@@ -13,7 +13,7 @@
     <packaging>jar</packaging>
 
     <name>Predicates :: API</name>
-    <description>Spark SQL support for the predicate API</description>
+    <description>Predicate API</description>
 
     <properties>
         <jackson.version>2.11.3</jackson.version>

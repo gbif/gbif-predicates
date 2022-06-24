@@ -13,6 +13,6 @@
     <packaging>jar</packaging>
 
     <name>Predicates :: Spark SQL</name>
-    <description>Examples of using project API and base classes</description>
+    <description>Spark SQL support for the predicate API</description>
 
 </project>
