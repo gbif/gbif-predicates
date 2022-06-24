@@ -19,5 +19,27 @@
 *.tar.gz
 *.rar
 
+.idea
+*.iml
+*.log
+*.log.*
+*.crc
+target
+output
+java-generated
+bin
+.DS_Store
+logs
+log
+temp
+tmp
+
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+/.idea/.gitignore
+/.idea/aws.xml
+/.idea/codeStyles/codeStyleConfig.xml
+/.idea/compiler.xml
+/predicates-api/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst
+/.idea/jarRepositories.xml
+/.idea/misc.xml

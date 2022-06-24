@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>predicates-parent</artifactId>
+        <groupId>org.gbif.predicates</groupId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>predicates-api</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Predicates :: API</name>
+    <description>Spark SQL support for the predicate API</description>
+
+    <properties>
+        <jackson.version>2.11.3</jackson.version>
+        <validation-api.version>2.0.1.Final</validation-api.version>
+        <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
+        <jts.version>1.16.1</jts.version>
+        <spatial4j.version>0.7</spatial4j.version>
+    </properties>
+
+    <dependencies>
+        <!-- FIXME do we want this dependency ? -->
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>gbif-api</artifactId>
+            <version>0.166</version>
+        </dependency>
+        <!-- Polygon search and validation dependencies -->
+        <dependency>
+            <groupId>org.locationtech.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+            <version>${spatial4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>${jts.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>${findbugs-jsr305.version}</version>
+        </dependency>
+        <!-- Jackson dependencies -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>${validation-api.version}</version>
+        </dependency>
+    </dependencies>
+</project>

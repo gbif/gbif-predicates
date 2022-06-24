@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.gbif</groupId>
+    <artifactId>motherpom</artifactId>
+    <version>53</version>
+  </parent>
+
+  <groupId>org.gbif.predicates</groupId>
+  <artifactId>predicates-parent</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>predicates-api</module>
+    <module>spark-sql-predicates</module>
+    <module>hive-predicates</module>
+    <module>es-predicates</module>
+  </modules>
+
+  <name>Predicates :: Parent</name>
+  <description>Predicate API and concrete implementations</description>
+  <url>https://github.com/gbif/gbif-predicates</url>
+
+  <scm>
+    <connection>scm:git:git@github.com:gbif/gbif-predicates.git</connection>
+    <url>https://github.com/gbif/gbif-predicates</url>
+    <developerConnection>scm:git:git@github.com:gbif/gbif-predicates.git</developerConnection>
+  </scm>
+
+  <distributionManagement>
+    <site>
+      <id>gh-pages</id>
+      <url>https://gbif.github.io/pipelines/</url>
+    </site>
+    <repository>
+      <id>gbif-release</id>
+      <url>https://repository.gbif.org/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>gbif-deploy</id>
+      <url>https://repository.gbif.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>gbif-all</id>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
+    </repository>
+    <repository>
+      <id>ALA</id>
+      <url>https://nexus.ala.org.au/content/repositories/releases</url>
+    </repository>
+    <repository>
+      <id>ALA-snapshots</id>
+      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
+    </repository>
+    <repository>
+      <id>osgeo</id>
+      <name>Open Source Geospatial Foundation Repository</name>
+      <url>https://repo.osgeo.org/repository/release/</url>
+    </repository>
+    <repository>
+      <id>cloudera-release</id>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+    </repository>
+  </repositories>
+
+  <properties>
+    <!-- Common variables -->
+    <jdkLevel>1.8</jdkLevel>
+    <encoding>UTF-8</encoding>
+    <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
+    <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
+  </properties>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <doclint>none</doclint>
+            <includeDependencySources>false</includeDependencySources>
+            <dependencySourceIncludes>
+              <dependencySourceInclude>org.gbif:*</dependencySourceInclude>
+            </dependencySourceIncludes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>${build-helper-maven.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>${maven-clean-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>${maven-plugin-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <compilerArgs>
+              <arg>-XepDisableAllChecks</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+        </plugin>
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless-maven-plugin.version}</version>
+          <configuration combine.self="override">
+            <java>
+              <googleJavaFormat>
+                <version>1.7</version>
+                <style>GOOGLE</style>
+              </googleJavaFormat>
+            </java>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Runs in compile phase to fail fast in case of formatting issues.-->
+            <id>spotless-check</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+
+  <!-- All dependencies of all modules are listed here with the project-wide default version.  Only when necessary
+  are library versions overridden in modules.-->
+  <dependencyManagement>
+  </dependencyManagement>
+
+</project>
