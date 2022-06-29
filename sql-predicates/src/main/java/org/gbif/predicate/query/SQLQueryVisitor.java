@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SQLQueryVisitor implements QueryVisitor {
 
+  public static final String ISSUE = "ISSUE";
   private static final Logger LOG = LoggerFactory.getLogger(SQLQueryVisitor.class);
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
@@ -77,12 +78,17 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   private static final List<GadmTerm> GADM_GIDS =
       ImmutableList.of(
           GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
+  public static final String TYPE_STATUS = "TYPE_STATUS";
+  public static final String GADM_GID = "GADM_GID";
+  public static final String MEDIA_TYPE = "MEDIA_TYPE";
+  public static final String TAXON_KEY = "TAXON_KEY";
+  public static final String GEOMETRY = "GEOMETRY";
 
   private final Joiner commaJoiner = Joiner.on(", ").skipNulls();
 
   private StringBuilder builder;
 
-  /** Transforms the value to the Hive statement lower(val). */
+  /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
     return "lower(" + val + ")";
   }
@@ -95,7 +101,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
                 DwcTerm dwcTerm = (DwcTerm) term;
                 String field = dwcTerm.simpleName();
                 if (String.class.isAssignableFrom(param.type())
-                    && !"GEOMETRY".equals(param.name())
+                    && !GEOMETRY.equals(param.name())
                     && !matchCase) {
                   return toSQLLower(field);
                 }
@@ -253,25 +259,25 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate predicate) throws QueryBuildingException {
-    if (predicate.getKey().name().equals("TAXON_KEY")) {
+    if (predicate.getKey().name().equals(TAXON_KEY)) {
       appendTaxonKeyFilter(predicate.getValue());
-    } else if ("GADM_GID".equals(predicate.getKey().name())) {
+    } else if (GADM_GID.equals(predicate.getKey().name())) {
       appendGadmGidFilter(predicate.getValue());
-    } else if ("MEDIA_TYPE".equals(predicate.getKey().name())) {
+    } else if (MEDIA_TYPE.equals(predicate.getKey().name())) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), MediaType.class))
           .ifPresent(
               mediaType ->
                   builder.append(
                       String.format(
                           getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
-    } else if ("TYPE_STATUS".equals(predicate.getKey().name())) {
+    } else if (TYPE_STATUS.equals(predicate.getKey().name())) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), TypeStatus.class))
           .ifPresent(
               typeStatus ->
                   builder.append(
                       String.format(
                           getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(), true)));
-    } else if ("ISSUE".equals(predicate.getKey().name())) {
+    } else if (ISSUE.equals(predicate.getKey().name())) {
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
