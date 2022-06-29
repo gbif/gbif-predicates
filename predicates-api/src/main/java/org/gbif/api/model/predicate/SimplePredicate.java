@@ -25,7 +25,6 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import org.gbif.api.annotation.Experimental;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.util.SearchTypeValidator;
 
 public class SimplePredicate implements Predicate {
@@ -34,7 +33,7 @@ public class SimplePredicate implements Predicate {
 
   @NotNull private final String value;
 
-  @Experimental @Nullable private final Boolean matchCase;
+  @Nullable private final Boolean matchCase;
 
   protected SimplePredicate(
       boolean checkForNonEquals, SearchParameter key, String value, Boolean matchCase) {
@@ -79,7 +78,7 @@ public class SimplePredicate implements Predicate {
 
   /** @throws IllegalArgumentException if the key SearchParameter is Geometry */
   private void checkPredicateAllowed() {
-    if (OccurrenceSearchParameter.GEOMETRY == key) {
+    if ("GEOMETRY".equals(key.name())) {
       throw new IllegalArgumentException("Geometry parameter must use a Within predicate");
     }
   }

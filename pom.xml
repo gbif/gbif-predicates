@@ -15,8 +15,7 @@
 
   <modules>
     <module>predicates-api</module>
-    <module>spark-sql-predicates</module>
-    <module>hive-predicates</module>
+    <module>sql-predicates</module>
     <module>es-predicates</module>
   </modules>
 

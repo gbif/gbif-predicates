@@ -21,26 +21,37 @@
         <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
         <jts.version>1.16.1</jts.version>
         <spatial4j.version>0.7</spatial4j.version>
+        <gbif-api.version>0.166</gbif-api.version>
     </properties>
 
     <dependencies>
-        <!-- FIXME do we want this dependency ? -->
+        <!-- Required because of references to SearchParameter and validation classes -->
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
-            <version>0.166</version>
+            <version>${gbif-api.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.gbif</groupId>
+                    <artifactId>dwc-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
-        <!-- Polygon search and validation dependencies -->
-        <dependency>
-            <groupId>org.locationtech.spatial4j</groupId>
-            <artifactId>spatial4j</artifactId>
-            <version>${spatial4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.locationtech.jts</groupId>
-            <artifactId>jts-core</artifactId>
-            <version>${jts.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.locationtech.spatial4j</groupId>-->
+<!--            <artifactId>spatial4j</artifactId>-->
+<!--            <version>${spatial4j.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.locationtech.spatial4j</groupId>-->
+<!--            <artifactId>spatial4j</artifactId>-->
+<!--            <version>${spatial4j.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.locationtech.jts</groupId>-->
+<!--            <artifactId>jts-core</artifactId>-->
+<!--            <version>${jts.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
