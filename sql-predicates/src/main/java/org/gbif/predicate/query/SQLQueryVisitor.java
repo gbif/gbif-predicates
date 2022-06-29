@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SQLQueryVisitor implements QueryVisitor {
 
-
   private static final Logger LOG = LoggerFactory.getLogger(SQLQueryVisitor.class);
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
