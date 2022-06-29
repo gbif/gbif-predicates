@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>predicates-parent</artifactId>
+        <groupId>org.gbif.predicates</groupId>
+        <version>0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>sql-predicates</artifactId>
+    <packaging>jar</packaging>
+
+    <name>Predicates :: SQL support</name>
+    <description>SQL support for the predicate API</description>
+
+    <properties>
+        <predicates-api.version>0.1-SNAPSHOT</predicates-api.version>
+        <dwc-api.version>1.36</dwc-api.version>
+        <dwca-io.version>2.12</dwca-io.version>
+        <guava.version>18.0</guava.version>
+        <occurrence-common.version>0.186-SNAPSHOT</occurrence-common.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.gbif.predicates</groupId>
+            <artifactId>predicates-api</artifactId>
+            <version>${predicates-api.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.gbif</groupId>
+                    <artifactId>dwc-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-api</artifactId>
+            <version>${dwc-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwca-io</artifactId>
+            <version>${dwca-io.version}</version>
+        </dependency>
+        <!-- Required for vocab checking - TermUtils which has a lot of code... -->
+        <dependency>
+            <groupId>org.gbif.occurrence</groupId>
+            <artifactId>occurrence-common</artifactId>
+            <version>${occurrence-common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+    </dependencies>
+</project>
