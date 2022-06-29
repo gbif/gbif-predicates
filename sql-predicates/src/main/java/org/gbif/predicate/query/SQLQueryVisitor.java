@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SQLQueryVisitor implements QueryVisitor {
 
-  public static final String ISSUE = "ISSUE";
+
   private static final Logger LOG = LoggerFactory.getLogger(SQLQueryVisitor.class);
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
@@ -60,7 +60,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   // where query to execute a select all
   private static final String ALL_QUERY = "true";
 
-  private static final String HIVE_ARRAY_PRE = "ARRAY";
+  private static final String SQL_ARRAY_PRE = "ARRAY";
 
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
@@ -83,6 +83,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   public static final String MEDIA_TYPE = "MEDIA_TYPE";
   public static final String TAXON_KEY = "TAXON_KEY";
   public static final String GEOMETRY = "GEOMETRY";
+  public static final String ISSUE = "ISSUE";
 
   private final Joiner commaJoiner = Joiner.on(", ").skipNulls();
 
@@ -685,7 +686,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
   /** Determines if the parameter type is a Hive array. */
   private boolean isSQLArray(SearchParameter parameter) {
-    return SQLColumnsUtils.getHiveType(term(parameter)).startsWith(HIVE_ARRAY_PRE);
+    return SQLColumnsUtils.getHiveType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
   /** Term associated to a search parameter */
