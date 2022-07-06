@@ -3,7 +3,6 @@ package org.gbif.predicate.query;
 import com.google.common.collect.ImmutableSet;
 import java.lang.annotation.Annotation;
 import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.dwc.terms.*;
 import org.gbif.occurrence.common.TermUtils;
 
@@ -20,7 +19,7 @@ public class SQLColumnsUtils {
     // empty constructor
   }
 
-  public static String getHiveColumn(Term term) {
+  public static String getSQLColumn(Term term) {
     if (GbifTerm.verbatimScientificName == term) {
       return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();
     }
@@ -32,24 +31,24 @@ public class SQLColumnsUtils {
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getHiveQueryColumn(Term term) {
-    String columnName = getHiveColumn(term);
+  public static String getSQLQueryColumn(Term term) {
+    String columnName = getSQLColumn(term);
     return isVocabulary(term) ? columnName + ".lineage" : columnName;
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getHiveValueColumn(Term term) {
-    String columnName = getHiveColumn(term);
+  public static String getSQLValueColumn(Term term) {
+    String columnName = getSQLColumn(term);
     return isVocabulary(term) ? columnName + ".concept" : columnName;
   }
 
   /** Gets the Hive column name of the extension parameter. */
-  public static String getHiveQueryColumn(Extension extension) {
+  public static String getSQLQueryColumn(Extension extension) {
     return EXTENSION_PRE + extension.name().toLowerCase();
   }
 
   /** Returns the Hive data type of term parameter. */
-  public static String getHiveType(Term term) {
+  public static String getSQLType(Term term) {
     if (TermUtils.isInterpretedNumerical(term)) {
       return "INT";
     } else if (TermUtils.isInterpretedLocalDate(term)) {
@@ -60,7 +59,7 @@ public class SQLColumnsUtils {
       return "DOUBLE";
     } else if (TermUtils.isInterpretedBoolean(term)) {
       return "BOOLEAN";
-    } else if (isHiveArray(term)) {
+    } else if (isSQLArray(term)) {
       return "ARRAY<STRING>";
     } else if (TermUtils.isVocabulary(term)) {
       return "STRUCT<concept: STRING,lineage: ARRAY<STRING>>";
@@ -74,7 +73,7 @@ public class SQLColumnsUtils {
   }
 
   /** Checks if the term is stored as an Hive array. */
-  public static boolean isHiveArray(Term term) {
+  public static boolean isSQLArray(Term term) {
     return GbifTerm.mediaType == term
         || GbifTerm.issue == term
         || GbifInternalTerm.networkKey == term
@@ -89,15 +88,6 @@ public class SQLColumnsUtils {
         || DwcTerm.identifiedBy == term
         || DwcTerm.preparations == term
         || DwcTerm.samplingProtocol == term;
-  }
-
-  /** Gets the Hive column name of the occurrence issue parameter. */
-  public static String getHiveQueryColumn(OccurrenceIssue issue) {
-    final String columnName = issue.name().toLowerCase();
-    if (SQL_RESERVED_WORDS.contains(columnName)) {
-      return columnName + '_';
-    }
-    return columnName;
   }
 
   public static boolean isVocabulary(Term term) {

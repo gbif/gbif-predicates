@@ -287,6 +287,17 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
               getArrayFn().apply(getArrayTerms().get(predicate.getKey())),
               predicate.getValue(),
               predicate.isMatchCase()));
+    } else if (getDenormedTerms().containsKey(predicate.getKey())) {
+      builder.append("(");
+      builder.append("(");
+      builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
+      builder.append(EQUALS_OPERATOR);
+      builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
+      builder.append(") OR (");
+      builder.append("array_contains(" + toSQLDenormField(predicate.getKey(), true) + ",");
+      builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), true));
+      builder.append("))");
+      builder.append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       builder.append(
           String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), true));
@@ -384,6 +395,8 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
   public void visit(InPredicate predicate) throws QueryBuildingException {
+
+    System.out.println("InPredicate " + predicate);
 
     boolean isMatchCase = Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE);
 
@@ -500,7 +513,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     builder.append('(');
     builder.append(
         NUB_KEYS.stream()
-            .map(term -> SQLColumnsUtils.getHiveQueryColumn(term) + unaryOperator)
+            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)
             .collect(Collectors.joining(CONJUNCTION_OPERATOR)));
     builder.append(')');
   }
@@ -570,9 +583,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       builder.append("contains(\"");
       builder.append(withinGeometry);
       builder.append("\", ");
-      builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLatitude));
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
       builder.append(", ");
-      builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLongitude));
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
       // Without the "= TRUE", the expression may evaluate to TRUE or FALSE for all records,
       // depending
       // on the data format (ORC, Avro, Parquet, text) of the table (!).
@@ -589,9 +602,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     builder.append("(geoDistance(");
     builder.append(geoDistance.getGeoDistance().toGeoDistanceString());
     builder.append(", ");
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLatitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
     builder.append(", ");
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLongitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
     builder.append(") = TRUE)");
   }
 
@@ -603,11 +616,11 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     builder.append('(');
 
     // Latitude is easy:
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLatitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
     builder.append(GREATER_THAN_EQUALS_OPERATOR);
     builder.append(bounds.getMinY());
     builder.append(CONJUNCTION_OPERATOR);
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLatitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
     builder.append(LESS_THAN_EQUALS_OPERATOR);
     builder.append(bounds.getMaxY());
 
@@ -615,7 +628,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
     // Longitude must take account of crossing the antimeridian:
     builder.append('(');
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLongitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
     builder.append(GREATER_THAN_EQUALS_OPERATOR);
     builder.append(bounds.getMinX());
     if (bounds.getMinX() < bounds.getMaxX()) {
@@ -623,7 +636,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     } else {
       builder.append(DISJUNCTION_OPERATOR);
     }
-    builder.append(SQLColumnsUtils.getHiveQueryColumn(DwcTerm.decimalLongitude));
+    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
     builder.append(LESS_THAN_EQUALS_OPERATOR);
     builder.append(bounds.getMaxX());
     builder.append(')');
@@ -685,7 +698,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
   /** Determines if the parameter type is a Hive array. */
   private boolean isSQLArray(SearchParameter parameter) {
-    return SQLColumnsUtils.getHiveType(term(parameter)).startsWith(SQL_ARRAY_PRE);
+    return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
   /** Term associated to a search parameter */
@@ -702,7 +715,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     builder.append('(');
     builder.append(
         NUB_KEYS.stream()
-            .map(term -> SQLColumnsUtils.getHiveQueryColumn(term) + EQUALS_OPERATOR + taxonKey)
+            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + taxonKey)
             .collect(Collectors.joining(DISJUNCTION_OPERATOR)));
     builder.append(')');
   }
@@ -719,7 +732,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getHiveQueryColumn(term));
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
       builder.append(EQUALS_OPERATOR);
       // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
       // Using .toUpperCase() is safe, GIDs must be ASCII anyway.
@@ -742,7 +755,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getHiveQueryColumn(term));
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
       builder.append(IN_OPERATOR);
       builder.append('(');
       builder.append(commaJoiner.join(taxonKeys));
@@ -764,7 +777,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getHiveQueryColumn(term));
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
       builder.append(IN_OPERATOR);
       builder.append('(');
       Iterator<String> iterator = gadmGids.iterator();
