@@ -20,11 +20,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gbif.api.model.common.search.SearchParameter;
 
 /** This predicate checks if its {@code key} is less or equal than its {@code value}. */
-public class LessThanOrEqualsPredicate extends SimplePredicate {
+public class LessThanOrEqualsPredicate<S extends SearchParameter> extends SimplePredicate<S> {
 
   @JsonCreator
   public LessThanOrEqualsPredicate(
-      @JsonProperty("key") SearchParameter key, @JsonProperty("value") String value) {
+      @JsonProperty("key") S key, @JsonProperty("value") String value) {
     super(true, key, value, null);
   }
 }
