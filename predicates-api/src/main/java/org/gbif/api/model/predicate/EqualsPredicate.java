@@ -22,11 +22,11 @@ import javax.annotation.Nullable;
 import org.gbif.api.model.common.search.SearchParameter;
 
 /** This predicate checks if its {@code key} is equal to its {@code value}. */
-public class EqualsPredicate extends SimplePredicate {
+public class EqualsPredicate<S extends SearchParameter> extends SimplePredicate<S> {
 
   @JsonCreator
   public EqualsPredicate(
-      @JsonProperty("key") SearchParameter key,
+      @JsonProperty("key") S key,
       @JsonProperty("value") String value,
       @Nullable @JsonProperty(value = "matchCase") Boolean matchCase) {
     super(false, key, value, matchCase);
@@ -42,7 +42,7 @@ public class EqualsPredicate extends SimplePredicate {
       return false;
     }
 
-    SimplePredicate that = (SimplePredicate) obj;
+    SimplePredicate<S> that = (SimplePredicate<S>) obj;
     return Objects.equals(this.getKey(), that.getKey())
         && Objects.equals(this.getValue(), that.getValue());
   }

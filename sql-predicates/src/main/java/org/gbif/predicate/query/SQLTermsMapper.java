@@ -1,17 +1,16 @@
 package org.gbif.predicate.query;
 
-import java.util.Map;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.dwc.terms.Term;
 
 /** Interface to encapsulate search parameter conversions to terms. */
 public interface SQLTermsMapper<S extends SearchParameter> {
 
-  Map<S, ? extends Term> getParam2Terms();
+  Term term(S searchParameter);
 
-  Map<S, Term> getArrayTerms();
+  boolean isArray(S searchParameter);
 
-  Map<S, Term> getDenormedTerms();
+  Term getTermArray(S searchParameter);
 
-  String getSqlColumn(Term term);
+  boolean isDenormedTerm(S searchParameter);
 }

@@ -100,11 +100,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return "lower(" + val + ")";
   }
 
-  protected String toSQLField(SearchParameter param, boolean matchCase) {
+  protected String toSQLField(S param, boolean matchCase) {
     return Optional.ofNullable(term(param))
         .map(
             term -> {
-              String sqlCol = sqlTermsMapper.getSqlColumn(term);
+              String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
               if (String.class.isAssignableFrom(param.type())
                   && !GEOMETRY.equals(param.name())
                   && !matchCase) {
@@ -127,7 +127,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @param matchCase
    * @return
    */
-  protected String toSQLDenormField(SearchParameter param, boolean matchCase) {
+  protected String toSQLDenormField(S param, boolean matchCase) {
     return Optional.ofNullable(term(param))
         .map(
             term -> {
@@ -256,7 +256,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
-  public void visit(EqualsPredicate predicate) throws QueryBuildingException {
+  public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getKey().name().equals(TAXON_KEY)) {
       appendTaxonKeyFilter(predicate.getValue());
     } else if (GADM_GID.equals(predicate.getKey().name())) {
@@ -279,13 +279,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
-    } else if (sqlTermsMapper.getArrayTerms().containsKey(predicate.getKey())) {
+    } else if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
           String.format(
-              getArrayFn().apply(sqlTermsMapper.getArrayTerms().get(predicate.getKey())),
+              getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
               predicate.getValue(),
               predicate.isMatchCase()));
-    } else if (sqlTermsMapper.getDenormedTerms().containsKey(predicate.getKey())) {
+    } else if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
       builder.append("(");
       builder.append("(");
       builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
@@ -392,7 +392,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * but it is probably still better to use an IN, which uses a hash table lookup internally:
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
-  public void visit(InPredicate predicate) throws QueryBuildingException {
+  public void visit(InPredicate<S> predicate) throws QueryBuildingException {
 
     System.out.println("InPredicate " + predicate);
 
@@ -404,7 +404,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       Iterator<String> iterator = predicate.getValues().iterator();
       while (iterator.hasNext()) {
         // Use the equals predicate to get the behaviour for array.
-        visit(new EqualsPredicate(predicate.getKey(), iterator.next(), isMatchCase));
+        visit(new EqualsPredicate<S>(predicate.getKey(), iterator.next(), isMatchCase));
         if (iterator.hasNext()) {
           builder.append(DISJUNCTION_OPERATOR);
         }
@@ -432,9 +432,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
       builder.append(")");
 
-      // this block can be removed in future if we dont need an denormalised
+      // this block can be removed in future if we don't need a denormalized
       // AVRO extension
-      if (sqlTermsMapper.getDenormedTerms().containsKey(predicate.getKey())) {
+      if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
         builder.append(" OR ");
         builder.append('(');
 
@@ -478,7 +478,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     visit(predicate.getPredicate());
   }
 
-  public void visit(IsNotNullPredicate predicate) throws QueryBuildingException {
+  public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
     if (isSQLArray(predicate.getParameter())
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
@@ -492,7 +492,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
-  public void visit(IsNullPredicate predicate) throws QueryBuildingException {
+  public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
     } else {
@@ -667,7 +667,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append(')');
   }
 
-  public void visitSimplePredicate(SimplePredicate predicate, String op)
+  public void visitSimplePredicate(SimplePredicate<S> predicate, String op)
       throws QueryBuildingException {
     if (Number.class.isAssignableFrom(predicate.getKey().type())) {
       if (SearchTypeValidator.isRange(predicate.getValue())) {
@@ -688,20 +688,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
   }
 
-  public void visitSimplePredicate(SimplePredicate predicate, String op, String value) {
+  public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value) {
     builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
     builder.append(op);
     builder.append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
   }
 
   /** Determines if the parameter type is a Hive array. */
-  private boolean isSQLArray(SearchParameter parameter) {
+  private boolean isSQLArray(S parameter) {
     return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
   /** Term associated to a search parameter */
-  public Term term(SearchParameter parameter) {
-    return sqlTermsMapper.getParam2Terms().get(parameter);
+  public Term term(S parameter) {
+    return sqlTermsMapper.term(parameter);
   }
 
   /**

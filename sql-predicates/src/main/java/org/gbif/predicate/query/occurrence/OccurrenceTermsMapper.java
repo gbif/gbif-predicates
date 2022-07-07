@@ -12,7 +12,6 @@ import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.IucnTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.predicate.query.SQLTermsMapper;
 
 public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchParameter> {
@@ -133,34 +132,22 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
       new ImmutableSet.Builder<String>().add("date", "order", "format", "group").build();
 
   @Override
-  public Map<OccurrenceSearchParameter, ? extends Term> getParam2Terms() {
-    return PARAM_TO_TERM;
+  public Term term(OccurrenceSearchParameter searchParameter) {
+    return PARAM_TO_TERM.get(searchParameter);
   }
 
   @Override
-  public Map<OccurrenceSearchParameter, Term> getArrayTerms() {
-    return ARRAY_STRING_TERMS;
+  public boolean isArray(OccurrenceSearchParameter searchParameter) {
+    return ARRAY_STRING_TERMS.containsKey(searchParameter);
   }
 
   @Override
-  public Map<OccurrenceSearchParameter, Term> getDenormedTerms() {
-    return DENORMED_TERMS;
-  }
-
-  public static String getHiveColumn(Term term) {
-    if (GbifTerm.verbatimScientificName == term) {
-      return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();
-    }
-    String columnName = term.simpleName().toLowerCase();
-    if (HIVE_RESERVED_WORDS.contains(columnName)) {
-      return columnName + '_';
-    }
-    return columnName;
+  public Term getTermArray(OccurrenceSearchParameter searchParameter) {
+    return ARRAY_STRING_TERMS.get(searchParameter);
   }
 
   @Override
-  public String getSqlColumn(Term term) {
-    String columnName = getHiveColumn(term);
-    return TermUtils.isVocabulary(term) ? columnName + ".lineage" : columnName;
+  public boolean isDenormedTerm(OccurrenceSearchParameter searchParameter) {
+    return DENORMED_TERMS.containsKey(searchParameter);
   }
 }
