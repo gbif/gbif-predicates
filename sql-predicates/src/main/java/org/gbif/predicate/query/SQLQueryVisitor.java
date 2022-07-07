@@ -14,6 +14,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.*;
@@ -39,7 +40,8 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SQLQueryVisitor implements QueryVisitor {
+@RequiredArgsConstructor
+public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private static final Logger LOG = LoggerFactory.getLogger(SQLQueryVisitor.class);
   private static final String CONJUNCTION_OPERATOR = " AND ";
@@ -60,6 +62,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   private static final String ALL_QUERY = "true";
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
+
+  private static final Function<Term, String> ARRAY_FN =
+      t -> "array_contains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
@@ -84,9 +89,11 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   public static final String GEOMETRY = "GEOMETRY";
   public static final String ISSUE = "ISSUE";
 
-  private final Joiner commaJoiner = Joiner.on(", ").skipNulls();
+  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private StringBuilder builder;
+
+  private final SQLTermsMapper<S> sqlTermsMapper;
 
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
@@ -97,23 +104,18 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     return Optional.ofNullable(term(param))
         .map(
             term -> {
-              if (term instanceof DwcTerm) {
-                DwcTerm dwcTerm = (DwcTerm) term;
-                String field = dwcTerm.simpleName();
-                if (String.class.isAssignableFrom(param.type())
-                    && !GEOMETRY.equals(param.name())
-                    && !matchCase) {
-                  return toSQLLower(field);
-                }
-                return field;
+              String sqlCol = sqlTermsMapper.getSqlColumn(term);
+              if (String.class.isAssignableFrom(param.type())
+                  && !GEOMETRY.equals(param.name())
+                  && !matchCase) {
+                return toSQLLower(sqlCol);
               }
-              return null;
+              return sqlCol;
             })
         .orElseThrow(
             () ->
                 // QueryBuildingException requires an underlying exception
-                new IllegalArgumentException(
-                    "Search parameter " + param + " is not mapped to Hive"));
+                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
   }
 
   /**
@@ -249,13 +251,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  protected abstract Map<SearchParameter, ? extends Term> getParam2Terms();
-
-  public abstract Map<SearchParameter, Term> getArrayTerms();
-
-  public abstract Map<SearchParameter, Term> getDenormedTerms();
-
-  public abstract Function<Term, String> getArrayFn();
+  public Function<Term, String> getArrayFn() {
+    return ARRAY_FN;
+  }
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate predicate) throws QueryBuildingException {
@@ -281,13 +279,13 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
-    } else if (getArrayTerms().containsKey(predicate.getKey())) {
+    } else if (sqlTermsMapper.getArrayTerms().containsKey(predicate.getKey())) {
       builder.append(
           String.format(
-              getArrayFn().apply(getArrayTerms().get(predicate.getKey())),
+              getArrayFn().apply(sqlTermsMapper.getArrayTerms().get(predicate.getKey())),
               predicate.getValue(),
               predicate.isMatchCase()));
-    } else if (getDenormedTerms().containsKey(predicate.getKey())) {
+    } else if (sqlTermsMapper.getDenormedTerms().containsKey(predicate.getKey())) {
       builder.append("(");
       builder.append("(");
       builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
@@ -436,7 +434,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
       // this block can be removed in future if we dont need an denormalised
       // AVRO extension
-      if (getDenormedTerms().containsKey(predicate.getKey())) {
+      if (sqlTermsMapper.getDenormedTerms().containsKey(predicate.getKey())) {
         builder.append(" OR ");
         builder.append('(');
 
@@ -703,7 +701,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
 
   /** Term associated to a search parameter */
   public Term term(SearchParameter parameter) {
-    return getParam2Terms().get(parameter);
+    return sqlTermsMapper.getParam2Terms().get(parameter);
   }
 
   /**
@@ -758,7 +756,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
       builder.append(IN_OPERATOR);
       builder.append('(');
-      builder.append(commaJoiner.join(taxonKeys));
+      builder.append(COMMA_JOINER.join(taxonKeys));
       builder.append(')');
       first = false;
     }
