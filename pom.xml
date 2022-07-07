@@ -16,7 +16,6 @@
   <modules>
     <module>predicates-api</module>
     <module>sql-predicates</module>
-    <module>es-predicates</module>
   </modules>
 
   <name>Predicates :: Parent</name>
