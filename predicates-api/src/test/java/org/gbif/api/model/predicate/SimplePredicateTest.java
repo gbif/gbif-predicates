@@ -46,13 +46,13 @@ public class SimplePredicateTest {
     SimplePredicate<OccurrenceSearchParameter> ep2 =
         new EqualsPredicate<>(TEST_KEY, TEST_VALUE, false);
     SimplePredicate<OccurrenceSearchParameter> gt1 =
-        new GreaterThanPredicate<OccurrenceSearchParameter>(COMP_PARAM, COMP_VALUE);
+        new GreaterThanPredicate<>(COMP_PARAM, COMP_VALUE);
     SimplePredicate<OccurrenceSearchParameter> gt2 =
-        new GreaterThanPredicate<OccurrenceSearchParameter>(COMP_PARAM, COMP_VALUE);
+        new GreaterThanPredicate<>(COMP_PARAM, COMP_VALUE);
     SimplePredicate<OccurrenceSearchParameter> lt1 =
-        new LessThanPredicate<OccurrenceSearchParameter>(COMP_PARAM, COMP_VALUE);
+        new LessThanPredicate<>(COMP_PARAM, COMP_VALUE);
     SimplePredicate<OccurrenceSearchParameter> lt2 =
-        new LessThanPredicate<OccurrenceSearchParameter>(COMP_PARAM, COMP_VALUE);
+        new LessThanPredicate<>(COMP_PARAM, COMP_VALUE);
 
     // All of them are equal to themselves
     assertThat(ep1, equalTo(ep1));
@@ -71,7 +71,7 @@ public class SimplePredicateTest {
     assertThat(gt1, equalTo(gt2));
     assertThat(lt1, equalTo(lt2));
 
-    ep2 = new EqualsPredicate(TEST_KEY, "FOOBAR", false);
+    ep2 = new EqualsPredicate<>(TEST_KEY, "FOOBAR", false);
     assertThat(ep1, not(equalTo(ep2)));
   }
 
@@ -86,7 +86,7 @@ public class SimplePredicateTest {
 
   @Test
   public void testGoodEnumValue() {
-    new EqualsPredicate(OccurrenceSearchParameter.BASIS_OF_RECORD, "PRESERVED_SPECIMEN", false);
+    new EqualsPredicate<>(OccurrenceSearchParameter.BASIS_OF_RECORD, "PRESERVED_SPECIMEN", false);
   }
 
   @Test

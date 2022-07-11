@@ -16,6 +16,7 @@
   <modules>
     <module>predicates-api</module>
     <module>sql-predicates</module>
+    <module>es-predicates</module>
   </modules>
 
   <name>Predicates :: Parent</name>
@@ -74,6 +75,12 @@
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
+
+    <!-- Logging -->
+    <slf4j.version>1.7.30</slf4j.version>
+
+    <!-- Tools-->
+    <lombok.version>1.18.20</lombok.version>
 
     <!-- Tests -->
     <junit-jupiter.version>5.6.3</junit-jupiter.version>
@@ -168,6 +175,31 @@
   are library versions overridden in modules.-->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.gbif.predicates</groupId>
+        <artifactId>predicates-api</artifactId>
+        <version>${project.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <!-- Logging dependencies -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
       <!-- Tests -->
       <dependency>
         <groupId>org.junit.jupiter</groupId>

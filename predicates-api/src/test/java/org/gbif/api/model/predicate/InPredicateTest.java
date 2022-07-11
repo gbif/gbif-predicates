@@ -50,8 +50,7 @@ public class InPredicateTest {
   @Test
   public void testEmptyConstructor() {
     assertThrows(
-        NullPointerException.class,
-        () -> new InPredicate<OccurrenceSearchParameter>(null, new ArrayList<>(), false));
+        NullPointerException.class, () -> new InPredicate<>(null, new ArrayList<>(), false));
   }
 
   @Test

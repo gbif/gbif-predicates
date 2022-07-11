@@ -13,4 +13,6 @@ public interface SQLTermsMapper<S extends SearchParameter> {
   Term getTermArray(S searchParameter);
 
   boolean isDenormedTerm(S searchParameter);
+
+  S getDefaultGadmLevel();
 }

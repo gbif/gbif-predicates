@@ -150,4 +150,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
   public boolean isDenormedTerm(OccurrenceSearchParameter searchParameter) {
     return DENORMED_TERMS.containsKey(searchParameter);
   }
+
+  @Override
+  public OccurrenceSearchParameter getDefaultGadmLevel() {
+    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;
+  }
 }
