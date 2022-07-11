@@ -28,7 +28,7 @@ public class PredicateDeSerTest {
   @Test
   public void deserTest() throws IOException {
     assertPredicate("is_null.json");
-    assertPredicate("conjuction.json");
+    assertPredicate("conjunction.json");
     assertPredicate("within.json");
     assertPredicate("equals_catalog_number.json");
     assertPredicate("like_catalog_number.json");
