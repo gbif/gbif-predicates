@@ -25,11 +25,11 @@ import org.gbif.api.model.common.search.SearchParameter;
  * </code> or any <code>*</code> arbitrary matching characters is the one used by ElasticSearch,
  * Unix/DOS shells, etc.
  */
-public class LikePredicate extends SimplePredicate {
+public class LikePredicate<S extends SearchParameter> extends SimplePredicate<S> {
 
   @JsonCreator
   public LikePredicate(
-      @JsonProperty("key") SearchParameter key,
+      @JsonProperty("key") S key,
       @JsonProperty("value") String value,
       @Nullable @JsonProperty(value = "matchCase") Boolean matchCase) {
     super(false, key, value, matchCase);

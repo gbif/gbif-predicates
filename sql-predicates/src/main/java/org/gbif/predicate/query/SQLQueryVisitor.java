@@ -14,8 +14,9 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.*;
 import org.gbif.api.query.QueryBuildingException;
 import org.gbif.api.query.QueryVisitor;
@@ -36,12 +37,11 @@ import org.locationtech.spatial4j.shape.Rectangle;
 import org.locationtech.spatial4j.shape.Shape;
 import org.locationtech.spatial4j.shape.impl.RectangleImpl;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public abstract class SQLQueryVisitor implements QueryVisitor {
+@RequiredArgsConstructor
+@Slf4j
+public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SQLQueryVisitor.class);
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
   private static final String EQUALS_OPERATOR = " = ";
@@ -60,6 +60,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   private static final String ALL_QUERY = "true";
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
+
+  private static final Function<Term, String> ARRAY_FN =
+      t -> "array_contains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
@@ -84,36 +87,33 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   public static final String GEOMETRY = "GEOMETRY";
   public static final String ISSUE = "ISSUE";
 
-  private final Joiner commaJoiner = Joiner.on(", ").skipNulls();
+  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
   private StringBuilder builder;
+
+  private final SQLTermsMapper<S> sqlTermsMapper;
 
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
     return "lower(" + val + ")";
   }
 
-  protected String toSQLField(SearchParameter param, boolean matchCase) {
+  protected String toSQLField(S param, boolean matchCase) {
     return Optional.ofNullable(term(param))
         .map(
             term -> {
-              if (term instanceof DwcTerm) {
-                DwcTerm dwcTerm = (DwcTerm) term;
-                String field = dwcTerm.simpleName();
-                if (String.class.isAssignableFrom(param.type())
-                    && !GEOMETRY.equals(param.name())
-                    && !matchCase) {
-                  return toSQLLower(field);
-                }
-                return field;
+              String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
+              if (String.class.isAssignableFrom(param.type())
+                  && !GEOMETRY.equals(param.name())
+                  && !matchCase) {
+                return toSQLLower(sqlCol);
               }
-              return null;
+              return sqlCol;
             })
         .orElseThrow(
             () ->
                 // QueryBuildingException requires an underlying exception
-                new IllegalArgumentException(
-                    "Search parameter " + param + " is not mapped to Hive"));
+                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
   }
 
   /**
@@ -125,7 +125,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * @param matchCase
    * @return
    */
-  protected String toSQLDenormField(SearchParameter param, boolean matchCase) {
+  protected String toSQLDenormField(S param, boolean matchCase) {
     return Optional.ofNullable(term(param))
         .map(
             term -> {
@@ -149,15 +149,14 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
   }
 
   /**
-   * Converts a value to the form expected by Hive based on the OccurrenceSearchParameter. Most
-   * values pass by unaltered. Quotes are added for values that need to be quoted, escaping any
-   * existing quotes.
+   * Converts a value to the form expected by Hive based on the SearchParameter. Most values pass by
+   * unaltered. Quotes are added for values that need to be quoted, escaping any existing quotes.
    *
    * @param param the type of parameter defining the expected type
    * @param value the original query value
    * @return the converted value expected by Hive
    */
-  protected String toSQLValue(SearchParameter param, String value, boolean matchCase) {
+  protected String toSQLValue(S param, String value, boolean matchCase) {
     if (Enum.class.isAssignableFrom(param.type())) {
       // all enum parameters are uppercase
       return '\'' + value.toUpperCase() + '\'';
@@ -222,11 +221,11 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     boolean useIn = true;
     Boolean matchCase = null;
     List<String> values = new ArrayList<>();
-    SearchParameter parameter = null;
+    S parameter = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       if (subPredicate instanceof EqualsPredicate) {
-        EqualsPredicate equalsSubPredicate = (EqualsPredicate) subPredicate;
+        EqualsPredicate<S> equalsSubPredicate = (EqualsPredicate<S>) subPredicate;
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
@@ -243,22 +242,18 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
 
     if (useIn) {
-      visit(new InPredicate(parameter, values, matchCase));
+      visit(new InPredicate<>(parameter, values, matchCase));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
     }
   }
 
-  protected abstract Map<SearchParameter, ? extends Term> getParam2Terms();
-
-  public abstract Map<SearchParameter, Term> getArrayTerms();
-
-  public abstract Map<SearchParameter, Term> getDenormedTerms();
-
-  public abstract Function<Term, String> getArrayFn();
+  public Function<Term, String> getArrayFn() {
+    return ARRAY_FN;
+  }
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
-  public void visit(EqualsPredicate predicate) throws QueryBuildingException {
+  public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getKey().name().equals(TAXON_KEY)) {
       appendTaxonKeyFilter(predicate.getValue());
     } else if (GADM_GID.equals(predicate.getKey().name())) {
@@ -281,23 +276,26 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
-    } else if (getArrayTerms().containsKey(predicate.getKey())) {
+    } else if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
           String.format(
-              getArrayFn().apply(getArrayTerms().get(predicate.getKey())),
+              getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
               predicate.getValue(),
               predicate.isMatchCase()));
-    } else if (getDenormedTerms().containsKey(predicate.getKey())) {
-      builder.append("(");
-      builder.append("(");
-      builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
-      builder.append(EQUALS_OPERATOR);
-      builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
-      builder.append(") OR (");
-      builder.append("array_contains(" + toSQLDenormField(predicate.getKey(), true) + ",");
-      builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), true));
-      builder.append("))");
-      builder.append(")");
+    } else if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
+      builder
+          .append("(")
+          .append("(")
+          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+          .append(EQUALS_OPERATOR)
+          .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()))
+          .append(") OR (")
+          .append("array_contains(")
+          .append(toSQLDenormField(predicate.getKey(), true))
+          .append(",")
+          .append(toSQLValue(predicate.getKey(), predicate.getValue(), true))
+          .append("))")
+          .append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       builder.append(
           String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), true));
@@ -331,7 +329,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(GreaterThanOrEqualsPredicate predicate) throws QueryBuildingException {
+  public void visit(GreaterThanOrEqualsPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the "OrEquals" to mean including the whole range.
       // "2000" includes all of 2000.
@@ -345,7 +343,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(GreaterThanPredicate predicate) throws QueryBuildingException {
+  public void visit(GreaterThanPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
       // range.
@@ -360,7 +358,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(LessThanOrEqualsPredicate predicate) throws QueryBuildingException {
+  public void visit(LessThanOrEqualsPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the "OrEquals" to mean including the whole range.
       // "2000" includes all of 2000, so the latest date is 2001-01-01 (not inclusive).
@@ -372,7 +370,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(LessThanPredicate predicate) throws QueryBuildingException {
+  public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
       // range.
@@ -394,9 +392,9 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * but it is probably still better to use an IN, which uses a hash table lookup internally:
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
-  public void visit(InPredicate predicate) throws QueryBuildingException {
+  public void visit(InPredicate<S> predicate) throws QueryBuildingException {
 
-    System.out.println("InPredicate " + predicate);
+    log.info("InPredicate " + predicate);
 
     boolean isMatchCase = Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE);
 
@@ -406,7 +404,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       Iterator<String> iterator = predicate.getValues().iterator();
       while (iterator.hasNext()) {
         // Use the equals predicate to get the behaviour for array.
-        visit(new EqualsPredicate(predicate.getKey(), iterator.next(), isMatchCase));
+        visit(new EqualsPredicate<S>(predicate.getKey(), iterator.next(), isMatchCase));
         if (iterator.hasNext()) {
           builder.append(DISJUNCTION_OPERATOR);
         }
@@ -421,10 +419,11 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       appendGadmGidFilter(predicate.getValues());
 
     } else {
-      builder.append('(');
-      builder.append(toSQLField(predicate.getKey(), isMatchCase));
-      builder.append(IN_OPERATOR);
-      builder.append('(');
+      builder
+          .append('(')
+          .append(toSQLField(predicate.getKey(), isMatchCase))
+          .append(IN_OPERATOR)
+          .append('(');
       Iterator<String> iterator = predicate.getValues().iterator();
       while (iterator.hasNext()) {
         builder.append(toSQLValue(predicate.getKey(), iterator.next(), isMatchCase));
@@ -434,20 +433,22 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       }
       builder.append(")");
 
-      // this block can be removed in future if we dont need an denormalised
+      // this block can be removed in future if we don't need a denormalized
       // AVRO extension
-      if (getDenormedTerms().containsKey(predicate.getKey())) {
-        builder.append(" OR ");
-        builder.append('(');
+      if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
+        builder.append(" OR ").append('(');
 
         Iterator<String> iterator2 = predicate.getValues().iterator();
         while (iterator2.hasNext()) {
-          builder.append('(');
-          // FIX ME
-          builder.append("array_contains(" + toSQLDenormField(predicate.getKey(), true) + ",");
-          builder.append(toSQLValue(predicate.getKey(), iterator2.next(), true));
-          builder.append(')');
-          builder.append(')');
+          builder
+              .append('(')
+              // FIX ME
+              .append("array_contains(")
+              .append(toSQLDenormField(predicate.getKey(), true))
+              .append(',')
+              .append(toSQLValue(predicate.getKey(), iterator2.next(), true))
+              .append(')')
+              .append(')');
           if (iterator2.hasNext()) {
             builder.append(" OR ");
           }
@@ -458,11 +459,11 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(LikePredicate predicate) throws QueryBuildingException {
+  public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
     // Replace % → \% and _ → \_
     // Then replace * → % and ? → _
-    LikePredicate likePredicate =
-        new LikePredicate(
+    LikePredicate<S> likePredicate =
+        new LikePredicate<>(
             predicate.getKey(),
             predicate
                 .getValue()
@@ -480,7 +481,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     visit(predicate.getPredicate());
   }
 
-  public void visit(IsNotNullPredicate predicate) throws QueryBuildingException {
+  public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
     if (isSQLArray(predicate.getParameter())
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
@@ -494,7 +495,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     }
   }
 
-  public void visit(IsNullPredicate predicate) throws QueryBuildingException {
+  public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
     } else {
@@ -580,32 +581,32 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       } else {
         withinGeometry = within.getGeometry();
       }
-      builder.append("contains(\"");
-      builder.append(withinGeometry);
-      builder.append("\", ");
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
-      builder.append(", ");
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
+      builder
+          .append("contains(\"")
+          .append(withinGeometry)
+          .append("\", ")
+          .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+          .append(", ")
+          .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
       // Without the "= TRUE", the expression may evaluate to TRUE or FALSE for all records,
       // depending
       // on the data format (ORC, Avro, Parquet, text) of the table (!).
       // We could not reproduce the issue on our test cluster, so it seems safest to include this.
-      builder.append(") = TRUE");
-
-      builder.append(')');
+      builder.append(") = TRUE").append(')');
     } catch (Exception e) {
       throw new QueryBuildingException(e);
     }
   }
 
   public void visit(GeoDistancePredicate geoDistance) throws QueryBuildingException {
-    builder.append("(geoDistance(");
-    builder.append(geoDistance.getGeoDistance().toGeoDistanceString());
-    builder.append(", ");
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
-    builder.append(", ");
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
-    builder.append(") = TRUE)");
+    builder
+        .append("(geoDistance(")
+        .append(geoDistance.getGeoDistance().toGeoDistanceString())
+        .append(", ")
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(", ")
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(") = TRUE)");
   }
 
   /**
@@ -613,35 +614,34 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * decimalLongitude to form a bounding box.
    */
   private void boundingBox(Rectangle bounds) {
-    builder.append('(');
+    builder
+        .append('(')
+        // Latitude is easy:
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(GREATER_THAN_EQUALS_OPERATOR)
+        .append(bounds.getMinY())
+        .append(CONJUNCTION_OPERATOR)
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(LESS_THAN_EQUALS_OPERATOR)
+        .append(bounds.getMaxY())
+        .append(CONJUNCTION_OPERATOR)
 
-    // Latitude is easy:
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
-    builder.append(GREATER_THAN_EQUALS_OPERATOR);
-    builder.append(bounds.getMinY());
-    builder.append(CONJUNCTION_OPERATOR);
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude));
-    builder.append(LESS_THAN_EQUALS_OPERATOR);
-    builder.append(bounds.getMaxY());
-
-    builder.append(CONJUNCTION_OPERATOR);
-
-    // Longitude must take account of crossing the antimeridian:
-    builder.append('(');
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
-    builder.append(GREATER_THAN_EQUALS_OPERATOR);
-    builder.append(bounds.getMinX());
+        // Longitude must take account of crossing the antimeridian:
+        .append('(')
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(GREATER_THAN_EQUALS_OPERATOR)
+        .append(bounds.getMinX());
     if (bounds.getMinX() < bounds.getMaxX()) {
       builder.append(CONJUNCTION_OPERATOR);
     } else {
       builder.append(DISJUNCTION_OPERATOR);
     }
-    builder.append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
-    builder.append(LESS_THAN_EQUALS_OPERATOR);
-    builder.append(bounds.getMaxX());
-    builder.append(')');
-
-    builder.append(')');
+    builder
+        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(LESS_THAN_EQUALS_OPERATOR)
+        .append(bounds.getMaxX())
+        .append(')')
+        .append(')');
   }
 
   /**
@@ -669,7 +669,7 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     builder.append(')');
   }
 
-  public void visitSimplePredicate(SimplePredicate predicate, String op)
+  public void visitSimplePredicate(SimplePredicate<S> predicate, String op)
       throws QueryBuildingException {
     if (Number.class.isAssignableFrom(predicate.getKey().type())) {
       if (SearchTypeValidator.isRange(predicate.getValue())) {
@@ -685,25 +685,27 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
         return;
       }
     }
-    builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
-    builder.append(op);
-    builder.append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
+    builder
+        .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+        .append(op)
+        .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
   }
 
-  public void visitSimplePredicate(SimplePredicate predicate, String op, String value) {
-    builder.append(toSQLField(predicate.getKey(), predicate.isMatchCase()));
-    builder.append(op);
-    builder.append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
+  public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value) {
+    builder
+        .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+        .append(op)
+        .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
   }
 
   /** Determines if the parameter type is a Hive array. */
-  private boolean isSQLArray(SearchParameter parameter) {
+  private boolean isSQLArray(S parameter) {
     return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
   /** Term associated to a search parameter */
-  public Term term(SearchParameter parameter) {
-    return getParam2Terms().get(parameter);
+  public Term term(S parameter) {
+    return sqlTermsMapper.term(parameter);
   }
 
   /**
@@ -712,12 +714,13 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * @param taxonKey to append as filter
    */
   private void appendTaxonKeyFilter(String taxonKey) {
-    builder.append('(');
-    builder.append(
-        NUB_KEYS.stream()
-            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + taxonKey)
-            .collect(Collectors.joining(DISJUNCTION_OPERATOR)));
-    builder.append(')');
+    builder
+        .append('(')
+        .append(
+            NUB_KEYS.stream()
+                .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + taxonKey)
+                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+        .append(')');
   }
 
   /**
@@ -732,12 +735,12 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
-      builder.append(EQUALS_OPERATOR);
-      // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
-      // Using .toUpperCase() is safe, GIDs must be ASCII anyway.
-      builder.append(
-          toSQLValue(OccurrenceSearchParameter.GADM_LEVEL_0_GID, gadmGid.toUpperCase(), true));
+      builder
+          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(EQUALS_OPERATOR)
+          // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
+          // Using .toUpperCase() is safe, GIDs must be ASCII anyway.
+          .append(toSQLValue(sqlTermsMapper.getDefaultGadmLevel(), gadmGid.toUpperCase(), true));
       first = false;
     }
     builder.append(')');
@@ -755,11 +758,12 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
-      builder.append(IN_OPERATOR);
-      builder.append('(');
-      builder.append(commaJoiner.join(taxonKeys));
-      builder.append(')');
+      builder
+          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(IN_OPERATOR)
+          .append('(')
+          .append(COMMA_JOINER.join(taxonKeys))
+          .append(')');
       first = false;
     }
     builder.append(')');
@@ -777,16 +781,13 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(term));
-      builder.append(IN_OPERATOR);
-      builder.append('(');
+      builder.append(SQLColumnsUtils.getSQLQueryColumn(term)).append(IN_OPERATOR).append('(');
       Iterator<String> iterator = gadmGids.iterator();
       while (iterator.hasNext()) {
         // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
         // Using .toUpperCase() is safe, GIDs must be ASCII anyway.
         builder.append(
-            toSQLValue(
-                OccurrenceSearchParameter.GADM_LEVEL_0_GID, iterator.next().toUpperCase(), true));
+            toSQLValue(sqlTermsMapper.getDefaultGadmLevel(), iterator.next().toUpperCase(), true));
         if (iterator.hasNext()) {
           builder.append(", ");
         }
@@ -801,23 +802,23 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * Converts decimal range into a predicate with the form: field >= range.lower AND field <=
    * range.upper.
    */
-  private static Predicate toNumberRangePredicate(Range<Double> range, SearchParameter key) {
+  private Predicate toNumberRangePredicate(Range<Double> range, S key) {
     if (!range.hasLowerBound()) {
-      return new LessThanOrEqualsPredicate(
+      return new LessThanOrEqualsPredicate<S>(
           key, String.valueOf(range.upperEndpoint().doubleValue()));
     }
     if (!range.hasUpperBound()) {
-      return new GreaterThanOrEqualsPredicate(
+      return new GreaterThanOrEqualsPredicate<S>(
           key, String.valueOf(range.lowerEndpoint().doubleValue()));
     }
 
     ImmutableList<Predicate> predicates =
         new ImmutableList.Builder<Predicate>()
             .add(
-                new GreaterThanOrEqualsPredicate(
+                new GreaterThanOrEqualsPredicate<S>(
                     key, String.valueOf(range.lowerEndpoint().doubleValue())))
             .add(
-                new LessThanOrEqualsPredicate(
+                new LessThanOrEqualsPredicate<S>(
                     key, String.valueOf(range.upperEndpoint().doubleValue())))
             .build();
     return new ConjunctionPredicate(predicates);
@@ -827,22 +828,23 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
    * Converts integer range into a predicate with the form: field >= range.lower AND field <=
    * range.upper.
    */
-  private static Predicate toIntegerRangePredicate(Range<Integer> range, SearchParameter key) {
+  private Predicate toIntegerRangePredicate(Range<Integer> range, S key) {
     if (!range.hasLowerBound()) {
-      return new LessThanOrEqualsPredicate(key, String.valueOf(range.upperEndpoint().intValue()));
+      return new LessThanOrEqualsPredicate<S>(
+          key, String.valueOf(range.upperEndpoint().intValue()));
     }
     if (!range.hasUpperBound()) {
-      return new GreaterThanOrEqualsPredicate(
+      return new GreaterThanOrEqualsPredicate<S>(
           key, String.valueOf(range.lowerEndpoint().intValue()));
     }
 
     ImmutableList<Predicate> predicates =
         new ImmutableList.Builder<Predicate>()
             .add(
-                new GreaterThanOrEqualsPredicate(
+                new GreaterThanOrEqualsPredicate<S>(
                     key, String.valueOf(range.lowerEndpoint().intValue())))
             .add(
-                new LessThanOrEqualsPredicate(
+                new LessThanOrEqualsPredicate<S>(
                     key, String.valueOf(range.upperEndpoint().intValue())))
             .build();
     return new ConjunctionPredicate(predicates);
@@ -853,19 +855,19 @@ public abstract class SQLQueryVisitor implements QueryVisitor {
     try {
       method = getClass().getMethod("visit", new Class[] {object.getClass()});
     } catch (NoSuchMethodException e) {
-      LOG.warn(
+      log.warn(
           "Visit method could not be found. That means a unknown Predicate has been passed", e);
       throw new IllegalArgumentException("Unknown Predicate", e);
     }
     try {
       method.invoke(this, object);
     } catch (IllegalAccessException e) {
-      LOG.error(
+      log.error(
           "This error shouldn't occur if all visit methods are public. Probably a programming error",
           e);
       Throwables.propagate(e);
     } catch (InvocationTargetException e) {
-      LOG.info("Exception thrown while building the query", e);
+      log.info("Exception thrown while building the query", e);
       throw new QueryBuildingException(e);
     }
   }

@@ -21,11 +21,11 @@ import java.util.Objects;
 import org.gbif.api.model.common.search.SearchParameter;
 
 /** This predicate checks if its {@code key} is greater than or equal its {@code value}. */
-public class GreaterThanOrEqualsPredicate extends SimplePredicate {
+public class GreaterThanOrEqualsPredicate<S extends SearchParameter> extends SimplePredicate<S> {
 
   @JsonCreator
   public GreaterThanOrEqualsPredicate(
-      @JsonProperty("key") SearchParameter key, @JsonProperty("value") String value) {
+      @JsonProperty("key") S key, @JsonProperty("value") String value) {
     super(true, key, value, null);
   }
 
@@ -39,7 +39,7 @@ public class GreaterThanOrEqualsPredicate extends SimplePredicate {
       return false;
     }
 
-    SimplePredicate that = (SimplePredicate) obj;
+    SimplePredicate<S> that = (SimplePredicate<S>) obj;
     return Objects.equals(this.getKey(), that.getKey())
         && Objects.equals(this.getValue(), that.getValue());
   }

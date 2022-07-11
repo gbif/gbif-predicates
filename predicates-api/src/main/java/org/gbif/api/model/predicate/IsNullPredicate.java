@@ -23,18 +23,18 @@ import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 
-public class IsNullPredicate implements Predicate {
+public class IsNullPredicate<S extends SearchParameter> implements Predicate {
 
-  @NotNull private final SearchParameter parameter;
+  @NotNull private final S parameter;
 
   @JsonCreator
-  public IsNullPredicate(@JsonProperty("parameter") SearchParameter parameter) {
+  public IsNullPredicate(@JsonProperty("parameter") S parameter) {
     Objects.requireNonNull(parameter, "<parameter> may not be null");
     this.parameter = parameter;
     checkPredicateAllowed();
   }
 
-  public SearchParameter getParameter() {
+  public S getParameter() {
     return parameter;
   }
 
@@ -54,7 +54,7 @@ public class IsNullPredicate implements Predicate {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    IsNullPredicate that = (IsNullPredicate) o;
+    IsNullPredicate<S> that = (IsNullPredicate<S>) o;
     return parameter == that.parameter;
   }
 

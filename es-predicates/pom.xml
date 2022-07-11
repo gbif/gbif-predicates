@@ -1,18 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>predicates-parent</artifactId>
-        <groupId>org.gbif.predicates</groupId>
-        <version>0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>predicates-parent</artifactId>
+    <groupId>org.gbif.predicates</groupId>
+    <version>0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-    <modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>es-predicates</artifactId>
-    <packaging>jar</packaging>
+  <artifactId>es-predicates</artifactId>
+  <packaging>jar</packaging>
 
-    <name>Predicates :: Elastic</name>
-    <description>Elastic search support for the predicate API</description>
+  <name>Predicates :: Elasticsearch support</name>
+  <description>Elasticsearch support for the predicate API</description>
+
+  <properties>
+    <predicates-api.version>0.1-SNAPSHOT</predicates-api.version>
+    <dwc-api.version>1.36</dwc-api.version>
+    <dwca-io.version>2.12</dwca-io.version>
+    <guava.version>18.0</guava.version>
+    <occurrence.version>0.186-SNAPSHOT</occurrence.version>
+
+    <!-- Tools-->
+    <lombok.version>1.18.20</lombok.version>
+    <elasticsearch.version>7.6.2</elasticsearch.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.predicates</groupId>
+      <artifactId>predicates-api</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>dwc-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>occurrence-search</artifactId>
+      <version>${occurrence.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId> org.elasticsearch</groupId>
+      <artifactId>elasticsearch</artifactId>
+      <version>${elasticsearch.version}</version>
+    </dependency>
+
+    <!-- Logging dependencies -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 </project>

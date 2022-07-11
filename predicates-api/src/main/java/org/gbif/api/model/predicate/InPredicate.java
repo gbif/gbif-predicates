@@ -33,9 +33,9 @@ import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.util.SearchTypeValidator;
 
 /** This predicate checks if its {@code key} contains any of its {@code values}. */
-public class InPredicate implements Predicate {
+public class InPredicate<S extends SearchParameter> implements Predicate {
 
-  @NotNull private final SearchParameter key;
+  @NotNull private final S key;
 
   @NotNull
   @Size(min = 1)
@@ -46,7 +46,7 @@ public class InPredicate implements Predicate {
 
   @JsonCreator
   public InPredicate(
-      @JsonProperty("key") SearchParameter key,
+      @JsonProperty("key") S key,
       @JsonProperty("values") Collection<String> values,
       @JsonProperty(value = "matchCase", defaultValue = "false") Boolean matchCase) {
     this.matchCase = matchCase;
@@ -62,7 +62,7 @@ public class InPredicate implements Predicate {
     this.values = Collections.unmodifiableList(new ArrayList<>(values));
   }
 
-  public SearchParameter getKey() {
+  public S getKey() {
     return key;
   }
 
@@ -93,7 +93,7 @@ public class InPredicate implements Predicate {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    InPredicate that = (InPredicate) o;
+    InPredicate<S> that = (InPredicate<S>) o;
     return key == that.key && Objects.equals(values, that.values) && matchCase == that.matchCase;
   }
 

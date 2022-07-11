@@ -27,16 +27,15 @@ import org.gbif.api.annotation.Experimental;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.util.SearchTypeValidator;
 
-public class SimplePredicate implements Predicate {
+public class SimplePredicate<S extends SearchParameter> implements Predicate {
 
-  @NotNull private final SearchParameter key;
+  @NotNull private final S key;
 
   @NotNull private final String value;
 
   @Nullable private final Boolean matchCase;
 
-  protected SimplePredicate(
-      boolean checkForNonEquals, SearchParameter key, String value, Boolean matchCase) {
+  protected SimplePredicate(boolean checkForNonEquals, S key, String value, Boolean matchCase) {
     this.matchCase = matchCase;
     Objects.requireNonNull(key, "<key> may not be null");
     Objects.requireNonNull(value, "<value> may not be null");
@@ -53,7 +52,7 @@ public class SimplePredicate implements Predicate {
     }
   }
 
-  public SearchParameter getKey() {
+  public S getKey() {
     return key;
   }
 
@@ -102,7 +101,7 @@ public class SimplePredicate implements Predicate {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SimplePredicate that = (SimplePredicate) o;
+    SimplePredicate<S> that = (SimplePredicate<S>) o;
     return key == that.key && Objects.equals(value, that.value) && matchCase == that.matchCase;
   }
 
