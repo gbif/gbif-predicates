@@ -49,7 +49,7 @@
 
     <dependency>
       <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-search</artifactId>
+      <artifactId>occurrence-es-mapping</artifactId>
       <version>${occurrence.version}</version>
     </dependency>
 

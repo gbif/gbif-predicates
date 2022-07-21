@@ -36,7 +36,6 @@ import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryBuildingException;
-import org.gbif.occurrence.search.es.EsQueryUtils;
 import org.gbif.predicate.query.occurrence.OccurrenceEsFieldMapper;
 import org.junit.jupiter.api.Test;
 
@@ -1469,8 +1468,9 @@ public class EsQueryVisitorTest {
     Arrays.stream(OccurrenceSearchParameter.values())
         .filter(
             p ->
-                Optional.ofNullable(EsQueryUtils.SEARCH_TO_ES_MAPPING.get(p))
-                    .map(EsQueryUtils::isVocabulary)
+                Optional.ofNullable(
+                        org.gbif.occurrence.search.es.EsFieldMapper.SEARCH_TO_ES_MAPPING.get(p))
+                    .map(org.gbif.occurrence.search.es.EsFieldMapper::isVocabulary)
                     .orElse(false))
         .forEach(
             param -> {

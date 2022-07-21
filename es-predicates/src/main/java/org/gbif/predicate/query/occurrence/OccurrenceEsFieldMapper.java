@@ -1,7 +1,8 @@
 package org.gbif.predicate.query.occurrence;
 
+import static org.gbif.occurrence.search.es.EsFieldMapper.SEARCH_TO_ES_MAPPING;
+
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.occurrence.search.es.EsQueryUtils;
 import org.gbif.occurrence.search.es.OccurrenceEsField;
 import org.gbif.predicate.query.EsFieldMapper;
 
@@ -9,12 +10,12 @@ public class OccurrenceEsFieldMapper implements EsFieldMapper<OccurrenceSearchPa
 
   @Override
   public String getVerbatimFieldName(OccurrenceSearchParameter searchParameter) {
-    return EsQueryUtils.SEARCH_TO_ES_MAPPING.get(searchParameter).getVerbatimFieldName();
+    return SEARCH_TO_ES_MAPPING.get(searchParameter).getVerbatimFieldName();
   }
 
   @Override
   public String getExactMatchFieldName(OccurrenceSearchParameter searchParameter) {
-    return EsQueryUtils.SEARCH_TO_ES_MAPPING.get(searchParameter).getExactMatchFieldName();
+    return SEARCH_TO_ES_MAPPING.get(searchParameter).getExactMatchFieldName();
   }
 
   @Override
