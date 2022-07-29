@@ -370,6 +370,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
+  public void visit(RangePredicate<S> predicate) throws QueryBuildingException {
+    visitSimplePredicate(
+        new LessThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getGte()),
+        GREATER_THAN_EQUALS_OPERATOR);
+    builder.append(CONJUNCTION_OPERATOR);
+    visitSimplePredicate(
+        new GreaterThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getLte()),
+        LESS_THAN_EQUALS_OPERATOR);
+  }
+
   public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
