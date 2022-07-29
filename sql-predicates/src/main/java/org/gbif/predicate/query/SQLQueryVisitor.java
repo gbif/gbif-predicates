@@ -709,7 +709,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Determines if the parameter type is a Hive array. */
-  private boolean isSQLArray(S parameter) {
+  protected boolean isSQLArray(S parameter) {
     return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
