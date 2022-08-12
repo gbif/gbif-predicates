@@ -3,6 +3,7 @@ package org.gbif.predicate.query;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.Arrays;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -20,9 +21,6 @@ import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryBuildingException;
-
-import java.util.Arrays;
-
 import org.junit.jupiter.api.Test;
 
 public class EsQueryVisitorTest {
@@ -691,8 +689,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testInPredicate() throws QueryBuildingException {
-    Predicate p =
-        new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
+    Predicate p = new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -719,8 +716,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testComplexInPredicate() throws QueryBuildingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
-    Predicate p2 =
-        new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
+    Predicate p2 = new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
     Predicate p3 = new EqualsPredicate<>(PARAM2, "value_2", false);
     Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));
     String query = visitor.buildQuery(p);
