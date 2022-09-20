@@ -62,7 +62,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String SQL_ARRAY_PRE = "ARRAY";
 
   private static final Function<Term, String> ARRAY_FN =
-      t -> "array_contains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+      t -> "array_contains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s')";
 
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
@@ -263,19 +263,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .ifPresent(
               mediaType ->
                   builder.append(
-                      String.format(
-                          getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
+                      String.format(getArrayFn().apply(GbifTerm.mediaType), mediaType.name())));
     } else if (TYPE_STATUS.equals(predicate.getKey().name())) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), TypeStatus.class))
           .ifPresent(
               typeStatus ->
                   builder.append(
-                      String.format(
-                          getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(), true)));
+                      String.format(getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name())));
     } else if (ISSUE.equals(predicate.getKey().name())) {
       builder.append(
-          String.format(
-              getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
+          String.format(getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase()));
     } else if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
           String.format(
@@ -298,7 +295,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       builder.append(
-          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), true));
+          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue()));
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Dates may contain a range even for an EqualsPredicate (e.g. "2000" or "2000-02")
       // The user's query value is inclusive, but the parsed dateRange is exclusive of the

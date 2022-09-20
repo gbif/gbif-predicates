@@ -172,8 +172,7 @@ public class HiveQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(array_contains(mediatype,'StillImage',true) OR array_contains(mediatype,'Sound',true))",
-        query);
+        "(array_contains(mediatype,'StillImage') OR array_contains(mediatype,'Sound'))", query);
   }
 
   @Test
@@ -283,8 +282,7 @@ public class HiveQueryVisitorTest {
             OccurrenceSearchParameter.MEDIA_TYPE, Lists.newArrayList("StillImage", "Sound"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(array_contains(mediatype,'StillImage',true) OR array_contains(mediatype,'Sound',true))",
-        query);
+        "(array_contains(mediatype,'StillImage') OR array_contains(mediatype,'Sound'))", query);
   }
 
   @Test
@@ -660,7 +658,7 @@ public class HiveQueryVisitorTest {
         visitor.buildQuery(
             new EqualsPredicate<>(
                 OccurrenceSearchParameter.ISSUE, "TAXON_MATCH_HIGHERRANK", false));
-    assertEquals("array_contains(issue,'TAXON_MATCH_HIGHERRANK',true)", query);
+    assertEquals("array_contains(issue,'TAXON_MATCH_HIGHERRANK')", query);
 
     // InPredicate
     query =
@@ -670,7 +668,7 @@ public class HiveQueryVisitorTest {
                 Lists.newArrayList("TAXON_MATCH_HIGHERRANK", "TAXON_MATCH_NONE"),
                 false));
     assertEquals(
-        "(array_contains(issue,'TAXON_MATCH_HIGHERRANK',true) OR array_contains(issue,'TAXON_MATCH_NONE',true))",
+        "(array_contains(issue,'TAXON_MATCH_HIGHERRANK') OR array_contains(issue,'TAXON_MATCH_NONE'))",
         query);
 
     // LikePredicate
@@ -686,7 +684,7 @@ public class HiveQueryVisitorTest {
             new NotPredicate(
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.ISSUE, "TAXON_MATCH_HIGHERRANK", false)));
-    assertEquals("NOT array_contains(issue,'TAXON_MATCH_HIGHERRANK',true)", query);
+    assertEquals("NOT array_contains(issue,'TAXON_MATCH_HIGHERRANK')", query);
 
     // Not disjunction
     query =
@@ -703,7 +701,7 @@ public class HiveQueryVisitorTest {
                         new EqualsPredicate<>(
                             OccurrenceSearchParameter.ISSUE, "RECORDED_DATE_INVALID", false)))));
     assertEquals(
-        "NOT (array_contains(issue,'COORDINATE_INVALID',true) OR array_contains(issue,'COORDINATE_OUT_OF_RANGE',true) OR array_contains(issue,'ZERO_COORDINATE',true) OR array_contains(issue,'RECORDED_DATE_INVALID',true))",
+        "NOT (array_contains(issue,'COORDINATE_INVALID') OR array_contains(issue,'COORDINATE_OUT_OF_RANGE') OR array_contains(issue,'ZERO_COORDINATE') OR array_contains(issue,'RECORDED_DATE_INVALID'))",
         query);
 
     // IsNotNull
@@ -762,7 +760,7 @@ public class HiveQueryVisitorTest {
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
-                assertEquals("array_contains(" + hiveQueryField + ",'value_1',true)", query);
+                assertEquals("array_contains(" + hiveQueryField + ",'value_1')", query);
 
                 // InPredicate
                 query =
@@ -771,9 +769,9 @@ public class HiveQueryVisitorTest {
                 assertEquals(
                     "(array_contains("
                         + hiveQueryField
-                        + ",'value_1',true) OR array_contains("
+                        + ",'value_1') OR array_contains("
                         + hiveQueryField
-                        + ",'value_2',true))",
+                        + ",'value_2'))",
                     query);
 
                 // LikePredicate
@@ -784,7 +782,7 @@ public class HiveQueryVisitorTest {
                 query =
                     visitor.buildQuery(
                         new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
-                assertEquals("NOT array_contains(" + hiveQueryField + ",'value_1',true)", query);
+                assertEquals("NOT array_contains(" + hiveQueryField + ",'value_1')", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
