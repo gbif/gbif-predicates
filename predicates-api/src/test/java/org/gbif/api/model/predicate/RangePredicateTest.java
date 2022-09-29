@@ -15,10 +15,10 @@
  */
 package org.gbif.api.model.predicate;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RangePredicateTest {
 
@@ -28,7 +28,6 @@ public class RangePredicateTest {
         NullPointerException.class,
         () -> new RangePredicate<>(OccurrenceSearchParameter.YEAR, new RangeValue("a", null)));
   }
-
 
   @Test
   public void testValidConstructor() {

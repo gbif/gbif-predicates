@@ -17,10 +17,9 @@ package org.gbif.api.model.predicate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.search.SearchParameter;
-
-import java.util.Objects;
 
 /** This predicate checks if its {@code key} is within the range {@code value}. */
 public class RangePredicate<S extends SearchParameter> implements Predicate {
