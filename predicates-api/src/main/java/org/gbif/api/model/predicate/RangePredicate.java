@@ -20,7 +20,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.NotNull;
 import org.gbif.api.model.common.search.SearchParameter;
 
-/** This predicate checks if its {@code key} is less or equal than its {@code value}. */
+import java.util.Objects;
+
+/** This predicate checks if its {@code key} is within the range {@code value}. */
 public class RangePredicate<S extends SearchParameter> implements Predicate {
 
   @NotNull private final S key;
@@ -29,6 +31,10 @@ public class RangePredicate<S extends SearchParameter> implements Predicate {
 
   @JsonCreator
   public RangePredicate(@JsonProperty("key") S key, @JsonProperty("value") RangeValue value) {
+    Objects.requireNonNull(key, "<key> may not be null");
+    Objects.requireNonNull(value, "<value> may not be null");
+    Objects.requireNonNull(value.gte, "<value.gte> may not be null");
+    Objects.requireNonNull(value.lte, "<value.lte> may not be null");
     this.key = key;
     this.value = value;
   }
