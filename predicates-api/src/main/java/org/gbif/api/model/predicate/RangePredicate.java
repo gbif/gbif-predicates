@@ -32,8 +32,6 @@ public class RangePredicate<S extends SearchParameter> implements Predicate {
   public RangePredicate(@JsonProperty("key") S key, @JsonProperty("value") RangeValue value) {
     Objects.requireNonNull(key, "<key> may not be null");
     Objects.requireNonNull(value, "<value> may not be null");
-    Objects.requireNonNull(value.gte, "<value.gte> may not be null");
-    Objects.requireNonNull(value.lte, "<value.lte> may not be null");
     this.key = key;
     this.value = value;
   }

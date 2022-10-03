@@ -26,12 +26,15 @@ public class RangePredicateTest {
   public void testInvalidConstructor() {
     assertThrows(
         NullPointerException.class,
-        () -> new RangePredicate<>(OccurrenceSearchParameter.YEAR, new RangeValue("a", null)));
+        () ->
+            new RangePredicate<>(
+                OccurrenceSearchParameter.YEAR, new RangeValue("a", null, null, null)));
   }
 
   @Test
   public void testValidConstructor() {
-    new RangePredicate<>(OccurrenceSearchParameter.MONTH, new RangeValue("1", "12"));
-    new RangePredicate<>(OccurrenceSearchParameter.YEAR, new RangeValue("2000", "2012"));
+    new RangePredicate<>(OccurrenceSearchParameter.MONTH, new RangeValue("1", null, "12", null));
+    new RangePredicate<>(
+        OccurrenceSearchParameter.YEAR, new RangeValue("2000", null, "2012", null));
   }
 }

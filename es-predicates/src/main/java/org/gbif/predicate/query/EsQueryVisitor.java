@@ -17,12 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -42,22 +37,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.geo.DistanceUnit;
-import org.gbif.api.model.predicate.ConjunctionPredicate;
-import org.gbif.api.model.predicate.DisjunctionPredicate;
-import org.gbif.api.model.predicate.EqualsPredicate;
-import org.gbif.api.model.predicate.GeoDistancePredicate;
-import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.GreaterThanPredicate;
-import org.gbif.api.model.predicate.InPredicate;
-import org.gbif.api.model.predicate.IsNotNullPredicate;
-import org.gbif.api.model.predicate.IsNullPredicate;
-import org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.LessThanPredicate;
-import org.gbif.api.model.predicate.LikePredicate;
-import org.gbif.api.model.predicate.NotPredicate;
-import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.predicate.SimplePredicate;
-import org.gbif.api.model.predicate.WithinPredicate;
+import org.gbif.api.model.predicate.*;
 import org.gbif.api.query.QueryBuildingException;
 import org.gbif.api.query.QueryVisitor;
 import org.gbif.api.util.IsoDateParsingUtils;
@@ -289,6 +269,67 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
             QueryBuilders.termQuery(
                 getExactMatchOrVerbatimField(predicate),
                 parseParamValue(predicate.getValue(), parameter)));
+  }
+
+  public void visit(RangePredicate<S> predicate, BoolQueryBuilder queryBuilder)
+      throws QueryBuildingException {
+
+    RangeQueryBuilder rqb =
+        QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(predicate.getKey()));
+
+    if (Integer.class.isAssignableFrom(predicate.getKey().type())) {
+      if (predicate.getValue().getGte() != null) {
+        rqb.gte(parseInteger(predicate.getValue().getGte()));
+      }
+      if (predicate.getValue().getLte() != null) {
+        rqb.lte(parseInteger(predicate.getValue().getLte()));
+      }
+      if (predicate.getValue().getGt() != null) {
+        rqb.gt(parseInteger(predicate.getValue().getGt()));
+      }
+      if (predicate.getValue().getLt() != null) {
+        rqb.lt(parseInteger(predicate.getValue().getLt()));
+      }
+    } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {
+      if (predicate.getValue().getGte() != null) {
+        rqb.gte(parseDouble(predicate.getValue().getGte()));
+      }
+      if (predicate.getValue().getLte() != null) {
+        rqb.lte(parseDouble(predicate.getValue().getLte()));
+      }
+      if (predicate.getValue().getGt() != null) {
+        rqb.gt(parseDouble(predicate.getValue().getGt()));
+      }
+      if (predicate.getValue().getLt() != null) {
+        rqb.lt(parseDouble(predicate.getValue().getLt()));
+      }
+    }
+    //    if (Date.class.isAssignableFrom(predicate.getKey().type())) {
+    //      if (SearchTypeValidator.isRange(predicate.getValue())) {
+    //        // The date range is closed-open, so we need lower ≤ date < upper.
+    //        Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+    //        RangeQueryBuilder rqb =
+    //                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
+    //        if (dateRange.hasLowerBound()) {
+    //          rqb.gte(dateRange.lowerEndpoint());
+    //        }
+    //        if (dateRange.hasUpperBound()) {
+    //          rqb.lt(dateRange.upperEndpoint());
+    //        }
+    //        queryBuilder.filter().add(rqb);
+    //        return;
+    //      }
+    //    }
+
+    queryBuilder.filter().add(rqb);
+  }
+
+  private static Integer parseInteger(String d) {
+    return "*".equals(d) ? null : Integer.parseInt(d);
+  }
+
+  private static Double parseDouble(String d) {
+    return "*".equals(d) ? null : Double.parseDouble(d);
   }
 
   /**

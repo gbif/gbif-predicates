@@ -20,21 +20,7 @@ import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.Optional;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.predicate.ConjunctionPredicate;
-import org.gbif.api.model.predicate.DisjunctionPredicate;
-import org.gbif.api.model.predicate.EqualsPredicate;
-import org.gbif.api.model.predicate.GeoDistancePredicate;
-import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.GreaterThanPredicate;
-import org.gbif.api.model.predicate.InPredicate;
-import org.gbif.api.model.predicate.IsNotNullPredicate;
-import org.gbif.api.model.predicate.IsNullPredicate;
-import org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.LessThanPredicate;
-import org.gbif.api.model.predicate.LikePredicate;
-import org.gbif.api.model.predicate.NotPredicate;
-import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.predicate.WithinPredicate;
+import org.gbif.api.model.predicate.*;
 import org.gbif.api.query.QueryBuildingException;
 import org.gbif.occurrence.search.es.EsQueryUtils;
 import org.gbif.predicate.query.occurrence.OccurrenceEsFieldMapper;
@@ -1502,5 +1488,121 @@ public class EsQueryVisitorTest {
                 throw new RuntimeException(ex);
               }
             });
+  }
+
+  @Test
+  public void testIntInclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue("1990", null, "2011", null);
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"year\" : {\n"
+            + "            \"from\" : 1990,\n"
+            + "            \"to\" : 2011,\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : true,\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testIntExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"year\" : {\n"
+            + "            \"from\" : 1990,\n"
+            + "            \"to\" : 2011,\n"
+            + "            \"include_lower\" : false,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testInclusiveExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue("1990", null, null, "2011");
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"year\" : {\n"
+            + "            \"from\" : 1990,\n"
+            + "            \"to\" : 2011,\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testExclusiveInclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"year\" : {\n"
+            + "            \"from\" : 1990,\n"
+            + "            \"to\" : 2011,\n"
+            + "            \"include_lower\" : false,\n"
+            + "            \"include_upper\" : true,\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
   }
 }

@@ -51,7 +51,7 @@ import org.gbif.occurrence.common.TermUtils;
 import org.gbif.predicate.query.occurrence.OccurrenceTermsMapper;
 import org.junit.jupiter.api.Test;
 
-public class HiveQueryVisitorTest {
+public class SQLQueryVisitorTest {
 
   private static final OccurrenceSearchParameter PARAM = OccurrenceSearchParameter.CATALOG_NUMBER;
   private static final OccurrenceSearchParameter PARAM2 =
@@ -624,15 +624,54 @@ public class HiveQueryVisitorTest {
   }
 
   @Test
-  public void testIntRangeWithRangePredicate() throws QueryBuildingException {
+  public void testIntInclusiveRangeWithRangePredicate() throws QueryBuildingException {
 
-    RangeValue rangeValue = new RangeValue("1990", "2011");
+    RangeValue rangeValue = new RangeValue("1990", null, "2011", null);
     Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     assertEquals(
         String.format(
             "((year >= %1$s) AND (year <= %2$s))",
             Integer.parseInt(rangeValue.getGte()), Integer.parseInt(rangeValue.getLte())),
+        query);
+  }
+
+  @Test
+  public void testIntExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((year > %1$s) AND (year < %2$s))",
+            Integer.parseInt(rangeValue.getGt()), Integer.parseInt(rangeValue.getLt())),
+        query);
+  }
+
+  @Test
+  public void testInclusiveExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue("1990", null, null, "2011");
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((year >= %1$s) AND (year < %2$s))",
+            Integer.parseInt(rangeValue.getGte()), Integer.parseInt(rangeValue.getLt())),
+        query);
+  }
+
+  @Test
+  public void testExclusiveInclusiveRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((year > %1$s) AND (year <= %2$s))",
+            Integer.parseInt(rangeValue.getGt()), Integer.parseInt(rangeValue.getLte())),
         query);
   }
 
