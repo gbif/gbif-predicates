@@ -56,6 +56,7 @@ import org.gbif.api.model.predicate.LessThanPredicate;
 import org.gbif.api.model.predicate.LikePredicate;
 import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
+import org.gbif.api.model.predicate.RangePredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryBuildingException;
@@ -289,6 +290,50 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
             QueryBuilders.termQuery(
                 getExactMatchOrVerbatimField(predicate),
                 parseParamValue(predicate.getValue(), parameter)));
+  }
+
+  private Function<String, Object> parseDate =
+      d -> "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);
+
+  private Function<String, Object> parseInteger = d -> "*".equals(d) ? null : Integer.parseInt(d);
+
+  private Function<String, Object> parseDouble = d -> "*".equals(d) ? null : Double.parseDouble(d);
+
+  public void visit(RangePredicate<S> predicate, BoolQueryBuilder queryBuilder)
+      throws QueryBuildingException {
+
+    RangeQueryBuilder rqb =
+        QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(predicate.getKey()));
+
+    if (Integer.class.isAssignableFrom(predicate.getKey().type())) {
+      initialiseRangeQuery(predicate, rqb, parseInteger);
+    } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {
+      initialiseRangeQuery(predicate, rqb, parseDouble);
+    } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
+      initialiseRangeQuery(predicate, rqb, parseDate);
+    }
+
+    queryBuilder.filter().add(rqb);
+  }
+
+  private void initialiseRangeQuery(
+      RangePredicate<S> predicate, RangeQueryBuilder rqb, Function<String, Object> initialiser) {
+    if (predicate.getValue().getGte() != null) {
+      rqb.gte(initialiser.apply(predicate.getValue().getGte()));
+    }
+    if (predicate.getValue().getLte() != null) {
+      rqb.lte(initialiser.apply(predicate.getValue().getLte()));
+    }
+    if (predicate.getValue().getGt() != null) {
+      rqb.gt(initialiser.apply(predicate.getValue().getGt()));
+    }
+    if (predicate.getValue().getLt() != null) {
+      rqb.lt(initialiser.apply(predicate.getValue().getLt()));
+    }
+  }
+
+  private static LocalDate parseDate(String d) {
+    return "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);
   }
 
   /**

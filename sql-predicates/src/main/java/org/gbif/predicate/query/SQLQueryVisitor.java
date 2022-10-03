@@ -370,6 +370,35 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
+  public void visit(RangePredicate<S> predicate) throws QueryBuildingException {
+    builder.append("((");
+
+    if (!Objects.isNull(predicate.getValue().getGte())) {
+      visitSimplePredicate(
+          new LessThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getGte()),
+          GREATER_THAN_EQUALS_OPERATOR);
+    } else {
+      visitSimplePredicate(
+          new LessThanPredicate<>(predicate.getKey(), predicate.getValue().getGt()),
+          GREATER_THAN_OPERATOR);
+    }
+
+    builder.append(")");
+    builder.append(CONJUNCTION_OPERATOR);
+    builder.append("(");
+
+    if (!Objects.isNull(predicate.getValue().getLte())) {
+      visitSimplePredicate(
+          new GreaterThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getLte()),
+          LESS_THAN_EQUALS_OPERATOR);
+    } else {
+      visitSimplePredicate(
+          new GreaterThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getLt()),
+          LESS_THAN_OPERATOR);
+    }
+    builder.append("))");
+  }
+
   public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
     if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
@@ -699,7 +728,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Determines if the parameter type is a Hive array. */
-  private boolean isSQLArray(S parameter) {
+  protected boolean isSQLArray(S parameter) {
     return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 

@@ -27,6 +27,7 @@ import java.io.Serializable;
   @JsonSubTypes.Type(value = LessThanOrEqualsPredicate.class, name = "lessThanOrEquals"),
   @JsonSubTypes.Type(value = GreaterThanPredicate.class, name = "greaterThan"),
   @JsonSubTypes.Type(value = GreaterThanOrEqualsPredicate.class, name = "greaterThanOrEquals"),
+  @JsonSubTypes.Type(value = RangePredicate.class, name = "range"),
   @JsonSubTypes.Type(value = InPredicate.class, name = "in"),
   @JsonSubTypes.Type(value = WithinPredicate.class, name = "within"),
   @JsonSubTypes.Type(value = GeoDistancePredicate.class, name = "geoDistance"),
