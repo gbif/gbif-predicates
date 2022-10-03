@@ -38,6 +38,8 @@ import org.gbif.api.model.predicate.LessThanPredicate;
 import org.gbif.api.model.predicate.LikePredicate;
 import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
+import org.gbif.api.model.predicate.RangePredicate;
+import org.gbif.api.model.predicate.RangeValue;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryBuildingException;
 import org.gbif.api.util.Range;
@@ -597,6 +599,41 @@ public class HiveQueryVisitorTest {
               range.lowerEndpoint().toEpochMilli(), range.upperEndpoint().toEpochMilli()),
           query);
     }
+  }
+
+  @Test
+  public void testIntRanges() throws QueryBuildingException {
+
+    String value = "1990,2011";
+    Range<Integer> range = SearchTypeValidator.parseIntegerRange(value);
+
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, value, false);
+    String query = visitor.buildQuery(p);
+
+    if (!range.hasUpperBound()) {
+      assertEquals(String.format("year >= %s", range.lowerEndpoint().intValue()), query);
+    } else if (!range.hasLowerBound()) {
+      assertEquals(String.format("year <= %s", range.upperEndpoint().intValue()), query);
+    } else {
+      assertEquals(
+          String.format(
+              "((year >= %s) AND (year <= %s))",
+              range.lowerEndpoint().intValue(), range.upperEndpoint().intValue()),
+          query);
+    }
+  }
+
+  @Test
+  public void testIntRangeWithRangePredicate() throws QueryBuildingException {
+
+    RangeValue rangeValue = new RangeValue("1990", "2011");
+    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((year >= %1$s) AND (year <= %2$s))",
+            Integer.parseInt(rangeValue.getGte()), Integer.parseInt(rangeValue.getLte())),
+        query);
   }
 
   @Test

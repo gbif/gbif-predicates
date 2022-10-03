@@ -371,13 +371,17 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(RangePredicate<S> predicate) throws QueryBuildingException {
+    builder.append("((");
     visitSimplePredicate(
         new LessThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getGte()),
         GREATER_THAN_EQUALS_OPERATOR);
+    builder.append(")");
     builder.append(CONJUNCTION_OPERATOR);
+    builder.append("(");
     visitSimplePredicate(
         new GreaterThanOrEqualsPredicate<>(predicate.getKey(), predicate.getValue().getLte()),
         LESS_THAN_EQUALS_OPERATOR);
+    builder.append("))");
   }
 
   public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
