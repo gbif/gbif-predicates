@@ -271,6 +271,13 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                 parseParamValue(predicate.getValue(), parameter)));
   }
 
+  private Function<String, Object> parseDate =
+      d -> "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);
+
+  private Function<String, Object> parseInteger = d -> "*".equals(d) ? null : Integer.parseInt(d);
+
+  private Function<String, Object> parseDouble = d -> "*".equals(d) ? null : Double.parseDouble(d);
+
   public void visit(RangePredicate<S> predicate, BoolQueryBuilder queryBuilder)
       throws QueryBuildingException {
 
@@ -278,58 +285,34 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(predicate.getKey()));
 
     if (Integer.class.isAssignableFrom(predicate.getKey().type())) {
-      if (predicate.getValue().getGte() != null) {
-        rqb.gte(parseInteger(predicate.getValue().getGte()));
-      }
-      if (predicate.getValue().getLte() != null) {
-        rqb.lte(parseInteger(predicate.getValue().getLte()));
-      }
-      if (predicate.getValue().getGt() != null) {
-        rqb.gt(parseInteger(predicate.getValue().getGt()));
-      }
-      if (predicate.getValue().getLt() != null) {
-        rqb.lt(parseInteger(predicate.getValue().getLt()));
-      }
+      initialiseRangeQuery(predicate, rqb, parseInteger);
     } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {
-      if (predicate.getValue().getGte() != null) {
-        rqb.gte(parseDouble(predicate.getValue().getGte()));
-      }
-      if (predicate.getValue().getLte() != null) {
-        rqb.lte(parseDouble(predicate.getValue().getLte()));
-      }
-      if (predicate.getValue().getGt() != null) {
-        rqb.gt(parseDouble(predicate.getValue().getGt()));
-      }
-      if (predicate.getValue().getLt() != null) {
-        rqb.lt(parseDouble(predicate.getValue().getLt()));
-      }
+      initialiseRangeQuery(predicate, rqb, parseDouble);
+    } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
+      initialiseRangeQuery(predicate, rqb, parseDate);
     }
-    //    if (Date.class.isAssignableFrom(predicate.getKey().type())) {
-    //      if (SearchTypeValidator.isRange(predicate.getValue())) {
-    //        // The date range is closed-open, so we need lower ≤ date < upper.
-    //        Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
-    //        RangeQueryBuilder rqb =
-    //                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
-    //        if (dateRange.hasLowerBound()) {
-    //          rqb.gte(dateRange.lowerEndpoint());
-    //        }
-    //        if (dateRange.hasUpperBound()) {
-    //          rqb.lt(dateRange.upperEndpoint());
-    //        }
-    //        queryBuilder.filter().add(rqb);
-    //        return;
-    //      }
-    //    }
 
     queryBuilder.filter().add(rqb);
   }
 
-  private static Integer parseInteger(String d) {
-    return "*".equals(d) ? null : Integer.parseInt(d);
+  private void initialiseRangeQuery(
+      RangePredicate<S> predicate, RangeQueryBuilder rqb, Function<String, Object> initialiser) {
+    if (predicate.getValue().getGte() != null) {
+      rqb.gte(initialiser.apply(predicate.getValue().getGte()));
+    }
+    if (predicate.getValue().getLte() != null) {
+      rqb.lte(initialiser.apply(predicate.getValue().getLte()));
+    }
+    if (predicate.getValue().getGt() != null) {
+      rqb.gt(initialiser.apply(predicate.getValue().getGt()));
+    }
+    if (predicate.getValue().getLt() != null) {
+      rqb.lt(initialiser.apply(predicate.getValue().getLt()));
+    }
   }
 
-  private static Double parseDouble(String d) {
-    return "*".equals(d) ? null : Double.parseDouble(d);
+  private static LocalDate parseDate(String d) {
+    return "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);
   }
 
   /**
