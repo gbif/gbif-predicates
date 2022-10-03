@@ -12,15 +12,14 @@ public class RangeValue {
       @Nullable @JsonProperty("gte") String gte,
       @Nullable @JsonProperty("gt") String gt,
       @Nullable @JsonProperty("lte") String lte,
-      @Nullable @JsonProperty("gt") String lt) {
+      @Nullable @JsonProperty("lt") String lt) {
 
     if (Objects.isNull(gte) && Objects.isNull(gt)) {
-      throw new NullPointerException("Specify gte or gt, not both");
+      throw new IllegalArgumentException("Specify gte or gt");
     }
     if (Objects.isNull(lte) && Objects.isNull(lt)) {
-      throw new NullPointerException("Specify lte or lt, not both");
+      throw new IllegalArgumentException("Specify lte or lt");
     }
-
     if (!Objects.isNull(gte) && !Objects.isNull(gt)) {
       throw new IllegalArgumentException("Specify gte or gt, not both");
     }

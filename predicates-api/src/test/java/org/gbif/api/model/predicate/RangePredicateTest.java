@@ -25,7 +25,7 @@ public class RangePredicateTest {
   @Test
   public void testInvalidConstructor() {
     assertThrows(
-        NullPointerException.class,
+        IllegalArgumentException.class,
         () ->
             new RangePredicate<>(
                 OccurrenceSearchParameter.YEAR, new RangeValue("a", null, null, null)));
