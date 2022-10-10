@@ -22,7 +22,6 @@
     <dwc-api.version>1.36</dwc-api.version>
     <dwca-io.version>2.12</dwca-io.version>
     <guava.version>18.0</guava.version>
-    <occurrence.version>0.187</occurrence.version>
 
     <!-- Tools-->
     <lombok.version>1.18.20</lombok.version>
@@ -45,12 +44,6 @@
           <artifactId>dwc-api</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.gbif.occurrence</groupId>
-      <artifactId>occurrence-search</artifactId>
-      <version>${occurrence.version}</version>
     </dependency>
 
     <dependency>

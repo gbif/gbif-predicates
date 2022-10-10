@@ -31,4 +31,12 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   public String getGeoShapeField() {
     return "scoordinates";
   }
+
+  @Override
+  public boolean isVocabulary(OccurrenceSearchParameter searchParameter) {
+    return OccurrenceSearchParameter.LIFE_STAGE == searchParameter
+        || OccurrenceSearchParameter.PATHWAY == searchParameter
+        || OccurrenceSearchParameter.DEGREE_OF_ESTABLISHMENT == searchParameter
+        || OccurrenceSearchParameter.ESTABLISHMENT_MEANS == searchParameter;
+  }
 }

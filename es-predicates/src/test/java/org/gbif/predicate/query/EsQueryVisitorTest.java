@@ -17,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Arrays;
-import java.util.Optional;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -37,7 +36,6 @@ import org.gbif.api.model.predicate.RangePredicate;
 import org.gbif.api.model.predicate.RangeValue;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryBuildingException;
-import org.gbif.occurrence.search.es.EsQueryUtils;
 import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */
@@ -1464,12 +1462,9 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testVocabularyEqualsPredicate() {
+
     Arrays.stream(OccurrenceSearchParameter.values())
-        .filter(
-            p ->
-                Optional.ofNullable(EsQueryUtils.SEARCH_TO_ES_MAPPING.get(p))
-                    .map(EsQueryUtils::isVocabulary)
-                    .orElse(false))
+        .filter(fieldMapper::isVocabulary)
         .forEach(
             param -> {
               try {

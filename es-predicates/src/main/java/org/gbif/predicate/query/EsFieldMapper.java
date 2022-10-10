@@ -11,4 +11,6 @@ public interface EsFieldMapper<S extends SearchParameter> {
   String getGeoDistanceField();
 
   String getGeoShapeField();
+
+  boolean isVocabulary(S searchParameter);
 }
