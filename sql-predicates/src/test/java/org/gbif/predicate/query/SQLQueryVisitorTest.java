@@ -484,10 +484,24 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testIsArrayNotNullPredicate() throws QueryBuildingException {
+    Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.IDENTIFIED_BY_ID);
+    String query = visitor.buildQuery(p);
+    assertEquals("(identifiedbyid IS NOT NULL AND size(identifiedbyid) > 0)", query);
+  }
+
+  @Test
   public void testIsNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
     assertEquals("catalognumber IS NULL ", query);
+  }
+
+  @Test
+  public void testIsArrayNullPredicate() throws QueryBuildingException {
+    Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.IDENTIFIED_BY_ID);
+    String query = visitor.buildQuery(p);
+    assertEquals("(identifiedbyid IS NULL OR size(identifiedbyid) = 0)", query);
   }
 
   @Test
@@ -871,7 +885,11 @@ public class SQLQueryVisitorTest {
 
                 // IsNull
                 query = visitor.buildQuery(new IsNullPredicate<>(param));
-                assertEquals(hiveQueryField + " IS NULL ", query);
+                if(visitor.isSQLArray(param)) {
+                  assertEquals( " (" + hiveQueryField + " IS NULL OR size("+ hiveQueryField + ") = 0) ", query);
+                } else {
+                  assertEquals(hiveQueryField + " IS NULL ", query);
+                }
 
               } catch (QueryBuildingException ex) {
                 throw new RuntimeException(ex);

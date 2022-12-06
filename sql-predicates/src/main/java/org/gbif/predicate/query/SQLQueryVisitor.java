@@ -55,6 +55,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String IS_NOT_NULL_OPERATOR = " IS NOT NULL ";
   private static final String IS_NULL_OPERATOR = " IS NULL ";
   private static final String IS_NOT_NULL_ARRAY_OPERATOR = "(%1$s IS NOT NULL AND size(%1$s) > 0)";
+  private static final String IS_NULL_ARRAY_OPERATOR = "(%1$s IS NULL OR size(%1$s) = 0)";
   private static final CharMatcher APOSTROPHE_MATCHER = CharMatcher.is('\'');
   // where query to execute a select all
   private static final String ALL_QUERY = "true";
@@ -529,8 +530,12 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
     } else {
       // matchCase: Avoid adding an unnecessary "lower()" when just testing for null.
-      builder.append(toSQLField(predicate.getParameter(), true));
-      builder.append(IS_NULL_OPERATOR);
+      if (isSQLArray(predicate.getParameter())) {
+        builder.append(String.format(IS_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
+      } else {
+        builder.append(toSQLField(predicate.getParameter(), true));
+        builder.append(IS_NULL_OPERATOR);
+      }
     }
   }
 
