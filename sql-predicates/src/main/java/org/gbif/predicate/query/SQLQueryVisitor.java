@@ -531,7 +531,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else {
       // matchCase: Avoid adding an unnecessary "lower()" when just testing for null.
       if (isSQLArray(predicate.getParameter())) {
-        builder.append(String.format(IS_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
+        builder.append(
+            String.format(IS_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
       } else {
         builder.append(toSQLField(predicate.getParameter(), true));
         builder.append(IS_NULL_OPERATOR);

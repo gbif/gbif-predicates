@@ -21,7 +21,7 @@
         <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
         <jts.version>1.16.1</jts.version>
         <spatial4j.version>0.7</spatial4j.version>
-        <gbif-api.version>0.172-SNAPSHOT</gbif-api.version>
+        <gbif-api.version>1.0.0-SNAPSHOT</gbif-api.version>
     </properties>
 
     <dependencies>
