@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.Map;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
+import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.dwc.terms.GadmTerm;
@@ -108,6 +110,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
           .put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName)
           .put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers)
           .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)
+          .put(
+              OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,
+              GbifTerm.distanceFromCentroidInMeters)
           .build();
 
   private static final Map<OccurrenceSearchParameter, Term> ARRAY_STRING_TERMS =
@@ -154,5 +159,11 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
   @Override
   public OccurrenceSearchParameter getDefaultGadmLevel() {
     return OccurrenceSearchParameter.GADM_LEVEL_0_GID;
+  }
+
+  @Override
+  public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
+    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
+        && predicate instanceof GreaterThanOrEqualsPredicate;
   }
 }

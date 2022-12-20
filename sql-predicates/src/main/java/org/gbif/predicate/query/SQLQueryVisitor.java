@@ -720,17 +720,49 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         return;
       }
     }
-    builder
-        .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
-        .append(op)
-        .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
+
+    if (sqlTermsMapper.includeNullInPredicate(predicate)) {
+      String column = SQLColumnsUtils.getSQLColumn(term(predicate.getKey()));
+      builder
+          .append('(')
+          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+          .append(op)
+          .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()))
+          .append(DISJUNCTION_OPERATOR)
+          .append(
+              isSQLArray(predicate.getKey())
+                  ? String.format(IS_NOT_NULL_ARRAY_OPERATOR, column)
+                  : column + IS_NULL_OPERATOR)
+          .append(')');
+    } else {
+      builder
+          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+          .append(op)
+          .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
+    }
   }
 
-  public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value) {
-    builder
-        .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
-        .append(op)
-        .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
+  public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value)
+      throws QueryBuildingException {
+    if (sqlTermsMapper.includeNullInPredicate(predicate)) {
+      String column = SQLColumnsUtils.getSQLColumn(term(predicate.getKey()));
+      builder
+          .append('(')
+          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+          .append(op)
+          .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()))
+          .append(DISJUNCTION_OPERATOR)
+          .append(
+              isSQLArray(predicate.getKey())
+                  ? String.format(IS_NOT_NULL_ARRAY_OPERATOR, column)
+                  : column + IS_NULL_OPERATOR)
+          .append(')');
+    } else {
+      builder
+          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
+          .append(op)
+          .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
+    }
   }
 
   /** Determines if the parameter type is a Hive array. */
@@ -847,16 +879,15 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           key, String.valueOf(range.lowerEndpoint().doubleValue()));
     }
 
-    ImmutableList<Predicate> predicates =
+    ImmutableList.Builder<Predicate> predicates =
         new ImmutableList.Builder<Predicate>()
             .add(
                 new GreaterThanOrEqualsPredicate<S>(
                     key, String.valueOf(range.lowerEndpoint().doubleValue())))
             .add(
                 new LessThanOrEqualsPredicate<S>(
-                    key, String.valueOf(range.upperEndpoint().doubleValue())))
-            .build();
-    return new ConjunctionPredicate(predicates);
+                    key, String.valueOf(range.upperEndpoint().doubleValue())));
+    return new ConjunctionPredicate(predicates.build());
   }
 
   /**

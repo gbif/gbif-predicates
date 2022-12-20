@@ -15,6 +15,7 @@ package org.gbif.predicate.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -1611,5 +1612,54 @@ public class EsQueryVisitorTest {
             + "  }\n"
             + "}";
     assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testGreaterThanEqualsIncludingNull() {
+    GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
+        new GreaterThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
+    try {
+      String query = visitor.buildQuery(distanceFromCentroidPredicate);
+      assertEquals(
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"range\" : {\n"
+              + "          \"distance_from_centroid_in_meters\" : {\n"
+              + "            \"from\" : \"10\",\n"
+              + "            \"to\" : null,\n"
+              + "            \"include_lower\" : true,\n"
+              + "            \"include_upper\" : true,\n"
+              + "            \"boost\" : 1.0\n"
+              + "          }\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"should\" : [\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"must_not\" : [\n"
+              + "            {\n"
+              + "              \"exists\" : {\n"
+              + "                \"field\" : \"distance_from_centroid_in_meters\",\n"
+              + "                \"boost\" : 1.0\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
   }
 }

@@ -898,4 +898,18 @@ public class SQLQueryVisitorTest {
               }
             });
   }
+
+  @Test
+  public void testGreaterThanEqualsIncludingNull() {
+    GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
+        new GreaterThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
+    try {
+      String query = visitor.buildQuery(distanceFromCentroidPredicate);
+      assertEquals(
+          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }

@@ -17,10 +17,10 @@
 
     <properties>
         <predicates-api.version>0.1-SNAPSHOT</predicates-api.version>
-        <dwc-api.version>1.36</dwc-api.version>
-        <dwca-io.version>2.12</dwca-io.version>
+        <dwc-api.version>1.43-SNAPSHOT</dwc-api.version>
+        <dwca-io.version>2.16</dwca-io.version>
         <guava.version>18.0</guava.version>
-        <occurrence-common.version>0.186-SNAPSHOT</occurrence-common.version>
+        <occurrence-common.version>0.188-SNAPSHOT</occurrence-common.version>
 
         <!-- Tools-->
         <lombok.version>1.18.20</lombok.version>
