@@ -913,4 +913,23 @@ public class SQLQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testDisjunctionGreaterThanEqualsIncludingNull() {
+    GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
+        new GreaterThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false);
+    DisjunctionPredicate disjunctionPredicate =
+        new DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
+    try {
+      String query = visitor.buildQuery(disjunctionPredicate);
+      assertEquals(
+          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )))",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }

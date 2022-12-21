@@ -152,15 +152,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
               try {
                 BoolQueryBuilder mustQueryBuilder = QueryBuilders.boolQuery();
                 visit(subPredicate, mustQueryBuilder);
-                if (subPredicate instanceof SimplePredicate) {
-                  SimplePredicate<S> simplePredicate = (SimplePredicate<S>) subPredicate;
-                  if (esFieldMapper.includeNullInPredicate(simplePredicate)) {
-                    mustQueryBuilder.should(
-                        QueryBuilders.existsQuery(
-                            esFieldMapper.getExactMatchFieldName(simplePredicate.getKey())));
-                  }
-                }
-                queryBuilder.filter(mustQueryBuilder);
+                queryBuilder.filter(addNullableFieldPredicate(subPredicate, mustQueryBuilder));
               } catch (QueryBuildingException ex) {
                 throw new RuntimeException(ex);
               }
@@ -185,15 +177,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                 if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   visit(subPredicate, shouldQueryBuilder);
-                  if (subPredicate instanceof SimplePredicate) {
-                    SimplePredicate<S> simplePredicate = (SimplePredicate<S>) subPredicate;
-                    if (esFieldMapper.includeNullInPredicate(simplePredicate)) {
-                      shouldQueryBuilder.should(
-                          QueryBuilders.existsQuery(
-                              esFieldMapper.getExactMatchFieldName(simplePredicate.getKey())));
-                    }
-                  }
-                  queryBuilder.should(shouldQueryBuilder);
+                  queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
                 }
               } catch (QueryBuildingException ex) {
                 throw new RuntimeException(ex);
@@ -281,8 +265,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         if (dateRange.hasUpperBound()) {
           rqb.lt(dateRange.upperEndpoint());
         }
-        queryBuilder.filter().add(rqb);
-        addNullPredicate(predicate, queryBuilder);
+        queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
         return;
       }
     } else if (Number.class.isAssignableFrom(predicate.getKey().type())) {
@@ -296,8 +279,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         if (decimalRange.hasUpperBound()) {
           rqb.lte(decimalRange.upperEndpoint());
         }
-        queryBuilder.filter().add(rqb);
-        addNullPredicate(predicate, queryBuilder);
+        queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
         return;
       }
     }
@@ -365,23 +347,29 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     queryBuilder
         .filter()
         .add(
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .gte(parseParamValue(predicate.getValue(), parameter)));
-    addNullPredicate(predicate, queryBuilder);
+            addNullableFieldPredicate(
+                predicate,
+                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
+                    .gte(parseParamValue(predicate.getValue(), parameter))));
   }
 
   /**
    * Adds an "is null" filter if the mapper instructs to. Used mostly in range queries to give
    * specific semantics to null values.
    */
-  private void addNullPredicate(SimplePredicate<S> simplePredicate, BoolQueryBuilder queryBuilder) {
-    if (esFieldMapper.includeNullInPredicate(simplePredicate)) {
-      queryBuilder.should(
-          QueryBuilders.boolQuery()
-              .mustNot(
-                  QueryBuilders.existsQuery(
-                      esFieldMapper.getExactMatchFieldName(simplePredicate.getKey()))));
+  private QueryBuilder addNullableFieldPredicate(Predicate predicate, QueryBuilder filter) {
+    if (predicate instanceof SimplePredicate
+        && esFieldMapper.includeNullInPredicate((SimplePredicate<S>) predicate)) {
+      return QueryBuilders.boolQuery()
+          .should(filter)
+          .should(
+              QueryBuilders.boolQuery()
+                  .mustNot(
+                      QueryBuilders.existsQuery(
+                          esFieldMapper.getExactMatchFieldName(
+                              ((SimplePredicate<S>) predicate).getKey()))));
     }
+    return filter;
   }
 
   /**
@@ -395,9 +383,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     queryBuilder
         .filter()
         .add(
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .gt(parseParamValue(predicate.getValue(), parameter)));
-    addNullPredicate(predicate, queryBuilder);
+            addNullableFieldPredicate(
+                predicate,
+                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
+                    .gt(parseParamValue(predicate.getValue(), parameter))));
   }
 
   /**
@@ -429,9 +418,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     queryBuilder
         .filter()
         .add(
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .lte(parseParamValue(predicate.getValue(), parameter)));
-    addNullPredicate(predicate, queryBuilder);
+            addNullableFieldPredicate(
+                predicate,
+                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
+                    .lte(parseParamValue(predicate.getValue(), parameter))));
   }
 
   /**
@@ -445,9 +435,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     queryBuilder
         .filter()
         .add(
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .lt(parseParamValue(predicate.getValue(), parameter)));
-    addNullPredicate(predicate, queryBuilder);
+            addNullableFieldPredicate(
+                predicate,
+                QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
+                    .lt(parseParamValue(predicate.getValue(), parameter))));
   }
 
   /**
