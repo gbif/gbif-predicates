@@ -20,7 +20,6 @@
         <dwc-api.version>1.43-SNAPSHOT</dwc-api.version>
         <dwca-io.version>2.16</dwca-io.version>
         <guava.version>18.0</guava.version>
-        <occurrence-common.version>0.188-SNAPSHOT</occurrence-common.version>
 
         <!-- Tools-->
         <lombok.version>1.18.20</lombok.version>
@@ -51,12 +50,6 @@
             <groupId>org.gbif</groupId>
             <artifactId>dwca-io</artifactId>
             <version>${dwca-io.version}</version>
-        </dependency>
-        <!-- Required for vocab checking - TermUtils which has a lot of code... -->
-        <dependency>
-            <groupId>org.gbif.occurrence</groupId>
-            <artifactId>occurrence-common</artifactId>
-            <version>${occurrence-common.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

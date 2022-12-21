@@ -46,8 +46,6 @@ import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.occurrence.common.HiveColumnsUtils;
-import org.gbif.occurrence.common.TermUtils;
 import org.gbif.predicate.query.occurrence.OccurrenceTermsMapper;
 import org.junit.jupiter.api.Test;
 
@@ -844,11 +842,14 @@ public class SQLQueryVisitorTest {
   public void testVocabularies() {
     Arrays.stream(OccurrenceSearchParameter.values())
         .filter(
-            p -> Optional.ofNullable(visitor.term(p)).map(TermUtils::isVocabulary).orElse(false))
+            p ->
+                Optional.ofNullable(visitor.term(p))
+                    .map(SQLColumnsUtils::isVocabulary)
+                    .orElse(false))
         .forEach(
             param -> {
               try {
-                String hiveQueryField = HiveColumnsUtils.getHiveQueryColumn(visitor.term(param));
+                String hiveQueryField = SQLColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
