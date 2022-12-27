@@ -915,6 +915,20 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testGreaterThanIncludingNull() {
+    GreaterThanPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
+      new GreaterThanPredicate<>(
+        OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
+    try {
+      String query = visitor.buildQuery(distanceFromCentroidPredicate);
+      assertEquals(
+        "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL )", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
   public void testDisjunctionGreaterThanEqualsIncludingNull() {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanOrEqualsPredicate<>(

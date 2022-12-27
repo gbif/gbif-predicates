@@ -2,6 +2,7 @@ package org.gbif.predicate.query;
 
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
+import org.gbif.api.model.predicate.GreaterThanPredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 
 public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSearchParameter> {
@@ -45,6 +46,6 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return predicate.getKey() == OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS
-        && predicate instanceof GreaterThanOrEqualsPredicate;
+        && (predicate instanceof GreaterThanOrEqualsPredicate || predicate instanceof GreaterThanPredicate);
   }
 }

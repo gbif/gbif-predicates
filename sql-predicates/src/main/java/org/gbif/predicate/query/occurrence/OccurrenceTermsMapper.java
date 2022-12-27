@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
+import org.gbif.api.model.predicate.GreaterThanPredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
@@ -164,6 +165,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
   @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
-        && predicate instanceof GreaterThanOrEqualsPredicate;
+        && (predicate instanceof GreaterThanOrEqualsPredicate || predicate instanceof GreaterThanPredicate);
   }
 }
