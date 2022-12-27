@@ -165,6 +165,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
   @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
-        && (predicate instanceof GreaterThanOrEqualsPredicate || predicate instanceof GreaterThanPredicate);
+        && (predicate instanceof GreaterThanOrEqualsPredicate
+            || predicate instanceof GreaterThanPredicate);
   }
 }

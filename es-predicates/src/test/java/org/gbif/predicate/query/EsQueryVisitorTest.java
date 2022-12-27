@@ -1672,57 +1672,58 @@ public class EsQueryVisitorTest {
   @Test
   public void testGreaterThanIncludingNull() {
     GreaterThanPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
-      new GreaterThanPredicate<>(
-        OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
+        new GreaterThanPredicate<>(
+            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
       assertEquals(
-        "{\n"
-        + "  \"bool\" : {\n"
-        + "    \"filter\" : [\n"
-        + "      {\n"
-        + "        \"bool\" : {\n"
-        + "          \"should\" : [\n"
-        + "            {\n"
-        + "              \"range\" : {\n"
-        + "                \"distance_from_centroid_in_meters\" : {\n"
-        + "                  \"from\" : \"10\",\n"
-        + "                  \"to\" : null,\n"
-        + "                  \"include_lower\" : false,\n"
-        + "                  \"include_upper\" : true,\n"
-        + "                  \"boost\" : 1.0\n"
-        + "                }\n"
-        + "              }\n"
-        + "            },\n"
-        + "            {\n"
-        + "              \"bool\" : {\n"
-        + "                \"must_not\" : [\n"
-        + "                  {\n"
-        + "                    \"exists\" : {\n"
-        + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-        + "                      \"boost\" : 1.0\n"
-        + "                    }\n"
-        + "                  }\n"
-        + "                ],\n"
-        + "                \"adjust_pure_negative\" : true,\n"
-        + "                \"boost\" : 1.0\n"
-        + "              }\n"
-        + "            }\n"
-        + "          ],\n"
-        + "          \"adjust_pure_negative\" : true,\n"
-        + "          \"boost\" : 1.0\n"
-        + "        }\n"
-        + "      }\n"
-        + "    ],\n"
-        + "    \"adjust_pure_negative\" : true,\n"
-        + "    \"boost\" : 1.0\n"
-        + "  }\n"
-        + "}",
-        query);
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"should\" : [\n"
+              + "            {\n"
+              + "              \"range\" : {\n"
+              + "                \"distance_from_centroid_in_meters\" : {\n"
+              + "                  \"from\" : \"10\",\n"
+              + "                  \"to\" : null,\n"
+              + "                  \"include_lower\" : false,\n"
+              + "                  \"include_upper\" : true,\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            },\n"
+              + "            {\n"
+              + "              \"bool\" : {\n"
+              + "                \"must_not\" : [\n"
+              + "                  {\n"
+              + "                    \"exists\" : {\n"
+              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
+              + "                      \"boost\" : 1.0\n"
+              + "                    }\n"
+              + "                  }\n"
+              + "                ],\n"
+              + "                \"adjust_pure_negative\" : true,\n"
+              + "                \"boost\" : 1.0\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}",
+          query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
+
   @Test
   public void testDisjunctionGreaterThanEqualsIncludingNull() {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
