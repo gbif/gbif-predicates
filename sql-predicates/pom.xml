@@ -3,7 +3,7 @@
     <parent>
         <artifactId>predicates-parent</artifactId>
         <groupId>org.gbif.predicates</groupId>
-        <version>0.1-SNAPSHOT</version>
+        <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -16,8 +16,7 @@
     <description>SQL support for the predicate API</description>
 
     <properties>
-        <predicates-api.version>0.1-SNAPSHOT</predicates-api.version>
-        <dwc-api.version>1.43-SNAPSHOT</dwc-api.version>
+        <dwc-api.version>1.43</dwc-api.version>
         <dwca-io.version>2.16</dwca-io.version>
         <guava.version>18.0</guava.version>
 
