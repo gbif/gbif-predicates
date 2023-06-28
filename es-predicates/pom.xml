@@ -16,7 +16,7 @@
   <description>Elasticsearch support for the predicate API</description>
 
   <properties>
-    <dwc-api.version>1.36</dwc-api.version>
+    <dwc-api.version>1.46</dwc-api.version>
     <dwca-io.version>2.12</dwca-io.version>
     <guava.version>18.0</guava.version>
 

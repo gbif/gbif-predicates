@@ -87,7 +87,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
           .put(OccurrenceSearchParameter.EVENT_ID, DwcTerm.eventID)
           .put(OccurrenceSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID)
           .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)
-          .put(OccurrenceSearchParameter.PROJECT_ID, GbifInternalTerm.projectId)
           .put(OccurrenceSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym)
           .put(OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME, GbifTerm.verbatimScientificName)
           .put(OccurrenceSearchParameter.TAXON_ID, DwcTerm.taxonID)
@@ -129,6 +128,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
           .put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy)
           .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)
           .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)
+          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
           .build();
 
   private static final Map<OccurrenceSearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
