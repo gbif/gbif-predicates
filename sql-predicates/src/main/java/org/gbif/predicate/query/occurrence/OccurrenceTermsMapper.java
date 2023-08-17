@@ -113,6 +113,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
           .put(
               OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,
               GbifTerm.distanceFromCentroidInMeters)
+          .put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID)
           .build();
 
   private static final Map<OccurrenceSearchParameter, Term> ARRAY_STRING_TERMS =
