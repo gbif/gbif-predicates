@@ -41,6 +41,7 @@ import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.predicate.RangePredicate;
 import org.gbif.api.model.predicate.WithinPredicate;
+import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.util.Range;
 import org.gbif.api.util.RangeValue;
 import org.gbif.api.util.SearchTypeValidator;
@@ -585,6 +586,89 @@ public class SQLQueryVisitorTest {
         query);
   }
 
+  @Test
+  public void testDateRangeComparisons() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01-02", false);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01-02,2000-01-04", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-01-05T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-02-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01,2000-03", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-04-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
+            Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000,2001", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
+            Instant.parse("2002-01-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    // Include the range (for the or-equal-to)
+    p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format("eventdategte < %s", Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format("eventdatelte >= %s", Instant.parse("2000-01-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    // Exclude the range
+    p = new LessThanPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format("eventdategte < %s", Instant.parse("2000-01-01T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new GreaterThanPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format("eventdatelte >= %s", Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+        query);
+  }
+
   /** Reusable method to test partial dates, i.e., dates with the format: yyyy, yyyy-MM. */
   private void testPartialDate(String expectedFrom, String expectedTo, String value)
       throws QueryBuildingException {
@@ -821,6 +905,8 @@ public class SQLQueryVisitorTest {
         value = values[0].name();
       } else if (Date.class.isAssignableFrom(param.type())) {
         value = "2014-01-23";
+      } else if (IsoDateInterval.class.isAssignableFrom(param.type())) {
+        value = "2014-01-23,2015-05";
       } else if (OccurrenceSearchParameter.GEO_DISTANCE == param) {
         predicates.add(new GeoDistancePredicate("10", "20", "10km"));
       }

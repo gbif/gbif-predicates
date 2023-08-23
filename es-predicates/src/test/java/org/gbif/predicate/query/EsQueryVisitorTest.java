@@ -108,9 +108,13 @@ public class EsQueryVisitorTest {
             + "  \"bool\" : {\n"
             + "    \"filter\" : [\n"
             + "      {\n"
-            + "        \"term\" : {\n"
+            + "        \"range\" : {\n"
             + "          \"event_date\" : {\n"
-            + "            \"value\" : \"2021-09-16\",\n"
+            + "            \"from\" : \"2021-09-16\",\n"
+            + "            \"to\" : \"2021-09-17\",\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"relation\" : \"within\",\n"
             + "            \"boost\" : 1.0\n"
             + "          }\n"
             + "        }\n"
@@ -200,6 +204,8 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testEqualsDateRangePredicate() throws QueryBuildingException {
+    // Occurrences will be returned if the occurrence date/date range is
+    // *completely within* the query date or date range.
     Predicate p =
         new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980-02,2021-09-16", false);
     String query = visitor.buildQuery(p);
@@ -214,6 +220,7 @@ public class EsQueryVisitorTest {
             + "            \"to\" : \"2021-09-17\",\n"
             + "            \"include_lower\" : true,\n"
             + "            \"include_upper\" : false,\n"
+            + "            \"relation\" : \"within\",\n"
             + "            \"boost\" : 1.0\n"
             + "          }\n"
             + "        }\n"
@@ -232,9 +239,38 @@ public class EsQueryVisitorTest {
             + "  \"bool\" : {\n"
             + "    \"filter\" : [\n"
             + "      {\n"
-            + "        \"term\" : {\n"
+            + "        \"range\" : {\n"
             + "          \"event_date\" : {\n"
-            + "            \"value\" : \"1980\",\n"
+            + "            \"from\" : \"1980-01-01\",\n"
+            + "            \"to\" : \"1981-01-01\",\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"relation\" : \"within\",\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980,1990-05-06", false);
+    query = visitor.buildQuery(p);
+    expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"event_date\" : {\n"
+            + "            \"from\" : \"1980-01-01\",\n"
+            + "            \"to\" : \"1990-05-07\",\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"relation\" : \"within\",\n"
             + "            \"boost\" : 1.0\n"
             + "          }\n"
             + "        }\n"

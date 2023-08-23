@@ -61,6 +61,7 @@ import org.gbif.api.model.predicate.RangePredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryVisitor;
+import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.util.IsoDateParsingUtils;
 import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
@@ -253,23 +254,8 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   public void visit(EqualsPredicate<S> predicate, BoolQueryBuilder queryBuilder) {
     S parameter = predicate.getKey();
 
-    if (Date.class.isAssignableFrom(predicate.getKey().type())) {
-      if (SearchTypeValidator.isRange(predicate.getValue())) {
-        // The date range is closed-open, so we need lower ≤ date < upper.
-        Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
-        RangeQueryBuilder rqb =
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
-        if (dateRange.hasLowerBound()) {
-          rqb.gte(dateRange.lowerEndpoint());
-        }
-        if (dateRange.hasUpperBound()) {
-          rqb.lt(dateRange.upperEndpoint());
-        }
-        queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
-        return;
-      }
-    } else if (Number.class.isAssignableFrom(predicate.getKey().type())) {
-      if (SearchTypeValidator.isRange(predicate.getValue())) {
+    if (Number.class.isAssignableFrom(predicate.getKey().type())) {
+      if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
         Range<Double> decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());
         RangeQueryBuilder rqb =
             QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
@@ -282,6 +268,43 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
         return;
       }
+    } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
+      if (SearchTypeValidator.isDateRange(predicate.getValue())) {
+        // The date range is closed-open, so we need lower ≤ date < upper.
+        Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+        RangeQueryBuilder rqb =
+            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
+        if (dateRange.hasLowerBound()) {
+          rqb.gte(dateRange.lowerEndpoint());
+        }
+        if (dateRange.hasUpperBound()) {
+          rqb.lt(dateRange.upperEndpoint());
+        }
+        // For a match, the occurrence's date range must be entirely within the search query date
+        // range.
+        // i.e. Q:eventDate=1980 will match rec:eventDate=1980-02, but not
+        // rec:eventDate=1980-10-01/1982-02-02.
+        rqb.relation("within");
+        queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
+        return;
+      }
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      RangeQueryBuilder rqb =
+          QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
+      if (dateRange.hasLowerBound()) {
+        rqb.gte(dateRange.lowerEndpoint());
+      }
+      if (dateRange.hasUpperBound()) {
+        rqb.lt(dateRange.upperEndpoint());
+      }
+      // For a match, the occurrence's date range must be entirely within the search query date
+      // range.
+      // i.e. Q:eventDate=1980 will match rec:eventDate=1980-02, but not
+      // rec:eventDate=1980-10-01/1982-02-02.
+      rqb.relation("within");
+      queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
+      return;
     }
 
     queryBuilder

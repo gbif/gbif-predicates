@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.predicate.CompoundPredicate;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -43,6 +44,7 @@ import org.gbif.api.model.predicate.RangePredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryVisitor;
+import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.util.IsoDateParsingUtils;
 import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
@@ -351,6 +353,44 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
         builder.append(')');
       }
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      // Dates may contain a range even for an EqualsPredicate (e.g. "2000" or "2000-02")
+      // The user's query value is inclusive, but the parsed dateRange is exclusive of the
+      // upperBound to allow including the day itself.
+      //
+      // I.e. a predicate value 2000/2005-03 gives a dateRange [2000-01-01,2005-04-01)
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+
+      if (dateRange.hasLowerBound() || dateRange.hasUpperBound()) {
+        // all the stuff here
+        builder.append('(');
+        if (dateRange.hasLowerBound()) {
+          SimplePredicate predicateGte =
+              new EqualsPredicate<>(
+                  InternalOccurrenceSearchParameter.EVENT_DATE_GTE,
+                  predicate.getValue(),
+                  predicate.isMatchCase());
+          visitSimplePredicate(
+              predicateGte,
+              GREATER_THAN_EQUALS_OPERATOR,
+              ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+          if (dateRange.hasUpperBound()) {
+            builder.append(CONJUNCTION_OPERATOR);
+          }
+        }
+        if (dateRange.hasUpperBound()) {
+          SimplePredicate predicateLte =
+              new EqualsPredicate<>(
+                  InternalOccurrenceSearchParameter.EVENT_DATE_LTE,
+                  predicate.getValue(),
+                  predicate.isMatchCase());
+          visitSimplePredicate(
+              predicateLte,
+              LESS_THAN_OPERATOR,
+              ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
+        }
+        builder.append(')');
+      }
     } else {
       visitSimplePredicate(predicate, EQUALS_OPERATOR);
     }
@@ -363,6 +403,17 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
       visitSimplePredicate(
           predicate,
+          GREATER_THAN_EQUALS_OPERATOR,
+          ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      // Where the date is a range, consider the "OrEquals" to mean including the whole range.
+      // "2000" includes all of 2000.
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      SimplePredicate predicateLte =
+          new GreaterThanOrEqualsPredicate<>(
+              InternalOccurrenceSearchParameter.EVENT_DATE_LTE, predicate.getValue());
+      visitSimplePredicate(
+          predicateLte,
           GREATER_THAN_EQUALS_OPERATOR,
           ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
     } else {
@@ -380,6 +431,19 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           predicate,
           GREATER_THAN_EQUALS_OPERATOR,
           ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
+      // range.
+      // "2000" excludes all of 2000, so the earliest date is 2001-01-01.
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      SimplePredicate predicateLte =
+          new GreaterThanPredicate<>(
+              InternalOccurrenceSearchParameter.EVENT_DATE_LTE, predicate.getValue());
+      visitSimplePredicate(
+          predicateLte,
+          GREATER_THAN_EQUALS_OPERATOR,
+          ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
+
     } else {
       visitSimplePredicate(predicate, GREATER_THAN_OPERATOR);
     }
@@ -392,8 +456,40 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
       visitSimplePredicate(
           predicate, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      // Where the date is a range, consider the "OrEquals" to mean including the whole range.
+      // "2000" includes all of 2000, so the latest date is 2001-01-01 (not inclusive).
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      SimplePredicate predicateGte =
+          new LessThanOrEqualsPredicate<>(
+              InternalOccurrenceSearchParameter.EVENT_DATE_GTE, predicate.getValue());
+      visitSimplePredicate(
+          predicateGte, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
     } else {
       visitSimplePredicate(predicate, LESS_THAN_EQUALS_OPERATOR);
+    }
+  }
+
+  public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
+    if (Date.class.isAssignableFrom(predicate.getKey().type())) {
+      // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
+      // range.
+      // "2000" excludes all of 2000, so the latest date is 2000-01-01 (not inclusive).
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      visitSimplePredicate(
+          predicate, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
+      // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
+      // range.
+      // "2000" excludes all of 2000, so the latest date is 2000-01-01 (not inclusive).
+      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
+      SimplePredicate predicateGte =
+          new LessThanPredicate<>(
+              InternalOccurrenceSearchParameter.EVENT_DATE_GTE, predicate.getValue());
+      visitSimplePredicate(
+          predicateGte, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+    } else {
+      visitSimplePredicate(predicate, LESS_THAN_OPERATOR);
     }
   }
 
@@ -424,19 +520,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           LESS_THAN_OPERATOR);
     }
     builder.append("))");
-  }
-
-  public void visit(LessThanPredicate<S> predicate) throws QueryBuildingException {
-    if (Date.class.isAssignableFrom(predicate.getKey().type())) {
-      // Where the date is a range, consider the lack of "OrEquals" to mean excluding the whole
-      // range.
-      // "2000" excludes all of 2000, so the latest date is 2000-01-01 (not inclusive).
-      Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
-      visitSimplePredicate(
-          predicate, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
-    } else {
-      visitSimplePredicate(predicate, LESS_THAN_OPERATOR);
-    }
   }
 
   /*
@@ -733,7 +816,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visitSimplePredicate(SimplePredicate<S> predicate, String op)
       throws QueryBuildingException {
     if (Number.class.isAssignableFrom(predicate.getKey().type())) {
-      if (SearchTypeValidator.isRange(predicate.getValue())) {
+      if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
         if (Integer.class.equals(predicate.getKey().type())) {
           visit(
               toIntegerRangePredicate(

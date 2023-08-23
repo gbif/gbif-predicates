@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.Map;
+import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;
@@ -17,11 +19,11 @@ import org.gbif.dwc.terms.IucnTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.predicate.query.SQLTermsMapper;
 
-public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchParameter> {
+public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
   // parameters that map directly to Hive.
   // boundingBox, coordinate, taxonKey and gadmGid are treated specially!
-  private static final Map<OccurrenceSearchParameter, ? extends Term> PARAM_TO_TERM =
-      ImmutableMap.<OccurrenceSearchParameter, Term>builder()
+  private static final Map<? extends SearchParameter, ? extends Term> PARAM_TO_TERM =
+      ImmutableMap.<SearchParameter, Term>builder()
           .put(OccurrenceSearchParameter.DATASET_KEY, GbifTerm.datasetKey)
           .put(OccurrenceSearchParameter.YEAR, DwcTerm.year)
           .put(OccurrenceSearchParameter.MONTH, DwcTerm.month)
@@ -114,9 +116,11 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
               OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,
               GbifTerm.distanceFromCentroidInMeters)
           .put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID)
+          .put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
+          .put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte)
           .build();
 
-  private static final Map<OccurrenceSearchParameter, Term> ARRAY_STRING_TERMS =
+  private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
       ImmutableMap.<OccurrenceSearchParameter, Term>builder()
           .put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)
           .put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)
@@ -132,39 +136,39 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<OccurrenceSearchPar
           .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
           .build();
 
-  private static final Map<OccurrenceSearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
+  private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
 
   // reserved hive words
   public static final ImmutableSet<String> HIVE_RESERVED_WORDS =
       new ImmutableSet.Builder<String>().add("date", "order", "format", "group").build();
 
   @Override
-  public Term term(OccurrenceSearchParameter searchParameter) {
+  public Term term(SearchParameter searchParameter) {
     return PARAM_TO_TERM.get(searchParameter);
   }
 
   @Override
-  public boolean isArray(OccurrenceSearchParameter searchParameter) {
+  public boolean isArray(SearchParameter searchParameter) {
     return ARRAY_STRING_TERMS.containsKey(searchParameter);
   }
 
   @Override
-  public Term getTermArray(OccurrenceSearchParameter searchParameter) {
+  public Term getTermArray(SearchParameter searchParameter) {
     return ARRAY_STRING_TERMS.get(searchParameter);
   }
 
   @Override
-  public boolean isDenormedTerm(OccurrenceSearchParameter searchParameter) {
+  public boolean isDenormedTerm(SearchParameter searchParameter) {
     return DENORMED_TERMS.containsKey(searchParameter);
   }
 
   @Override
-  public OccurrenceSearchParameter getDefaultGadmLevel() {
+  public SearchParameter getDefaultGadmLevel() {
     return OccurrenceSearchParameter.GADM_LEVEL_0_GID;
   }
 
   @Override
-  public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
+  public boolean includeNullInPredicate(SimplePredicate<SearchParameter> predicate) {
     return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
         && (predicate instanceof GreaterThanOrEqualsPredicate
             || predicate instanceof GreaterThanPredicate);
