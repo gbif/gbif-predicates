@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
+import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -34,9 +35,8 @@ import org.gbif.api.model.predicate.LikePredicate;
 import org.gbif.api.model.predicate.NotPredicate;
 import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.predicate.RangePredicate;
-import org.gbif.api.model.predicate.RangeValue;
 import org.gbif.api.model.predicate.WithinPredicate;
-import org.gbif.api.query.QueryBuildingException;
+import org.gbif.api.util.RangeValue;
 import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */

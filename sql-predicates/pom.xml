@@ -16,8 +16,6 @@
     <description>SQL support for the predicate API</description>
 
     <properties>
-        <dwc-api.version>1.46</dwc-api.version>
-        <dwca-io.version>2.16</dwca-io.version>
         <guava.version>18.0</guava.version>
 
         <!-- Tools-->
@@ -31,31 +29,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.gbif.predicates</groupId>
-            <artifactId>predicates-api</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.gbif</groupId>
-                    <artifactId>dwc-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.gbif</groupId>
-            <artifactId>dwc-api</artifactId>
-            <version>${dwc-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.gbif</groupId>
-            <artifactId>dwca-io</artifactId>
-            <version>${dwca-io.version}</version>
+            <artifactId>gbif-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
-
 
         <!-- Tests -->
         <dependency>

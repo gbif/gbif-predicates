@@ -16,13 +16,11 @@
   <description>Elasticsearch support for the predicate API</description>
 
   <properties>
-    <dwc-api.version>1.46</dwc-api.version>
-    <dwca-io.version>2.12</dwca-io.version>
     <guava.version>18.0</guava.version>
 
     <!-- Tools-->
     <lombok.version>1.18.20</lombok.version>
-    <elasticsearch.version>7.6.2</elasticsearch.version>
+    <elasticsearch.version>7.10.2</elasticsearch.version>
   </properties>
 
   <dependencies>
@@ -33,14 +31,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.gbif.predicates</groupId>
-      <artifactId>predicates-api</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>org.gbif</groupId>
-          <artifactId>dwc-api</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-api</artifactId>
     </dependency>
 
     <dependency>

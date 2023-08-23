@@ -14,13 +14,12 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>predicates-api</module>
-    <module>sql-predicates</module>
     <module>es-predicates</module>
+    <module>sql-predicates</module>
   </modules>
 
   <name>Predicates :: Parent</name>
-  <description>Predicate API and concrete implementations</description>
+  <description>Predicate API implementations</description>
   <url>https://github.com/gbif/gbif-predicates</url>
 
   <scm>
@@ -76,6 +75,8 @@
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
+
+    <gbif-api.version>1.12.0-SNAPSHOT</gbif-api.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.30</slf4j.version>
@@ -184,15 +185,9 @@
       </dependency>
 
       <dependency>
-        <groupId>org.gbif.predicates</groupId>
-        <artifactId>predicates-api</artifactId>
-        <version>${project.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.gbif</groupId>
-            <artifactId>dwc-api</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.gbif</groupId>
+        <artifactId>gbif-api</artifactId>
+        <version>${gbif-api.version}</version>
       </dependency>
       <!-- Logging dependencies -->
       <dependency>

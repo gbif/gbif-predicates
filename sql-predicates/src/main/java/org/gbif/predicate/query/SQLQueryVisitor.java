@@ -11,14 +11,37 @@ import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.predicate.*;
-import org.gbif.api.query.QueryBuildingException;
+import org.gbif.api.model.predicate.CompoundPredicate;
+import org.gbif.api.model.predicate.ConjunctionPredicate;
+import org.gbif.api.model.predicate.DisjunctionPredicate;
+import org.gbif.api.model.predicate.EqualsPredicate;
+import org.gbif.api.model.predicate.GeoDistancePredicate;
+import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
+import org.gbif.api.model.predicate.GreaterThanPredicate;
+import org.gbif.api.model.predicate.InPredicate;
+import org.gbif.api.model.predicate.IsNotNullPredicate;
+import org.gbif.api.model.predicate.IsNullPredicate;
+import org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
+import org.gbif.api.model.predicate.LessThanPredicate;
+import org.gbif.api.model.predicate.LikePredicate;
+import org.gbif.api.model.predicate.NotPredicate;
+import org.gbif.api.model.predicate.Predicate;
+import org.gbif.api.model.predicate.RangePredicate;
+import org.gbif.api.model.predicate.SimplePredicate;
+import org.gbif.api.model.predicate.WithinPredicate;
 import org.gbif.api.query.QueryVisitor;
 import org.gbif.api.util.IsoDateParsingUtils;
 import org.gbif.api.util.Range;
@@ -26,7 +49,10 @@ import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.dwc.terms.*;
+import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.GadmTerm;
+import org.gbif.dwc.terms.GbifTerm;
+import org.gbif.dwc.terms.Term;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -118,7 +144,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /**
-   * Allow support for querying the denormalised extension.
+   * Allow support for querying the denormalized extension.
    *
    * <p>FIXME - this can probably be factored out once all required fields are denormalized.
    *
