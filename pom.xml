@@ -76,7 +76,7 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>1.12.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>1.13.0-SNAPSHOT</gbif-api.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.30</slf4j.version>
