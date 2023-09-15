@@ -23,7 +23,7 @@ public class SQLColumnsUtils {
           .collect(Collectors.toSet());
 
   private static final Set<? extends Term> INTERPRETED_LOCAL_DATES =
-      ImmutableSet.of(DwcTerm.eventDate, DwcTerm.dateIdentified);
+      ImmutableSet.of(DwcTerm.dateIdentified);
 
   private static final Set<? extends Term> INTERPRETED_UTC_DATES =
       ImmutableSet.of(

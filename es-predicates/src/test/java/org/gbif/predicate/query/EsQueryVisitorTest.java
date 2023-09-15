@@ -281,6 +281,33 @@ public class EsQueryVisitorTest {
             + "  }\n"
             + "}";
     assertEquals(expectedQuery, query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1990-05-06", false);
+    query = visitor.buildQuery(p);
+    expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"range\" : {\n"
+            + "          \"event_date\" : {\n"
+            + "            \"from\" : \"1990-05-06\",\n"
+            + "            \"to\" : \"1990-05-07\",\n"
+            + "            \"include_lower\" : true,\n"
+            + "            \"include_upper\" : false,\n"
+            + "            \"relation\" : \"within\",\n"
+            + "            \"boost\" : 1.0\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    System.out.println(expectedQuery);
+    System.out.println(expectedQuery.replace(" ", "").replace("\n", ""));
+    assertEquals(expectedQuery, query);
   }
 
   @Test
