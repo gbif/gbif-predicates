@@ -2,7 +2,6 @@ package org.gbif.predicate.query;
 
 import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +55,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String IS_NULL_OPERATOR = " IS NULL ";
   private static final String IS_NOT_NULL_ARRAY_OPERATOR = "(%1$s IS NOT NULL AND size(%1$s) > 0)";
   private static final String IS_NULL_ARRAY_OPERATOR = "(%1$s IS NULL OR size(%1$s) = 0)";
-  private static final CharMatcher APOSTROPHE_MATCHER = CharMatcher.is('\'');
   // where query to execute a select all
   private static final String ALL_QUERY = "true";
 
@@ -176,7 +174,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
     } else {
       // quote value, escape existing quotes
-      String strVal = '\'' + APOSTROPHE_MATCHER.replaceFrom(value, "\\\'") + '\'';
+      String strVal = '\'' + value.replaceAll("'", "\\\\'") + '\'';
       if (String.class.isAssignableFrom(param.type())
           && !"GEOMETRY".equals(param.name())
           && !matchCase) {
@@ -281,7 +279,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(
           String.format(
               getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
-              predicate.getValue(),
+              predicate.getValue().replaceAll("'", "\\\\'"),
               predicate.isMatchCase()));
     } else if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
       builder
