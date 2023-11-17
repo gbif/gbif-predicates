@@ -329,7 +329,8 @@ public class SQLQueryVisitorTest {
     String query = visitor.buildQuery(p);
     assertEquals("lower(catalognumber) = lower(\'my \\\'pleasure\\\'\')", query);
 
-    Predicate predicateRecordedBY = new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, "Brian J O'Shea", false);
+    Predicate predicateRecordedBY =
+        new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, "Brian J O'Shea", false);
     String queryRecordedBy = visitor.buildQuery(predicateRecordedBY);
     assertEquals("stringArrayContains(recordedby,'Brian J O\\'Shea',false)", queryRecordedBy);
 
