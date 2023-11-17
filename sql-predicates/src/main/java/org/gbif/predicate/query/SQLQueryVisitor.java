@@ -204,7 +204,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
     } else {
       // quote value, escape existing quotes
-      String strVal = '\'' + APOSTROPHE_MATCHER.replaceFrom(value, "\\\'") + '\'';
+      String strVal = '\'' + value.replaceAll("'", "\\\\'") + '\'';
       if (String.class.isAssignableFrom(param.type())
           && !"GEOMETRY".equals(param.name())
           && !matchCase) {
@@ -309,7 +309,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(
           String.format(
               getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
-              predicate.getValue(),
+              predicate.getValue().replaceAll("'", "\\\\'"),
               predicate.isMatchCase()));
     } else if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
       builder
