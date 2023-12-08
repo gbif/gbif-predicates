@@ -25,6 +25,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
   private static final Map<? extends SearchParameter, ? extends Term> PARAM_TO_TERM =
       ImmutableMap.<SearchParameter, Term>builder()
           .put(OccurrenceSearchParameter.DATASET_KEY, GbifTerm.datasetKey)
+          .put(OccurrenceSearchParameter.SEX, DwcTerm.sex)
           .put(OccurrenceSearchParameter.YEAR, DwcTerm.year)
           .put(OccurrenceSearchParameter.MONTH, DwcTerm.month)
           .put(OccurrenceSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude)
@@ -41,6 +42,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.PATHWAY, DwcTerm.pathway)
           // the following need some value transformation
           .put(OccurrenceSearchParameter.EVENT_DATE, DwcTerm.eventDate)
+          .put(OccurrenceSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear)
+          .put(OccurrenceSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear)
           .put(OccurrenceSearchParameter.MODIFIED, DcTerm.modified)
           .put(OccurrenceSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted)
           .put(OccurrenceSearchParameter.BASIS_OF_RECORD, DwcTerm.basisOfRecord)
@@ -92,8 +95,10 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym)
           .put(OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME, GbifTerm.verbatimScientificName)
           .put(OccurrenceSearchParameter.TAXON_ID, DwcTerm.taxonID)
+          .put(OccurrenceSearchParameter.TAXON_CONCEPT_ID, DwcTerm.taxonConceptID)
           .put(OccurrenceSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit)
           .put(OccurrenceSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue)
+          .put(OccurrenceSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications)
           .put(OccurrenceSearchParameter.ORGANISM_QUANTITY, DwcTerm.organismQuantity)
           .put(OccurrenceSearchParameter.ORGANISM_QUANTITY_TYPE, DwcTerm.organismQuantityType)
           .put(
@@ -118,6 +123,52 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID)
           .put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
           .put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte)
+          .put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion)
+          .put(OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion)
+          .put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced)
+          .put(OccurrenceSearchParameter.ISLAND, DwcTerm.island)
+          .put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup)
+          .put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber)
+          .put(
+              OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,
+              DwcTerm.earliestEonOrLowestEonothem)
+          .put(
+              OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,
+              DwcTerm.latestEonOrHighestEonothem)
+          .put(
+              OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,
+              DwcTerm.earliestEraOrLowestErathem)
+          .put(
+              OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM,
+              DwcTerm.latestEraOrHighestErathem)
+          .put(
+              OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,
+              DwcTerm.earliestPeriodOrLowestSystem)
+          .put(
+              OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,
+              DwcTerm.latestPeriodOrHighestSystem)
+          .put(
+              OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,
+              DwcTerm.earliestEpochOrLowestSeries)
+          .put(
+              OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,
+              DwcTerm.latestEpochOrHighestSeries)
+          .put(
+              OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE,
+              DwcTerm.earliestAgeOrLowestStage)
+          .put(
+              OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE,
+              DwcTerm.latestAgeOrHighestStage)
+          .put(
+              OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE,
+              DwcTerm.lowestBiostratigraphicZone)
+          .put(
+              OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,
+              DwcTerm.highestBiostratigraphicZone)
+          .put(OccurrenceSearchParameter.GROUP, DwcTerm.group)
+          .put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation)
+          .put(OccurrenceSearchParameter.MEMBER, DwcTerm.member)
+          .put(OccurrenceSearchParameter.BED, DwcTerm.bed)
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
@@ -134,6 +185,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)
           .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)
           .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
+          .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)
+          .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)
           .build();
 
   private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
