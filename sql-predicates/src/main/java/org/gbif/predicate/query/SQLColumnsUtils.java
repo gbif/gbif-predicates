@@ -70,6 +70,8 @@ public class SQLColumnsUtils {
           DwcTerm.otherCatalogNumbers,
           DwcTerm.recordedBy,
           DwcTerm.identifiedBy,
+          DwcTerm.georeferencedBy,
+          DwcTerm.higherGeography,
           DwcTerm.preparations,
           DwcTerm.samplingProtocol);
 
@@ -158,7 +160,9 @@ public class SQLColumnsUtils {
         || DwcTerm.recordedBy == term
         || DwcTerm.identifiedBy == term
         || DwcTerm.preparations == term
-        || DwcTerm.samplingProtocol == term;
+        || DwcTerm.samplingProtocol == term
+        || DwcTerm.georeferencedBy == term
+        || DwcTerm.higherGeography == term;
   }
 
   public static boolean isVocabulary(Term term) {
