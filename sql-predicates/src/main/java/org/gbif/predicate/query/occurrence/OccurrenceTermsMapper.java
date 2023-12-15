@@ -187,6 +187,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
           .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)
           .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)
+          .put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences)
           .build();
 
   private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
