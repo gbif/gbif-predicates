@@ -28,10 +28,16 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.gbif</groupId>
+            <artifactId>dwc-api</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

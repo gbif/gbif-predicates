@@ -77,6 +77,7 @@
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
     <gbif-api.version>1.13.0-SNAPSHOT</gbif-api.version>
+    <dwc-api.version>1.48-SNAPSHOT</dwc-api.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.30</slf4j.version>
@@ -188,6 +189,11 @@
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>dwc-api</artifactId>
+        <version>${dwc-api.version}</version>
       </dependency>
       <!-- Logging dependencies -->
       <dependency>
