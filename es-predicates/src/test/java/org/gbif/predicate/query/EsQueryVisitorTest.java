@@ -125,6 +125,95 @@ public class EsQueryVisitorTest {
             + "  }\n"
             + "}";
     assertEquals(expectedQuery, query);
+
+    // An InPredicate should be exactly the same
+    p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16"), false);
+    query = visitor.buildQuery(p);
+    expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"should\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"range\" : {\n"
+            + "                \"event_date\" : {\n"
+            + "                  \"from\" : \"2021-09-16\",\n"
+            + "                  \"to\" : \"2021-09-17\",\n"
+            + "                  \"include_lower\" : true,\n"
+            + "                  \"include_upper\" : false,\n"
+            + "                  \"relation\" : \"within\",\n"
+            + "                  \"boost\" : 1.0\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+
+    p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16", "2024-01-17"), false);
+    query = visitor.buildQuery(p);
+    expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"should\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"range\" : {\n"
+            + "                \"event_date\" : {\n"
+            + "                  \"from\" : \"2021-09-16\",\n"
+            + "                  \"to\" : \"2021-09-17\",\n"
+            + "                  \"include_lower\" : true,\n"
+            + "                  \"include_upper\" : false,\n"
+            + "                  \"relation\" : \"within\",\n"
+            + "                  \"boost\" : 1.0\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"range\" : {\n"
+            + "                \"event_date\" : {\n"
+            + "                  \"from\" : \"2024-01-17\",\n"
+            + "                  \"to\" : \"2024-01-18\",\n"
+            + "                  \"include_lower\" : true,\n"
+            + "                  \"include_upper\" : false,\n"
+            + "                  \"relation\" : \"within\",\n"
+            + "                  \"boost\" : 1.0\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
   }
 
   @Test

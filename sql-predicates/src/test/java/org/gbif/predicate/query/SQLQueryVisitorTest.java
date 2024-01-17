@@ -602,6 +602,26 @@ public class SQLQueryVisitorTest {
             Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
         query);
 
+    p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2000-01-02"), false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((eventdategte >= %s AND eventdatelte < %s))",
+            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2000-01-02", "2024-01-17"), false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "((eventdategte >= %s AND eventdatelte < %s) OR (eventdategte >= %s AND eventdatelte < %s))",
+            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli(),
+            Instant.parse("2024-01-17T00:00:00Z").toEpochMilli(),
+            Instant.parse("2024-01-18T00:00:00Z").toEpochMilli()),
+        query);
+
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01-02,2000-01-04", false);
     query = visitor.buildQuery(p);
     assertEquals(

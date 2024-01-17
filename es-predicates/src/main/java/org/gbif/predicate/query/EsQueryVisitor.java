@@ -43,6 +43,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.geo.DistanceUnit;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
 import org.gbif.api.model.predicate.EqualsPredicate;
@@ -420,14 +421,35 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    */
   public void visit(InPredicate<S> predicate, BoolQueryBuilder queryBuilder) {
     S parameter = predicate.getKey();
-    queryBuilder
-        .filter()
-        .add(
-            QueryBuilders.termsQuery(
-                getExactMatchOrVerbatimField(predicate),
-                predicate.getValues().stream()
-                    .map(v -> parseParamValue(v, parameter))
-                    .collect(Collectors.toList())));
+
+    // EVENT_DATE needs special handling
+    if (parameter == OccurrenceSearchParameter.EVENT_DATE) {
+      predicate
+          .getValues()
+          .forEach(
+              value -> {
+                try {
+                  BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
+                  Predicate subPredicate =
+                      new EqualsPredicate<>(
+                          OccurrenceSearchParameter.EVENT_DATE, value, predicate.isMatchCase());
+                  visit(subPredicate, shouldQueryBuilder);
+                  queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
+                } catch (QueryBuildingException ex) {
+                  throw new RuntimeException(ex);
+                }
+              });
+
+    } else {
+      queryBuilder
+          .filter()
+          .add(
+              QueryBuilders.termsQuery(
+                  getExactMatchOrVerbatimField(predicate),
+                  predicate.getValues().stream()
+                      .map(v -> parseParamValue(v, parameter))
+                      .collect(Collectors.toList())));
+    }
   }
 
   /**

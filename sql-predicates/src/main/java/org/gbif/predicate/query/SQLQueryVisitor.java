@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.CompoundPredicate;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -107,12 +108,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final List<GadmTerm> GADM_GIDS =
       ImmutableList.of(
           GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
-  public static final String TYPE_STATUS = "TYPE_STATUS";
-  public static final String GADM_GID = "GADM_GID";
-  public static final String MEDIA_TYPE = "MEDIA_TYPE";
-  public static final String TAXON_KEY = "TAXON_KEY";
-  public static final String GEOMETRY = "GEOMETRY";
-  public static final String ISSUE = "ISSUE";
 
   private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
 
@@ -131,7 +126,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             term -> {
               String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
               if (String.class.isAssignableFrom(param.type())
-                  && !GEOMETRY.equals(param.name())
+                  && (param != OccurrenceSearchParameter.GEOMETRY)
                   && !matchCase) {
                 return toSQLLower(sqlCol);
               }
@@ -281,25 +276,25 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
-    if (predicate.getKey().name().equals(TAXON_KEY)) {
+    if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       appendTaxonKeyFilter(predicate.getValue());
-    } else if (GADM_GID.equals(predicate.getKey().name())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       appendGadmGidFilter(predicate.getValue());
-    } else if (MEDIA_TYPE.equals(predicate.getKey().name())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), MediaType.class))
           .ifPresent(
               mediaType ->
                   builder.append(
                       String.format(
                           getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
-    } else if (TYPE_STATUS.equals(predicate.getKey().name())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TYPE_STATUS) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), TypeStatus.class))
           .ifPresent(
               typeStatus ->
                   builder.append(
                       String.format(
                           getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(), true)));
-    } else if (ISSUE.equals(predicate.getKey().name())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.ISSUE) {
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
@@ -554,6 +549,19 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (predicate.getKey().name().equals("GADM_GID")) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
+
+    } else if (predicate.getKey().name().equals("EVENT_DATE")) {
+      // Event dates must be expanded into a disjunction of conjunction predicates (of comparisons)
+      builder.append('(');
+      Iterator<String> iterator = predicate.getValues().iterator();
+      while (iterator.hasNext()) {
+        // Use the equals predicate to get the behaviour for event dates.
+        visit(new EqualsPredicate<S>(predicate.getKey(), iterator.next(), isMatchCase));
+        if (iterator.hasNext()) {
+          builder.append(DISJUNCTION_OPERATOR);
+        }
+      }
+      builder.append(')');
 
     } else {
       builder
