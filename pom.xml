@@ -32,7 +32,7 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>https://gbif.github.io/pipelines/</url>
+      <url>https://gbif.github.io/gbif-predicates/</url>
     </site>
     <repository>
       <id>gbif-release</id>
