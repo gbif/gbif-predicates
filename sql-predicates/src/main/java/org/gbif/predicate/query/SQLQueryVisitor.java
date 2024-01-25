@@ -751,8 +751,12 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(GeoDistancePredicate geoDistance) throws QueryBuildingException {
     builder
         .append("(geoDistance(")
-        .append(geoDistance.getGeoDistance().toGeoDistanceString())
+        .append(geoDistance.getGeoDistance().getLatitude())
         .append(", ")
+        .append(geoDistance.getGeoDistance().getLongitude())
+        .append(", \"")
+        .append(geoDistance.getGeoDistance().getDistance().toString())
+        .append("\", ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(", ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))

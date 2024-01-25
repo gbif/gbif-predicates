@@ -348,8 +348,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new GeoDistancePredicate("30", "10", "10km");
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(geoDistance(" + "30.0, 10.0, 10.0km" + ", decimallatitude, decimallongitude) = TRUE)",
-        query);
+        "(geoDistance(30.0, 10.0, \"10.0km\", decimallatitude, decimallongitude) = TRUE)", query);
   }
 
   @Test
@@ -611,7 +610,9 @@ public class SQLQueryVisitorTest {
             Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
         query);
 
-    p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2000-01-02", "2024-01-17"), false);
+    p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2000-01-02", "2024-01-17"), false);
     query = visitor.buildQuery(p);
     assertEquals(
         String.format(
