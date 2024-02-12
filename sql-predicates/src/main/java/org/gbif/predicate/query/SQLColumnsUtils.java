@@ -22,16 +22,18 @@ public class SQLColumnsUtils {
           .map(ext -> TermFactory.instance().findTerm(ext.getRowType()))
           .collect(Collectors.toSet());
 
-  private static final Set<? extends Term> INTERPRETED_LOCAL_DATES =
+  private static final Set<? extends Term> INTERPRETED_LOCAL_DATES_SECONDS =
       ImmutableSet.of(
           DwcTerm.dateIdentified, GbifInternalTerm.eventDateGte, GbifInternalTerm.eventDateLte);
 
-  private static final Set<? extends Term> INTERPRETED_UTC_DATES =
+  private static final Set<? extends Term> INTERPRETED_UTC_DATES_SECONDS =
+      ImmutableSet.of(DcTerm.modified);
+
+  private static final Set<? extends Term> INTERPRETED_UTC_DATES_MILLISECONDS =
       ImmutableSet.of(
           GbifTerm.lastInterpreted,
           GbifTerm.lastParsed,
           GbifTerm.lastCrawled,
-          DcTerm.modified,
           GbifInternalTerm.fragmentCreated);
 
   private static final Set<? extends Term> INTERPRETED_NUM =
@@ -124,9 +126,11 @@ public class SQLColumnsUtils {
   public static String getSQLType(Term term) {
     if (isInterpretedNumerical(term)) {
       return "INT";
-    } else if (isInterpretedLocalDate(term)) {
+    } else if (isInterpretedLocalDateSeconds(term)) {
       return "BIGINT";
-    } else if (isInterpretedUtcDate(term)) {
+    } else if (isInterpretedUtcDateSeconds(term)) {
+      return "BIGINT";
+    } else if (isInterpretedUtcDateMilliseconds(term)) {
       return "BIGINT";
     } else if (isInterpretedDouble(term)) {
       return "DOUBLE";
@@ -142,10 +146,12 @@ public class SQLColumnsUtils {
   }
 
   public static boolean isDate(Term term) {
-    return isInterpretedLocalDate(term) || isInterpretedUtcDate(term);
+    return isInterpretedLocalDateSeconds(term)
+        || isInterpretedUtcDateSeconds(term)
+        || isInterpretedUtcDateMilliseconds(term);
   }
 
-  /** Checks if the term is stored as an Hive array. */
+  /** Checks if the term is stored as a Hive array. */
   public static boolean isSQLArray(Term term) {
     return GbifTerm.mediaType == term
         || GbifTerm.issue == term
@@ -178,13 +184,18 @@ public class SQLColumnsUtils {
   }
 
   /** @return true if the term is an interpreted local date (timezone not relevant) */
-  public static boolean isInterpretedLocalDate(Term term) {
-    return INTERPRETED_LOCAL_DATES.contains(term);
+  public static boolean isInterpretedLocalDateSeconds(Term term) {
+    return INTERPRETED_LOCAL_DATES_SECONDS.contains(term);
   }
 
-  /** @return true if the term is an interpreted UTC date with */
-  public static boolean isInterpretedUtcDate(Term term) {
-    return INTERPRETED_UTC_DATES.contains(term);
+  /** @return true if the term is an interpreted UTC date stored in seconds */
+  public static boolean isInterpretedUtcDateSeconds(Term term) {
+    return INTERPRETED_UTC_DATES_SECONDS.contains(term);
+  }
+
+  /** @return true if the term is an interpreted UTC date stored in milliseconds */
+  public static boolean isInterpretedUtcDateMilliseconds(Term term) {
+    return INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);
   }
 
   /** @return true if the term is an interpreted numerical */

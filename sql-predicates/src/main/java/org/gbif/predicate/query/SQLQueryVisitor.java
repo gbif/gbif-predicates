@@ -1,6 +1,7 @@
 package org.gbif.predicate.query;
 
 import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
+import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
@@ -188,7 +189,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       // use longs for timestamps expressed as ISO dates
       LocalDate ld = IsoDateParsingUtils.parseDate(value);
       Instant i = ld.atStartOfDay(ZoneOffset.UTC).toInstant();
-      if (param.equals(OccurrenceSearchParameter.LAST_INTERPRETED)) {
+      if (isInterpretedUtcDateMilliseconds(term(param))) {
         return String.valueOf(i.toEpochMilli());
       } else {
         return String.valueOf(i.getEpochSecond());

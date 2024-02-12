@@ -1,7 +1,6 @@
 package org.gbif.predicate.query.occurrence;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.Map;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -191,10 +190,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .build();
 
   private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
-
-  // reserved hive words
-  public static final ImmutableSet<String> HIVE_RESERVED_WORDS =
-      new ImmutableSet.Builder<String>().add("date", "order", "format", "group").build();
 
   @Override
   public Term term(SearchParameter searchParameter) {
