@@ -494,6 +494,13 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testIsVocabularyNotNullPredicate() throws QueryBuildingException {
+    Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.LIFE_STAGE);
+    String query = visitor.buildQuery(p);
+    assertEquals("(lifestage.lineage IS NOT NULL AND size(lifestage.lineage) > 0)", query);
+  }
+
+  @Test
   public void testIsNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
@@ -505,6 +512,13 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.IDENTIFIED_BY_ID);
     String query = visitor.buildQuery(p);
     assertEquals("(identifiedbyid IS NULL OR size(identifiedbyid) = 0)", query);
+  }
+
+  @Test
+  public void testIsVocabularyNullPredicate() throws QueryBuildingException {
+    Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.LIFE_STAGE);
+    String query = visitor.buildQuery(p);
+    assertEquals("lifestage.lineage IS NULL ", query);
   }
 
   @Test
@@ -597,8 +611,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-03T00:00:00Z").getEpochSecond()),
         query);
 
     p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2000-01-02"), false);
@@ -606,8 +620,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "((eventdategte >= %s AND eventdatelte < %s))",
-            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-03T00:00:00Z").getEpochSecond()),
         query);
 
     p =
@@ -617,10 +631,10 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "((eventdategte >= %s AND eventdatelte < %s) OR (eventdategte >= %s AND eventdatelte < %s))",
-            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli(),
-            Instant.parse("2024-01-17T00:00:00Z").toEpochMilli(),
-            Instant.parse("2024-01-18T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-03T00:00:00Z").getEpochSecond(),
+            Instant.parse("2024-01-17T00:00:00Z").getEpochSecond(),
+            Instant.parse("2024-01-18T00:00:00Z").getEpochSecond()),
         query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01-02,2000-01-04", false);
@@ -628,8 +642,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-01-05T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-05T00:00:00Z").getEpochSecond()),
         query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01", false);
@@ -637,8 +651,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-02-01T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-01T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-02-01T00:00:00Z").getEpochSecond()),
         query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01,2000-03", false);
@@ -646,8 +660,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
-            Instant.parse("2000-04-01T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-01T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-04-01T00:00:00Z").getEpochSecond()),
         query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000", false);
@@ -655,8 +669,8 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
-            Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-01T00:00:00Z").getEpochSecond(),
+            Instant.parse("2001-01-01T00:00:00Z").getEpochSecond()),
         query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000,2001", false);
@@ -664,34 +678,34 @@ public class SQLQueryVisitorTest {
     assertEquals(
         String.format(
             "(eventdategte >= %s AND eventdatelte < %s)",
-            Instant.parse("2000-01-01T00:00:00Z").toEpochMilli(),
-            Instant.parse("2002-01-01T00:00:00Z").toEpochMilli()),
+            Instant.parse("2000-01-01T00:00:00Z").getEpochSecond(),
+            Instant.parse("2002-01-01T00:00:00Z").getEpochSecond()),
         query);
 
     // Include the range (for the or-equal-to)
     p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
     query = visitor.buildQuery(p);
     assertEquals(
-        String.format("eventdategte < %s", Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+        String.format("eventdategte < %s", Instant.parse("2001-01-01T00:00:00Z").getEpochSecond()),
         query);
 
     p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
     query = visitor.buildQuery(p);
     assertEquals(
-        String.format("eventdatelte >= %s", Instant.parse("2000-01-01T00:00:00Z").toEpochMilli()),
+        String.format("eventdatelte >= %s", Instant.parse("2000-01-01T00:00:00Z").getEpochSecond()),
         query);
 
     // Exclude the range
     p = new LessThanPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
     query = visitor.buildQuery(p);
     assertEquals(
-        String.format("eventdategte < %s", Instant.parse("2000-01-01T00:00:00Z").toEpochMilli()),
+        String.format("eventdategte < %s", Instant.parse("2000-01-01T00:00:00Z").getEpochSecond()),
         query);
 
     p = new GreaterThanPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000");
     query = visitor.buildQuery(p);
     assertEquals(
-        String.format("eventdatelte >= %s", Instant.parse("2001-01-01T00:00:00Z").toEpochMilli()),
+        String.format("eventdatelte >= %s", Instant.parse("2001-01-01T00:00:00Z").getEpochSecond()),
         query);
   }
 
@@ -721,6 +735,37 @@ public class SQLQueryVisitorTest {
               range.lowerEndpoint().toEpochMilli(), range.upperEndpoint().toEpochMilli()),
           query);
     }
+  }
+
+  /** Some dates in HDFS are a number of seconds, others a number of milliseconds. */
+  @Test
+  public void testDateMagnitude() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2000-01-02", false);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(eventdategte >= %s AND eventdatelte < %s)",
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-03T00:00:00Z").getEpochSecond()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2000-01-02", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(lastinterpreted >= %s AND lastinterpreted < %s)",
+            Instant.parse("2000-01-02T00:00:00Z").toEpochMilli(),
+            Instant.parse("2000-01-03T00:00:00Z").toEpochMilli()),
+        query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.MODIFIED, "2000-01-02", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        String.format(
+            "(modified >= %s AND modified < %s)",
+            Instant.parse("2000-01-02T00:00:00Z").getEpochSecond(),
+            Instant.parse("2000-01-03T00:00:00Z").getEpochSecond()),
+        query);
   }
 
   @Test

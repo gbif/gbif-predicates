@@ -188,7 +188,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       // use longs for timestamps expressed as ISO dates
       LocalDate ld = IsoDateParsingUtils.parseDate(value);
       Instant i = ld.atStartOfDay(ZoneOffset.UTC).toInstant();
-      return String.valueOf(i.toEpochMilli());
+      if (param.equals(OccurrenceSearchParameter.LAST_INTERPRETED)) {
+        return String.valueOf(i.toEpochMilli());
+      } else {
+        return String.valueOf(i.getEpochSecond());
+      }
 
     } else if (Number.class.isAssignableFrom(param.type())
         || Boolean.class.isAssignableFrom(param.type())) {
