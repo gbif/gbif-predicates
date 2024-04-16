@@ -168,6 +168,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation)
           .put(OccurrenceSearchParameter.MEMBER, DwcTerm.member)
           .put(OccurrenceSearchParameter.BED, DwcTerm.bed)
+          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =

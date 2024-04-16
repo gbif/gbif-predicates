@@ -168,7 +168,8 @@ public class SQLColumnsUtils {
         || DwcTerm.preparations == term
         || DwcTerm.samplingProtocol == term
         || DwcTerm.georeferencedBy == term
-        || DwcTerm.higherGeography == term;
+        || DwcTerm.higherGeography == term
+        || GbifTerm.projectId == term;
   }
 
   public static boolean isVocabulary(Term term) {
