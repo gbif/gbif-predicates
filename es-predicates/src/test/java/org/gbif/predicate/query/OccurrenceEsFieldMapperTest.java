@@ -62,6 +62,11 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
+  public String getChecklistField(String checklistKey, OccurrenceSearchParameter searchParameter) {
+    return "classification." + checklistKey + "." + searchParameter.name().toLowerCase();
+  }
+
+  @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return predicate.getKey() == OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS
         && (predicate instanceof GreaterThanOrEqualsPredicate

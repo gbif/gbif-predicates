@@ -122,21 +122,35 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   protected String toSQLField(S param, boolean matchCase) {
-    return Optional.ofNullable(term(param))
-        .map(
-            term -> {
-              String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
-              if (String.class.isAssignableFrom(param.type())
-                  && (param != OccurrenceSearchParameter.GEOMETRY)
-                  && !matchCase) {
-                return toSQLLower(sqlCol);
-              }
-              return sqlCol;
-            })
-        .orElseThrow(
-            () ->
-                // QueryBuildingException requires an underlying exception
-                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
+
+    Term term = term(param);
+    if (term == null) {
+      throw new IllegalArgumentException("Search parameter " + param + " is not mapped");
+    }
+
+    String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
+    if (String.class.isAssignableFrom(param.type())
+        && (param != OccurrenceSearchParameter.GEOMETRY)
+        && !matchCase) {
+      return toSQLLower(sqlCol);
+    }
+    return sqlCol;
+
+    //    return Optional.ofNullable(term(param))
+    //        .map(
+    //            term -> {
+    //              String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
+    //              if (String.class.isAssignableFrom(param.type())
+    //                  && (param != OccurrenceSearchParameter.GEOMETRY)
+    //                  && !matchCase) {
+    //                return toSQLLower(sqlCol);
+    //              }
+    //              return sqlCol;
+    //            })
+    //        .orElseThrow(
+    //            () ->
+    //                // QueryBuildingException requires an underlying exception
+    //                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
   }
 
   /**

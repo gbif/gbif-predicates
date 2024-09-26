@@ -991,7 +991,7 @@ public class SQLQueryVisitorTest {
     try {
       visitor.buildQuery(and);
     } catch (QueryBuildingException e) {
-      fail();
+      fail(e);
     }
   }
 

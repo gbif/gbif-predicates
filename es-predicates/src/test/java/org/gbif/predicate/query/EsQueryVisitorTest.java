@@ -1896,7 +1896,7 @@ public class EsQueryVisitorTest {
               + "          \"filter\" : [\n"
               + "            {\n"
               + "              \"term\" : {\n"
-              + "                \"taxon_key\" : {\n"
+              + "                \"taxon_key.keyword\" : {\n"
               + "                  \"value\" : \"6\",\n"
               + "                  \"boost\" : 1.0\n"
               + "                }\n"

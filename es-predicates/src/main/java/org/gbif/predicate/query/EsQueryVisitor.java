@@ -291,22 +291,20 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       return;
     }
 
-    if (!Objects.isNull(predicate.getChecklistKey())){
+    if (!Objects.isNull(predicate.getChecklistKey())) {
       queryBuilder
-              .filter()
-              .add(
-                      QueryBuilders.termQuery(
-                              getChecklistExactMatchOrVerbatimField(predicate),
-                              parseParamValue(predicate.getValue(), parameter))
-              );
+          .filter()
+          .add(
+              QueryBuilders.termQuery(
+                  getChecklistExactMatchOrVerbatimField(predicate),
+                  parseParamValue(predicate.getValue(), parameter)));
     } else {
       queryBuilder
-              .filter()
-              .add(
-                      QueryBuilders.termQuery(
-                              getExactMatchOrVerbatimField(predicate),
-                              parseParamValue(predicate.getValue(), parameter))
-              );
+          .filter()
+          .add(
+              QueryBuilders.termQuery(
+                  getExactMatchOrVerbatimField(predicate),
+                  parseParamValue(predicate.getValue(), parameter)));
     }
   }
 
@@ -426,7 +424,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   Predicate subPredicate =
                       new EqualsPredicate<>(
-                          OccurrenceSearchParameter.EVENT_DATE, value, predicate.isMatchCase(), predicate.getChecklistKey());
+                          OccurrenceSearchParameter.EVENT_DATE,
+                          value,
+                          predicate.isMatchCase(),
+                          predicate.getChecklistKey());
                   visit(subPredicate, shouldQueryBuilder);
                   queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
                 } catch (QueryBuildingException ex) {
