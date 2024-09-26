@@ -93,6 +93,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
   }
 
+  private String getChecklistExactMatchOrVerbatimField(InPredicate<S> predicate) {
+    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+  }
+
   /**
    * Translates a valid {@link org.gbif.api.model.occurrence.Download} object and translates it into
    * a json query that can be used as the <em>body</em> for _search request of ES index.
@@ -436,14 +440,26 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
               });
 
     } else {
-      queryBuilder
-          .filter()
-          .add(
-              QueryBuilders.termsQuery(
-                  getExactMatchOrVerbatimField(predicate),
-                  predicate.getValues().stream()
-                      .map(v -> parseParamValue(v, parameter))
-                      .collect(Collectors.toList())));
+
+      if (predicate.getChecklistKey() != null){
+        queryBuilder
+                .filter()
+                .add(
+                        QueryBuilders.termsQuery(
+                                getChecklistExactMatchOrVerbatimField(predicate),
+                                predicate.getValues().stream()
+                                        .map(v -> parseParamValue(v, parameter))
+                                        .collect(Collectors.toList())));
+      } else {
+        queryBuilder
+                .filter()
+                .add(
+                        QueryBuilders.termsQuery(
+                                getExactMatchOrVerbatimField(predicate),
+                                predicate.getValues().stream()
+                                        .map(v -> parseParamValue(v, parameter))
+                                        .collect(Collectors.toList())));
+      }
     }
   }
 
