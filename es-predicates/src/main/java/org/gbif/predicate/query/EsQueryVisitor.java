@@ -441,24 +441,24 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
     } else {
 
-      if (predicate.getChecklistKey() != null){
+      if (predicate.getChecklistKey() != null) {
         queryBuilder
-                .filter()
-                .add(
-                        QueryBuilders.termsQuery(
-                                getChecklistExactMatchOrVerbatimField(predicate),
-                                predicate.getValues().stream()
-                                        .map(v -> parseParamValue(v, parameter))
-                                        .collect(Collectors.toList())));
+            .filter()
+            .add(
+                QueryBuilders.termsQuery(
+                    getChecklistExactMatchOrVerbatimField(predicate),
+                    predicate.getValues().stream()
+                        .map(v -> parseParamValue(v, parameter))
+                        .collect(Collectors.toList())));
       } else {
         queryBuilder
-                .filter()
-                .add(
-                        QueryBuilders.termsQuery(
-                                getExactMatchOrVerbatimField(predicate),
-                                predicate.getValues().stream()
-                                        .map(v -> parseParamValue(v, parameter))
-                                        .collect(Collectors.toList())));
+            .filter()
+            .add(
+                QueryBuilders.termsQuery(
+                    getExactMatchOrVerbatimField(predicate),
+                    predicate.getValues().stream()
+                        .map(v -> parseParamValue(v, parameter))
+                        .collect(Collectors.toList())));
       }
     }
   }
