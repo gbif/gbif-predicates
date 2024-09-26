@@ -17,12 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -44,23 +39,7 @@ import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.geo.DistanceUnit;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.predicate.ConjunctionPredicate;
-import org.gbif.api.model.predicate.DisjunctionPredicate;
-import org.gbif.api.model.predicate.EqualsPredicate;
-import org.gbif.api.model.predicate.GeoDistancePredicate;
-import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.GreaterThanPredicate;
-import org.gbif.api.model.predicate.InPredicate;
-import org.gbif.api.model.predicate.IsNotNullPredicate;
-import org.gbif.api.model.predicate.IsNullPredicate;
-import org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.LessThanPredicate;
-import org.gbif.api.model.predicate.LikePredicate;
-import org.gbif.api.model.predicate.NotPredicate;
-import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.predicate.RangePredicate;
-import org.gbif.api.model.predicate.SimplePredicate;
-import org.gbif.api.model.predicate.WithinPredicate;
+import org.gbif.api.model.predicate.*;
 import org.gbif.api.query.QueryVisitor;
 import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.util.IsoDateParsingUtils;
@@ -108,6 +87,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       return value.toLowerCase();
     }
     return value;
+  }
+
+  private String getChecklistExactMatchOrVerbatimField(EqualsPredicate<S> predicate) {
+    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
   }
 
   /**
@@ -308,12 +291,23 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       return;
     }
 
-    queryBuilder
-        .filter()
-        .add(
-            QueryBuilders.termQuery(
-                getExactMatchOrVerbatimField(predicate),
-                parseParamValue(predicate.getValue(), parameter)));
+    if (!Objects.isNull(predicate.getChecklistKey())){
+      queryBuilder
+              .filter()
+              .add(
+                      QueryBuilders.termQuery(
+                              getChecklistExactMatchOrVerbatimField(predicate),
+                              parseParamValue(predicate.getValue(), parameter))
+              );
+    } else {
+      queryBuilder
+              .filter()
+              .add(
+                      QueryBuilders.termQuery(
+                              getExactMatchOrVerbatimField(predicate),
+                              parseParamValue(predicate.getValue(), parameter))
+              );
+    }
   }
 
   private Function<String, Object> parseDate =
@@ -432,7 +426,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   Predicate subPredicate =
                       new EqualsPredicate<>(
-                          OccurrenceSearchParameter.EVENT_DATE, value, predicate.isMatchCase());
+                          OccurrenceSearchParameter.EVENT_DATE, value, predicate.isMatchCase(), predicate.getChecklistKey());
                   visit(subPredicate, shouldQueryBuilder);
                   queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
                 } catch (QueryBuildingException ex) {
