@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>56</version>
+    <version>59-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.predicates</groupId>
@@ -70,14 +70,14 @@
 
   <properties>
     <!-- Common variables -->
-    <jdkLevel>1.8</jdkLevel>
+    <jdkLevel>11</jdkLevel>
     <encoding>UTF-8</encoding>
     <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>1.13.2</gbif-api.version>
-    <dwc-api.version>1.48</dwc-api.version>
+    <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
+    <dwc-api.version>1.49-H3-SNAPSHOT</dwc-api.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.30</slf4j.version>
@@ -127,15 +127,6 @@
           <version>${maven-plugin-plugin.version}</version>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <compilerArgs>
-              <arg>-XepDisableAllChecks</arg>
-            </compilerArgs>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
         </plugin>
@@ -146,7 +137,7 @@
           <configuration combine.self="override">
             <java>
               <googleJavaFormat>
-                <version>1.7</version>
+                <version>1.8</version>
                 <style>GOOGLE</style>
               </googleJavaFormat>
             </java>

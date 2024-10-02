@@ -114,7 +114,9 @@ public class SQLColumnsUtils {
   /** Gets the Hive column name of the term parameter. */
   public static String getSQLValueColumn(Term term) {
     String columnName = getSQLColumn(term);
-    return isVocabulary(term) ? columnName + ".concept" : columnName;
+    return isVocabulary(term)
+        ? isSQLArray(term) ? columnName + ".concepts" : columnName + ".concept"
+        : columnName;
   }
 
   /** Gets the Hive column name of the extension parameter. */
@@ -136,10 +138,14 @@ public class SQLColumnsUtils {
       return "DOUBLE";
     } else if (isInterpretedBoolean(term)) {
       return "BOOLEAN";
+    } else if (isVocabulary(term)) {
+      if (isSQLArray(term)) {
+        return "STRUCT<concepts: ARRAY<STRING>,lineage: ARRAY<STRING>>";
+      } else {
+        return "STRUCT<concept: STRING,lineage: ARRAY<STRING>>";
+      }
     } else if (isSQLArray(term)) {
       return "ARRAY<STRING>";
-    } else if (isVocabulary(term)) {
-      return "STRUCT<concept: STRING,lineage: ARRAY<STRING>>";
     } else {
       return "STRING";
     }
@@ -169,7 +175,9 @@ public class SQLColumnsUtils {
         || DwcTerm.samplingProtocol == term
         || DwcTerm.georeferencedBy == term
         || DwcTerm.higherGeography == term
-        || GbifTerm.projectId == term;
+        || GbifTerm.projectId == term
+        || GbifTerm.lithostratigraphy == term
+        || GbifTerm.biostratigraphy == term;
   }
 
   public static boolean isVocabulary(Term term) {

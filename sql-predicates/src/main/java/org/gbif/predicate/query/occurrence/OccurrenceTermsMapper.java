@@ -169,6 +169,10 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.MEMBER, DwcTerm.member)
           .put(OccurrenceSearchParameter.BED, DwcTerm.bed)
           .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
+          .put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime)
+          .put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy)
+          .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)
+          .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
