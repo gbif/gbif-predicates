@@ -381,6 +381,34 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
         builder.append(')');
       }
+    } else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+      if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
+        Range<Double> range = SearchTypeValidator.parseDecimalRange(predicate.getValue());
+        if (range.hasLowerBound()) {
+          builder
+              .append("geologicaltime.gt")
+              .append(GREATER_THAN_EQUALS_OPERATOR)
+              .append(range.lowerEndpoint());
+        }
+        if (range.hasUpperBound()) {
+          if (range.hasLowerBound()) {
+            builder.append(CONJUNCTION_OPERATOR);
+          }
+          builder
+              .append("geologicaltime.lte")
+              .append(LESS_THAN_EQUALS_OPERATOR)
+              .append(range.upperEndpoint());
+        }
+      } else {
+        builder
+            .append(predicate.getValue())
+            .append(GREATER_THAN_OPERATOR)
+            .append("geologicaltime.gt")
+            .append(CONJUNCTION_OPERATOR)
+            .append(predicate.getValue())
+            .append(LESS_THAN_EQUALS_OPERATOR)
+            .append("geologicaltime.lte");
+      }
     } else {
       visitSimplePredicate(predicate, EQUALS_OPERATOR);
     }
