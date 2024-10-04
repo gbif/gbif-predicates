@@ -1106,19 +1106,23 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testGeoTimePredicate() throws QueryBuildingException {
-    Predicate predicate = new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12", false);
+    Predicate predicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12", false);
     String query = visitor.buildQuery(predicate);
     assertEquals("12 > geologicaltime.gt AND 12 <= geologicaltime.lte", query);
 
-    Predicate rangePredicate = new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,15", false);
+    Predicate rangePredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,15", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.gt >= 12.0 AND geologicaltime.lte <= 15.0", query);
 
-    rangePredicate = new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,*", false);
+    rangePredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,*", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.gt >= 12.0", query);
 
-    rangePredicate = new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "*,15", false);
+    rangePredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "*,15", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.lte <= 15.0", query);
   }
