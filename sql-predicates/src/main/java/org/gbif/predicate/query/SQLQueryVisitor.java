@@ -52,10 +52,7 @@ import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.api.vocabulary.TypeStatus;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GadmTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.*;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -282,7 +279,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
-      appendTaxonKeyFilter(predicate.getValue());
+      appendTaxonKeyFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       appendGadmGidFilter(predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
@@ -549,7 +546,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (predicate.getKey().name().equals("TAXON_KEY")) {
       // Taxon keys must be expanded into a disjunction of in predicates
-      appendTaxonKeyFilter(predicate.getValues());
+      appendTaxonKeyFilter(predicate);
 
     } else if (predicate.getKey().name().equals("GADM_GID")) {
       // GADM GIDs must be expanded into a disjunction of in predicates
@@ -902,16 +899,32 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /**
    * Searches any of the NUB keys in Hive of any rank.
    *
-   * @param taxonKey to append as filter
+   * @param taxonKeyPredicate to append as filter
    */
-  private void appendTaxonKeyFilter(String taxonKey) {
-    builder
-        .append('(')
-        .append(
-            NUB_KEYS.stream()
-                .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + taxonKey)
-                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
-        .append(')');
+  private void appendTaxonKeyFilter(EqualsPredicate<S> taxonKeyPredicate) {
+    if (taxonKeyPredicate.getChecklistKey() != null) {
+      builder
+          .append('(')
+          .append(
+              String.format(
+                  "stringArrayContains(%s['%s'], '%s', true)",
+                  SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.classifications),
+                  taxonKeyPredicate.getChecklistKey(),
+                  taxonKeyPredicate.getValue()))
+          .append(')');
+    } else {
+      builder
+          .append('(')
+          .append(
+              NUB_KEYS.stream()
+                  .map(
+                      term ->
+                          SQLColumnsUtils.getSQLQueryColumn(term)
+                              + EQUALS_OPERATOR
+                              + taxonKeyPredicate.getValue())
+                  .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+          .append(')');
+    }
   }
 
   /**
@@ -942,22 +955,47 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *
    * @param taxonKeys to append as filter
    */
-  private void appendTaxonKeyFilter(Collection<String> taxonKeys) {
-    builder.append('(');
-    boolean first = true;
-    for (Term term : NUB_KEYS) {
-      if (!first) {
-        builder.append(DISJUNCTION_OPERATOR);
+  private void appendTaxonKeyFilter(InPredicate<S> taxonKeyPredicate) {
+
+    Collection<String> taxonKeys = taxonKeyPredicate.getValues();
+
+    if (taxonKeyPredicate.getChecklistKey() != null) {
+      builder.append('(');
+      boolean first = true;
+      for (String taxonKey : taxonKeys) {
+        if (!first) {
+          builder.append(DISJUNCTION_OPERATOR);
+        }
+        builder
+            .append('(')
+            .append(
+                String.format(
+                    "stringArrayContains(%s['%s'], '%s', true)",
+                    SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.classifications),
+                    taxonKeyPredicate.getChecklistKey(),
+                    taxonKey))
+            .append(')');
+        first = false;
       }
-      builder
-          .append(SQLColumnsUtils.getSQLQueryColumn(term))
-          .append(IN_OPERATOR)
-          .append('(')
-          .append(COMMA_JOINER.join(taxonKeys))
-          .append(')');
-      first = false;
+      builder.append(')');
+    } else {
+
+      builder.append('(');
+      boolean first = true;
+      for (Term term : NUB_KEYS) {
+        if (!first) {
+          builder.append(DISJUNCTION_OPERATOR);
+        }
+        builder
+            .append(SQLColumnsUtils.getSQLQueryColumn(term))
+            .append(IN_OPERATOR)
+            .append('(')
+            .append(COMMA_JOINER.join(taxonKeys))
+            .append(')');
+        first = false;
+      }
+      builder.append(')');
     }
-    builder.append(')');
   }
 
   /**

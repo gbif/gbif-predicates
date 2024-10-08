@@ -1103,4 +1103,33 @@ public class SQLQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testMultiTaxonomyEqualsPredicate() {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      System.out.println(query);
+      assertEquals("(stringArrayContains(classifications['my-checklist-uuid'], '6', true))", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testMultiTaxonomyInPredicate() {
+    InPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      System.out.println(query);
+      assertEquals(
+          "((stringArrayContains(classifications['my-checklist-uuid'], '6', true)) OR (stringArrayContains(classifications['my-checklist-uuid'], '7', true)))",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }
