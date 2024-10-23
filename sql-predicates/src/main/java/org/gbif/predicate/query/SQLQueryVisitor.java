@@ -953,7 +953,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /**
    * Searches any of the NUB keys in Hive of any rank, for multiple keys.
    *
-   * @param taxonKeys to append as filter
+   * @param taxonKeyPredicate to append as filter
    */
   private void appendTaxonKeyFilter(InPredicate<S> taxonKeyPredicate) {
 

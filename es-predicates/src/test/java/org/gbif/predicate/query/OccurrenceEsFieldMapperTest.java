@@ -63,7 +63,7 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
 
   @Override
   public String getChecklistField(String checklistKey, OccurrenceSearchParameter searchParameter) {
-    return "classification." + checklistKey + "." + searchParameter.name().toLowerCase();
+    return "classifications." + checklistKey + ".taxonKeys.keyword";
   }
 
   @Override

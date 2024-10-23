@@ -1980,4 +1980,103 @@ public class EsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testMultiTaxonomyPredicate() {
+    EqualsPredicate equalsPredicate =
+        new EqualsPredicate<OccurrenceSearchParameter>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            "urn:lsid:marinespecies.org:taxname:368663",
+            false,
+            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"term\" : {\n"
+              + "          \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys.keyword\" : {\n"
+              + "            \"value\" : \"urn:lsid:marinespecies.org:taxname:368663\",\n"
+              + "            \"boost\" : 1.0\n"
+              + "          }\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testMultipleTaxonomiesPredicate() {
+
+    DisjunctionPredicate conjunctionPredicate =
+        new DisjunctionPredicate(
+            Arrays.asList(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "urn:lsid:marinespecies.org:taxname:1",
+                    false,
+                    "checklistkey1"),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "urn:lsid:marinespecies.org:taxname:2",
+                    false,
+                    "checklistkey2")));
+    try {
+      String query = visitor.buildQuery(conjunctionPredicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"should\" : [\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"term\" : {\n"
+              + "                \"classifications.checklistkey1.taxonKeys.keyword\" : {\n"
+              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:1\",\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      },\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"term\" : {\n"
+              + "                \"classifications.checklistkey2.taxonKeys.keyword\" : {\n"
+              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:2\",\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }

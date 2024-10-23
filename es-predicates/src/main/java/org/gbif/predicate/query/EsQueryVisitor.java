@@ -204,6 +204,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   private Map<S, List<EqualsPredicate<S>>> groupEquals(DisjunctionPredicate predicate) {
     return predicate.getPredicates().stream()
         .filter(p -> p instanceof EqualsPredicate)
+        .filter(p -> ((EqualsPredicate<?>) p).getChecklistKey() == null)
         .map(p -> (EqualsPredicate<S>) p)
         .collect(Collectors.groupingBy(EqualsPredicate::getKey))
         .entrySet()
