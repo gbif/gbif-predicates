@@ -51,7 +51,6 @@ import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.dwc.terms.*;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -289,13 +288,15 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   builder.append(
                       String.format(
                           getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TYPE_STATUS) {
-      Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), TypeStatus.class))
-          .ifPresent(
-              typeStatus ->
-                  builder.append(
-                      String.format(
-                          getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(), true)));
+      //    } else if (predicate.getKey() == OccurrenceSearchParameter.TYPE_STATUS) {
+      //      Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(),
+      // TypeStatus.class))
+      //          .ifPresent(
+      //              typeStatus ->
+      //                  builder.append(
+      //                      String.format(
+      //                          getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(),
+      // true)));
     } else if (predicate.getKey() == OccurrenceSearchParameter.ISSUE) {
       builder.append(
           String.format(

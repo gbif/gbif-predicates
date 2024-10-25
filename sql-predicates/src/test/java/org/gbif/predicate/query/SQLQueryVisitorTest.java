@@ -1045,7 +1045,7 @@ public class SQLQueryVisitorTest {
                 query = visitor.buildQuery(new IsNullPredicate<>(param));
                 if (visitor.isSQLArray(param)) {
                   assertEquals(
-                      " (" + hiveQueryField + " IS NULL OR size(" + hiveQueryField + ") = 0) ",
+                      "(" + hiveQueryField + " IS NULL OR size(" + hiveQueryField + ") = 0)",
                       query);
                 } else {
                   assertEquals(hiveQueryField + " IS NULL ", query);
