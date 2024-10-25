@@ -138,7 +138,7 @@ public class SQLColumnsUtils {
       return "BOOLEAN";
     } else if (isSQLArray(term)) {
       return "ARRAY<STRING>";
-    } else if (DwcTerm.typeStatus == term || DwcTerm.sex == term ) {
+    } else if (DwcTerm.typeStatus == term || DwcTerm.sex == term) {
       return "STRUCT<concepts: ARRAY<STRING>,lineage: ARRAY<STRING>>";
     } else if (isVocabulary(term)) {
       return "STRUCT<concept: STRING,lineage: ARRAY<STRING>>";
