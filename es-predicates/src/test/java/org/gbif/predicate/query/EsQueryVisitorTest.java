@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
+import java.util.List;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -1981,6 +1982,7 @@ public class EsQueryVisitorTest {
     }
   }
 
+  /** Test a single taxon key query with a checklist key specified. */
   @Test
   public void testMultiTaxonomyPredicate() {
     EqualsPredicate equalsPredicate =
@@ -2014,10 +2016,121 @@ public class EsQueryVisitorTest {
     }
   }
 
+  /** Test a single taxon key query with a checklist key specified. */
   @Test
-  public void testMultipleTaxonomiesPredicate() {
+  public void testMultiTaxonomyPredicates() {
+    InPredicate inPredicate =
+        new InPredicate<OccurrenceSearchParameter>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            List.of(
+                "urn:lsid:marinespecies.org:taxname:368663",
+                "urn:lsid:marinespecies.org:taxname:368664"),
+            false,
+            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+    try {
+      String query = visitor.buildQuery(inPredicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"terms\" : {\n"
+              + "          \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys.keyword\" : [\n"
+              + "            \"urn:lsid:marinespecies.org:taxname:368663\",\n"
+              + "            \"urn:lsid:marinespecies.org:taxname:368664\"\n"
+              + "          ],\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 
-    DisjunctionPredicate conjunctionPredicate =
+  /**
+   * Tests queries with 2 taxon keys coming from 2 separate classification with conjunction
+   * predicate (AND).
+   */
+  @Test
+  public void testMultipleTaxonomiesConjunctionPredicate() {
+
+    ConjunctionPredicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "urn:lsid:marinespecies.org:taxname:1",
+                    false,
+                    "checklistkey1"),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "urn:lsid:marinespecies.org:taxname:2",
+                    false,
+                    "checklistkey2")));
+    try {
+      String query = visitor.buildQuery(predicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"term\" : {\n"
+              + "                \"classifications.checklistkey1.taxonKeys.keyword\" : {\n"
+              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:1\",\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      },\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"term\" : {\n"
+              + "                \"classifications.checklistkey2.taxonKeys.keyword\" : {\n"
+              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:2\",\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  /**
+   * Tests queries with 2 taxon keys coming from 2 separate classification with disjunction
+   * predicate (OR).
+   */
+  @Test
+  public void testMultipleTaxonomiesDisjunctionPredicate() {
+
+    DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
@@ -2031,7 +2144,7 @@ public class EsQueryVisitorTest {
                     false,
                     "checklistkey2")));
     try {
-      String query = visitor.buildQuery(conjunctionPredicate);
+      String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
               + "  \"bool\" : {\n"
