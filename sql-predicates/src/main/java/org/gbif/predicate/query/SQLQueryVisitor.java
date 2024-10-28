@@ -245,6 +245,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     Boolean matchCase = null;
     List<String> values = new ArrayList<>();
     S parameter = null;
+    String checklistsKey = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       if (subPredicate instanceof EqualsPredicate) {
@@ -252,8 +253,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
+          checklistsKey = equalsSubPredicate.getChecklistKey();
         } else if (parameter != equalsSubPredicate.getKey()
-            || matchCase != equalsSubPredicate.isMatchCase()) {
+            || matchCase != equalsSubPredicate.isMatchCase()
+            || !Objects.equals(checklistsKey, equalsSubPredicate.getChecklistKey())) {
           useIn = false;
           break;
         }
