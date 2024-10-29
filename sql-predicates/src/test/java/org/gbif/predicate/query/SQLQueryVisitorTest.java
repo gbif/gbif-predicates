@@ -225,6 +225,29 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testEqualsArrayPredicate() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, "value", false);
+    String query = visitor.buildQuery(p);
+    assertEquals("stringArrayContains(recordedby,'value',false)", query);
+
+    p = new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, "value", true);
+    query = visitor.buildQuery(p);
+    assertEquals("stringArrayContains(recordedby,'value',true)", query);
+  }
+
+  @Test
+  public void testLikeArrayPredicate() throws QueryBuildingException {
+    // NB: ? and * are the wildcards here.
+    Predicate p = new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, "v?l*ue_%", false);
+    String query = visitor.buildQuery(p);
+    assertEquals("stringArrayLike(recordedby,'v?l*ue_%',false)", query);
+
+    p = new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, "v?l*ue_%", true);
+    query = visitor.buildQuery(p);
+    assertEquals("stringArrayLike(recordedby,'v?l*ue_%',true)", query);
+  }
+
+  @Test
   public void testGreaterThanOrEqualPredicate() throws QueryBuildingException {
     Predicate p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "222");
     String query = visitor.buildQuery(p);

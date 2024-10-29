@@ -92,6 +92,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final Function<Term, String> ARRAY_FN =
       t -> "stringArrayContains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
+  private static final Function<Term, String> ARRAY_LIKE_FN =
+      t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
           GbifTerm.taxonKey,
@@ -630,20 +633,28 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
-    // Replace % → \% and _ → \_
-    // Then replace * → % and ? → _
-    LikePredicate<S> likePredicate =
-        new LikePredicate<>(
-            predicate.getKey(),
-            predicate
-                .getValue()
-                .replace("%", "\\%")
-                .replace("_", "\\_")
-                .replace('*', '%')
-                .replace('?', '_'),
-            predicate.isMatchCase());
+    if (sqlTermsMapper.isArray(predicate.getKey())) {
+      builder.append(
+          String.format(
+              ARRAY_LIKE_FN.apply(sqlTermsMapper.getTermArray(predicate.getKey())),
+              predicate.getValue().replaceAll("'", "\\\\'"),
+              predicate.isMatchCase()));
+    } else {
+      // Replace % → \% and _ → \_
+      // Then replace * → % and ? → _
+      LikePredicate<S> likePredicate =
+          new LikePredicate<>(
+              predicate.getKey(),
+              predicate
+                  .getValue()
+                  .replace("%", "\\%")
+                  .replace("_", "\\_")
+                  .replace('*', '%')
+                  .replace('?', '_'),
+              predicate.isMatchCase());
 
-    visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+      visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+    }
   }
 
   public void visit(NotPredicate predicate) throws QueryBuildingException {
