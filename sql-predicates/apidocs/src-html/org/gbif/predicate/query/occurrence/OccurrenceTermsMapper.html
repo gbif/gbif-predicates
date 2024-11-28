@@ -1,0 +1,304 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<main role="main">
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span><a id="line.1">package org.gbif.predicate.query.occurrence;</a>
+<span class="sourceLineNo">002</span><a id="line.2"></a>
+<span class="sourceLineNo">003</span><a id="line.3">import com.google.common.collect.ImmutableMap;</a>
+<span class="sourceLineNo">004</span><a id="line.4">import java.util.Collections;</a>
+<span class="sourceLineNo">005</span><a id="line.5">import java.util.Map;</a>
+<span class="sourceLineNo">006</span><a id="line.6">import org.gbif.api.model.common.search.SearchParameter;</a>
+<span class="sourceLineNo">007</span><a id="line.7">import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;</a>
+<span class="sourceLineNo">008</span><a id="line.8">import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;</a>
+<span class="sourceLineNo">009</span><a id="line.9">import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;</a>
+<span class="sourceLineNo">010</span><a id="line.10">import org.gbif.api.model.predicate.GreaterThanPredicate;</a>
+<span class="sourceLineNo">011</span><a id="line.11">import org.gbif.api.model.predicate.SimplePredicate;</a>
+<span class="sourceLineNo">012</span><a id="line.12">import org.gbif.dwc.terms.DcTerm;</a>
+<span class="sourceLineNo">013</span><a id="line.13">import org.gbif.dwc.terms.DwcTerm;</a>
+<span class="sourceLineNo">014</span><a id="line.14">import org.gbif.dwc.terms.GadmTerm;</a>
+<span class="sourceLineNo">015</span><a id="line.15">import org.gbif.dwc.terms.GbifInternalTerm;</a>
+<span class="sourceLineNo">016</span><a id="line.16">import org.gbif.dwc.terms.GbifTerm;</a>
+<span class="sourceLineNo">017</span><a id="line.17">import org.gbif.dwc.terms.IucnTerm;</a>
+<span class="sourceLineNo">018</span><a id="line.18">import org.gbif.dwc.terms.Term;</a>
+<span class="sourceLineNo">019</span><a id="line.19">import org.gbif.predicate.query.SQLTermsMapper;</a>
+<span class="sourceLineNo">020</span><a id="line.20"></a>
+<span class="sourceLineNo">021</span><a id="line.21">public class OccurrenceTermsMapper implements SQLTermsMapper&lt;SearchParameter&gt; {</a>
+<span class="sourceLineNo">022</span><a id="line.22">  // parameters that map directly to Hive.</a>
+<span class="sourceLineNo">023</span><a id="line.23">  // boundingBox, coordinate, taxonKey and gadmGid are treated specially!</a>
+<span class="sourceLineNo">024</span><a id="line.24">  private static final Map&lt;? extends SearchParameter, ? extends Term&gt; PARAM_TO_TERM =</a>
+<span class="sourceLineNo">025</span><a id="line.25">      ImmutableMap.&lt;SearchParameter, Term&gt;builder()</a>
+<span class="sourceLineNo">026</span><a id="line.26">          .put(OccurrenceSearchParameter.DATASET_KEY, GbifTerm.datasetKey)</a>
+<span class="sourceLineNo">027</span><a id="line.27">          .put(OccurrenceSearchParameter.SEX, DwcTerm.sex)</a>
+<span class="sourceLineNo">028</span><a id="line.28">          .put(OccurrenceSearchParameter.YEAR, DwcTerm.year)</a>
+<span class="sourceLineNo">029</span><a id="line.29">          .put(OccurrenceSearchParameter.MONTH, DwcTerm.month)</a>
+<span class="sourceLineNo">030</span><a id="line.30">          .put(OccurrenceSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude)</a>
+<span class="sourceLineNo">031</span><a id="line.31">          .put(OccurrenceSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude)</a>
+<span class="sourceLineNo">032</span><a id="line.32">          .put(OccurrenceSearchParameter.ELEVATION, GbifTerm.elevation)</a>
+<span class="sourceLineNo">033</span><a id="line.33">          .put(OccurrenceSearchParameter.DEPTH, GbifTerm.depth)</a>
+<span class="sourceLineNo">034</span><a id="line.34">          .put(OccurrenceSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode)</a>
+<span class="sourceLineNo">035</span><a id="line.35">          .put(OccurrenceSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode)</a>
+<span class="sourceLineNo">036</span><a id="line.36">          .put(OccurrenceSearchParameter.CATALOG_NUMBER, DwcTerm.catalogNumber)</a>
+<span class="sourceLineNo">037</span><a id="line.37">          .put(OccurrenceSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName)</a>
+<span class="sourceLineNo">038</span><a id="line.38">          .put(OccurrenceSearchParameter.OCCURRENCE_ID, DwcTerm.occurrenceID)</a>
+<span class="sourceLineNo">039</span><a id="line.39">          .put(OccurrenceSearchParameter.ESTABLISHMENT_MEANS, DwcTerm.establishmentMeans)</a>
+<span class="sourceLineNo">040</span><a id="line.40">          .put(OccurrenceSearchParameter.DEGREE_OF_ESTABLISHMENT, DwcTerm.degreeOfEstablishment)</a>
+<span class="sourceLineNo">041</span><a id="line.41">          .put(OccurrenceSearchParameter.PATHWAY, DwcTerm.pathway)</a>
+<span class="sourceLineNo">042</span><a id="line.42">          // the following need some value transformation</a>
+<span class="sourceLineNo">043</span><a id="line.43">          .put(OccurrenceSearchParameter.EVENT_DATE, DwcTerm.eventDate)</a>
+<span class="sourceLineNo">044</span><a id="line.44">          .put(OccurrenceSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear)</a>
+<span class="sourceLineNo">045</span><a id="line.45">          .put(OccurrenceSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear)</a>
+<span class="sourceLineNo">046</span><a id="line.46">          .put(OccurrenceSearchParameter.MODIFIED, DcTerm.modified)</a>
+<span class="sourceLineNo">047</span><a id="line.47">          .put(OccurrenceSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted)</a>
+<span class="sourceLineNo">048</span><a id="line.48">          .put(OccurrenceSearchParameter.BASIS_OF_RECORD, DwcTerm.basisOfRecord)</a>
+<span class="sourceLineNo">049</span><a id="line.49">          .put(OccurrenceSearchParameter.COUNTRY, DwcTerm.countryCode)</a>
+<span class="sourceLineNo">050</span><a id="line.50">          .put(OccurrenceSearchParameter.CONTINENT, DwcTerm.continent)</a>
+<span class="sourceLineNo">051</span><a id="line.51">          .put(OccurrenceSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry)</a>
+<span class="sourceLineNo">052</span><a id="line.52">          .put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy)</a>
+<span class="sourceLineNo">053</span><a id="line.53">          .put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy)</a>
+<span class="sourceLineNo">054</span><a id="line.54">          .put(OccurrenceSearchParameter.RECORD_NUMBER, DwcTerm.recordNumber)</a>
+<span class="sourceLineNo">055</span><a id="line.55">          .put(OccurrenceSearchParameter.TYPE_STATUS, DwcTerm.typeStatus)</a>
+<span class="sourceLineNo">056</span><a id="line.56">          .put(OccurrenceSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate)</a>
+<span class="sourceLineNo">057</span><a id="line.57">          .put(OccurrenceSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues)</a>
+<span class="sourceLineNo">058</span><a id="line.58">          .put(OccurrenceSearchParameter.MEDIA_TYPE, GbifTerm.mediaType)</a>
+<span class="sourceLineNo">059</span><a id="line.59">          .put(OccurrenceSearchParameter.ISSUE, GbifTerm.issue)</a>
+<span class="sourceLineNo">060</span><a id="line.60">          .put(OccurrenceSearchParameter.KINGDOM_KEY, GbifTerm.kingdomKey)</a>
+<span class="sourceLineNo">061</span><a id="line.61">          .put(OccurrenceSearchParameter.PHYLUM_KEY, GbifTerm.phylumKey)</a>
+<span class="sourceLineNo">062</span><a id="line.62">          .put(OccurrenceSearchParameter.CLASS_KEY, GbifTerm.classKey)</a>
+<span class="sourceLineNo">063</span><a id="line.63">          .put(OccurrenceSearchParameter.ORDER_KEY, GbifTerm.orderKey)</a>
+<span class="sourceLineNo">064</span><a id="line.64">          .put(OccurrenceSearchParameter.FAMILY_KEY, GbifTerm.familyKey)</a>
+<span class="sourceLineNo">065</span><a id="line.65">          .put(OccurrenceSearchParameter.GENUS_KEY, GbifTerm.genusKey)</a>
+<span class="sourceLineNo">066</span><a id="line.66">          .put(OccurrenceSearchParameter.SUBGENUS_KEY, GbifTerm.subgenusKey)</a>
+<span class="sourceLineNo">067</span><a id="line.67">          .put(OccurrenceSearchParameter.SPECIES_KEY, GbifTerm.speciesKey)</a>
+<span class="sourceLineNo">068</span><a id="line.68">          .put(OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey)</a>
+<span class="sourceLineNo">069</span><a id="line.69">          .put(OccurrenceSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus)</a>
+<span class="sourceLineNo">070</span><a id="line.70">          .put(OccurrenceSearchParameter.REPATRIATED, GbifTerm.repatriated)</a>
+<span class="sourceLineNo">071</span><a id="line.71">          .put(OccurrenceSearchParameter.ORGANISM_ID, DwcTerm.organismID)</a>
+<span class="sourceLineNo">072</span><a id="line.72">          .put(OccurrenceSearchParameter.LOCALITY, DwcTerm.locality)</a>
+<span class="sourceLineNo">073</span><a id="line.73">          .put(</a>
+<span class="sourceLineNo">074</span><a id="line.74">              OccurrenceSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,</a>
+<span class="sourceLineNo">075</span><a id="line.75">              DwcTerm.coordinateUncertaintyInMeters)</a>
+<span class="sourceLineNo">076</span><a id="line.76">          .put(OccurrenceSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince)</a>
+<span class="sourceLineNo">077</span><a id="line.77">          .put(OccurrenceSearchParameter.WATER_BODY, DwcTerm.waterBody)</a>
+<span class="sourceLineNo">078</span><a id="line.78">          .put(OccurrenceSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid)</a>
+<span class="sourceLineNo">079</span><a id="line.79">          .put(OccurrenceSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid)</a>
+<span class="sourceLineNo">080</span><a id="line.80">          .put(OccurrenceSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid)</a>
+<span class="sourceLineNo">081</span><a id="line.81">          .put(OccurrenceSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid)</a>
+<span class="sourceLineNo">082</span><a id="line.82">          .put(OccurrenceSearchParameter.PROTOCOL, GbifTerm.protocol)</a>
+<span class="sourceLineNo">083</span><a id="line.83">          .put(OccurrenceSearchParameter.LICENSE, DcTerm.license)</a>
+<span class="sourceLineNo">084</span><a id="line.84">          .put(OccurrenceSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey)</a>
+<span class="sourceLineNo">085</span><a id="line.85">          .put(</a>
+<span class="sourceLineNo">086</span><a id="line.86">              OccurrenceSearchParameter.HOSTING_ORGANIZATION_KEY,</a>
+<span class="sourceLineNo">087</span><a id="line.87">              GbifInternalTerm.hostingOrganizationKey)</a>
+<span class="sourceLineNo">088</span><a id="line.88">          .put(OccurrenceSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId)</a>
+<span class="sourceLineNo">089</span><a id="line.89">          .put(OccurrenceSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey)</a>
+<span class="sourceLineNo">090</span><a id="line.90">          .put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)</a>
+<span class="sourceLineNo">091</span><a id="line.91">          .put(OccurrenceSearchParameter.EVENT_ID, DwcTerm.eventID)</a>
+<span class="sourceLineNo">092</span><a id="line.92">          .put(OccurrenceSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID)</a>
+<span class="sourceLineNo">093</span><a id="line.93">          .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)</a>
+<span class="sourceLineNo">094</span><a id="line.94">          .put(OccurrenceSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym)</a>
+<span class="sourceLineNo">095</span><a id="line.95">          .put(OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME, GbifTerm.verbatimScientificName)</a>
+<span class="sourceLineNo">096</span><a id="line.96">          .put(OccurrenceSearchParameter.TAXON_ID, DwcTerm.taxonID)</a>
+<span class="sourceLineNo">097</span><a id="line.97">          .put(OccurrenceSearchParameter.TAXON_CONCEPT_ID, DwcTerm.taxonConceptID)</a>
+<span class="sourceLineNo">098</span><a id="line.98">          .put(OccurrenceSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit)</a>
+<span class="sourceLineNo">099</span><a id="line.99">          .put(OccurrenceSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue)</a>
+<span class="sourceLineNo">100</span><a id="line.100">          .put(OccurrenceSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications)</a>
+<span class="sourceLineNo">101</span><a id="line.101">          .put(OccurrenceSearchParameter.ORGANISM_QUANTITY, DwcTerm.organismQuantity)</a>
+<span class="sourceLineNo">102</span><a id="line.102">          .put(OccurrenceSearchParameter.ORGANISM_QUANTITY_TYPE, DwcTerm.organismQuantityType)</a>
+<span class="sourceLineNo">103</span><a id="line.103">          .put(</a>
+<span class="sourceLineNo">104</span><a id="line.104">              OccurrenceSearchParameter.RELATIVE_ORGANISM_QUANTITY,</a>
+<span class="sourceLineNo">105</span><a id="line.105">              GbifTerm.relativeOrganismQuantity)</a>
+<span class="sourceLineNo">106</span><a id="line.106">          .put(OccurrenceSearchParameter.COLLECTION_KEY, GbifInternalTerm.collectionKey)</a>
+<span class="sourceLineNo">107</span><a id="line.107">          .put(OccurrenceSearchParameter.INSTITUTION_KEY, GbifInternalTerm.institutionKey)</a>
+<span class="sourceLineNo">108</span><a id="line.108">          .put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID)</a>
+<span class="sourceLineNo">109</span><a id="line.109">          .put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID)</a>
+<span class="sourceLineNo">110</span><a id="line.110">          .put(OccurrenceSearchParameter.OCCURRENCE_STATUS, DwcTerm.occurrenceStatus)</a>
+<span class="sourceLineNo">111</span><a id="line.111">          .put(OccurrenceSearchParameter.LIFE_STAGE, DwcTerm.lifeStage)</a>
+<span class="sourceLineNo">112</span><a id="line.112">          .put(OccurrenceSearchParameter.IS_IN_CLUSTER, GbifInternalTerm.isInCluster)</a>
+<span class="sourceLineNo">113</span><a id="line.113">          .put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)</a>
+<span class="sourceLineNo">114</span><a id="line.114">          .put(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory)</a>
+<span class="sourceLineNo">115</span><a id="line.115">          .put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID)</a>
+<span class="sourceLineNo">116</span><a id="line.116">          .put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName)</a>
+<span class="sourceLineNo">117</span><a id="line.117">          .put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers)</a>
+<span class="sourceLineNo">118</span><a id="line.118">          .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)</a>
+<span class="sourceLineNo">119</span><a id="line.119">          .put(</a>
+<span class="sourceLineNo">120</span><a id="line.120">              OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,</a>
+<span class="sourceLineNo">121</span><a id="line.121">              GbifTerm.distanceFromCentroidInMeters)</a>
+<span class="sourceLineNo">122</span><a id="line.122">          .put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID)</a>
+<span class="sourceLineNo">123</span><a id="line.123">          .put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)</a>
+<span class="sourceLineNo">124</span><a id="line.124">          .put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte)</a>
+<span class="sourceLineNo">125</span><a id="line.125">          .put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion)</a>
+<span class="sourceLineNo">126</span><a id="line.126">          .put(OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion)</a>
+<span class="sourceLineNo">127</span><a id="line.127">          .put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced)</a>
+<span class="sourceLineNo">128</span><a id="line.128">          .put(OccurrenceSearchParameter.ISLAND, DwcTerm.island)</a>
+<span class="sourceLineNo">129</span><a id="line.129">          .put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup)</a>
+<span class="sourceLineNo">130</span><a id="line.130">          .put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber)</a>
+<span class="sourceLineNo">131</span><a id="line.131">          .put(</a>
+<span class="sourceLineNo">132</span><a id="line.132">              OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,</a>
+<span class="sourceLineNo">133</span><a id="line.133">              DwcTerm.earliestEonOrLowestEonothem)</a>
+<span class="sourceLineNo">134</span><a id="line.134">          .put(</a>
+<span class="sourceLineNo">135</span><a id="line.135">              OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,</a>
+<span class="sourceLineNo">136</span><a id="line.136">              DwcTerm.latestEonOrHighestEonothem)</a>
+<span class="sourceLineNo">137</span><a id="line.137">          .put(</a>
+<span class="sourceLineNo">138</span><a id="line.138">              OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,</a>
+<span class="sourceLineNo">139</span><a id="line.139">              DwcTerm.earliestEraOrLowestErathem)</a>
+<span class="sourceLineNo">140</span><a id="line.140">          .put(</a>
+<span class="sourceLineNo">141</span><a id="line.141">              OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM,</a>
+<span class="sourceLineNo">142</span><a id="line.142">              DwcTerm.latestEraOrHighestErathem)</a>
+<span class="sourceLineNo">143</span><a id="line.143">          .put(</a>
+<span class="sourceLineNo">144</span><a id="line.144">              OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,</a>
+<span class="sourceLineNo">145</span><a id="line.145">              DwcTerm.earliestPeriodOrLowestSystem)</a>
+<span class="sourceLineNo">146</span><a id="line.146">          .put(</a>
+<span class="sourceLineNo">147</span><a id="line.147">              OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,</a>
+<span class="sourceLineNo">148</span><a id="line.148">              DwcTerm.latestPeriodOrHighestSystem)</a>
+<span class="sourceLineNo">149</span><a id="line.149">          .put(</a>
+<span class="sourceLineNo">150</span><a id="line.150">              OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,</a>
+<span class="sourceLineNo">151</span><a id="line.151">              DwcTerm.earliestEpochOrLowestSeries)</a>
+<span class="sourceLineNo">152</span><a id="line.152">          .put(</a>
+<span class="sourceLineNo">153</span><a id="line.153">              OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,</a>
+<span class="sourceLineNo">154</span><a id="line.154">              DwcTerm.latestEpochOrHighestSeries)</a>
+<span class="sourceLineNo">155</span><a id="line.155">          .put(</a>
+<span class="sourceLineNo">156</span><a id="line.156">              OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE,</a>
+<span class="sourceLineNo">157</span><a id="line.157">              DwcTerm.earliestAgeOrLowestStage)</a>
+<span class="sourceLineNo">158</span><a id="line.158">          .put(</a>
+<span class="sourceLineNo">159</span><a id="line.159">              OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE,</a>
+<span class="sourceLineNo">160</span><a id="line.160">              DwcTerm.latestAgeOrHighestStage)</a>
+<span class="sourceLineNo">161</span><a id="line.161">          .put(</a>
+<span class="sourceLineNo">162</span><a id="line.162">              OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE,</a>
+<span class="sourceLineNo">163</span><a id="line.163">              DwcTerm.lowestBiostratigraphicZone)</a>
+<span class="sourceLineNo">164</span><a id="line.164">          .put(</a>
+<span class="sourceLineNo">165</span><a id="line.165">              OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,</a>
+<span class="sourceLineNo">166</span><a id="line.166">              DwcTerm.highestBiostratigraphicZone)</a>
+<span class="sourceLineNo">167</span><a id="line.167">          .put(OccurrenceSearchParameter.GROUP, DwcTerm.group)</a>
+<span class="sourceLineNo">168</span><a id="line.168">          .put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation)</a>
+<span class="sourceLineNo">169</span><a id="line.169">          .put(OccurrenceSearchParameter.MEMBER, DwcTerm.member)</a>
+<span class="sourceLineNo">170</span><a id="line.170">          .put(OccurrenceSearchParameter.BED, DwcTerm.bed)</a>
+<span class="sourceLineNo">171</span><a id="line.171">          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)</a>
+<span class="sourceLineNo">172</span><a id="line.172">          .put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime)</a>
+<span class="sourceLineNo">173</span><a id="line.173">          .put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy)</a>
+<span class="sourceLineNo">174</span><a id="line.174">          .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)</a>
+<span class="sourceLineNo">175</span><a id="line.175">          .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)</a>
+<span class="sourceLineNo">176</span><a id="line.176">          .build();</a>
+<span class="sourceLineNo">177</span><a id="line.177"></a>
+<span class="sourceLineNo">178</span><a id="line.178">  private static final Map&lt;? extends SearchParameter, Term&gt; ARRAY_STRING_TERMS =</a>
+<span class="sourceLineNo">179</span><a id="line.179">      ImmutableMap.&lt;OccurrenceSearchParameter, Term&gt;builder()</a>
+<span class="sourceLineNo">180</span><a id="line.180">          .put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)</a>
+<span class="sourceLineNo">181</span><a id="line.181">          .put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)</a>
+<span class="sourceLineNo">182</span><a id="line.182">          .put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID)</a>
+<span class="sourceLineNo">183</span><a id="line.183">          .put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID)</a>
+<span class="sourceLineNo">184</span><a id="line.184">          .put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID)</a>
+<span class="sourceLineNo">185</span><a id="line.185">          .put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName)</a>
+<span class="sourceLineNo">186</span><a id="line.186">          .put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers)</a>
+<span class="sourceLineNo">187</span><a id="line.187">          .put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy)</a>
+<span class="sourceLineNo">188</span><a id="line.188">          .put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy)</a>
+<span class="sourceLineNo">189</span><a id="line.189">          .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)</a>
+<span class="sourceLineNo">190</span><a id="line.190">          .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)</a>
+<span class="sourceLineNo">191</span><a id="line.191">          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)</a>
+<span class="sourceLineNo">192</span><a id="line.192">          .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)</a>
+<span class="sourceLineNo">193</span><a id="line.193">          .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)</a>
+<span class="sourceLineNo">194</span><a id="line.194">          .put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences)</a>
+<span class="sourceLineNo">195</span><a id="line.195">          .build();</a>
+<span class="sourceLineNo">196</span><a id="line.196"></a>
+<span class="sourceLineNo">197</span><a id="line.197">  private static final Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();</a>
+<span class="sourceLineNo">198</span><a id="line.198"></a>
+<span class="sourceLineNo">199</span><a id="line.199">  @Override</a>
+<span class="sourceLineNo">200</span><a id="line.200">  public Term term(SearchParameter searchParameter) {</a>
+<span class="sourceLineNo">201</span><a id="line.201">    return PARAM_TO_TERM.get(searchParameter);</a>
+<span class="sourceLineNo">202</span><a id="line.202">  }</a>
+<span class="sourceLineNo">203</span><a id="line.203"></a>
+<span class="sourceLineNo">204</span><a id="line.204">  @Override</a>
+<span class="sourceLineNo">205</span><a id="line.205">  public boolean isArray(SearchParameter searchParameter) {</a>
+<span class="sourceLineNo">206</span><a id="line.206">    return ARRAY_STRING_TERMS.containsKey(searchParameter);</a>
+<span class="sourceLineNo">207</span><a id="line.207">  }</a>
+<span class="sourceLineNo">208</span><a id="line.208"></a>
+<span class="sourceLineNo">209</span><a id="line.209">  @Override</a>
+<span class="sourceLineNo">210</span><a id="line.210">  public Term getTermArray(SearchParameter searchParameter) {</a>
+<span class="sourceLineNo">211</span><a id="line.211">    return ARRAY_STRING_TERMS.get(searchParameter);</a>
+<span class="sourceLineNo">212</span><a id="line.212">  }</a>
+<span class="sourceLineNo">213</span><a id="line.213"></a>
+<span class="sourceLineNo">214</span><a id="line.214">  @Override</a>
+<span class="sourceLineNo">215</span><a id="line.215">  public boolean isDenormedTerm(SearchParameter searchParameter) {</a>
+<span class="sourceLineNo">216</span><a id="line.216">    return DENORMED_TERMS.containsKey(searchParameter);</a>
+<span class="sourceLineNo">217</span><a id="line.217">  }</a>
+<span class="sourceLineNo">218</span><a id="line.218"></a>
+<span class="sourceLineNo">219</span><a id="line.219">  @Override</a>
+<span class="sourceLineNo">220</span><a id="line.220">  public SearchParameter getDefaultGadmLevel() {</a>
+<span class="sourceLineNo">221</span><a id="line.221">    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;</a>
+<span class="sourceLineNo">222</span><a id="line.222">  }</a>
+<span class="sourceLineNo">223</span><a id="line.223"></a>
+<span class="sourceLineNo">224</span><a id="line.224">  @Override</a>
+<span class="sourceLineNo">225</span><a id="line.225">  public boolean includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {</a>
+<span class="sourceLineNo">226</span><a id="line.226">    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()</a>
+<span class="sourceLineNo">227</span><a id="line.227">        &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate</a>
+<span class="sourceLineNo">228</span><a id="line.228">            || predicate instanceof GreaterThanPredicate);</a>
+<span class="sourceLineNo">229</span><a id="line.229">  }</a>
+<span class="sourceLineNo">230</span><a id="line.230">}</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</main>
+</body>
+</html>

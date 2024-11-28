@@ -1,0 +1,1165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head><meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>SQLQueryVisitorTest xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../testapidocs/org/gbif/predicate/query/SQLQueryVisitorTest.html">View Javadoc</a></div><pre>
+<a class="jxr_linenumber" name="L1" href="#L1">1</a>   <em class="jxr_comment">/*</em>
+<a class="jxr_linenumber" name="L2" href="#L2">2</a>   <em class="jxr_comment"> * Licensed under the Apache License, Version 2.0 (the "License");</em>
+<a class="jxr_linenumber" name="L3" href="#L3">3</a>   <em class="jxr_comment"> * you may not use this file except in compliance with the License.</em>
+<a class="jxr_linenumber" name="L4" href="#L4">4</a>   <em class="jxr_comment"> * You may obtain a copy of the License at</em>
+<a class="jxr_linenumber" name="L5" href="#L5">5</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L6" href="#L6">6</a>   <em class="jxr_comment"> *     <a href="http://www.apache.org/licenses/LICENSE-2.0" target="alexandria_uri">http://www.apache.org/licenses/LICENSE-2.0</a></em>
+<a class="jxr_linenumber" name="L7" href="#L7">7</a>   <em class="jxr_comment"> *</em>
+<a class="jxr_linenumber" name="L8" href="#L8">8</a>   <em class="jxr_comment"> * Unless required by applicable law or agreed to in writing, software</em>
+<a class="jxr_linenumber" name="L9" href="#L9">9</a>   <em class="jxr_comment"> * distributed under the License is distributed on an "AS IS" BASIS,</em>
+<a class="jxr_linenumber" name="L10" href="#L10">10</a>  <em class="jxr_comment"> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</em>
+<a class="jxr_linenumber" name="L11" href="#L11">11</a>  <em class="jxr_comment"> * See the License for the specific language governing permissions and</em>
+<a class="jxr_linenumber" name="L12" href="#L12">12</a>  <em class="jxr_comment"> * limitations under the License.</em>
+<a class="jxr_linenumber" name="L13" href="#L13">13</a>  <em class="jxr_comment"> */</em>
+<a class="jxr_linenumber" name="L14" href="#L14">14</a>  <strong class="jxr_keyword">package</strong> org.gbif.predicate.query;
+<a class="jxr_linenumber" name="L15" href="#L15">15</a>  
+<a class="jxr_linenumber" name="L16" href="#L16">16</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.assertEquals;
+<a class="jxr_linenumber" name="L17" href="#L17">17</a>  <strong class="jxr_keyword">import</strong> <strong class="jxr_keyword">static</strong> org.junit.jupiter.api.Assertions.fail;
+<a class="jxr_linenumber" name="L18" href="#L18">18</a>  
+<a class="jxr_linenumber" name="L19" href="#L19">19</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.Lists;
+<a class="jxr_linenumber" name="L20" href="#L20">20</a>  <strong class="jxr_keyword">import</strong> java.time.Instant;
+<a class="jxr_linenumber" name="L21" href="#L21">21</a>  <strong class="jxr_keyword">import</strong> java.util.Arrays;
+<a class="jxr_linenumber" name="L22" href="#L22">22</a>  <strong class="jxr_keyword">import</strong> java.util.Date;
+<a class="jxr_linenumber" name="L23" href="#L23">23</a>  <strong class="jxr_keyword">import</strong> java.util.List;
+<a class="jxr_linenumber" name="L24" href="#L24">24</a>  <strong class="jxr_keyword">import</strong> java.util.Optional;
+<a class="jxr_linenumber" name="L25" href="#L25">25</a>  <strong class="jxr_keyword">import</strong> java.util.UUID;
+<a class="jxr_linenumber" name="L26" href="#L26">26</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.exception.QueryBuildingException;
+<a class="jxr_linenumber" name="L27" href="#L27">27</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+<a class="jxr_linenumber" name="L28" href="#L28">28</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.ConjunctionPredicate;
+<a class="jxr_linenumber" name="L29" href="#L29">29</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.DisjunctionPredicate;
+<a class="jxr_linenumber" name="L30" href="#L30">30</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.EqualsPredicate;
+<a class="jxr_linenumber" name="L31" href="#L31">31</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.GeoDistancePredicate;
+<a class="jxr_linenumber" name="L32" href="#L32">32</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
+<a class="jxr_linenumber" name="L33" href="#L33">33</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.GreaterThanPredicate;
+<a class="jxr_linenumber" name="L34" href="#L34">34</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.InPredicate;
+<a class="jxr_linenumber" name="L35" href="#L35">35</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.IsNotNullPredicate;
+<a class="jxr_linenumber" name="L36" href="#L36">36</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.IsNullPredicate;
+<a class="jxr_linenumber" name="L37" href="#L37">37</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
+<a class="jxr_linenumber" name="L38" href="#L38">38</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.LessThanPredicate;
+<a class="jxr_linenumber" name="L39" href="#L39">39</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.LikePredicate;
+<a class="jxr_linenumber" name="L40" href="#L40">40</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.NotPredicate;
+<a class="jxr_linenumber" name="L41" href="#L41">41</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.Predicate;
+<a class="jxr_linenumber" name="L42" href="#L42">42</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.RangePredicate;
+<a class="jxr_linenumber" name="L43" href="#L43">43</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.model.predicate.WithinPredicate;
+<a class="jxr_linenumber" name="L44" href="#L44">44</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.util.IsoDateInterval;
+<a class="jxr_linenumber" name="L45" href="#L45">45</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.util.Range;
+<a class="jxr_linenumber" name="L46" href="#L46">46</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.util.RangeValue;
+<a class="jxr_linenumber" name="L47" href="#L47">47</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.util.SearchTypeValidator;
+<a class="jxr_linenumber" name="L48" href="#L48">48</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.vocabulary.Country;
+<a class="jxr_linenumber" name="L49" href="#L49">49</a>  <strong class="jxr_keyword">import</strong> org.gbif.api.vocabulary.Language;
+<a class="jxr_linenumber" name="L50" href="#L50">50</a>  <strong class="jxr_keyword">import</strong> org.gbif.predicate.query.occurrence.OccurrenceTermsMapper;
+<a class="jxr_linenumber" name="L51" href="#L51">51</a>  <strong class="jxr_keyword">import</strong> org.junit.jupiter.api.Test;
+<a class="jxr_linenumber" name="L52" href="#L52">52</a>  
+<a class="jxr_linenumber" name="L53" href="#L53">53</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">class</strong> <a name="SQLQueryVisitorTest" href="../../../../org/gbif/predicate/query/SQLQueryVisitorTest.html#SQLQueryVisitorTest">SQLQueryVisitorTest</a> {
+<a class="jxr_linenumber" name="L54" href="#L54">54</a>  
+<a class="jxr_linenumber" name="L55" href="#L55">55</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> OccurrenceSearchParameter PARAM = OccurrenceSearchParameter.CATALOG_NUMBER;
+<a class="jxr_linenumber" name="L56" href="#L56">56</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> OccurrenceSearchParameter PARAM2 =
+<a class="jxr_linenumber" name="L57" href="#L57">57</a>        OccurrenceSearchParameter.INSTITUTION_CODE;
+<a class="jxr_linenumber" name="L58" href="#L58">58</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> SQLQueryVisitor visitor = <strong class="jxr_keyword">new</strong> SQLQueryVisitor(<strong class="jxr_keyword">new</strong> OccurrenceTermsMapper());
+<a class="jxr_linenumber" name="L59" href="#L59">59</a>  
+<a class="jxr_linenumber" name="L60" href="#L60">60</a>    @Test
+<a class="jxr_linenumber" name="L61" href="#L61">61</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testComplexQuery() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L62" href="#L62">62</a>      Predicate aves = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"212"</span>, false);
+<a class="jxr_linenumber" name="L63" href="#L63">63</a>      Predicate passer =
+<a class="jxr_linenumber" name="L64" href="#L64">64</a>          <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(OccurrenceSearchParameter.SCIENTIFIC_NAME, <span class="jxr_string">"Passer*"</span>, false);
+<a class="jxr_linenumber" name="L65" href="#L65">65</a>      Predicate UK = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, <span class="jxr_string">"GB"</span>, false);
+<a class="jxr_linenumber" name="L66" href="#L66">66</a>      Predicate before1989 = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, <span class="jxr_string">"1989"</span>);
+<a class="jxr_linenumber" name="L67" href="#L67">67</a>      Predicate georeferencedPredicate =
+<a class="jxr_linenumber" name="L68" href="#L68">68</a>          <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.HAS_COORDINATE, <span class="jxr_string">"true"</span>, false);
+<a class="jxr_linenumber" name="L69" href="#L69">69</a>  
+<a class="jxr_linenumber" name="L70" href="#L70">70</a>      ConjunctionPredicate p =
+<a class="jxr_linenumber" name="L71" href="#L71">71</a>          <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L72" href="#L72">72</a>              Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));
+<a class="jxr_linenumber" name="L73" href="#L73">73</a>      String where = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L74" href="#L74">74</a>      assertEquals(
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>          <span class="jxr_string">"(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR subgenuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year &lt;= 1989) AND (hascoordinate = true))"</span>,
+<a class="jxr_linenumber" name="L76" href="#L76">76</a>          where);
+<a class="jxr_linenumber" name="L77" href="#L77">77</a>    }
+<a class="jxr_linenumber" name="L78" href="#L78">78</a>  
+<a class="jxr_linenumber" name="L79" href="#L79">79</a>    @Test
+<a class="jxr_linenumber" name="L80" href="#L80">80</a>    <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testMoreComplexQuery() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L81" href="#L81">81</a>      Predicate taxon1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"1"</span>, false);
+<a class="jxr_linenumber" name="L82" href="#L82">82</a>      Predicate taxon2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"2"</span>, false);
+<a class="jxr_linenumber" name="L83" href="#L83">83</a>      DisjunctionPredicate taxa = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(taxon1, taxon2));
+<a class="jxr_linenumber" name="L84" href="#L84">84</a>  
+<a class="jxr_linenumber" name="L85" href="#L85">85</a>      Predicate basis =
+<a class="jxr_linenumber" name="L86" href="#L86">86</a>          <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L87" href="#L87">87</a>              OccurrenceSearchParameter.BASIS_OF_RECORD,
+<a class="jxr_linenumber" name="L88" href="#L88">88</a>              Lists.newArrayList(<span class="jxr_string">"HUMAN_OBSERVATION"</span>, <span class="jxr_string">"MACHINE_OBSERVATION"</span>),
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>              false);
+<a class="jxr_linenumber" name="L90" href="#L90">90</a>  
+<a class="jxr_linenumber" name="L91" href="#L91">91</a>      Predicate UK = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, <span class="jxr_string">"GB"</span>, false);
+<a class="jxr_linenumber" name="L92" href="#L92">92</a>      Predicate IE = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, <span class="jxr_string">"IE"</span>, false);
+<a class="jxr_linenumber" name="L93" href="#L93">93</a>      DisjunctionPredicate countries = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(UK, IE));
+<a class="jxr_linenumber" name="L94" href="#L94">94</a>  
+<a class="jxr_linenumber" name="L95" href="#L95">95</a>      Predicate before1989 = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, <span class="jxr_string">"1989"</span>);
+<a class="jxr_linenumber" name="L96" href="#L96">96</a>      Predicate in2000 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, <span class="jxr_string">"2000"</span>, false);
+<a class="jxr_linenumber" name="L97" href="#L97">97</a>      DisjunctionPredicate years = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(before1989, in2000));
+<a class="jxr_linenumber" name="L98" href="#L98">98</a>  
+<a class="jxr_linenumber" name="L99" href="#L99">99</a>      ConjunctionPredicate p =
+<a class="jxr_linenumber" name="L100" href="#L100">100</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
+<a class="jxr_linenumber" name="L101" href="#L101">101</a>     String where = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L102" href="#L102">102</a>     assertEquals(
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         <span class="jxr_string">"(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))) "</span>
+<a class="jxr_linenumber" name="L104" href="#L104">104</a>             + <span class="jxr_string">"AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "</span>
+<a class="jxr_linenumber" name="L105" href="#L105">105</a>             + <span class="jxr_string">"AND ((countrycode IN(\'GB\', \'IE\'))) "</span>
+<a class="jxr_linenumber" name="L106" href="#L106">106</a>             + <span class="jxr_string">"AND (((year &lt;= 1989) OR (year = 2000))))"</span>,
+<a class="jxr_linenumber" name="L107" href="#L107">107</a>         where);
+<a class="jxr_linenumber" name="L108" href="#L108">108</a>   }
+<a class="jxr_linenumber" name="L109" href="#L109">109</a> 
+<a class="jxr_linenumber" name="L110" href="#L110">110</a>   @Test
+<a class="jxr_linenumber" name="L111" href="#L111">111</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testConjunctionPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_1"</span>, false);
+<a class="jxr_linenumber" name="L113" href="#L113">113</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM2, <span class="jxr_string">"value_2"</span>, false);
+<a class="jxr_linenumber" name="L114" href="#L114">114</a> 
+<a class="jxr_linenumber" name="L115" href="#L115">115</a>     ConjunctionPredicate p = <strong class="jxr_keyword">new</strong> ConjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L116" href="#L116">116</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L117" href="#L117">117</a>     assertEquals(
+<a class="jxr_linenumber" name="L118" href="#L118">118</a>         <span class="jxr_string">"((lower(catalognumber) = lower(\'value_1\')) AND (lower(institutioncode) = lower(\'value_2\')))"</span>,
+<a class="jxr_linenumber" name="L119" href="#L119">119</a>         query);
+<a class="jxr_linenumber" name="L120" href="#L120">120</a>   }
+<a class="jxr_linenumber" name="L121" href="#L121">121</a> 
+<a class="jxr_linenumber" name="L122" href="#L122">122</a>   @Test
+<a class="jxr_linenumber" name="L123" href="#L123">123</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L124" href="#L124">124</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_1"</span>, false);
+<a class="jxr_linenumber" name="L125" href="#L125">125</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM2, <span class="jxr_string">"value_2"</span>, false);
+<a class="jxr_linenumber" name="L126" href="#L126">126</a> 
+<a class="jxr_linenumber" name="L127" href="#L127">127</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L128" href="#L128">128</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L129" href="#L129">129</a>     assertEquals(
+<a class="jxr_linenumber" name="L130" href="#L130">130</a>         <span class="jxr_string">"((lower(catalognumber) = lower(\'value_1\')) OR (lower(institutioncode) = lower(\'value_2\')))"</span>,
+<a class="jxr_linenumber" name="L131" href="#L131">131</a>         query);
+<a class="jxr_linenumber" name="L132" href="#L132">132</a>   }
+<a class="jxr_linenumber" name="L133" href="#L133">133</a> 
+<a class="jxr_linenumber" name="L134" href="#L134">134</a>   @Test
+<a class="jxr_linenumber" name="L135" href="#L135">135</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionToInPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L136" href="#L136">136</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_1"</span>, false);
+<a class="jxr_linenumber" name="L137" href="#L137">137</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_2"</span>, false);
+<a class="jxr_linenumber" name="L138" href="#L138">138</a> 
+<a class="jxr_linenumber" name="L139" href="#L139">139</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L140" href="#L140">140</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L141" href="#L141">141</a>     assertEquals(<span class="jxr_string">"(lower(catalognumber) IN(lower(\'value_1\'), lower(\'value_2\')))"</span>, query);
+<a class="jxr_linenumber" name="L142" href="#L142">142</a>   }
+<a class="jxr_linenumber" name="L143" href="#L143">143</a> 
+<a class="jxr_linenumber" name="L144" href="#L144">144</a>   @Test
+<a class="jxr_linenumber" name="L145" href="#L145">145</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionToInTaxonPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L146" href="#L146">146</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"1"</span>, false);
+<a class="jxr_linenumber" name="L147" href="#L147">147</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"2"</span>, false);
+<a class="jxr_linenumber" name="L148" href="#L148">148</a> 
+<a class="jxr_linenumber" name="L149" href="#L149">149</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L150" href="#L150">150</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L151" href="#L151">151</a>     assertEquals(
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
+<a class="jxr_linenumber" name="L153" href="#L153">153</a>         query);
+<a class="jxr_linenumber" name="L154" href="#L154">154</a>   }
+<a class="jxr_linenumber" name="L155" href="#L155">155</a> 
+<a class="jxr_linenumber" name="L156" href="#L156">156</a>   @Test
+<a class="jxr_linenumber" name="L157" href="#L157">157</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionToInGadmGidPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L158" href="#L158">158</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GADM_GID, <span class="jxr_string">"IRL_1"</span>, false);
+<a class="jxr_linenumber" name="L159" href="#L159">159</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GADM_GID, <span class="jxr_string">"GBR.2_1"</span>, false);
+<a class="jxr_linenumber" name="L160" href="#L160">160</a> 
+<a class="jxr_linenumber" name="L161" href="#L161">161</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L162" href="#L162">162</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L163" href="#L163">163</a>     assertEquals(
+<a class="jxr_linenumber" name="L164" href="#L164">164</a>         <span class="jxr_string">"(level0gid IN('IRL_1', 'GBR.2_1') OR level1gid IN('IRL_1', 'GBR.2_1') OR level2gid IN('IRL_1', 'GBR.2_1') OR level3gid IN('IRL_1', 'GBR.2_1'))"</span>,
+<a class="jxr_linenumber" name="L165" href="#L165">165</a>         query);
+<a class="jxr_linenumber" name="L166" href="#L166">166</a>   }
+<a class="jxr_linenumber" name="L167" href="#L167">167</a> 
+<a class="jxr_linenumber" name="L168" href="#L168">168</a>   @Test
+<a class="jxr_linenumber" name="L169" href="#L169">169</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionMediaTypePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L170" href="#L170">170</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.MEDIA_TYPE, <span class="jxr_string">"StillImage"</span>, false);
+<a class="jxr_linenumber" name="L171" href="#L171">171</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.MEDIA_TYPE, <span class="jxr_string">"Sound"</span>, false);
+<a class="jxr_linenumber" name="L172" href="#L172">172</a> 
+<a class="jxr_linenumber" name="L173" href="#L173">173</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L174" href="#L174">174</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L175" href="#L175">175</a>     assertEquals(
+<a class="jxr_linenumber" name="L176" href="#L176">176</a>         <span class="jxr_string">"(stringArrayContains(mediatype,'StillImage',true) OR stringArrayContains(mediatype,'Sound',true))"</span>,
+<a class="jxr_linenumber" name="L177" href="#L177">177</a>         query);
+<a class="jxr_linenumber" name="L178" href="#L178">178</a>   }
+<a class="jxr_linenumber" name="L179" href="#L179">179</a> 
+<a class="jxr_linenumber" name="L180" href="#L180">180</a>   @Test
+<a class="jxr_linenumber" name="L181" href="#L181">181</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionVerbatimToInPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L182" href="#L182">182</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_1"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L183" href="#L183">183</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_2"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L184" href="#L184">184</a> 
+<a class="jxr_linenumber" name="L185" href="#L185">185</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L186" href="#L186">186</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L187" href="#L187">187</a>     assertEquals(<span class="jxr_string">"(catalognumber IN('value_1', 'value_2'))"</span>, query);
+<a class="jxr_linenumber" name="L188" href="#L188">188</a> 
+<a class="jxr_linenumber" name="L189" href="#L189">189</a>     Predicate p3 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_3"</span>, false);
+<a class="jxr_linenumber" name="L190" href="#L190">190</a> 
+<a class="jxr_linenumber" name="L191" href="#L191">191</a>     p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2, p3));
+<a class="jxr_linenumber" name="L192" href="#L192">192</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L193" href="#L193">193</a>     assertEquals(
+<a class="jxr_linenumber" name="L194" href="#L194">194</a>         <span class="jxr_string">"((catalognumber = 'value_1') OR (catalognumber = 'value_2') OR (lower(catalognumber) = lower('value_3')))"</span>,
+<a class="jxr_linenumber" name="L195" href="#L195">195</a>         query);
+<a class="jxr_linenumber" name="L196" href="#L196">196</a>   }
+<a class="jxr_linenumber" name="L197" href="#L197">197</a> 
+<a class="jxr_linenumber" name="L198" href="#L198">198</a>   @Test
+<a class="jxr_linenumber" name="L199" href="#L199">199</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testEqualsPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L200" href="#L200">200</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value"</span>, false);
+<a class="jxr_linenumber" name="L201" href="#L201">201</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L202" href="#L202">202</a>     assertEquals(<span class="jxr_string">"lower(catalognumber) = lower(\'value\')"</span>, query);
+<a class="jxr_linenumber" name="L203" href="#L203">203</a>   }
+<a class="jxr_linenumber" name="L204" href="#L204">204</a> 
+<a class="jxr_linenumber" name="L205" href="#L205">205</a>   @Test
+<a class="jxr_linenumber" name="L206" href="#L206">206</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLikePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L207" href="#L207">207</a>     <em class="jxr_comment">// NB: ? and * are wildcards (translated to SQL _ and %), so literal _ and % are escaped.</em>
+<a class="jxr_linenumber" name="L208" href="#L208">208</a>     Predicate p = <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(PARAM, <span class="jxr_string">"v?l*ue_%"</span>, false);
+<a class="jxr_linenumber" name="L209" href="#L209">209</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L210" href="#L210">210</a>     assertEquals(<span class="jxr_string">"lower(catalognumber) LIKE lower(\'v_l%ue&#92;&#92;_&#92;&#92;%\')"</span>, query);
+<a class="jxr_linenumber" name="L211" href="#L211">211</a>   }
+<a class="jxr_linenumber" name="L212" href="#L212">212</a> 
+<a class="jxr_linenumber" name="L213" href="#L213">213</a>   @Test
+<a class="jxr_linenumber" name="L214" href="#L214">214</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLikeVerbatimPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L215" href="#L215">215</a>     Predicate p = <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(PARAM, <span class="jxr_string">"v?l*ue_%"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L216" href="#L216">216</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L217" href="#L217">217</a>     assertEquals(<span class="jxr_string">"catalognumber LIKE \'v_l%ue&#92;&#92;_&#92;&#92;%\'"</span>, query);
+<a class="jxr_linenumber" name="L218" href="#L218">218</a>   }
+<a class="jxr_linenumber" name="L219" href="#L219">219</a> 
+<a class="jxr_linenumber" name="L220" href="#L220">220</a>   @Test
+<a class="jxr_linenumber" name="L221" href="#L221">221</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testEqualsVerbatimPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L222" href="#L222">222</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L223" href="#L223">223</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L224" href="#L224">224</a>     assertEquals(<span class="jxr_string">"catalognumber = \'value\'"</span>, query);
+<a class="jxr_linenumber" name="L225" href="#L225">225</a>   }
+<a class="jxr_linenumber" name="L226" href="#L226">226</a> 
+<a class="jxr_linenumber" name="L227" href="#L227">227</a>   @Test
+<a class="jxr_linenumber" name="L228" href="#L228">228</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testEqualsArrayPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L229" href="#L229">229</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.RECORDED_BY, <span class="jxr_string">"value"</span>, false);
+<a class="jxr_linenumber" name="L230" href="#L230">230</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L231" href="#L231">231</a>     assertEquals(<span class="jxr_string">"stringArrayContains(recordedby,'value',false)"</span>, query);
+<a class="jxr_linenumber" name="L232" href="#L232">232</a> 
+<a class="jxr_linenumber" name="L233" href="#L233">233</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.RECORDED_BY, <span class="jxr_string">"value"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L234" href="#L234">234</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L235" href="#L235">235</a>     assertEquals(<span class="jxr_string">"stringArrayContains(recordedby,'value',true)"</span>, query);
+<a class="jxr_linenumber" name="L236" href="#L236">236</a>   }
+<a class="jxr_linenumber" name="L237" href="#L237">237</a> 
+<a class="jxr_linenumber" name="L238" href="#L238">238</a>   @Test
+<a class="jxr_linenumber" name="L239" href="#L239">239</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLikeArrayPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L240" href="#L240">240</a>     <em class="jxr_comment">// NB: ? and * are the wildcards here.</em>
+<a class="jxr_linenumber" name="L241" href="#L241">241</a>     Predicate p = <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(OccurrenceSearchParameter.RECORDED_BY, <span class="jxr_string">"v?l*ue_%"</span>, false);
+<a class="jxr_linenumber" name="L242" href="#L242">242</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L243" href="#L243">243</a>     assertEquals(<span class="jxr_string">"stringArrayLike(recordedby,'v?l*ue_%',false)"</span>, query);
+<a class="jxr_linenumber" name="L244" href="#L244">244</a> 
+<a class="jxr_linenumber" name="L245" href="#L245">245</a>     p = <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(OccurrenceSearchParameter.RECORDED_BY, <span class="jxr_string">"v?l*ue_%"</span>, <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L246" href="#L246">246</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L247" href="#L247">247</a>     assertEquals(<span class="jxr_string">"stringArrayLike(recordedby,'v?l*ue_%',true)"</span>, query);
+<a class="jxr_linenumber" name="L248" href="#L248">248</a>   }
+<a class="jxr_linenumber" name="L249" href="#L249">249</a> 
+<a class="jxr_linenumber" name="L250" href="#L250">250</a>   @Test
+<a class="jxr_linenumber" name="L251" href="#L251">251</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGreaterThanOrEqualPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L252" href="#L252">252</a>     Predicate p = <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, <span class="jxr_string">"222"</span>);
+<a class="jxr_linenumber" name="L253" href="#L253">253</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L254" href="#L254">254</a>     assertEquals(<span class="jxr_string">"elevation &gt;= 222"</span>, query);
+<a class="jxr_linenumber" name="L255" href="#L255">255</a>   }
+<a class="jxr_linenumber" name="L256" href="#L256">256</a> 
+<a class="jxr_linenumber" name="L257" href="#L257">257</a>   @Test
+<a class="jxr_linenumber" name="L258" href="#L258">258</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGreaterThanPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L259" href="#L259">259</a>     Predicate p = <strong class="jxr_keyword">new</strong> GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, <span class="jxr_string">"1000"</span>);
+<a class="jxr_linenumber" name="L260" href="#L260">260</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L261" href="#L261">261</a>     assertEquals(<span class="jxr_string">"elevation &gt; 1000"</span>, query);
+<a class="jxr_linenumber" name="L262" href="#L262">262</a>   }
+<a class="jxr_linenumber" name="L263" href="#L263">263</a> 
+<a class="jxr_linenumber" name="L264" href="#L264">264</a>   @Test
+<a class="jxr_linenumber" name="L265" href="#L265">265</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L266" href="#L266">266</a>     Predicate p =
+<a class="jxr_linenumber" name="L267" href="#L267">267</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(PARAM, Lists.newArrayList(<span class="jxr_string">"value_1"</span>, <span class="jxr_string">"value_2"</span>, <span class="jxr_string">"value_3"</span>), false);
+<a class="jxr_linenumber" name="L268" href="#L268">268</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L269" href="#L269">269</a>     assertEquals(
+<a class="jxr_linenumber" name="L270" href="#L270">270</a>         <span class="jxr_string">"(lower(catalognumber) IN(lower(\'value_1\'), lower(\'value_2\'), lower(\'value_3\')))"</span>,
+<a class="jxr_linenumber" name="L271" href="#L271">271</a>         query);
+<a class="jxr_linenumber" name="L272" href="#L272">272</a>   }
+<a class="jxr_linenumber" name="L273" href="#L273">273</a> 
+<a class="jxr_linenumber" name="L274" href="#L274">274</a>   @Test
+<a class="jxr_linenumber" name="L275" href="#L275">275</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInVerbatimPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L276" href="#L276">276</a>     Predicate p =
+<a class="jxr_linenumber" name="L277" href="#L277">277</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(PARAM, Lists.newArrayList(<span class="jxr_string">"value_1"</span>, <span class="jxr_string">"value_2"</span>, <span class="jxr_string">"value_3"</span>), <strong class="jxr_keyword">true</strong>);
+<a class="jxr_linenumber" name="L278" href="#L278">278</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L279" href="#L279">279</a>     assertEquals(<span class="jxr_string">"(catalognumber IN(\'value_1\', \'value_2\', \'value_3\'))"</span>, query);
+<a class="jxr_linenumber" name="L280" href="#L280">280</a>   }
+<a class="jxr_linenumber" name="L281" href="#L281">281</a> 
+<a class="jxr_linenumber" name="L282" href="#L282">282</a>   @Test
+<a class="jxr_linenumber" name="L283" href="#L283">283</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInPredicateTaxonKey() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L284" href="#L284">284</a>     Predicate p =
+<a class="jxr_linenumber" name="L285" href="#L285">285</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList(<span class="jxr_string">"1"</span>, <span class="jxr_string">"2"</span>), false);
+<a class="jxr_linenumber" name="L286" href="#L286">286</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L287" href="#L287">287</a>     assertEquals(
+<a class="jxr_linenumber" name="L288" href="#L288">288</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
+<a class="jxr_linenumber" name="L289" href="#L289">289</a>         query);
+<a class="jxr_linenumber" name="L290" href="#L290">290</a>   }
+<a class="jxr_linenumber" name="L291" href="#L291">291</a> 
+<a class="jxr_linenumber" name="L292" href="#L292">292</a>   @Test
+<a class="jxr_linenumber" name="L293" href="#L293">293</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInPredicateGadmGid() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L294" href="#L294">294</a>     Predicate p =
+<a class="jxr_linenumber" name="L295" href="#L295">295</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L296" href="#L296">296</a>             OccurrenceSearchParameter.GADM_GID, Lists.newArrayList(<span class="jxr_string">"IRL_1"</span>, <span class="jxr_string">"GBR.2_1"</span>), false);
+<a class="jxr_linenumber" name="L297" href="#L297">297</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>     assertEquals(
+<a class="jxr_linenumber" name="L299" href="#L299">299</a>         <span class="jxr_string">"(level0gid IN('IRL_1', 'GBR.2_1') OR level1gid IN('IRL_1', 'GBR.2_1') OR level2gid IN('IRL_1', 'GBR.2_1') OR level3gid IN('IRL_1', 'GBR.2_1'))"</span>,
+<a class="jxr_linenumber" name="L300" href="#L300">300</a>         query);
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>   }
+<a class="jxr_linenumber" name="L302" href="#L302">302</a> 
+<a class="jxr_linenumber" name="L303" href="#L303">303</a>   @Test
+<a class="jxr_linenumber" name="L304" href="#L304">304</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInPredicateMediaType() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L305" href="#L305">305</a>     Predicate p =
+<a class="jxr_linenumber" name="L306" href="#L306">306</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L307" href="#L307">307</a>             OccurrenceSearchParameter.MEDIA_TYPE, Lists.newArrayList(<span class="jxr_string">"StillImage"</span>, <span class="jxr_string">"Sound"</span>), false);
+<a class="jxr_linenumber" name="L308" href="#L308">308</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L309" href="#L309">309</a>     assertEquals(
+<a class="jxr_linenumber" name="L310" href="#L310">310</a>         <span class="jxr_string">"(stringArrayContains(mediatype,'StillImage',true) OR stringArrayContains(mediatype,'Sound',true))"</span>,
+<a class="jxr_linenumber" name="L311" href="#L311">311</a>         query);
+<a class="jxr_linenumber" name="L312" href="#L312">312</a>   }
+<a class="jxr_linenumber" name="L313" href="#L313">313</a> 
+<a class="jxr_linenumber" name="L314" href="#L314">314</a>   @Test
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLessThanOrEqualPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L316" href="#L316">316</a>     Predicate p = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, <span class="jxr_string">"1000"</span>);
+<a class="jxr_linenumber" name="L317" href="#L317">317</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L318" href="#L318">318</a>     assertEquals(<span class="jxr_string">"elevation &lt;= 1000"</span>, query);
+<a class="jxr_linenumber" name="L319" href="#L319">319</a>   }
+<a class="jxr_linenumber" name="L320" href="#L320">320</a> 
+<a class="jxr_linenumber" name="L321" href="#L321">321</a>   @Test
+<a class="jxr_linenumber" name="L322" href="#L322">322</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLessThanPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L323" href="#L323">323</a>     Predicate p = <strong class="jxr_keyword">new</strong> LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, <span class="jxr_string">"1000"</span>);
+<a class="jxr_linenumber" name="L324" href="#L324">324</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L325" href="#L325">325</a>     assertEquals(<span class="jxr_string">"elevation &lt; 1000"</span>, query);
+<a class="jxr_linenumber" name="L326" href="#L326">326</a>   }
+<a class="jxr_linenumber" name="L327" href="#L327">327</a> 
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>   @Test
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testNotPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>     Predicate p = <strong class="jxr_keyword">new</strong> NotPredicate(<strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value"</span>, false));
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>     assertEquals(<span class="jxr_string">"NOT lower(catalognumber) = lower(\'value\')"</span>, query);
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>   }
+<a class="jxr_linenumber" name="L334" href="#L334">334</a> 
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>   @Test
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testNotPredicateComplex() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>     Predicate p1 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"value_1"</span>, false);
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>     Predicate p2 = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM2, <span class="jxr_string">"value_2"</span>, false);
+<a class="jxr_linenumber" name="L339" href="#L339">339</a> 
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>     ConjunctionPredicate cp = <strong class="jxr_keyword">new</strong> ConjunctionPredicate(Lists.newArrayList(p1, p2));
+<a class="jxr_linenumber" name="L341" href="#L341">341</a> 
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     Predicate p = <strong class="jxr_keyword">new</strong> NotPredicate(cp);
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>     assertEquals(
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>         <span class="jxr_string">"NOT ((lower(catalognumber) = lower(\'value_1\')) AND (lower(institutioncode) = lower(\'value_2\')))"</span>,
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>         query);
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>   }
+<a class="jxr_linenumber" name="L348" href="#L348">348</a> 
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>   @Test
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testQuotes() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(PARAM, <span class="jxr_string">"my \'pleasure\'"</span>, false);
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>     assertEquals(<span class="jxr_string">"lower(catalognumber) = lower(\'my &#92;&#92;\'pleasure&#92;&#92;\'\')"</span>, query);
+<a class="jxr_linenumber" name="L354" href="#L354">354</a> 
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>     Predicate predicateRecordedBY =
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.RECORDED_BY, <span class="jxr_string">"Brian J O'Shea"</span>, false);
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>     String queryRecordedBy = visitor.buildQuery(predicateRecordedBY);
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>     assertEquals(<span class="jxr_string">"stringArrayContains(recordedby,'Brian J O&#92;&#92;'Shea',false)"</span>, queryRecordedBy);
+<a class="jxr_linenumber" name="L359" href="#L359">359</a> 
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>     p = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, <span class="jxr_string">"101"</span>);
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>     assertEquals(<span class="jxr_string">"elevation &lt;= 101"</span>, query);
+<a class="jxr_linenumber" name="L363" href="#L363">363</a> 
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>     p = <strong class="jxr_keyword">new</strong> GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, <span class="jxr_string">"1998"</span>);
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>     assertEquals(<span class="jxr_string">"year &gt; 1998"</span>, query);
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>   }
+<a class="jxr_linenumber" name="L368" href="#L368">368</a> 
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>   @Test
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGeoDistancePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>     Predicate p = <strong class="jxr_keyword">new</strong> GeoDistancePredicate(<span class="jxr_string">"30"</span>, <span class="jxr_string">"10"</span>, <span class="jxr_string">"10km"</span>);
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>     assertEquals(
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>         <span class="jxr_string">"(geoDistance(30.0, 10.0, \&quot;10.0km\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>, query);
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>   }
+<a class="jxr_linenumber" name="L376" href="#L376">376</a> 
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>   @Test
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testWithinPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>     <strong class="jxr_keyword">final</strong> String wkt = <span class="jxr_string">"POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"</span>;
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>     Predicate p = <strong class="jxr_keyword">new</strong> WithinPredicate(wkt);
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>     assertEquals(<span class="jxr_string">"(contains(\&quot;"</span> + wkt + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>, query);
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>   }
+<a class="jxr_linenumber" name="L384" href="#L384">384</a> 
+<a class="jxr_linenumber" name="L385" href="#L385">385</a>   @Test
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testLongerWithinPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>     <strong class="jxr_keyword">final</strong> String wkt =
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>         <span class="jxr_string">"POLYGON ((-21.4671921 65.441761, -21.3157028 65.9990267, -22.46732 66.4657148, -23.196803 66.3490242, -22.362113 66.2703732, -22.9758561 66.228119, -22.3831844 66.0933255, -22.424131 65.8374539, -23.4703372 66.1972321, -23.2565264 65.6767322, -24.5319933 65.5027259, -21.684764 65.4547893, -24.0482947 64.8794291, -21.3551366 64.3842337, -22.7053151 63.8001572, -19.1269971 63.3980322, -13.4948065 65.076438, -15.1872897 66.1073781, -14.5302343 66.3783121, -16.0235596 66.5371808, -21.4671921 65.441761))"</span>;
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>     Predicate p = <strong class="jxr_keyword">new</strong> WithinPredicate(wkt);
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>     assertEquals(
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>         <span class="jxr_string">"((decimallatitude &gt;= 63.3980322 AND decimallatitude &lt;= 66.5371808 AND (decimallongitude &gt;= -24.5319933 AND decimallongitude &lt;= -13.4948065)) AND contains(\&quot;"</span>
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>             + wkt
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>             + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>         query);
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>   }
+<a class="jxr_linenumber" name="L397" href="#L397">397</a> 
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>   @Test
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testAntimeridianWithinPredicate() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>     <em class="jxr_comment">// A rectangle over the Bering sea, shouldn't have any bounding box added</em>
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>     String wkt =
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>         <span class="jxr_string">"POLYGON((-206.71875 39.20502, -133.59375 39.20502, -133.59375 77.26611, -206.71875 77.26611, -206.71875 39.20502))"</span>;
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>     String query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wkt));
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>     assertEquals(<span class="jxr_string">"(contains(\&quot;"</span> + wkt + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>, query);
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>   }
+<a class="jxr_linenumber" name="L406" href="#L406">406</a> 
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>   @Test
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testAddedBoundingBoxes() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>     String query;
+<a class="jxr_linenumber" name="L410" href="#L410">410</a> 
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>     <em class="jxr_comment">// A multipolygon around Taveuni, split over the antimeridian</em>
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>     String wktM =
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>         <span class="jxr_string">"MULTIPOLYGON (((180 -16.658979090909092, 180 -17.12485513597339, 179.87915 -17.12058, 179.78577 -16.82899, 179.85168 -16.72643, 180 -16.658979090909092)), ((-180 -17.12485513597339, -180 -16.658979090909092, -179.8764 -16.60277, -179.75006 -16.86054, -179.89838 -17.12845, -180 -17.12485513597339)))"</span>;
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>     String bbox =
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>         <span class="jxr_string">"(decimallatitude &gt;= -17.12845 AND decimallatitude &lt;= -16.60277 AND (decimallongitude &gt;= 179.78577 OR decimallongitude &lt;= -179.75006))"</span>;
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wktM));
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>     assertEquals(
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>         query);
+<a class="jxr_linenumber" name="L420" href="#L420">420</a> 
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>     <em class="jxr_comment">// A polygon around Taveuni, Fiji, as portal16 produces it.</em>
+<a class="jxr_linenumber" name="L422" href="#L422">422</a>     <em class="jxr_comment">// Note the result still contains the multipolygon.</em>
+<a class="jxr_linenumber" name="L423" href="#L423">423</a>     String wkt16 =
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>         <span class="jxr_string">"POLYGON((-180.14832 -16.72643, -180.21423 -16.82899, -180.12085 -17.12058, -179.89838 -17.12845, -179.75006 -16.86054, -179.8764 -16.60277, -180.14832 -16.72643))"</span>;
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wkt16));
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>     assertEquals(
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>         query);
+<a class="jxr_linenumber" name="L429" href="#L429">429</a> 
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>     <em class="jxr_comment">// Same place, but as Wicket draws it:</em>
+<a class="jxr_linenumber" name="L431" href="#L431">431</a>     <em class="jxr_comment">// Note the result still contains the same multipolygon.</em>
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>     String wktWk =
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>         <span class="jxr_string">"POLYGON((179.85168 -16.72643, 179.78577 -16.82899, 179.87915 -17.12058, -179.89838 -17.12845, -179.75006 -16.86054, -179.8764 -16.60277, 179.85168 -16.72643))"</span>;
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wktWk));
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>     assertEquals(
+<a class="jxr_linenumber" name="L436" href="#L436">436</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>         query);
+<a class="jxr_linenumber" name="L438" href="#L438">438</a> 
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>     <em class="jxr_comment">// Tiny areas scattered around the world, all in a single multipolygon.</em>
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>     <em class="jxr_comment">// Requires bounding boxes to avoid very slow Hive performance.</em>
+<a class="jxr_linenumber" name="L441" href="#L441">441</a>     String wktMM =
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>         <span class="jxr_string">"MULTIPOLYGON (((-109.42861 -27.13333, -109.42861 -27.13666, -109.43138 -27.13666, -109.43138 -27.13333, -109.42861 -27.13333)), "</span>
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>             + <span class="jxr_string">"((-109.42236 -27.10919, -109.42236 -27.11191, -109.42541 -27.11191, -109.42541 -27.10919, -109.42236 -27.10919)), "</span>
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>             + <span class="jxr_string">"((-174.35146 -19.80528, -174.35146 -19.81829, -174.36338 -19.81829, -174.36338 -19.80528, -174.35146 -19.80528)), "</span>
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>             + <span class="jxr_string">"((-173.94525 -18.71444, -173.96472 -18.71444, -173.96472 -18.68694, -173.94525 -18.68694, -173.94525 -18.71444)), "</span>
+<a class="jxr_linenumber" name="L446" href="#L446">446</a>             + <span class="jxr_string">"((-173.91655 -18.66372, -173.94041 -18.66372, -173.94041 -18.63616, -173.91655 -18.63616, -173.91655 -18.66372)))"</span>;
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>     String bboxMM =
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>         <span class="jxr_string">"(decimallatitude &gt;= -27.13666 AND decimallatitude &lt;= -18.63616 AND (decimallongitude &gt;= -174.36338 AND decimallongitude &lt;= -109.42236)) AND "</span>
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>             + <span class="jxr_string">"(((decimallatitude &gt;= -27.13666 AND decimallatitude &lt;= -27.13333 AND (decimallongitude &gt;= -109.43138 AND decimallongitude &lt;= -109.42861)) OR "</span>
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>             + <span class="jxr_string">"(decimallatitude &gt;= -27.11191 AND decimallatitude &lt;= -27.10919 AND (decimallongitude &gt;= -109.42541 AND decimallongitude &lt;= -109.42236)) OR "</span>
+<a class="jxr_linenumber" name="L451" href="#L451">451</a>             + <span class="jxr_string">"(decimallatitude &gt;= -19.81829 AND decimallatitude &lt;= -19.80528 AND (decimallongitude &gt;= -174.36338 AND decimallongitude &lt;= -174.35146)) OR "</span>
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>             + <span class="jxr_string">"(decimallatitude &gt;= -18.71444 AND decimallatitude &lt;= -18.68694 AND (decimallongitude &gt;= -173.96472 AND decimallongitude &lt;= -173.94525)) OR "</span>
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>             + <span class="jxr_string">"(decimallatitude &gt;= -18.66372 AND decimallatitude &lt;= -18.63616 AND (decimallongitude &gt;= -173.94041 AND decimallongitude &lt;= -173.91655))))"</span>;
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wktMM));
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>     assertEquals(
+<a class="jxr_linenumber" name="L456" href="#L456">456</a>         <span class="jxr_string">"("</span>
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>             + bboxMM
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>             + <span class="jxr_string">" AND contains(\&quot;"</span>
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>             + wktMM
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>             + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>         query);
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>   }
+<a class="jxr_linenumber" name="L463" href="#L463">463</a> 
+<a class="jxr_linenumber" name="L464" href="#L464">464</a>   @Test
+<a class="jxr_linenumber" name="L465" href="#L465">465</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testWidePolygons() <strong class="jxr_keyword">throws</strong> Exception {
+<a class="jxr_linenumber" name="L466" href="#L466">466</a>     String query;
+<a class="jxr_linenumber" name="L467" href="#L467">467</a> 
+<a class="jxr_linenumber" name="L468" href="#L468">468</a>     <em class="jxr_comment">// A polygon around Antarctica</em>
+<a class="jxr_linenumber" name="L469" href="#L469">469</a>     String wktP =
+<a class="jxr_linenumber" name="L470" href="#L470">470</a>         <span class="jxr_string">"POLYGON ((180 -64.7, 180 -56.8, 180 -44.3, 173 -44.3, 173 -47.5, 170 -47.5, 157 -47.5, 157 -45.9, 150 -45.9, 150 -47.5, 143 -47.5, 143 -45.8, 140 -45.8, 140 -44.5, 137 -44.5, 137 -43, 135 -43, 135 -41.7, 131 -41.7, 131 -40.1, 115 -40.1, 92 -40.1, 92 -41.4, 78 -41.4, 78 -42.3, 69 -42.3, 69 -43.3, 47 -43.3, 47 -41.7, 30 -41.7, 12 -41.7, 12 -40.3, 10 -40.3, 10 -38.3, -5 -38.3, -5 -38.9, -9 -38.9, -9 -40.2, -13 -40.2, -13 -41.4, -21 -41.4, -21 -42.5, -39 -42.5, -39 -40.7, -49 -40.7, -49 -48.6, -54 -48.6, -54 -55.7, -62.79726 -55.7, -64 -55.7, -64 -57.8, -71 -57.8, -71 -58.9, -80 -58.9, -80 -40, -103.71094 -40.14844, -125 -40, -167 -40, -167 -42.6, -171 -42.6, -171 -44.3, -180 -44.3, -180 -56.8, -180 -64.7, -180 -80, -125 -80, -70 -80, 30 -80, 115 -80, 158 -80, 180 -80, 180 -64.7))"</span>;
+<a class="jxr_linenumber" name="L471" href="#L471">471</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wktP));
+<a class="jxr_linenumber" name="L472" href="#L472">472</a>     assertEquals(
+<a class="jxr_linenumber" name="L473" href="#L473">473</a>         <span class="jxr_string">"((decimallatitude &gt;= -80.0 AND decimallatitude &lt;= -38.3 AND (decimallongitude &gt;= -180.0 AND decimallongitude &lt;= 180.0)) AND contains(\&quot;"</span>
+<a class="jxr_linenumber" name="L474" href="#L474">474</a>             + wktP
+<a class="jxr_linenumber" name="L475" href="#L475">475</a>             + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L476" href="#L476">476</a>         query);
+<a class="jxr_linenumber" name="L477" href="#L477">477</a> 
+<a class="jxr_linenumber" name="L478" href="#L478">478</a>     <em class="jxr_comment">// A multipolygon around the Pacific and Indian oceans, split over the antimeridian</em>
+<a class="jxr_linenumber" name="L479" href="#L479">479</a>     String wktM =
+<a class="jxr_linenumber" name="L480" href="#L480">480</a>         <span class="jxr_string">"MULTIPOLYGON (((180 51.83076923076923, 180 -63, 35 -63, 60 -9, 127 1, 157 49, 180 51.83076923076923)), ((-180 -63, -180 51.83076923076923, -138 57, -127 39, -112 18, -92 13, -84 1, -77 -63, -169 -63, -180 -63)))"</span>;
+<a class="jxr_linenumber" name="L481" href="#L481">481</a>     String bbox =
+<a class="jxr_linenumber" name="L482" href="#L482">482</a>         <span class="jxr_string">"(decimallatitude &gt;= -63.0 AND decimallatitude &lt;= 57.0 AND (decimallongitude &gt;= 35.0 OR decimallongitude &lt;= -77.0))"</span>;
+<a class="jxr_linenumber" name="L483" href="#L483">483</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wktM));
+<a class="jxr_linenumber" name="L484" href="#L484">484</a>     assertEquals(
+<a class="jxr_linenumber" name="L485" href="#L485">485</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L486" href="#L486">486</a>         query);
+<a class="jxr_linenumber" name="L487" href="#L487">487</a> 
+<a class="jxr_linenumber" name="L488" href="#L488">488</a>     <em class="jxr_comment">// The same polygon, as portal16 produces it.</em>
+<a class="jxr_linenumber" name="L489" href="#L489">489</a>     <em class="jxr_comment">// Note the result still contains the multipolygon.</em>
+<a class="jxr_linenumber" name="L490" href="#L490">490</a>     String wkt16 =
+<a class="jxr_linenumber" name="L491" href="#L491">491</a>         <span class="jxr_string">"POLYGON((35.0 -63.0, 191.0 -63.0, 283.0 -63.0, 276.0 1.0, 268.0 13.0, 248.0 18.0, 233.0 39.0, 222.0 57.0, 157.0 49.0, 127.0 1.0, 60.0 -9.0, 35.0 -63.0))"</span>;
+<a class="jxr_linenumber" name="L492" href="#L492">492</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> WithinPredicate(wkt16));
+<a class="jxr_linenumber" name="L493" href="#L493">493</a>     assertEquals(
+<a class="jxr_linenumber" name="L494" href="#L494">494</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L495" href="#L495">495</a>         query);
+<a class="jxr_linenumber" name="L496" href="#L496">496</a> 
+<a class="jxr_linenumber" name="L497" href="#L497">497</a>     <em class="jxr_comment">// A polygon around the Pacific, as Wicket draws it:</em>
+<a class="jxr_linenumber" name="L498" href="#L498">498</a>     String wktWk =
+<a class="jxr_linenumber" name="L499" href="#L499">499</a>         <span class="jxr_string">"POLYGON((157.0 49.0,127.0 1.0,60.0 -9.0,35.0 -63.0,-169.0 -63.0,-77.0 -63.0,-84.0 1.0,-92.0 13.0,-112.0 18.0,-127.0 39.0,-138.0 57.0,157.0 49.0))"</span>;
+<a class="jxr_linenumber" name="L500" href="#L500">500</a>     assertEquals(
+<a class="jxr_linenumber" name="L501" href="#L501">501</a>         <span class="jxr_string">"("</span> + bbox + <span class="jxr_string">" AND contains(\&quot;"</span> + wktM + <span class="jxr_string">"\&quot;, decimallatitude, decimallongitude) = TRUE)"</span>,
+<a class="jxr_linenumber" name="L502" href="#L502">502</a>         query);
+<a class="jxr_linenumber" name="L503" href="#L503">503</a>   }
+<a class="jxr_linenumber" name="L504" href="#L504">504</a> 
+<a class="jxr_linenumber" name="L505" href="#L505">505</a>   @Test
+<a class="jxr_linenumber" name="L506" href="#L506">506</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsNotNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L507" href="#L507">507</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(PARAM);
+<a class="jxr_linenumber" name="L508" href="#L508">508</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L509" href="#L509">509</a>     assertEquals(<span class="jxr_string">"catalognumber IS NOT NULL "</span>, query);
+<a class="jxr_linenumber" name="L510" href="#L510">510</a>   }
+<a class="jxr_linenumber" name="L511" href="#L511">511</a> 
+<a class="jxr_linenumber" name="L512" href="#L512">512</a>   @Test
+<a class="jxr_linenumber" name="L513" href="#L513">513</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsArrayNotNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L514" href="#L514">514</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.IDENTIFIED_BY_ID);
+<a class="jxr_linenumber" name="L515" href="#L515">515</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L516" href="#L516">516</a>     assertEquals(<span class="jxr_string">"(identifiedbyid IS NOT NULL AND size(identifiedbyid) &gt; 0)"</span>, query);
+<a class="jxr_linenumber" name="L517" href="#L517">517</a>   }
+<a class="jxr_linenumber" name="L518" href="#L518">518</a> 
+<a class="jxr_linenumber" name="L519" href="#L519">519</a>   @Test
+<a class="jxr_linenumber" name="L520" href="#L520">520</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsVocabularyNotNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L521" href="#L521">521</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.LIFE_STAGE);
+<a class="jxr_linenumber" name="L522" href="#L522">522</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L523" href="#L523">523</a>     assertEquals(<span class="jxr_string">"(lifestage.lineage IS NOT NULL AND size(lifestage.lineage) &gt; 0)"</span>, query);
+<a class="jxr_linenumber" name="L524" href="#L524">524</a>   }
+<a class="jxr_linenumber" name="L525" href="#L525">525</a> 
+<a class="jxr_linenumber" name="L526" href="#L526">526</a>   @Test
+<a class="jxr_linenumber" name="L527" href="#L527">527</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L528" href="#L528">528</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(PARAM);
+<a class="jxr_linenumber" name="L529" href="#L529">529</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L530" href="#L530">530</a>     assertEquals(<span class="jxr_string">"catalognumber IS NULL "</span>, query);
+<a class="jxr_linenumber" name="L531" href="#L531">531</a>   }
+<a class="jxr_linenumber" name="L532" href="#L532">532</a> 
+<a class="jxr_linenumber" name="L533" href="#L533">533</a>   @Test
+<a class="jxr_linenumber" name="L534" href="#L534">534</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsArrayNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L535" href="#L535">535</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(OccurrenceSearchParameter.IDENTIFIED_BY_ID);
+<a class="jxr_linenumber" name="L536" href="#L536">536</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L537" href="#L537">537</a>     assertEquals(<span class="jxr_string">"(identifiedbyid IS NULL OR size(identifiedbyid) = 0)"</span>, query);
+<a class="jxr_linenumber" name="L538" href="#L538">538</a>   }
+<a class="jxr_linenumber" name="L539" href="#L539">539</a> 
+<a class="jxr_linenumber" name="L540" href="#L540">540</a>   @Test
+<a class="jxr_linenumber" name="L541" href="#L541">541</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsVocabularyNullPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L542" href="#L542">542</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(OccurrenceSearchParameter.LIFE_STAGE);
+<a class="jxr_linenumber" name="L543" href="#L543">543</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L544" href="#L544">544</a>     assertEquals(<span class="jxr_string">"lifestage.lineage IS NULL "</span>, query);
+<a class="jxr_linenumber" name="L545" href="#L545">545</a>   }
+<a class="jxr_linenumber" name="L546" href="#L546">546</a> 
+<a class="jxr_linenumber" name="L547" href="#L547">547</a>   @Test
+<a class="jxr_linenumber" name="L548" href="#L548">548</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsNotNullTaxonKey() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L549" href="#L549">549</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);
+<a class="jxr_linenumber" name="L550" href="#L550">550</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L551" href="#L551">551</a>     assertEquals(
+<a class="jxr_linenumber" name="L552" href="#L552">552</a>         <span class="jxr_string">"(taxonkey IS NOT NULL  AND acceptedtaxonkey IS NOT NULL  AND kingdomkey IS NOT NULL  AND phylumkey IS NOT NULL  AND classkey IS NOT NULL  AND orderkey IS NOT NULL  AND familykey IS NOT NULL  AND genuskey IS NOT NULL  AND subgenuskey IS NOT NULL  AND specieskey IS NOT NULL )"</span>,
+<a class="jxr_linenumber" name="L553" href="#L553">553</a>         query);
+<a class="jxr_linenumber" name="L554" href="#L554">554</a>   }
+<a class="jxr_linenumber" name="L555" href="#L555">555</a> 
+<a class="jxr_linenumber" name="L556" href="#L556">556</a>   @Test
+<a class="jxr_linenumber" name="L557" href="#L557">557</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsNullTaxonKey() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L558" href="#L558">558</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);
+<a class="jxr_linenumber" name="L559" href="#L559">559</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L560" href="#L560">560</a>     assertEquals(
+<a class="jxr_linenumber" name="L561" href="#L561">561</a>         <span class="jxr_string">"(taxonkey IS NULL  AND acceptedtaxonkey IS NULL  AND kingdomkey IS NULL  AND phylumkey IS NULL  AND classkey IS NULL  AND orderkey IS NULL  AND familykey IS NULL  AND genuskey IS NULL  AND subgenuskey IS NULL  AND specieskey IS NULL )"</span>,
+<a class="jxr_linenumber" name="L562" href="#L562">562</a>         query);
+<a class="jxr_linenumber" name="L563" href="#L563">563</a>   }
+<a class="jxr_linenumber" name="L564" href="#L564">564</a> 
+<a class="jxr_linenumber" name="L565" href="#L565">565</a>   @Test
+<a class="jxr_linenumber" name="L566" href="#L566">566</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIsNotNullArrayPredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L567" href="#L567">567</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.MEDIA_TYPE);
+<a class="jxr_linenumber" name="L568" href="#L568">568</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L569" href="#L569">569</a>     assertEquals(<span class="jxr_string">"(mediatype IS NOT NULL AND size(mediatype) &gt; 0)"</span>, query);
+<a class="jxr_linenumber" name="L570" href="#L570">570</a>   }
+<a class="jxr_linenumber" name="L571" href="#L571">571</a> 
+<a class="jxr_linenumber" name="L572" href="#L572">572</a>   @Test
+<a class="jxr_linenumber" name="L573" href="#L573">573</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testPartialDates() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L574" href="#L574">574</a>     testPartialDate(<span class="jxr_string">"2021-10-25T00:00:00Z"</span>, <span class="jxr_string">"2021-10-26T00:00:00Z"</span>, <span class="jxr_string">"2021-10-25"</span>);
+<a class="jxr_linenumber" name="L575" href="#L575">575</a>     testPartialDate(<span class="jxr_string">"2014-10-01T00:00:00Z"</span>, <span class="jxr_string">"2014-11-01T00:00:00Z"</span>, <span class="jxr_string">"2014-10"</span>);
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>     testPartialDate(<span class="jxr_string">"1936-01-01T00:00:00Z"</span>, <span class="jxr_string">"1937-01-01T00:00:00Z"</span>, <span class="jxr_string">"1936"</span>);
+<a class="jxr_linenumber" name="L577" href="#L577">577</a>   }
+<a class="jxr_linenumber" name="L578" href="#L578">578</a> 
+<a class="jxr_linenumber" name="L579" href="#L579">579</a>   @Test
+<a class="jxr_linenumber" name="L580" href="#L580">580</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDateRanges() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L581" href="#L581">581</a>     testPartialDate(<span class="jxr_string">"2021-10-25T00:00:00Z"</span>, <span class="jxr_string">"2021-10-26T00:00:00Z"</span>, <span class="jxr_string">"2021-10-25,2021-10-25"</span>);
+<a class="jxr_linenumber" name="L582" href="#L582">582</a>     testPartialDate(<span class="jxr_string">"2021-10-25T00:00:00Z"</span>, <span class="jxr_string">"2021-10-27T00:00:00Z"</span>, <span class="jxr_string">"2021-10-25,2021-10-26"</span>);
+<a class="jxr_linenumber" name="L583" href="#L583">583</a>     testPartialDate(<span class="jxr_string">"2014-05-01T00:00:00Z"</span>, <span class="jxr_string">"2014-07-01T00:00:00Z"</span>, <span class="jxr_string">"2014-05,2014-06"</span>);
+<a class="jxr_linenumber" name="L584" href="#L584">584</a>     testPartialDate(<span class="jxr_string">"1936-01-01T00:00:00Z"</span>, <span class="jxr_string">"1941-01-01T00:00:00Z"</span>, <span class="jxr_string">"1936,1940"</span>);
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>     testPartialDate(<span class="jxr_string">"1940-01-01T00:00:00Z"</span>, <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"1940,*"</span>);
+<a class="jxr_linenumber" name="L586" href="#L586">586</a>     testPartialDate(<strong class="jxr_keyword">null</strong>, <span class="jxr_string">"1941-01-01T00:00:00Z"</span>, <span class="jxr_string">"*,1940"</span>);
+<a class="jxr_linenumber" name="L587" href="#L587">587</a>     testPartialDate(<strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"*,*"</span>);
+<a class="jxr_linenumber" name="L588" href="#L588">588</a>   }
+<a class="jxr_linenumber" name="L589" href="#L589">589</a> 
+<a class="jxr_linenumber" name="L590" href="#L590">590</a>   @Test
+<a class="jxr_linenumber" name="L591" href="#L591">591</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDateComparisons() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L592" href="#L592">592</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000"</span>, false);
+<a class="jxr_linenumber" name="L593" href="#L593">593</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L594" href="#L594">594</a>     assertEquals(
+<a class="jxr_linenumber" name="L595" href="#L595">595</a>         String.format(
+<a class="jxr_linenumber" name="L596" href="#L596">596</a>             <span class="jxr_string">"(lastinterpreted &gt;= %s AND lastinterpreted &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L597" href="#L597">597</a>             Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).toEpochMilli(),
+<a class="jxr_linenumber" name="L598" href="#L598">598</a>             Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L599" href="#L599">599</a>         query);
+<a class="jxr_linenumber" name="L600" href="#L600">600</a> 
+<a class="jxr_linenumber" name="L601" href="#L601">601</a>     <em class="jxr_comment">// Include the range</em>
+<a class="jxr_linenumber" name="L602" href="#L602">602</a>     p = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L603" href="#L603">603</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L604" href="#L604">604</a>     assertEquals(
+<a class="jxr_linenumber" name="L605" href="#L605">605</a>         String.format(<span class="jxr_string">"lastinterpreted &lt; %s"</span>, Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L606" href="#L606">606</a>         query);
+<a class="jxr_linenumber" name="L607" href="#L607">607</a> 
+<a class="jxr_linenumber" name="L608" href="#L608">608</a>     p = <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L609" href="#L609">609</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L610" href="#L610">610</a>     assertEquals(
+<a class="jxr_linenumber" name="L611" href="#L611">611</a>         String.format(
+<a class="jxr_linenumber" name="L612" href="#L612">612</a>             <span class="jxr_string">"lastinterpreted &gt;= %s"</span>, Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L613" href="#L613">613</a>         query);
+<a class="jxr_linenumber" name="L614" href="#L614">614</a> 
+<a class="jxr_linenumber" name="L615" href="#L615">615</a>     <em class="jxr_comment">// Exclude the range</em>
+<a class="jxr_linenumber" name="L616" href="#L616">616</a>     p = <strong class="jxr_keyword">new</strong> LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L617" href="#L617">617</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L618" href="#L618">618</a>     assertEquals(
+<a class="jxr_linenumber" name="L619" href="#L619">619</a>         String.format(<span class="jxr_string">"lastinterpreted &lt; %s"</span>, Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L620" href="#L620">620</a>         query);
+<a class="jxr_linenumber" name="L621" href="#L621">621</a> 
+<a class="jxr_linenumber" name="L622" href="#L622">622</a>     p = <strong class="jxr_keyword">new</strong> GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L623" href="#L623">623</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L624" href="#L624">624</a>     assertEquals(
+<a class="jxr_linenumber" name="L625" href="#L625">625</a>         String.format(
+<a class="jxr_linenumber" name="L626" href="#L626">626</a>             <span class="jxr_string">"lastinterpreted &gt;= %s"</span>, Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L627" href="#L627">627</a>         query);
+<a class="jxr_linenumber" name="L628" href="#L628">628</a>   }
+<a class="jxr_linenumber" name="L629" href="#L629">629</a> 
+<a class="jxr_linenumber" name="L630" href="#L630">630</a>   @Test
+<a class="jxr_linenumber" name="L631" href="#L631">631</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDateRangeComparisons() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L632" href="#L632">632</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000-01-02"</span>, false);
+<a class="jxr_linenumber" name="L633" href="#L633">633</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L634" href="#L634">634</a>     assertEquals(
+<a class="jxr_linenumber" name="L635" href="#L635">635</a>         String.format(
+<a class="jxr_linenumber" name="L636" href="#L636">636</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L637" href="#L637">637</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L638" href="#L638">638</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L639" href="#L639">639</a>         query);
+<a class="jxr_linenumber" name="L640" href="#L640">640</a> 
+<a class="jxr_linenumber" name="L641" href="#L641">641</a>     p = <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList(<span class="jxr_string">"2000-01-02"</span>), false);
+<a class="jxr_linenumber" name="L642" href="#L642">642</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L643" href="#L643">643</a>     assertEquals(
+<a class="jxr_linenumber" name="L644" href="#L644">644</a>         String.format(
+<a class="jxr_linenumber" name="L645" href="#L645">645</a>             <span class="jxr_string">"((eventdategte &gt;= %s AND eventdatelte &lt; %s))"</span>,
+<a class="jxr_linenumber" name="L646" href="#L646">646</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L647" href="#L647">647</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L648" href="#L648">648</a>         query);
+<a class="jxr_linenumber" name="L649" href="#L649">649</a> 
+<a class="jxr_linenumber" name="L650" href="#L650">650</a>     p =
+<a class="jxr_linenumber" name="L651" href="#L651">651</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L652" href="#L652">652</a>             OccurrenceSearchParameter.EVENT_DATE, Arrays.asList(<span class="jxr_string">"2000-01-02"</span>, <span class="jxr_string">"2024-01-17"</span>), false);
+<a class="jxr_linenumber" name="L653" href="#L653">653</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L654" href="#L654">654</a>     assertEquals(
+<a class="jxr_linenumber" name="L655" href="#L655">655</a>         String.format(
+<a class="jxr_linenumber" name="L656" href="#L656">656</a>             <span class="jxr_string">"((eventdategte &gt;= %s AND eventdatelte &lt; %s) OR (eventdategte &gt;= %s AND eventdatelte &lt; %s))"</span>,
+<a class="jxr_linenumber" name="L657" href="#L657">657</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L658" href="#L658">658</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L659" href="#L659">659</a>             Instant.parse(<span class="jxr_string">"2024-01-17T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L660" href="#L660">660</a>             Instant.parse(<span class="jxr_string">"2024-01-18T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L661" href="#L661">661</a>         query);
+<a class="jxr_linenumber" name="L662" href="#L662">662</a> 
+<a class="jxr_linenumber" name="L663" href="#L663">663</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000-01-02,2000-01-04"</span>, false);
+<a class="jxr_linenumber" name="L664" href="#L664">664</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L665" href="#L665">665</a>     assertEquals(
+<a class="jxr_linenumber" name="L666" href="#L666">666</a>         String.format(
+<a class="jxr_linenumber" name="L667" href="#L667">667</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L668" href="#L668">668</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L669" href="#L669">669</a>             Instant.parse(<span class="jxr_string">"2000-01-05T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L670" href="#L670">670</a>         query);
+<a class="jxr_linenumber" name="L671" href="#L671">671</a> 
+<a class="jxr_linenumber" name="L672" href="#L672">672</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000-01"</span>, false);
+<a class="jxr_linenumber" name="L673" href="#L673">673</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L674" href="#L674">674</a>     assertEquals(
+<a class="jxr_linenumber" name="L675" href="#L675">675</a>         String.format(
+<a class="jxr_linenumber" name="L676" href="#L676">676</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L677" href="#L677">677</a>             Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L678" href="#L678">678</a>             Instant.parse(<span class="jxr_string">"2000-02-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L679" href="#L679">679</a>         query);
+<a class="jxr_linenumber" name="L680" href="#L680">680</a> 
+<a class="jxr_linenumber" name="L681" href="#L681">681</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000-01,2000-03"</span>, false);
+<a class="jxr_linenumber" name="L682" href="#L682">682</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L683" href="#L683">683</a>     assertEquals(
+<a class="jxr_linenumber" name="L684" href="#L684">684</a>         String.format(
+<a class="jxr_linenumber" name="L685" href="#L685">685</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L686" href="#L686">686</a>             Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L687" href="#L687">687</a>             Instant.parse(<span class="jxr_string">"2000-04-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L688" href="#L688">688</a>         query);
+<a class="jxr_linenumber" name="L689" href="#L689">689</a> 
+<a class="jxr_linenumber" name="L690" href="#L690">690</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000"</span>, false);
+<a class="jxr_linenumber" name="L691" href="#L691">691</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L692" href="#L692">692</a>     assertEquals(
+<a class="jxr_linenumber" name="L693" href="#L693">693</a>         String.format(
+<a class="jxr_linenumber" name="L694" href="#L694">694</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L695" href="#L695">695</a>             Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L696" href="#L696">696</a>             Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L697" href="#L697">697</a>         query);
+<a class="jxr_linenumber" name="L698" href="#L698">698</a> 
+<a class="jxr_linenumber" name="L699" href="#L699">699</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000,2001"</span>, false);
+<a class="jxr_linenumber" name="L700" href="#L700">700</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L701" href="#L701">701</a>     assertEquals(
+<a class="jxr_linenumber" name="L702" href="#L702">702</a>         String.format(
+<a class="jxr_linenumber" name="L703" href="#L703">703</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L704" href="#L704">704</a>             Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L705" href="#L705">705</a>             Instant.parse(<span class="jxr_string">"2002-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L706" href="#L706">706</a>         query);
+<a class="jxr_linenumber" name="L707" href="#L707">707</a> 
+<a class="jxr_linenumber" name="L708" href="#L708">708</a>     <em class="jxr_comment">// Include the range (for the or-equal-to)</em>
+<a class="jxr_linenumber" name="L709" href="#L709">709</a>     p = <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L710" href="#L710">710</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L711" href="#L711">711</a>     assertEquals(
+<a class="jxr_linenumber" name="L712" href="#L712">712</a>         String.format(<span class="jxr_string">"eventdategte &lt; %s"</span>, Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L713" href="#L713">713</a>         query);
+<a class="jxr_linenumber" name="L714" href="#L714">714</a> 
+<a class="jxr_linenumber" name="L715" href="#L715">715</a>     p = <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L716" href="#L716">716</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L717" href="#L717">717</a>     assertEquals(
+<a class="jxr_linenumber" name="L718" href="#L718">718</a>         String.format(<span class="jxr_string">"eventdatelte &gt;= %s"</span>, Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L719" href="#L719">719</a>         query);
+<a class="jxr_linenumber" name="L720" href="#L720">720</a> 
+<a class="jxr_linenumber" name="L721" href="#L721">721</a>     <em class="jxr_comment">// Exclude the range</em>
+<a class="jxr_linenumber" name="L722" href="#L722">722</a>     p = <strong class="jxr_keyword">new</strong> LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L723" href="#L723">723</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L724" href="#L724">724</a>     assertEquals(
+<a class="jxr_linenumber" name="L725" href="#L725">725</a>         String.format(<span class="jxr_string">"eventdategte &lt; %s"</span>, Instant.parse(<span class="jxr_string">"2000-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L726" href="#L726">726</a>         query);
+<a class="jxr_linenumber" name="L727" href="#L727">727</a> 
+<a class="jxr_linenumber" name="L728" href="#L728">728</a>     p = <strong class="jxr_keyword">new</strong> GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000"</span>);
+<a class="jxr_linenumber" name="L729" href="#L729">729</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L730" href="#L730">730</a>     assertEquals(
+<a class="jxr_linenumber" name="L731" href="#L731">731</a>         String.format(<span class="jxr_string">"eventdatelte &gt;= %s"</span>, Instant.parse(<span class="jxr_string">"2001-01-01T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L732" href="#L732">732</a>         query);
+<a class="jxr_linenumber" name="L733" href="#L733">733</a>   }
+<a class="jxr_linenumber" name="L734" href="#L734">734</a> 
+<a class="jxr_linenumber" name="L735" href="#L735">735</a>   <em class="jxr_javadoccomment">/** Reusable method to test partial dates, i.e., dates with the format: yyyy, yyyy-MM. */</em>
+<a class="jxr_linenumber" name="L736" href="#L736">736</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> testPartialDate(String expectedFrom, String expectedTo, String value)
+<a class="jxr_linenumber" name="L737" href="#L737">737</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L738" href="#L738">738</a>     Range&lt;Instant&gt; range =
+<a class="jxr_linenumber" name="L739" href="#L739">739</a>         Range.closed(
+<a class="jxr_linenumber" name="L740" href="#L740">740</a>             expectedFrom == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : Instant.parse(expectedFrom),
+<a class="jxr_linenumber" name="L741" href="#L741">741</a>             expectedTo == <strong class="jxr_keyword">null</strong> ? <strong class="jxr_keyword">null</strong> : Instant.parse(expectedTo));
+<a class="jxr_linenumber" name="L742" href="#L742">742</a> 
+<a class="jxr_linenumber" name="L743" href="#L743">743</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, value, false);
+<a class="jxr_linenumber" name="L744" href="#L744">744</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L745" href="#L745">745</a> 
+<a class="jxr_linenumber" name="L746" href="#L746">746</a>     <strong class="jxr_keyword">if</strong> (!range.hasUpperBound() &amp;&amp; !range.hasLowerBound()) {
+<a class="jxr_linenumber" name="L747" href="#L747">747</a>       assertEquals(<span class="jxr_string">""</span>, query);
+<a class="jxr_linenumber" name="L748" href="#L748">748</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!range.hasUpperBound()) {
+<a class="jxr_linenumber" name="L749" href="#L749">749</a>       assertEquals(
+<a class="jxr_linenumber" name="L750" href="#L750">750</a>           String.format(<span class="jxr_string">"(lastinterpreted &gt;= %s)"</span>, range.lowerEndpoint().toEpochMilli()), query);
+<a class="jxr_linenumber" name="L751" href="#L751">751</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!range.hasLowerBound()) {
+<a class="jxr_linenumber" name="L752" href="#L752">752</a>       assertEquals(
+<a class="jxr_linenumber" name="L753" href="#L753">753</a>           String.format(<span class="jxr_string">"(lastinterpreted &lt; %s)"</span>, range.upperEndpoint().toEpochMilli()), query);
+<a class="jxr_linenumber" name="L754" href="#L754">754</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L755" href="#L755">755</a>       assertEquals(
+<a class="jxr_linenumber" name="L756" href="#L756">756</a>           String.format(
+<a class="jxr_linenumber" name="L757" href="#L757">757</a>               <span class="jxr_string">"(lastinterpreted &gt;= %s AND lastinterpreted &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L758" href="#L758">758</a>               range.lowerEndpoint().toEpochMilli(), range.upperEndpoint().toEpochMilli()),
+<a class="jxr_linenumber" name="L759" href="#L759">759</a>           query);
+<a class="jxr_linenumber" name="L760" href="#L760">760</a>     }
+<a class="jxr_linenumber" name="L761" href="#L761">761</a>   }
+<a class="jxr_linenumber" name="L762" href="#L762">762</a> 
+<a class="jxr_linenumber" name="L763" href="#L763">763</a>   <em class="jxr_javadoccomment">/** Some dates in HDFS are a number of seconds, others a number of milliseconds. */</em>
+<a class="jxr_linenumber" name="L764" href="#L764">764</a>   @Test
+<a class="jxr_linenumber" name="L765" href="#L765">765</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDateMagnitude() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L766" href="#L766">766</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.EVENT_DATE, <span class="jxr_string">"2000-01-02"</span>, false);
+<a class="jxr_linenumber" name="L767" href="#L767">767</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L768" href="#L768">768</a>     assertEquals(
+<a class="jxr_linenumber" name="L769" href="#L769">769</a>         String.format(
+<a class="jxr_linenumber" name="L770" href="#L770">770</a>             <span class="jxr_string">"(eventdategte &gt;= %s AND eventdatelte &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L771" href="#L771">771</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L772" href="#L772">772</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L773" href="#L773">773</a>         query);
+<a class="jxr_linenumber" name="L774" href="#L774">774</a> 
+<a class="jxr_linenumber" name="L775" href="#L775">775</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.LAST_INTERPRETED, <span class="jxr_string">"2000-01-02"</span>, false);
+<a class="jxr_linenumber" name="L776" href="#L776">776</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L777" href="#L777">777</a>     assertEquals(
+<a class="jxr_linenumber" name="L778" href="#L778">778</a>         String.format(
+<a class="jxr_linenumber" name="L779" href="#L779">779</a>             <span class="jxr_string">"(lastinterpreted &gt;= %s AND lastinterpreted &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L780" href="#L780">780</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).toEpochMilli(),
+<a class="jxr_linenumber" name="L781" href="#L781">781</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).toEpochMilli()),
+<a class="jxr_linenumber" name="L782" href="#L782">782</a>         query);
+<a class="jxr_linenumber" name="L783" href="#L783">783</a> 
+<a class="jxr_linenumber" name="L784" href="#L784">784</a>     p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.MODIFIED, <span class="jxr_string">"2000-01-02"</span>, false);
+<a class="jxr_linenumber" name="L785" href="#L785">785</a>     query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L786" href="#L786">786</a>     assertEquals(
+<a class="jxr_linenumber" name="L787" href="#L787">787</a>         String.format(
+<a class="jxr_linenumber" name="L788" href="#L788">788</a>             <span class="jxr_string">"(modified &gt;= %s AND modified &lt; %s)"</span>,
+<a class="jxr_linenumber" name="L789" href="#L789">789</a>             Instant.parse(<span class="jxr_string">"2000-01-02T00:00:00Z"</span>).getEpochSecond(),
+<a class="jxr_linenumber" name="L790" href="#L790">790</a>             Instant.parse(<span class="jxr_string">"2000-01-03T00:00:00Z"</span>).getEpochSecond()),
+<a class="jxr_linenumber" name="L791" href="#L791">791</a>         query);
+<a class="jxr_linenumber" name="L792" href="#L792">792</a>   }
+<a class="jxr_linenumber" name="L793" href="#L793">793</a> 
+<a class="jxr_linenumber" name="L794" href="#L794">794</a>   @Test
+<a class="jxr_linenumber" name="L795" href="#L795">795</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIntRanges() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L796" href="#L796">796</a> 
+<a class="jxr_linenumber" name="L797" href="#L797">797</a>     String value = <span class="jxr_string">"1990,2011"</span>;
+<a class="jxr_linenumber" name="L798" href="#L798">798</a>     Range&lt;Integer&gt; range = SearchTypeValidator.parseIntegerRange(value);
+<a class="jxr_linenumber" name="L799" href="#L799">799</a> 
+<a class="jxr_linenumber" name="L800" href="#L800">800</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, value, false);
+<a class="jxr_linenumber" name="L801" href="#L801">801</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L802" href="#L802">802</a> 
+<a class="jxr_linenumber" name="L803" href="#L803">803</a>     <strong class="jxr_keyword">if</strong> (!range.hasUpperBound()) {
+<a class="jxr_linenumber" name="L804" href="#L804">804</a>       assertEquals(String.format(<span class="jxr_string">"year &gt;= %s"</span>, range.lowerEndpoint().intValue()), query);
+<a class="jxr_linenumber" name="L805" href="#L805">805</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!range.hasLowerBound()) {
+<a class="jxr_linenumber" name="L806" href="#L806">806</a>       assertEquals(String.format(<span class="jxr_string">"year &lt;= %s"</span>, range.upperEndpoint().intValue()), query);
+<a class="jxr_linenumber" name="L807" href="#L807">807</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L808" href="#L808">808</a>       assertEquals(
+<a class="jxr_linenumber" name="L809" href="#L809">809</a>           String.format(
+<a class="jxr_linenumber" name="L810" href="#L810">810</a>               <span class="jxr_string">"((year &gt;= %s) AND (year &lt;= %s))"</span>,
+<a class="jxr_linenumber" name="L811" href="#L811">811</a>               range.lowerEndpoint().intValue(), range.upperEndpoint().intValue()),
+<a class="jxr_linenumber" name="L812" href="#L812">812</a>           query);
+<a class="jxr_linenumber" name="L813" href="#L813">813</a>     }
+<a class="jxr_linenumber" name="L814" href="#L814">814</a>   }
+<a class="jxr_linenumber" name="L815" href="#L815">815</a> 
+<a class="jxr_linenumber" name="L816" href="#L816">816</a>   @Test
+<a class="jxr_linenumber" name="L817" href="#L817">817</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIntInclusiveRangeWithRangePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L818" href="#L818">818</a> 
+<a class="jxr_linenumber" name="L819" href="#L819">819</a>     RangeValue rangeValue = <strong class="jxr_keyword">new</strong> RangeValue(<span class="jxr_string">"1990"</span>, <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"2011"</span>, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L820" href="#L820">820</a>     Predicate p = <strong class="jxr_keyword">new</strong> RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+<a class="jxr_linenumber" name="L821" href="#L821">821</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L822" href="#L822">822</a>     assertEquals(
+<a class="jxr_linenumber" name="L823" href="#L823">823</a>         String.format(
+<a class="jxr_linenumber" name="L824" href="#L824">824</a>             <span class="jxr_string">"((year &gt;= %1$s) AND (year &lt;= %2$s))"</span>,
+<a class="jxr_linenumber" name="L825" href="#L825">825</a>             Integer.parseInt(rangeValue.getGte()), Integer.parseInt(rangeValue.getLte())),
+<a class="jxr_linenumber" name="L826" href="#L826">826</a>         query);
+<a class="jxr_linenumber" name="L827" href="#L827">827</a>   }
+<a class="jxr_linenumber" name="L828" href="#L828">828</a> 
+<a class="jxr_linenumber" name="L829" href="#L829">829</a>   @Test
+<a class="jxr_linenumber" name="L830" href="#L830">830</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIntExclusiveRangeWithRangePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L831" href="#L831">831</a> 
+<a class="jxr_linenumber" name="L832" href="#L832">832</a>     RangeValue rangeValue = <strong class="jxr_keyword">new</strong> RangeValue(<strong class="jxr_keyword">null</strong>, <span class="jxr_string">"1990"</span>, <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"2011"</span>);
+<a class="jxr_linenumber" name="L833" href="#L833">833</a>     Predicate p = <strong class="jxr_keyword">new</strong> RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+<a class="jxr_linenumber" name="L834" href="#L834">834</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L835" href="#L835">835</a>     assertEquals(
+<a class="jxr_linenumber" name="L836" href="#L836">836</a>         String.format(
+<a class="jxr_linenumber" name="L837" href="#L837">837</a>             <span class="jxr_string">"((year &gt; %1$s) AND (year &lt; %2$s))"</span>,
+<a class="jxr_linenumber" name="L838" href="#L838">838</a>             Integer.parseInt(rangeValue.getGt()), Integer.parseInt(rangeValue.getLt())),
+<a class="jxr_linenumber" name="L839" href="#L839">839</a>         query);
+<a class="jxr_linenumber" name="L840" href="#L840">840</a>   }
+<a class="jxr_linenumber" name="L841" href="#L841">841</a> 
+<a class="jxr_linenumber" name="L842" href="#L842">842</a>   @Test
+<a class="jxr_linenumber" name="L843" href="#L843">843</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testInclusiveExclusiveRangeWithRangePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L844" href="#L844">844</a> 
+<a class="jxr_linenumber" name="L845" href="#L845">845</a>     RangeValue rangeValue = <strong class="jxr_keyword">new</strong> RangeValue(<span class="jxr_string">"1990"</span>, <strong class="jxr_keyword">null</strong>, <strong class="jxr_keyword">null</strong>, <span class="jxr_string">"2011"</span>);
+<a class="jxr_linenumber" name="L846" href="#L846">846</a>     Predicate p = <strong class="jxr_keyword">new</strong> RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+<a class="jxr_linenumber" name="L847" href="#L847">847</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L848" href="#L848">848</a>     assertEquals(
+<a class="jxr_linenumber" name="L849" href="#L849">849</a>         String.format(
+<a class="jxr_linenumber" name="L850" href="#L850">850</a>             <span class="jxr_string">"((year &gt;= %1$s) AND (year &lt; %2$s))"</span>,
+<a class="jxr_linenumber" name="L851" href="#L851">851</a>             Integer.parseInt(rangeValue.getGte()), Integer.parseInt(rangeValue.getLt())),
+<a class="jxr_linenumber" name="L852" href="#L852">852</a>         query);
+<a class="jxr_linenumber" name="L853" href="#L853">853</a>   }
+<a class="jxr_linenumber" name="L854" href="#L854">854</a> 
+<a class="jxr_linenumber" name="L855" href="#L855">855</a>   @Test
+<a class="jxr_linenumber" name="L856" href="#L856">856</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testExclusiveInclusiveRangeWithRangePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L857" href="#L857">857</a> 
+<a class="jxr_linenumber" name="L858" href="#L858">858</a>     RangeValue rangeValue = <strong class="jxr_keyword">new</strong> RangeValue(<strong class="jxr_keyword">null</strong>, <span class="jxr_string">"1990"</span>, <span class="jxr_string">"2011"</span>, <strong class="jxr_keyword">null</strong>);
+<a class="jxr_linenumber" name="L859" href="#L859">859</a>     Predicate p = <strong class="jxr_keyword">new</strong> RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+<a class="jxr_linenumber" name="L860" href="#L860">860</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L861" href="#L861">861</a>     assertEquals(
+<a class="jxr_linenumber" name="L862" href="#L862">862</a>         String.format(
+<a class="jxr_linenumber" name="L863" href="#L863">863</a>             <span class="jxr_string">"((year &gt; %1$s) AND (year &lt;= %2$s))"</span>,
+<a class="jxr_linenumber" name="L864" href="#L864">864</a>             Integer.parseInt(rangeValue.getGt()), Integer.parseInt(rangeValue.getLte())),
+<a class="jxr_linenumber" name="L865" href="#L865">865</a>         query);
+<a class="jxr_linenumber" name="L866" href="#L866">866</a>   }
+<a class="jxr_linenumber" name="L867" href="#L867">867</a> 
+<a class="jxr_linenumber" name="L868" href="#L868">868</a>   @Test
+<a class="jxr_linenumber" name="L869" href="#L869">869</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDoubleRanges() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L870" href="#L870">870</a>     testDoubleRange(<span class="jxr_string">"-200,600.2"</span>);
+<a class="jxr_linenumber" name="L871" href="#L871">871</a>     testDoubleRange(<span class="jxr_string">"*,300.3"</span>);
+<a class="jxr_linenumber" name="L872" href="#L872">872</a>     testDoubleRange(<span class="jxr_string">"-23.8,*"</span>);
+<a class="jxr_linenumber" name="L873" href="#L873">873</a>   }
+<a class="jxr_linenumber" name="L874" href="#L874">874</a> 
+<a class="jxr_linenumber" name="L875" href="#L875">875</a>   <em class="jxr_javadoccomment">/** Reusable method to test number ranges. */</em>
+<a class="jxr_linenumber" name="L876" href="#L876">876</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> testDoubleRange(String value) <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L877" href="#L877">877</a>     Range&lt;Double&gt; range = SearchTypeValidator.parseDecimalRange(value);
+<a class="jxr_linenumber" name="L878" href="#L878">878</a> 
+<a class="jxr_linenumber" name="L879" href="#L879">879</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.ELEVATION, value, false);
+<a class="jxr_linenumber" name="L880" href="#L880">880</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L881" href="#L881">881</a> 
+<a class="jxr_linenumber" name="L882" href="#L882">882</a>     <strong class="jxr_keyword">if</strong> (!range.hasUpperBound()) {
+<a class="jxr_linenumber" name="L883" href="#L883">883</a>       assertEquals(String.format(<span class="jxr_string">"elevation &gt;= %s"</span>, range.lowerEndpoint().doubleValue()), query);
+<a class="jxr_linenumber" name="L884" href="#L884">884</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!range.hasLowerBound()) {
+<a class="jxr_linenumber" name="L885" href="#L885">885</a>       assertEquals(String.format(<span class="jxr_string">"elevation &lt;= %s"</span>, range.upperEndpoint().doubleValue()), query);
+<a class="jxr_linenumber" name="L886" href="#L886">886</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L887" href="#L887">887</a>       assertEquals(
+<a class="jxr_linenumber" name="L888" href="#L888">888</a>           String.format(
+<a class="jxr_linenumber" name="L889" href="#L889">889</a>               <span class="jxr_string">"((elevation &gt;= %s) AND (elevation &lt;= %s))"</span>,
+<a class="jxr_linenumber" name="L890" href="#L890">890</a>               range.lowerEndpoint().doubleValue(), range.upperEndpoint().doubleValue()),
+<a class="jxr_linenumber" name="L891" href="#L891">891</a>           query);
+<a class="jxr_linenumber" name="L892" href="#L892">892</a>     }
+<a class="jxr_linenumber" name="L893" href="#L893">893</a>   }
+<a class="jxr_linenumber" name="L894" href="#L894">894</a> 
+<a class="jxr_linenumber" name="L895" href="#L895">895</a>   @Test
+<a class="jxr_linenumber" name="L896" href="#L896">896</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIntegerRanges() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L897" href="#L897">897</a>     testIntegerRange(<span class="jxr_string">"1950,1960"</span>);
+<a class="jxr_linenumber" name="L898" href="#L898">898</a>     testIntegerRange(<span class="jxr_string">"*,2000"</span>);
+<a class="jxr_linenumber" name="L899" href="#L899">899</a>     testIntegerRange(<span class="jxr_string">"2000,*"</span>);
+<a class="jxr_linenumber" name="L900" href="#L900">900</a>   }
+<a class="jxr_linenumber" name="L901" href="#L901">901</a> 
+<a class="jxr_linenumber" name="L902" href="#L902">902</a>   <em class="jxr_javadoccomment">/** Reusable method to test number ranges. */</em>
+<a class="jxr_linenumber" name="L903" href="#L903">903</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> testIntegerRange(String value) <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L904" href="#L904">904</a>     Range&lt;Integer&gt; range = SearchTypeValidator.parseIntegerRange(value);
+<a class="jxr_linenumber" name="L905" href="#L905">905</a> 
+<a class="jxr_linenumber" name="L906" href="#L906">906</a>     Predicate p = <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, value, false);
+<a class="jxr_linenumber" name="L907" href="#L907">907</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L908" href="#L908">908</a> 
+<a class="jxr_linenumber" name="L909" href="#L909">909</a>     <strong class="jxr_keyword">if</strong> (!range.hasUpperBound()) {
+<a class="jxr_linenumber" name="L910" href="#L910">910</a>       assertEquals(String.format(<span class="jxr_string">"year &gt;= %s"</span>, range.lowerEndpoint().intValue()), query);
+<a class="jxr_linenumber" name="L911" href="#L911">911</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (!range.hasLowerBound()) {
+<a class="jxr_linenumber" name="L912" href="#L912">912</a>       assertEquals(String.format(<span class="jxr_string">"year &lt;= %s"</span>, range.upperEndpoint().intValue()), query);
+<a class="jxr_linenumber" name="L913" href="#L913">913</a>     } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L914" href="#L914">914</a>       assertEquals(
+<a class="jxr_linenumber" name="L915" href="#L915">915</a>           String.format(
+<a class="jxr_linenumber" name="L916" href="#L916">916</a>               <span class="jxr_string">"((year &gt;= %s) AND (year &lt;= %s))"</span>,
+<a class="jxr_linenumber" name="L917" href="#L917">917</a>               range.lowerEndpoint().intValue(), range.upperEndpoint().intValue()),
+<a class="jxr_linenumber" name="L918" href="#L918">918</a>           query);
+<a class="jxr_linenumber" name="L919" href="#L919">919</a>     }
+<a class="jxr_linenumber" name="L920" href="#L920">920</a>   }
+<a class="jxr_linenumber" name="L921" href="#L921">921</a> 
+<a class="jxr_linenumber" name="L922" href="#L922">922</a>   @Test
+<a class="jxr_linenumber" name="L923" href="#L923">923</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testIssues() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L924" href="#L924">924</a>     <em class="jxr_comment">// EqualsPredicate</em>
+<a class="jxr_linenumber" name="L925" href="#L925">925</a>     String query =
+<a class="jxr_linenumber" name="L926" href="#L926">926</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L927" href="#L927">927</a>             <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L928" href="#L928">928</a>                 OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"TAXON_MATCH_HIGHERRANK"</span>, false));
+<a class="jxr_linenumber" name="L929" href="#L929">929</a>     assertEquals(<span class="jxr_string">"stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true)"</span>, query);
+<a class="jxr_linenumber" name="L930" href="#L930">930</a> 
+<a class="jxr_linenumber" name="L931" href="#L931">931</a>     <em class="jxr_comment">// InPredicate</em>
+<a class="jxr_linenumber" name="L932" href="#L932">932</a>     query =
+<a class="jxr_linenumber" name="L933" href="#L933">933</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L934" href="#L934">934</a>             <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L935" href="#L935">935</a>                 OccurrenceSearchParameter.ISSUE,
+<a class="jxr_linenumber" name="L936" href="#L936">936</a>                 Lists.newArrayList(<span class="jxr_string">"TAXON_MATCH_HIGHERRANK"</span>, <span class="jxr_string">"TAXON_MATCH_NONE"</span>),
+<a class="jxr_linenumber" name="L937" href="#L937">937</a>                 false));
+<a class="jxr_linenumber" name="L938" href="#L938">938</a>     assertEquals(
+<a class="jxr_linenumber" name="L939" href="#L939">939</a>         <span class="jxr_string">"(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))"</span>,
+<a class="jxr_linenumber" name="L940" href="#L940">940</a>         query);
+<a class="jxr_linenumber" name="L941" href="#L941">941</a> 
+<a class="jxr_linenumber" name="L942" href="#L942">942</a>     <em class="jxr_comment">// LikePredicate</em>
+<a class="jxr_linenumber" name="L943" href="#L943">943</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L944" href="#L944">944</a>       <strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"TAXON_MATCH_HIGHERRANK"</span>, false);
+<a class="jxr_linenumber" name="L945" href="#L945">945</a>       fail();
+<a class="jxr_linenumber" name="L946" href="#L946">946</a>     } <strong class="jxr_keyword">catch</strong> (IllegalArgumentException e) {
+<a class="jxr_linenumber" name="L947" href="#L947">947</a>     }
+<a class="jxr_linenumber" name="L948" href="#L948">948</a> 
+<a class="jxr_linenumber" name="L949" href="#L949">949</a>     <em class="jxr_comment">// Not</em>
+<a class="jxr_linenumber" name="L950" href="#L950">950</a>     query =
+<a class="jxr_linenumber" name="L951" href="#L951">951</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L952" href="#L952">952</a>             <strong class="jxr_keyword">new</strong> NotPredicate(
+<a class="jxr_linenumber" name="L953" href="#L953">953</a>                 <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L954" href="#L954">954</a>                     OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"TAXON_MATCH_HIGHERRANK"</span>, false)));
+<a class="jxr_linenumber" name="L955" href="#L955">955</a>     assertEquals(<span class="jxr_string">"NOT stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true)"</span>, query);
+<a class="jxr_linenumber" name="L956" href="#L956">956</a> 
+<a class="jxr_linenumber" name="L957" href="#L957">957</a>     <em class="jxr_comment">// Not disjunction</em>
+<a class="jxr_linenumber" name="L958" href="#L958">958</a>     query =
+<a class="jxr_linenumber" name="L959" href="#L959">959</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L960" href="#L960">960</a>             <strong class="jxr_keyword">new</strong> NotPredicate(
+<a class="jxr_linenumber" name="L961" href="#L961">961</a>                 <strong class="jxr_keyword">new</strong> DisjunctionPredicate(
+<a class="jxr_linenumber" name="L962" href="#L962">962</a>                     Lists.newArrayList(
+<a class="jxr_linenumber" name="L963" href="#L963">963</a>                         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L964" href="#L964">964</a>                             OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"COORDINATE_INVALID"</span>, false),
+<a class="jxr_linenumber" name="L965" href="#L965">965</a>                         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L966" href="#L966">966</a>                             OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"COORDINATE_OUT_OF_RANGE"</span>, false),
+<a class="jxr_linenumber" name="L967" href="#L967">967</a>                         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L968" href="#L968">968</a>                             OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"ZERO_COORDINATE"</span>, false),
+<a class="jxr_linenumber" name="L969" href="#L969">969</a>                         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L970" href="#L970">970</a>                             OccurrenceSearchParameter.ISSUE, <span class="jxr_string">"RECORDED_DATE_INVALID"</span>, false)))));
+<a class="jxr_linenumber" name="L971" href="#L971">971</a>     assertEquals(
+<a class="jxr_linenumber" name="L972" href="#L972">972</a>         <span class="jxr_string">"NOT (stringArrayContains(issue,'COORDINATE_INVALID',true) OR stringArrayContains(issue,'COORDINATE_OUT_OF_RANGE',true) OR stringArrayContains(issue,'ZERO_COORDINATE',true) OR stringArrayContains(issue,'RECORDED_DATE_INVALID',true))"</span>,
+<a class="jxr_linenumber" name="L973" href="#L973">973</a>         query);
+<a class="jxr_linenumber" name="L974" href="#L974">974</a> 
+<a class="jxr_linenumber" name="L975" href="#L975">975</a>     <em class="jxr_comment">// IsNotNull</em>
+<a class="jxr_linenumber" name="L976" href="#L976">976</a>     query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.ISSUE));
+<a class="jxr_linenumber" name="L977" href="#L977">977</a>     assertEquals(<span class="jxr_string">"(issue IS NOT NULL AND size(issue) &gt; 0)"</span>, query);
+<a class="jxr_linenumber" name="L978" href="#L978">978</a>   }
+<a class="jxr_linenumber" name="L979" href="#L979">979</a> 
+<a class="jxr_linenumber" name="L980" href="#L980">980</a>   @Test
+<a class="jxr_linenumber" name="L981" href="#L981">981</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testAllParamsExist() {
+<a class="jxr_linenumber" name="L982" href="#L982">982</a>     List&lt;Predicate&gt; predicates = Lists.newArrayList();
+<a class="jxr_linenumber" name="L983" href="#L983">983</a>     <strong class="jxr_keyword">for</strong> (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
+<a class="jxr_linenumber" name="L984" href="#L984">984</a>       String value = <span class="jxr_string">"7"</span>;
+<a class="jxr_linenumber" name="L985" href="#L985">985</a> 
+<a class="jxr_linenumber" name="L986" href="#L986">986</a>       <strong class="jxr_keyword">if</strong> (OccurrenceSearchParameter.GEOMETRY == param) {
+<a class="jxr_linenumber" name="L987" href="#L987">987</a>         value = <span class="jxr_string">"POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"</span>;
+<a class="jxr_linenumber" name="L988" href="#L988">988</a>         predicates.add(<strong class="jxr_keyword">new</strong> WithinPredicate(value));
+<a class="jxr_linenumber" name="L989" href="#L989">989</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (UUID.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L990" href="#L990">990</a>         value = UUID.randomUUID().toString();
+<a class="jxr_linenumber" name="L991" href="#L991">991</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Boolean.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L992" href="#L992">992</a>         value = <span class="jxr_string">"true"</span>;
+<a class="jxr_linenumber" name="L993" href="#L993">993</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Country.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L994" href="#L994">994</a>         value = Country.GERMANY.getIso2LetterCode();
+<a class="jxr_linenumber" name="L995" href="#L995">995</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Language.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L996" href="#L996">996</a>         value = Language.GERMAN.getIso2LetterCode();
+<a class="jxr_linenumber" name="L997" href="#L997">997</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Enum.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L998" href="#L998">998</a>         Enum&lt;?&gt;[] values = ((Class&lt;Enum&gt;) param.type()).getEnumConstants();
+<a class="jxr_linenumber" name="L999" href="#L999">999</a>         value = values[0].name();
+<a class="jxr_linenumber" name="L1000" href="#L1000">1000</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (Date.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L1001" href="#L1001">1001</a>         value = <span class="jxr_string">"2014-01-23"</span>;
+<a class="jxr_linenumber" name="L1002" href="#L1002">1002</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (IsoDateInterval.<strong class="jxr_keyword">class</strong>.isAssignableFrom(param.type())) {
+<a class="jxr_linenumber" name="L1003" href="#L1003">1003</a>         value = <span class="jxr_string">"2014-01-23,2015-05"</span>;
+<a class="jxr_linenumber" name="L1004" href="#L1004">1004</a>       } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (OccurrenceSearchParameter.GEO_DISTANCE == param) {
+<a class="jxr_linenumber" name="L1005" href="#L1005">1005</a>         predicates.add(<strong class="jxr_keyword">new</strong> GeoDistancePredicate(<span class="jxr_string">"10"</span>, <span class="jxr_string">"20"</span>, <span class="jxr_string">"10km"</span>));
+<a class="jxr_linenumber" name="L1006" href="#L1006">1006</a>       }
+<a class="jxr_linenumber" name="L1007" href="#L1007">1007</a> 
+<a class="jxr_linenumber" name="L1008" href="#L1008">1008</a>       <strong class="jxr_keyword">if</strong> (OccurrenceSearchParameter.GEOMETRY != param
+<a class="jxr_linenumber" name="L1009" href="#L1009">1009</a>           &amp;&amp; OccurrenceSearchParameter.GEO_DISTANCE != param) {
+<a class="jxr_linenumber" name="L1010" href="#L1010">1010</a>         predicates.add(<strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(param, value, false));
+<a class="jxr_linenumber" name="L1011" href="#L1011">1011</a>       }
+<a class="jxr_linenumber" name="L1012" href="#L1012">1012</a>     }
+<a class="jxr_linenumber" name="L1013" href="#L1013">1013</a>     ConjunctionPredicate and = <strong class="jxr_keyword">new</strong> ConjunctionPredicate(predicates);
+<a class="jxr_linenumber" name="L1014" href="#L1014">1014</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1015" href="#L1015">1015</a>       visitor.buildQuery(and);
+<a class="jxr_linenumber" name="L1016" href="#L1016">1016</a>     } <strong class="jxr_keyword">catch</strong> (QueryBuildingException e) {
+<a class="jxr_linenumber" name="L1017" href="#L1017">1017</a>       fail(e);
+<a class="jxr_linenumber" name="L1018" href="#L1018">1018</a>     }
+<a class="jxr_linenumber" name="L1019" href="#L1019">1019</a>   }
+<a class="jxr_linenumber" name="L1020" href="#L1020">1020</a> 
+<a class="jxr_linenumber" name="L1021" href="#L1021">1021</a>   @Test
+<a class="jxr_linenumber" name="L1022" href="#L1022">1022</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testVocabularies() {
+<a class="jxr_linenumber" name="L1023" href="#L1023">1023</a>     Arrays.stream(OccurrenceSearchParameter.values())
+<a class="jxr_linenumber" name="L1024" href="#L1024">1024</a>         .filter(
+<a class="jxr_linenumber" name="L1025" href="#L1025">1025</a>             p -&gt;
+<a class="jxr_linenumber" name="L1026" href="#L1026">1026</a>                 Optional.ofNullable(visitor.term(p))
+<a class="jxr_linenumber" name="L1027" href="#L1027">1027</a>                     .map(SQLColumnsUtils::isVocabulary)
+<a class="jxr_linenumber" name="L1028" href="#L1028">1028</a>                     .orElse(false))
+<a class="jxr_linenumber" name="L1029" href="#L1029">1029</a>         .forEach(
+<a class="jxr_linenumber" name="L1030" href="#L1030">1030</a>             param -&gt; {
+<a class="jxr_linenumber" name="L1031" href="#L1031">1031</a>               <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1032" href="#L1032">1032</a>                 String hiveQueryField = SQLColumnsUtils.getSQLQueryColumn(visitor.term(param));
+<a class="jxr_linenumber" name="L1033" href="#L1033">1033</a> 
+<a class="jxr_linenumber" name="L1034" href="#L1034">1034</a>                 <em class="jxr_comment">// EqualsPredicate</em>
+<a class="jxr_linenumber" name="L1035" href="#L1035">1035</a>                 String query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(param, <span class="jxr_string">"value_1"</span>, false));
+<a class="jxr_linenumber" name="L1036" href="#L1036">1036</a>                 assertEquals(<span class="jxr_string">"stringArrayContains("</span> + hiveQueryField + <span class="jxr_string">",'value_1',true)"</span>, query);
+<a class="jxr_linenumber" name="L1037" href="#L1037">1037</a> 
+<a class="jxr_linenumber" name="L1038" href="#L1038">1038</a>                 <em class="jxr_comment">// InPredicate</em>
+<a class="jxr_linenumber" name="L1039" href="#L1039">1039</a>                 query =
+<a class="jxr_linenumber" name="L1040" href="#L1040">1040</a>                     visitor.buildQuery(
+<a class="jxr_linenumber" name="L1041" href="#L1041">1041</a>                         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(param, Lists.newArrayList(<span class="jxr_string">"value_1"</span>, <span class="jxr_string">"value_2"</span>), false));
+<a class="jxr_linenumber" name="L1042" href="#L1042">1042</a>                 assertEquals(
+<a class="jxr_linenumber" name="L1043" href="#L1043">1043</a>                     <span class="jxr_string">"(stringArrayContains("</span>
+<a class="jxr_linenumber" name="L1044" href="#L1044">1044</a>                         + hiveQueryField
+<a class="jxr_linenumber" name="L1045" href="#L1045">1045</a>                         + <span class="jxr_string">",'value_1',true) OR stringArrayContains("</span>
+<a class="jxr_linenumber" name="L1046" href="#L1046">1046</a>                         + hiveQueryField
+<a class="jxr_linenumber" name="L1047" href="#L1047">1047</a>                         + <span class="jxr_string">",'value_2',true))"</span>,
+<a class="jxr_linenumber" name="L1048" href="#L1048">1048</a>                     query);
+<a class="jxr_linenumber" name="L1049" href="#L1049">1049</a> 
+<a class="jxr_linenumber" name="L1050" href="#L1050">1050</a>                 <em class="jxr_comment">// LikePredicate</em>
+<a class="jxr_linenumber" name="L1051" href="#L1051">1051</a>                 query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> LikePredicate&lt;&gt;(param, <span class="jxr_string">"value_*"</span>, false));
+<a class="jxr_linenumber" name="L1052" href="#L1052">1052</a>                 assertEquals(<span class="jxr_string">"lower("</span> + hiveQueryField + <span class="jxr_string">") LIKE lower('value&#92;&#92;_%')"</span>, query);
+<a class="jxr_linenumber" name="L1053" href="#L1053">1053</a> 
+<a class="jxr_linenumber" name="L1054" href="#L1054">1054</a>                 <em class="jxr_comment">// Not</em>
+<a class="jxr_linenumber" name="L1055" href="#L1055">1055</a>                 query =
+<a class="jxr_linenumber" name="L1056" href="#L1056">1056</a>                     visitor.buildQuery(
+<a class="jxr_linenumber" name="L1057" href="#L1057">1057</a>                         <strong class="jxr_keyword">new</strong> NotPredicate(<strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(param, <span class="jxr_string">"value_1"</span>, false)));
+<a class="jxr_linenumber" name="L1058" href="#L1058">1058</a>                 assertEquals(
+<a class="jxr_linenumber" name="L1059" href="#L1059">1059</a>                     <span class="jxr_string">"NOT stringArrayContains("</span> + hiveQueryField + <span class="jxr_string">",'value_1',true)"</span>, query);
+<a class="jxr_linenumber" name="L1060" href="#L1060">1060</a> 
+<a class="jxr_linenumber" name="L1061" href="#L1061">1061</a>                 <em class="jxr_comment">// IsNotNull</em>
+<a class="jxr_linenumber" name="L1062" href="#L1062">1062</a>                 query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(param));
+<a class="jxr_linenumber" name="L1063" href="#L1063">1063</a>                 assertEquals(
+<a class="jxr_linenumber" name="L1064" href="#L1064">1064</a>                     <span class="jxr_string">"("</span> + hiveQueryField + <span class="jxr_string">" IS NOT NULL AND size("</span> + hiveQueryField + <span class="jxr_string">") &gt; 0)"</span>,
+<a class="jxr_linenumber" name="L1065" href="#L1065">1065</a>                     query);
+<a class="jxr_linenumber" name="L1066" href="#L1066">1066</a> 
+<a class="jxr_linenumber" name="L1067" href="#L1067">1067</a>                 <em class="jxr_comment">// IsNull</em>
+<a class="jxr_linenumber" name="L1068" href="#L1068">1068</a>                 query = visitor.buildQuery(<strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(param));
+<a class="jxr_linenumber" name="L1069" href="#L1069">1069</a>                 <strong class="jxr_keyword">if</strong> (visitor.isSQLArray(param)) {
+<a class="jxr_linenumber" name="L1070" href="#L1070">1070</a>                   assertEquals(
+<a class="jxr_linenumber" name="L1071" href="#L1071">1071</a>                       <span class="jxr_string">" ("</span> + hiveQueryField + <span class="jxr_string">" IS NULL OR size("</span> + hiveQueryField + <span class="jxr_string">") = 0) "</span>,
+<a class="jxr_linenumber" name="L1072" href="#L1072">1072</a>                       query);
+<a class="jxr_linenumber" name="L1073" href="#L1073">1073</a>                 } <strong class="jxr_keyword">else</strong> {
+<a class="jxr_linenumber" name="L1074" href="#L1074">1074</a>                   assertEquals(hiveQueryField + <span class="jxr_string">" IS NULL "</span>, query);
+<a class="jxr_linenumber" name="L1075" href="#L1075">1075</a>                 }
+<a class="jxr_linenumber" name="L1076" href="#L1076">1076</a> 
+<a class="jxr_linenumber" name="L1077" href="#L1077">1077</a>               } <strong class="jxr_keyword">catch</strong> (QueryBuildingException ex) {
+<a class="jxr_linenumber" name="L1078" href="#L1078">1078</a>                 <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> RuntimeException(ex);
+<a class="jxr_linenumber" name="L1079" href="#L1079">1079</a>               }
+<a class="jxr_linenumber" name="L1080" href="#L1080">1080</a>             });
+<a class="jxr_linenumber" name="L1081" href="#L1081">1081</a>   }
+<a class="jxr_linenumber" name="L1082" href="#L1082">1082</a> 
+<a class="jxr_linenumber" name="L1083" href="#L1083">1083</a>   @Test
+<a class="jxr_linenumber" name="L1084" href="#L1084">1084</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGreaterThanEqualsIncludingNull() {
+<a class="jxr_linenumber" name="L1085" href="#L1085">1085</a>     GreaterThanOrEqualsPredicate&lt;OccurrenceSearchParameter&gt; distanceFromCentroidPredicate =
+<a class="jxr_linenumber" name="L1086" href="#L1086">1086</a>         <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L1087" href="#L1087">1087</a>             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, <span class="jxr_string">"10"</span>);
+<a class="jxr_linenumber" name="L1088" href="#L1088">1088</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1089" href="#L1089">1089</a>       String query = visitor.buildQuery(distanceFromCentroidPredicate);
+<a class="jxr_linenumber" name="L1090" href="#L1090">1090</a>       assertEquals(
+<a class="jxr_linenumber" name="L1091" href="#L1091">1091</a>           <span class="jxr_string">"(distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL )"</span>, query);
+<a class="jxr_linenumber" name="L1092" href="#L1092">1092</a>     } <strong class="jxr_keyword">catch</strong> (QueryBuildingException ex) {
+<a class="jxr_linenumber" name="L1093" href="#L1093">1093</a>       fail();
+<a class="jxr_linenumber" name="L1094" href="#L1094">1094</a>     }
+<a class="jxr_linenumber" name="L1095" href="#L1095">1095</a>   }
+<a class="jxr_linenumber" name="L1096" href="#L1096">1096</a> 
+<a class="jxr_linenumber" name="L1097" href="#L1097">1097</a>   @Test
+<a class="jxr_linenumber" name="L1098" href="#L1098">1098</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGreaterThanIncludingNull() {
+<a class="jxr_linenumber" name="L1099" href="#L1099">1099</a>     GreaterThanPredicate&lt;OccurrenceSearchParameter&gt; distanceFromCentroidPredicate =
+<a class="jxr_linenumber" name="L1100" href="#L1100">1100</a>         <strong class="jxr_keyword">new</strong> GreaterThanPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L1101" href="#L1101">1101</a>             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, <span class="jxr_string">"10"</span>);
+<a class="jxr_linenumber" name="L1102" href="#L1102">1102</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1103" href="#L1103">1103</a>       String query = visitor.buildQuery(distanceFromCentroidPredicate);
+<a class="jxr_linenumber" name="L1104" href="#L1104">1104</a>       assertEquals(
+<a class="jxr_linenumber" name="L1105" href="#L1105">1105</a>           <span class="jxr_string">"(distancefromcentroidinmeters &gt; 10 OR distancefromcentroidinmeters IS NULL )"</span>, query);
+<a class="jxr_linenumber" name="L1106" href="#L1106">1106</a>     } <strong class="jxr_keyword">catch</strong> (QueryBuildingException ex) {
+<a class="jxr_linenumber" name="L1107" href="#L1107">1107</a>       fail();
+<a class="jxr_linenumber" name="L1108" href="#L1108">1108</a>     }
+<a class="jxr_linenumber" name="L1109" href="#L1109">1109</a>   }
+<a class="jxr_linenumber" name="L1110" href="#L1110">1110</a> 
+<a class="jxr_linenumber" name="L1111" href="#L1111">1111</a>   @Test
+<a class="jxr_linenumber" name="L1112" href="#L1112">1112</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testDisjunctionGreaterThanEqualsIncludingNull() {
+<a class="jxr_linenumber" name="L1113" href="#L1113">1113</a>     GreaterThanOrEqualsPredicate&lt;OccurrenceSearchParameter&gt; distanceFromCentroidPredicate =
+<a class="jxr_linenumber" name="L1114" href="#L1114">1114</a>         <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L1115" href="#L1115">1115</a>             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, <span class="jxr_string">"10"</span>);
+<a class="jxr_linenumber" name="L1116" href="#L1116">1116</a>     EqualsPredicate&lt;OccurrenceSearchParameter&gt; equalsPredicate =
+<a class="jxr_linenumber" name="L1117" href="#L1117">1117</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, <span class="jxr_string">"6"</span>, false);
+<a class="jxr_linenumber" name="L1118" href="#L1118">1118</a>     DisjunctionPredicate disjunctionPredicate =
+<a class="jxr_linenumber" name="L1119" href="#L1119">1119</a>         <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
+<a class="jxr_linenumber" name="L1120" href="#L1120">1120</a>     <strong class="jxr_keyword">try</strong> {
+<a class="jxr_linenumber" name="L1121" href="#L1121">1121</a>       String query = visitor.buildQuery(disjunctionPredicate);
+<a class="jxr_linenumber" name="L1122" href="#L1122">1122</a>       assertEquals(
+<a class="jxr_linenumber" name="L1123" href="#L1123">1123</a>           <span class="jxr_string">"(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL )))"</span>,
+<a class="jxr_linenumber" name="L1124" href="#L1124">1124</a>           query);
+<a class="jxr_linenumber" name="L1125" href="#L1125">1125</a>     } <strong class="jxr_keyword">catch</strong> (QueryBuildingException ex) {
+<a class="jxr_linenumber" name="L1126" href="#L1126">1126</a>       fail();
+<a class="jxr_linenumber" name="L1127" href="#L1127">1127</a>     }
+<a class="jxr_linenumber" name="L1128" href="#L1128">1128</a>   }
+<a class="jxr_linenumber" name="L1129" href="#L1129">1129</a> 
+<a class="jxr_linenumber" name="L1130" href="#L1130">1130</a>   @Test
+<a class="jxr_linenumber" name="L1131" href="#L1131">1131</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testGeoTimePredicate() <strong class="jxr_keyword">throws</strong> QueryBuildingException {
+<a class="jxr_linenumber" name="L1132" href="#L1132">1132</a>     Predicate predicate =
+<a class="jxr_linenumber" name="L1133" href="#L1133">1133</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GEOLOGICAL_TIME, <span class="jxr_string">"12"</span>, false);
+<a class="jxr_linenumber" name="L1134" href="#L1134">1134</a>     String query = visitor.buildQuery(predicate);
+<a class="jxr_linenumber" name="L1135" href="#L1135">1135</a>     assertEquals(<span class="jxr_string">"12 &gt; geologicaltime.gt AND 12 &lt;= geologicaltime.lte"</span>, query);
+<a class="jxr_linenumber" name="L1136" href="#L1136">1136</a> 
+<a class="jxr_linenumber" name="L1137" href="#L1137">1137</a>     Predicate rangePredicate =
+<a class="jxr_linenumber" name="L1138" href="#L1138">1138</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GEOLOGICAL_TIME, <span class="jxr_string">"12,15"</span>, false);
+<a class="jxr_linenumber" name="L1139" href="#L1139">1139</a>     query = visitor.buildQuery(rangePredicate);
+<a class="jxr_linenumber" name="L1140" href="#L1140">1140</a>     assertEquals(<span class="jxr_string">"geologicaltime.gt &gt;= 12.0 AND geologicaltime.lte &lt;= 15.0"</span>, query);
+<a class="jxr_linenumber" name="L1141" href="#L1141">1141</a> 
+<a class="jxr_linenumber" name="L1142" href="#L1142">1142</a>     rangePredicate =
+<a class="jxr_linenumber" name="L1143" href="#L1143">1143</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GEOLOGICAL_TIME, <span class="jxr_string">"12,*"</span>, false);
+<a class="jxr_linenumber" name="L1144" href="#L1144">1144</a>     query = visitor.buildQuery(rangePredicate);
+<a class="jxr_linenumber" name="L1145" href="#L1145">1145</a>     assertEquals(<span class="jxr_string">"geologicaltime.gt &gt;= 12.0"</span>, query);
+<a class="jxr_linenumber" name="L1146" href="#L1146">1146</a> 
+<a class="jxr_linenumber" name="L1147" href="#L1147">1147</a>     rangePredicate =
+<a class="jxr_linenumber" name="L1148" href="#L1148">1148</a>         <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.GEOLOGICAL_TIME, <span class="jxr_string">"*,15"</span>, false);
+<a class="jxr_linenumber" name="L1149" href="#L1149">1149</a>     query = visitor.buildQuery(rangePredicate);
+<a class="jxr_linenumber" name="L1150" href="#L1150">1150</a>     assertEquals(<span class="jxr_string">"geologicaltime.lte &lt;= 15.0"</span>, query);
+<a class="jxr_linenumber" name="L1151" href="#L1151">1151</a>   }
+<a class="jxr_linenumber" name="L1152" href="#L1152">1152</a> }
+</pre>
+<hr/>
+<div id="footer">Copyright &#169; 2024 <a href="https://www.gbif.org">Global Biodiversity Information Facility (GBIF)</a>. All rights reserved.</div>
+</body>
+</html>
