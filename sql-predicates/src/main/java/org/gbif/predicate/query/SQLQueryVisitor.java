@@ -768,9 +768,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         withinGeometry = within.getGeometry();
       }
       builder
-          .append("contains(\"")
+          .append("contains('")
           .append(withinGeometry)
-          .append("\", ")
+          .append("', ")
           .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
           .append(", ")
           .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
@@ -790,9 +790,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(geoDistance.getGeoDistance().getLatitude())
         .append(", ")
         .append(geoDistance.getGeoDistance().getLongitude())
-        .append(", \"")
+        .append(", '")
         .append(geoDistance.getGeoDistance().getDistance().toString())
-        .append("\", ")
+        .append("', ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(", ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
