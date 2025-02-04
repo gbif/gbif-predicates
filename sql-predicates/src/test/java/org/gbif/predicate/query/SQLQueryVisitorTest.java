@@ -1033,7 +1033,7 @@ public class SQLQueryVisitorTest {
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
-                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',true)", query);
+                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
 
                 // InPredicate
                 query =
@@ -1042,9 +1042,9 @@ public class SQLQueryVisitorTest {
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
-                        + ",'value_1',true) OR stringArrayContains("
+                        + ",'value_1',false) OR stringArrayContains("
                         + hiveQueryField
-                        + ",'value_2',true))",
+                        + ",'value_2',false))",
                     query);
 
                 // LikePredicate
@@ -1056,7 +1056,7 @@ public class SQLQueryVisitorTest {
                     visitor.buildQuery(
                         new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
                 assertEquals(
-                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',true)", query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));

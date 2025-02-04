@@ -320,7 +320,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       builder.append(
-          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), true));
+          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), false));
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Dates may contain a range even for an EqualsPredicate (e.g. "2000" or "2000-02")
       // The user's query value is inclusive, but the parsed dateRange is exclusive of the
