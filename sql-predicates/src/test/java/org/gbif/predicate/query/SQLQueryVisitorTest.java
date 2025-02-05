@@ -502,7 +502,7 @@ public class SQLQueryVisitorTest {
   public void testIsNotNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNotNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
-    assertEquals("catalognumber IS NOT NULL ", query);
+    assertEquals("catalognumber IS NOT NULL", query);
   }
 
   @Test
@@ -520,10 +520,28 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testIsNotNullPredicateGadmGid() throws QueryBuildingException {
+    Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.GADM_GID);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(level0gid IS NOT NULL AND level1gid IS NOT NULL AND level2gid IS NOT NULL AND level3gid IS NOT NULL)",
+        query);
+  }
+
+  @Test
   public void testIsNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
-    assertEquals("catalognumber IS NULL ", query);
+    assertEquals("catalognumber IS NULL", query);
+  }
+
+  @Test
+  public void testIsNullPredicateGadmGid() throws QueryBuildingException {
+    Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.GADM_GID);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(level0gid IS NULL AND level1gid IS NULL AND level2gid IS NULL AND level3gid IS NULL)",
+        query);
   }
 
   @Test
@@ -537,7 +555,7 @@ public class SQLQueryVisitorTest {
   public void testIsVocabularyNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.LIFE_STAGE);
     String query = visitor.buildQuery(p);
-    assertEquals("lifestage.lineage IS NULL ", query);
+    assertEquals("lifestage.lineage IS NULL", query);
   }
 
   @Test
@@ -545,7 +563,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NOT NULL  AND acceptedtaxonkey IS NOT NULL  AND kingdomkey IS NOT NULL  AND phylumkey IS NOT NULL  AND classkey IS NOT NULL  AND orderkey IS NOT NULL  AND familykey IS NOT NULL  AND genuskey IS NOT NULL  AND subgenuskey IS NOT NULL  AND specieskey IS NOT NULL )",
+        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND subgenuskey IS NOT NULL AND specieskey IS NOT NULL)",
         query);
   }
 
@@ -554,7 +572,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NULL  AND acceptedtaxonkey IS NULL  AND kingdomkey IS NULL  AND phylumkey IS NULL  AND classkey IS NULL  AND orderkey IS NULL  AND familykey IS NULL  AND genuskey IS NULL  AND subgenuskey IS NULL  AND specieskey IS NULL )",
+        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND subgenuskey IS NULL AND specieskey IS NULL)",
         query);
   }
 
@@ -1067,7 +1085,7 @@ public class SQLQueryVisitorTest {
                       " (" + hiveQueryField + " IS NULL OR size(" + hiveQueryField + ") = 0) ",
                       query);
                 } else {
-                  assertEquals(hiveQueryField + " IS NULL ", query);
+                  assertEquals(hiveQueryField + " IS NULL", query);
                 }
 
               } catch (QueryBuildingException ex) {
@@ -1084,7 +1102,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
       assertEquals(
-          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )", query);
+          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -1098,7 +1116,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
       assertEquals(
-          "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL )", query);
+          "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL)", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -1116,7 +1134,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(disjunctionPredicate);
       assertEquals(
-          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )))",
+          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
           query);
     } catch (QueryBuildingException ex) {
       fail();
