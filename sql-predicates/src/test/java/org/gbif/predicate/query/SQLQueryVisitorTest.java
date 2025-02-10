@@ -371,7 +371,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new GeoDistancePredicate("30", "10", "10km");
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(geoDistance(30.0, 10.0, \"10.0km\", decimallatitude, decimallongitude) = TRUE)", query);
+        "(geoDistance(30.0, 10.0, '10.0km', decimallatitude, decimallongitude) = TRUE)", query);
   }
 
   @Test
@@ -379,7 +379,7 @@ public class SQLQueryVisitorTest {
     final String wkt = "POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))";
     Predicate p = new WithinPredicate(wkt);
     String query = visitor.buildQuery(p);
-    assertEquals("(contains(\"" + wkt + "\", decimallatitude, decimallongitude) = TRUE)", query);
+    assertEquals("(contains('" + wkt + "', decimallatitude, decimallongitude) = TRUE)", query);
   }
 
   @Test
@@ -389,9 +389,9 @@ public class SQLQueryVisitorTest {
     Predicate p = new WithinPredicate(wkt);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "((decimallatitude >= 63.3980322 AND decimallatitude <= 66.5371808 AND (decimallongitude >= -24.5319933 AND decimallongitude <= -13.4948065)) AND contains(\""
+        "((decimallatitude >= 63.3980322 AND decimallatitude <= 66.5371808 AND (decimallongitude >= -24.5319933 AND decimallongitude <= -13.4948065)) AND contains('"
             + wkt
-            + "\", decimallatitude, decimallongitude) = TRUE)",
+            + "', decimallatitude, decimallongitude) = TRUE)",
         query);
   }
 
@@ -401,7 +401,7 @@ public class SQLQueryVisitorTest {
     String wkt =
         "POLYGON((-206.71875 39.20502, -133.59375 39.20502, -133.59375 77.26611, -206.71875 77.26611, -206.71875 39.20502))";
     String query = visitor.buildQuery(new WithinPredicate(wkt));
-    assertEquals("(contains(\"" + wkt + "\", decimallatitude, decimallongitude) = TRUE)", query);
+    assertEquals("(contains('" + wkt + "', decimallatitude, decimallongitude) = TRUE)", query);
   }
 
   @Test
@@ -415,7 +415,7 @@ public class SQLQueryVisitorTest {
         "(decimallatitude >= -17.12845 AND decimallatitude <= -16.60277 AND (decimallongitude >= 179.78577 OR decimallongitude <= -179.75006))";
     query = visitor.buildQuery(new WithinPredicate(wktM));
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // A polygon around Taveuni, Fiji, as portal16 produces it.
@@ -424,7 +424,7 @@ public class SQLQueryVisitorTest {
         "POLYGON((-180.14832 -16.72643, -180.21423 -16.82899, -180.12085 -17.12058, -179.89838 -17.12845, -179.75006 -16.86054, -179.8764 -16.60277, -180.14832 -16.72643))";
     query = visitor.buildQuery(new WithinPredicate(wkt16));
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // Same place, but as Wicket draws it:
@@ -433,7 +433,7 @@ public class SQLQueryVisitorTest {
         "POLYGON((179.85168 -16.72643, 179.78577 -16.82899, 179.87915 -17.12058, -179.89838 -17.12845, -179.75006 -16.86054, -179.8764 -16.60277, 179.85168 -16.72643))";
     query = visitor.buildQuery(new WithinPredicate(wktWk));
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // Tiny areas scattered around the world, all in a single multipolygon.
@@ -453,11 +453,7 @@ public class SQLQueryVisitorTest {
             + "(decimallatitude >= -18.66372 AND decimallatitude <= -18.63616 AND (decimallongitude >= -173.94041 AND decimallongitude <= -173.91655))))";
     query = visitor.buildQuery(new WithinPredicate(wktMM));
     assertEquals(
-        "("
-            + bboxMM
-            + " AND contains(\""
-            + wktMM
-            + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bboxMM + " AND contains('" + wktMM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
   }
 
@@ -470,9 +466,9 @@ public class SQLQueryVisitorTest {
         "POLYGON ((180 -64.7, 180 -56.8, 180 -44.3, 173 -44.3, 173 -47.5, 170 -47.5, 157 -47.5, 157 -45.9, 150 -45.9, 150 -47.5, 143 -47.5, 143 -45.8, 140 -45.8, 140 -44.5, 137 -44.5, 137 -43, 135 -43, 135 -41.7, 131 -41.7, 131 -40.1, 115 -40.1, 92 -40.1, 92 -41.4, 78 -41.4, 78 -42.3, 69 -42.3, 69 -43.3, 47 -43.3, 47 -41.7, 30 -41.7, 12 -41.7, 12 -40.3, 10 -40.3, 10 -38.3, -5 -38.3, -5 -38.9, -9 -38.9, -9 -40.2, -13 -40.2, -13 -41.4, -21 -41.4, -21 -42.5, -39 -42.5, -39 -40.7, -49 -40.7, -49 -48.6, -54 -48.6, -54 -55.7, -62.79726 -55.7, -64 -55.7, -64 -57.8, -71 -57.8, -71 -58.9, -80 -58.9, -80 -40, -103.71094 -40.14844, -125 -40, -167 -40, -167 -42.6, -171 -42.6, -171 -44.3, -180 -44.3, -180 -56.8, -180 -64.7, -180 -80, -125 -80, -70 -80, 30 -80, 115 -80, 158 -80, 180 -80, 180 -64.7))";
     query = visitor.buildQuery(new WithinPredicate(wktP));
     assertEquals(
-        "((decimallatitude >= -80.0 AND decimallatitude <= -38.3 AND (decimallongitude >= -180.0 AND decimallongitude <= 180.0)) AND contains(\""
+        "((decimallatitude >= -80.0 AND decimallatitude <= -38.3 AND (decimallongitude >= -180.0 AND decimallongitude <= 180.0)) AND contains('"
             + wktP
-            + "\", decimallatitude, decimallongitude) = TRUE)",
+            + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // A multipolygon around the Pacific and Indian oceans, split over the antimeridian
@@ -482,7 +478,7 @@ public class SQLQueryVisitorTest {
         "(decimallatitude >= -63.0 AND decimallatitude <= 57.0 AND (decimallongitude >= 35.0 OR decimallongitude <= -77.0))";
     query = visitor.buildQuery(new WithinPredicate(wktM));
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // The same polygon, as portal16 produces it.
@@ -491,14 +487,14 @@ public class SQLQueryVisitorTest {
         "POLYGON((35.0 -63.0, 191.0 -63.0, 283.0 -63.0, 276.0 1.0, 268.0 13.0, 248.0 18.0, 233.0 39.0, 222.0 57.0, 157.0 49.0, 127.0 1.0, 60.0 -9.0, 35.0 -63.0))";
     query = visitor.buildQuery(new WithinPredicate(wkt16));
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
 
     // A polygon around the Pacific, as Wicket draws it:
     String wktWk =
         "POLYGON((157.0 49.0,127.0 1.0,60.0 -9.0,35.0 -63.0,-169.0 -63.0,-77.0 -63.0,-84.0 1.0,-92.0 13.0,-112.0 18.0,-127.0 39.0,-138.0 57.0,157.0 49.0))";
     assertEquals(
-        "(" + bbox + " AND contains(\"" + wktM + "\", decimallatitude, decimallongitude) = TRUE)",
+        "(" + bbox + " AND contains('" + wktM + "', decimallatitude, decimallongitude) = TRUE)",
         query);
   }
 
@@ -506,7 +502,7 @@ public class SQLQueryVisitorTest {
   public void testIsNotNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNotNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
-    assertEquals("catalognumber IS NOT NULL ", query);
+    assertEquals("catalognumber IS NOT NULL", query);
   }
 
   @Test
@@ -524,10 +520,28 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testIsNotNullPredicateGadmGid() throws QueryBuildingException {
+    Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.GADM_GID);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(level0gid IS NOT NULL AND level1gid IS NOT NULL AND level2gid IS NOT NULL AND level3gid IS NOT NULL)",
+        query);
+  }
+
+  @Test
   public void testIsNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
-    assertEquals("catalognumber IS NULL ", query);
+    assertEquals("catalognumber IS NULL", query);
+  }
+
+  @Test
+  public void testIsNullPredicateGadmGid() throws QueryBuildingException {
+    Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.GADM_GID);
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(level0gid IS NULL AND level1gid IS NULL AND level2gid IS NULL AND level3gid IS NULL)",
+        query);
   }
 
   @Test
@@ -541,7 +555,7 @@ public class SQLQueryVisitorTest {
   public void testIsVocabularyNullPredicate() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.LIFE_STAGE);
     String query = visitor.buildQuery(p);
-    assertEquals("lifestage.lineage IS NULL ", query);
+    assertEquals("lifestage.lineage IS NULL", query);
   }
 
   @Test
@@ -549,7 +563,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NOT NULL  AND acceptedtaxonkey IS NOT NULL  AND kingdomkey IS NOT NULL  AND phylumkey IS NOT NULL  AND classkey IS NOT NULL  AND orderkey IS NOT NULL  AND familykey IS NOT NULL  AND genuskey IS NOT NULL  AND subgenuskey IS NOT NULL  AND specieskey IS NOT NULL )",
+        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND subgenuskey IS NOT NULL AND specieskey IS NOT NULL)",
         query);
   }
 
@@ -558,7 +572,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NULL  AND acceptedtaxonkey IS NULL  AND kingdomkey IS NULL  AND phylumkey IS NULL  AND classkey IS NULL  AND orderkey IS NULL  AND familykey IS NULL  AND genuskey IS NULL  AND subgenuskey IS NULL  AND specieskey IS NULL )",
+        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND subgenuskey IS NULL AND specieskey IS NULL)",
         query);
   }
 
@@ -1033,7 +1047,7 @@ public class SQLQueryVisitorTest {
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
-                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',true)", query);
+                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
 
                 // InPredicate
                 query =
@@ -1042,9 +1056,9 @@ public class SQLQueryVisitorTest {
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
-                        + ",'value_1',true) OR stringArrayContains("
+                        + ",'value_1',false) OR stringArrayContains("
                         + hiveQueryField
-                        + ",'value_2',true))",
+                        + ",'value_2',false))",
                     query);
 
                 // LikePredicate
@@ -1056,7 +1070,7 @@ public class SQLQueryVisitorTest {
                     visitor.buildQuery(
                         new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
                 assertEquals(
-                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',true)", query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
@@ -1071,7 +1085,7 @@ public class SQLQueryVisitorTest {
                       " (" + hiveQueryField + " IS NULL OR size(" + hiveQueryField + ") = 0) ",
                       query);
                 } else {
-                  assertEquals(hiveQueryField + " IS NULL ", query);
+                  assertEquals(hiveQueryField + " IS NULL", query);
                 }
 
               } catch (QueryBuildingException ex) {
@@ -1088,7 +1102,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
       assertEquals(
-          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )", query);
+          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -1102,7 +1116,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
       assertEquals(
-          "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL )", query);
+          "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL)", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -1120,7 +1134,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(disjunctionPredicate);
       assertEquals(
-          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL )))",
+          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
           query);
     } catch (QueryBuildingException ex) {
       fail();
