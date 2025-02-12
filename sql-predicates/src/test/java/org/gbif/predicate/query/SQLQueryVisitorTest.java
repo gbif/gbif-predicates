@@ -203,6 +203,16 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testEqualsPredicateGadmGid() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.GADM_GID, "IRL_1", false);
+
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(level0gid = 'IRL_1' OR level1gid = 'IRL_1' OR level2gid = 'IRL_1' OR level3gid = 'IRL_1')",
+        query);
+  }
+
+  @Test
   public void testLikePredicate() throws QueryBuildingException {
     // NB: ? and * are wildcards (translated to SQL _ and %), so literal _ and % are escaped.
     Predicate p = new LikePredicate<>(PARAM, "v?l*ue_%", false);

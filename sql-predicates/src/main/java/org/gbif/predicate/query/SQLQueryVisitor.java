@@ -138,7 +138,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .orElseThrow(
             () ->
                 // QueryBuildingException requires an underlying exception
-                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
+                new IllegalArgumentException(
+                    "Search parameter " + param.type().getName() + "." + param + " is not mapped"));
   }
 
   /**
@@ -284,9 +285,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
-      appendFilterList(NUB_KEYS, predicate.getValue());
+      appendTaxonFilterList(NUB_KEYS, predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
-      appendFilterList(GADM_GIDS, predicate.getValue());
+      appendGadmFilterList(GADM_GIDS, predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), MediaType.class))
           .ifPresent(
@@ -919,12 +920,29 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Creates a disjunction of all the given terms. */
-  private void appendFilterList(List<? extends Term> terms, String value) {
+  private void appendTaxonFilterList(List<? extends Term> terms, String value) {
     builder
         .append('(')
         .append(
             terms.stream()
                 .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + value)
+                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+        .append(')');
+  }
+
+  /** Creates a disjunction of all the given terms. */
+  private void appendGadmFilterList(List<? extends Term> terms, String value) {
+    builder
+        .append('(')
+        .append(
+            terms.stream()
+                .map(
+                    term ->
+                        SQLColumnsUtils.getSQLQueryColumn(term)
+                            + EQUALS_OPERATOR
+                            + "'"
+                            + value
+                            + "'")
                 .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
         .append(')');
   }
