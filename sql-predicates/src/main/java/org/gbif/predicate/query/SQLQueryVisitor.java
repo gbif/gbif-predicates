@@ -77,8 +77,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String LESS_THAN_EQUALS_OPERATOR = " <= ";
   private static final String NOT_OPERATOR = "NOT ";
   private static final String LIKE_OPERATOR = " LIKE ";
-  private static final String IS_NOT_NULL_OPERATOR = " IS NOT NULL ";
-  private static final String IS_NULL_OPERATOR = " IS NULL ";
+  private static final String IS_NOT_NULL_OPERATOR = " IS NOT NULL";
+  private static final String IS_NULL_OPERATOR = " IS NULL";
   private static final String IS_NOT_NULL_ARRAY_OPERATOR = "(%1$s IS NOT NULL AND size(%1$s) > 0)";
   private static final String IS_NULL_ARRAY_OPERATOR = "(%1$s IS NULL OR size(%1$s) = 0)";
   // where query to execute a select all
@@ -88,6 +88,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final Function<Term, String> ARRAY_FN =
       t -> "stringArrayContains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+
+  private static final Function<Term, String> ARRAY_LIKE_FN =
+      t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
   private static final List<GbifTerm> NUB_KEYS =
       ImmutableList.of(
@@ -132,7 +135,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .orElseThrow(
             () ->
                 // QueryBuildingException requires an underlying exception
-                new IllegalArgumentException("Search parameter " + param + " is not mapped"));
+                new IllegalArgumentException(
+                    "Search parameter " + param.type().getName() + "." + param + " is not mapped"));
   }
 
   /**
@@ -283,7 +287,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       appendTaxonKeyFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
-      appendGadmGidFilter(predicate.getValue());
+      appendGadmFilterList(GADM_GIDS, predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), MediaType.class))
           .ifPresent(
@@ -291,15 +295,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   builder.append(
                       String.format(
                           getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
-      //    } else if (predicate.getKey() == OccurrenceSearchParameter.TYPE_STATUS) {
-      //      Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(),
-      // TypeStatus.class))
-      //          .ifPresent(
-      //              typeStatus ->
-      //                  builder.append(
-      //                      String.format(
-      //                          getArrayFn().apply(DwcTerm.typeStatus), typeStatus.name(),
-      // true)));
     } else if (predicate.getKey() == OccurrenceSearchParameter.ISSUE) {
       builder.append(
           String.format(
@@ -326,7 +321,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       builder.append(
-          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), true));
+          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), false));
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Dates may contain a range even for an EqualsPredicate (e.g. "2000" or "2000-02")
       // The user's query value is inclusive, but the parsed dateRange is exclusive of the
@@ -389,6 +384,34 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
         }
         builder.append(')');
+      }
+    } else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+      if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
+        Range<Double> range = SearchTypeValidator.parseDecimalRange(predicate.getValue());
+        if (range.hasLowerBound()) {
+          builder
+              .append("geologicaltime.gt")
+              .append(GREATER_THAN_EQUALS_OPERATOR)
+              .append(range.lowerEndpoint());
+        }
+        if (range.hasUpperBound()) {
+          if (range.hasLowerBound()) {
+            builder.append(CONJUNCTION_OPERATOR);
+          }
+          builder
+              .append("geologicaltime.lte")
+              .append(LESS_THAN_EQUALS_OPERATOR)
+              .append(range.upperEndpoint());
+        }
+      } else {
+        builder
+            .append(predicate.getValue())
+            .append(GREATER_THAN_OPERATOR)
+            .append("geologicaltime.gt")
+            .append(CONJUNCTION_OPERATOR)
+            .append(predicate.getValue())
+            .append(LESS_THAN_EQUALS_OPERATOR)
+            .append("geologicaltime.lte");
       }
     } else {
       visitSimplePredicate(predicate, EQUALS_OPERATOR);
@@ -551,11 +574,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (predicate.getKey().name().equals("TAXON_KEY")) {
       // Taxon keys must be expanded into a disjunction of in predicates
       appendTaxonKeyFilter(predicate);
-
     } else if (predicate.getKey().name().equals("GADM_GID")) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
-
     } else if (predicate.getKey().name().equals("EVENT_DATE")) {
       // Event dates must be expanded into a disjunction of conjunction predicates (of comparisons)
       builder.append('(');
@@ -611,20 +632,28 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
-    // Replace % → \% and _ → \_
-    // Then replace * → % and ? → _
-    LikePredicate<S> likePredicate =
-        new LikePredicate<>(
-            predicate.getKey(),
-            predicate
-                .getValue()
-                .replace("%", "\\%")
-                .replace("_", "\\_")
-                .replace('*', '%')
-                .replace('?', '_'),
-            predicate.isMatchCase());
+    if (sqlTermsMapper.isArray(predicate.getKey())) {
+      builder.append(
+          String.format(
+              ARRAY_LIKE_FN.apply(sqlTermsMapper.getTermArray(predicate.getKey())),
+              predicate.getValue().replaceAll("'", "\\\\'"),
+              predicate.isMatchCase()));
+    } else {
+      // Replace % → \% and _ → \_
+      // Then replace * → % and ? → _
+      LikePredicate<S> likePredicate =
+          new LikePredicate<>(
+              predicate.getKey(),
+              predicate
+                  .getValue()
+                  .replace("%", "\\%")
+                  .replace("_", "\\_")
+                  .replace('*', '%')
+                  .replace('?', '_'),
+              predicate.isMatchCase());
 
-    visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+      visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+    }
   }
 
   public void visit(NotPredicate predicate) throws QueryBuildingException {
@@ -639,6 +668,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           String.format(IS_NOT_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
     } else if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NOT_NULL_OPERATOR);
+    } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
+      appendUnaryList(GADM_GIDS, IS_NOT_NULL_OPERATOR);
     } else {
       // matchCase: Avoid adding an unnecessary "lower()" when just testing for null.
       builder.append(toSQLField(predicate.getParameter(), true));
@@ -649,6 +680,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
+    } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
+      appendUnaryList(GADM_GIDS, IS_NULL_OPERATOR);
     } else {
       // matchCase: Avoid adding an unnecessary "lower()" when just testing for null.
       if (isSQLArray(predicate.getParameter())) {
@@ -738,9 +771,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         withinGeometry = within.getGeometry();
       }
       builder
-          .append("contains(\"")
+          .append("contains('")
           .append(withinGeometry)
-          .append("\", ")
+          .append("', ")
           .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
           .append(", ")
           .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
@@ -760,9 +793,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(geoDistance.getGeoDistance().getLatitude())
         .append(", ")
         .append(geoDistance.getGeoDistance().getLongitude())
-        .append(", \"")
+        .append(", '")
         .append(geoDistance.getGeoDistance().getDistance().toString())
-        .append("\", ")
+        .append("', ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(", ")
         .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
@@ -931,27 +964,21 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
-  /**
-   * Searches every level of GADM GID in Hive.
-   *
-   * @param gadmGid to append as filter
-   */
-  private void appendGadmGidFilter(String gadmGid) {
-    builder.append('(');
-    boolean first = true;
-    for (Term term : GADM_GIDS) {
-      if (!first) {
-        builder.append(DISJUNCTION_OPERATOR);
-      }
-      builder
-          .append(SQLColumnsUtils.getSQLQueryColumn(term))
-          .append(EQUALS_OPERATOR)
-          // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
-          // Using .toUpperCase() is safe, GIDs must be ASCII anyway.
-          .append(toSQLValue(sqlTermsMapper.getDefaultGadmLevel(), gadmGid.toUpperCase(), true));
-      first = false;
-    }
-    builder.append(')');
+  /** Creates a disjunction of all the given terms. */
+  private void appendGadmFilterList(List<? extends Term> terms, String value) {
+    builder
+        .append('(')
+        .append(
+            terms.stream()
+                .map(
+                    term ->
+                        SQLColumnsUtils.getSQLQueryColumn(term)
+                            + EQUALS_OPERATOR
+                            + "'"
+                            + value
+                            + "'")
+                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+        .append(')');
   }
 
   /**
@@ -1028,6 +1055,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(")");
       first = false;
     }
+    builder.append(')');
+  }
+
+  /**
+   * Searches any of the NUB keys in Hive of any rank.
+   *
+   * @param unaryOperator to append as filter
+   */
+  private void appendUnaryList(List<? extends Term> terms, String unaryOperator) {
+    builder.append('(');
+    builder.append(
+        terms.stream()
+            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)
+            .collect(Collectors.joining(CONJUNCTION_OPERATOR)));
     builder.append(')');
   }
 
