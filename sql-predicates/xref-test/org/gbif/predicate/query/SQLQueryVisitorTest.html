@@ -80,7 +80,7 @@
 <a class="jxr_linenumber" name="L72" href="#L72">72</a>              Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));
 <a class="jxr_linenumber" name="L73" href="#L73">73</a>      String where = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L74" href="#L74">74</a>      assertEquals(
-<a class="jxr_linenumber" name="L75" href="#L75">75</a>          <span class="jxr_string">"(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR subgenuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year &lt;= 1989) AND (hascoordinate = true))"</span>,
+<a class="jxr_linenumber" name="L75" href="#L75">75</a>          <span class="jxr_string">"(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year &lt;= 1989) AND (hascoordinate = true))"</span>,
 <a class="jxr_linenumber" name="L76" href="#L76">76</a>          where);
 <a class="jxr_linenumber" name="L77" href="#L77">77</a>    }
 <a class="jxr_linenumber" name="L78" href="#L78">78</a>  
@@ -108,7 +108,7 @@
 <a class="jxr_linenumber" name="L100" href="#L100">100</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
 <a class="jxr_linenumber" name="L101" href="#L101">101</a>     String where = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L102" href="#L102">102</a>     assertEquals(
-<a class="jxr_linenumber" name="L103" href="#L103">103</a>         <span class="jxr_string">"(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))) "</span>
+<a class="jxr_linenumber" name="L103" href="#L103">103</a>         <span class="jxr_string">"(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))) "</span>
 <a class="jxr_linenumber" name="L104" href="#L104">104</a>             + <span class="jxr_string">"AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "</span>
 <a class="jxr_linenumber" name="L105" href="#L105">105</a>             + <span class="jxr_string">"AND ((countrycode IN(\'GB\', \'IE\'))) "</span>
 <a class="jxr_linenumber" name="L106" href="#L106">106</a>             + <span class="jxr_string">"AND (((year &lt;= 1989) OR (year = 2000))))"</span>,
@@ -157,7 +157,7 @@
 <a class="jxr_linenumber" name="L149" href="#L149">149</a>     DisjunctionPredicate p = <strong class="jxr_keyword">new</strong> DisjunctionPredicate(Lists.newArrayList(p1, p2));
 <a class="jxr_linenumber" name="L150" href="#L150">150</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L151" href="#L151">151</a>     assertEquals(
-<a class="jxr_linenumber" name="L152" href="#L152">152</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
+<a class="jxr_linenumber" name="L152" href="#L152">152</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
 <a class="jxr_linenumber" name="L153" href="#L153">153</a>         query);
 <a class="jxr_linenumber" name="L154" href="#L154">154</a>   }
 <a class="jxr_linenumber" name="L155" href="#L155">155</a> 
@@ -303,7 +303,7 @@
 <a class="jxr_linenumber" name="L295" href="#L295">295</a>         <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList(<span class="jxr_string">"1"</span>, <span class="jxr_string">"2"</span>), false);
 <a class="jxr_linenumber" name="L296" href="#L296">296</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L297" href="#L297">297</a>     assertEquals(
-<a class="jxr_linenumber" name="L298" href="#L298">298</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
+<a class="jxr_linenumber" name="L298" href="#L298">298</a>         <span class="jxr_string">"(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))"</span>,
 <a class="jxr_linenumber" name="L299" href="#L299">299</a>         query);
 <a class="jxr_linenumber" name="L300" href="#L300">300</a>   }
 <a class="jxr_linenumber" name="L301" href="#L301">301</a> 
@@ -581,7 +581,7 @@
 <a class="jxr_linenumber" name="L573" href="#L573">573</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);
 <a class="jxr_linenumber" name="L574" href="#L574">574</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L575" href="#L575">575</a>     assertEquals(
-<a class="jxr_linenumber" name="L576" href="#L576">576</a>         <span class="jxr_string">"(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND subgenuskey IS NOT NULL AND specieskey IS NOT NULL)"</span>,
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>         <span class="jxr_string">"(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND specieskey IS NOT NULL)"</span>,
 <a class="jxr_linenumber" name="L577" href="#L577">577</a>         query);
 <a class="jxr_linenumber" name="L578" href="#L578">578</a>   }
 <a class="jxr_linenumber" name="L579" href="#L579">579</a> 
@@ -590,7 +590,7 @@
 <a class="jxr_linenumber" name="L582" href="#L582">582</a>     Predicate p = <strong class="jxr_keyword">new</strong> IsNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);
 <a class="jxr_linenumber" name="L583" href="#L583">583</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L584" href="#L584">584</a>     assertEquals(
-<a class="jxr_linenumber" name="L585" href="#L585">585</a>         <span class="jxr_string">"(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND subgenuskey IS NULL AND specieskey IS NULL)"</span>,
+<a class="jxr_linenumber" name="L585" href="#L585">585</a>         <span class="jxr_string">"(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND specieskey IS NULL)"</span>,
 <a class="jxr_linenumber" name="L586" href="#L586">586</a>         query);
 <a class="jxr_linenumber" name="L587" href="#L587">587</a>   }
 <a class="jxr_linenumber" name="L588" href="#L588">588</a> 
@@ -1152,7 +1152,7 @@
 <a class="jxr_linenumber" name="L1144" href="#L1144">1144</a>     <strong class="jxr_keyword">try</strong> {
 <a class="jxr_linenumber" name="L1145" href="#L1145">1145</a>       String query = visitor.buildQuery(disjunctionPredicate);
 <a class="jxr_linenumber" name="L1146" href="#L1146">1146</a>       assertEquals(
-<a class="jxr_linenumber" name="L1147" href="#L1147">1147</a>           <span class="jxr_string">"(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL)))"</span>,
+<a class="jxr_linenumber" name="L1147" href="#L1147">1147</a>           <span class="jxr_string">"(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL)))"</span>,
 <a class="jxr_linenumber" name="L1148" href="#L1148">1148</a>           query);
 <a class="jxr_linenumber" name="L1149" href="#L1149">1149</a>     } <strong class="jxr_keyword">catch</strong> (QueryBuildingException ex) {
 <a class="jxr_linenumber" name="L1150" href="#L1150">1150</a>       fail();

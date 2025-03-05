@@ -81,7 +81,7 @@
 <span class="sourceLineNo">072</span><a id="line.72">            Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));</a>
 <span class="sourceLineNo">073</span><a id="line.73">    String where = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">074</span><a id="line.74">    assertEquals(</a>
-<span class="sourceLineNo">075</span><a id="line.75">        "(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR subgenuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year &lt;= 1989) AND (hascoordinate = true))",</a>
+<span class="sourceLineNo">075</span><a id="line.75">        "(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year &lt;= 1989) AND (hascoordinate = true))",</a>
 <span class="sourceLineNo">076</span><a id="line.76">        where);</a>
 <span class="sourceLineNo">077</span><a id="line.77">  }</a>
 <span class="sourceLineNo">078</span><a id="line.78"></a>
@@ -109,7 +109,7 @@
 <span class="sourceLineNo">100</span><a id="line.100">        new ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));</a>
 <span class="sourceLineNo">101</span><a id="line.101">    String where = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">102</span><a id="line.102">    assertEquals(</a>
-<span class="sourceLineNo">103</span><a id="line.103">        "(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))) "</a>
+<span class="sourceLineNo">103</span><a id="line.103">        "(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))) "</a>
 <span class="sourceLineNo">104</span><a id="line.104">            + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "</a>
 <span class="sourceLineNo">105</span><a id="line.105">            + "AND ((countrycode IN(\'GB\', \'IE\'))) "</a>
 <span class="sourceLineNo">106</span><a id="line.106">            + "AND (((year &lt;= 1989) OR (year = 2000))))",</a>
@@ -158,7 +158,7 @@
 <span class="sourceLineNo">149</span><a id="line.149">    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));</a>
 <span class="sourceLineNo">150</span><a id="line.150">    String query = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">151</span><a id="line.151">    assertEquals(</a>
-<span class="sourceLineNo">152</span><a id="line.152">        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))",</a>
+<span class="sourceLineNo">152</span><a id="line.152">        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",</a>
 <span class="sourceLineNo">153</span><a id="line.153">        query);</a>
 <span class="sourceLineNo">154</span><a id="line.154">  }</a>
 <span class="sourceLineNo">155</span><a id="line.155"></a>
@@ -304,7 +304,7 @@
 <span class="sourceLineNo">295</span><a id="line.295">        new InPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList("1", "2"), false);</a>
 <span class="sourceLineNo">296</span><a id="line.296">    String query = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">297</span><a id="line.297">    assertEquals(</a>
-<span class="sourceLineNo">298</span><a id="line.298">        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))",</a>
+<span class="sourceLineNo">298</span><a id="line.298">        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",</a>
 <span class="sourceLineNo">299</span><a id="line.299">        query);</a>
 <span class="sourceLineNo">300</span><a id="line.300">  }</a>
 <span class="sourceLineNo">301</span><a id="line.301"></a>
@@ -582,7 +582,7 @@
 <span class="sourceLineNo">573</span><a id="line.573">    Predicate p = new IsNotNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);</a>
 <span class="sourceLineNo">574</span><a id="line.574">    String query = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">575</span><a id="line.575">    assertEquals(</a>
-<span class="sourceLineNo">576</span><a id="line.576">        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND subgenuskey IS NOT NULL AND specieskey IS NOT NULL)",</a>
+<span class="sourceLineNo">576</span><a id="line.576">        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND specieskey IS NOT NULL)",</a>
 <span class="sourceLineNo">577</span><a id="line.577">        query);</a>
 <span class="sourceLineNo">578</span><a id="line.578">  }</a>
 <span class="sourceLineNo">579</span><a id="line.579"></a>
@@ -591,7 +591,7 @@
 <span class="sourceLineNo">582</span><a id="line.582">    Predicate p = new IsNullPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY);</a>
 <span class="sourceLineNo">583</span><a id="line.583">    String query = visitor.buildQuery(p);</a>
 <span class="sourceLineNo">584</span><a id="line.584">    assertEquals(</a>
-<span class="sourceLineNo">585</span><a id="line.585">        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND subgenuskey IS NULL AND specieskey IS NULL)",</a>
+<span class="sourceLineNo">585</span><a id="line.585">        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND specieskey IS NULL)",</a>
 <span class="sourceLineNo">586</span><a id="line.586">        query);</a>
 <span class="sourceLineNo">587</span><a id="line.587">  }</a>
 <span class="sourceLineNo">588</span><a id="line.588"></a>
@@ -1153,7 +1153,7 @@
 <span class="sourceLineNo">1144</span><a id="line.1144">    try {</a>
 <span class="sourceLineNo">1145</span><a id="line.1145">      String query = visitor.buildQuery(disjunctionPredicate);</a>
 <span class="sourceLineNo">1146</span><a id="line.1146">      assertEquals(</a>
-<span class="sourceLineNo">1147</span><a id="line.1147">          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL)))",</a>
+<span class="sourceLineNo">1147</span><a id="line.1147">          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters &gt;= 10 OR distancefromcentroidinmeters IS NULL)))",</a>
 <span class="sourceLineNo">1148</span><a id="line.1148">          query);</a>
 <span class="sourceLineNo">1149</span><a id="line.1149">    } catch (QueryBuildingException ex) {</a>
 <span class="sourceLineNo">1150</span><a id="line.1150">      fail();</a>
