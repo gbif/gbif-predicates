@@ -91,6 +91,7 @@
     <hamcrest.version>2.2</hamcrest.version>
 
     <!-- Plugins -->
+    <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
     <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
   </properties>
 
