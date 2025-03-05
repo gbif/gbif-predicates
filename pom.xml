@@ -92,6 +92,7 @@
 
     <!-- Plugins -->
     <build-helper-maven-plugin.version>3.6.0</build-helper-maven-plugin.version>
+    <googleJavaFormat.version>1.11.0</googleJavaFormat.version>
     <maven-plugin-plugin.version>3.6.4</maven-plugin-plugin.version>
   </properties>
 
@@ -141,7 +142,7 @@
           <configuration combine.self="override">
             <java>
               <googleJavaFormat>
-                <version>1.8</version>
+                <version>${googleJavaFormat.version}</version>
                 <style>GOOGLE</style>
               </googleJavaFormat>
             </java>
