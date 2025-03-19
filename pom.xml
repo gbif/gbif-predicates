@@ -76,8 +76,8 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.0.0</gbif-api.version>
-    <dwc-api.version>2.0.0</dwc-api.version>
+    <gbif-api.version>2.0.5-dna-SNAPSHOT</gbif-api.version>
+    <dwc-api.version>2.0.1-dna-SNAPSHOT</dwc-api.version>
 
     <!-- Logging -->
     <slf4j.version>1.7.30</slf4j.version>
