@@ -76,7 +76,7 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.0.0</gbif-api.version>
+    <gbif-api.version>2.0.6</gbif-api.version>
     <dwc-api.version>2.0.0</dwc-api.version>
 
     <!-- Logging -->
