@@ -27,6 +27,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.SEX, DwcTerm.sex)
           .put(OccurrenceSearchParameter.YEAR, DwcTerm.year)
           .put(OccurrenceSearchParameter.MONTH, DwcTerm.month)
+          .put(OccurrenceSearchParameter.DAY, DwcTerm.day)
           .put(OccurrenceSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude)
           .put(OccurrenceSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude)
           .put(OccurrenceSearchParameter.ELEVATION, GbifTerm.elevation)
