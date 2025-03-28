@@ -72,7 +72,7 @@ public class SQLQueryVisitorTest {
             Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR subgenuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((taxonkey = 212 OR acceptedtaxonkey = 212 OR kingdomkey = 212 OR phylumkey = 212 OR classkey = 212 OR orderkey = 212 OR familykey = 212 OR genuskey = 212 OR specieskey = 212)) AND (countrycode = \'GB\') AND (lower(scientificname) LIKE lower(\'Passer%\')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
@@ -100,7 +100,7 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))) "
+        "(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -149,7 +149,7 @@ public class SQLQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))",
+        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",
         query);
   }
 
@@ -295,7 +295,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList("1", "2"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR subgenuskey IN(1, 2) OR specieskey IN(1, 2))",
+        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",
         query);
   }
 
@@ -573,7 +573,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND subgenuskey IS NOT NULL AND specieskey IS NOT NULL)",
+        "(taxonkey IS NOT NULL AND acceptedtaxonkey IS NOT NULL AND kingdomkey IS NOT NULL AND phylumkey IS NOT NULL AND classkey IS NOT NULL AND orderkey IS NOT NULL AND familykey IS NOT NULL AND genuskey IS NOT NULL AND specieskey IS NOT NULL)",
         query);
   }
 
@@ -582,7 +582,7 @@ public class SQLQueryVisitorTest {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND subgenuskey IS NULL AND specieskey IS NULL)",
+        "(taxonkey IS NULL AND acceptedtaxonkey IS NULL AND kingdomkey IS NULL AND phylumkey IS NULL AND classkey IS NULL AND orderkey IS NULL AND familykey IS NULL AND genuskey IS NULL AND specieskey IS NULL)",
         query);
   }
 
@@ -1144,7 +1144,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(disjunctionPredicate);
       assertEquals(
-          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR subgenuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
+          "(((taxonkey = 6 OR acceptedtaxonkey = 6 OR kingdomkey = 6 OR phylumkey = 6 OR classkey = 6 OR orderkey = 6 OR familykey = 6 OR genuskey = 6 OR specieskey = 6)) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
           query);
     } catch (QueryBuildingException ex) {
       fail();

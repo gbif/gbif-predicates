@@ -102,7 +102,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           GbifTerm.orderKey,
           GbifTerm.familyKey,
           GbifTerm.genusKey,
-          GbifTerm.subgenusKey,
+          // GbifTerm.subgenusKey, Excluded as it is not populated by interpretation.
           GbifTerm.speciesKey);
 
   private static final List<GadmTerm> GADM_GIDS =
