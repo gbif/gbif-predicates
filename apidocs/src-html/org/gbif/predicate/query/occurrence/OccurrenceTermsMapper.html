@@ -187,61 +187,63 @@
 <span class="source-line-no">174</span><span id="line-174">          .put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy)</span>
 <span class="source-line-no">175</span><span id="line-175">          .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)</span>
 <span class="source-line-no">176</span><span id="line-176">          .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)</span>
-<span class="source-line-no">177</span><span id="line-177">          .build();</span>
-<span class="source-line-no">178</span><span id="line-178"></span>
-<span class="source-line-no">179</span><span id="line-179">  private static final Map&lt;? extends SearchParameter, Term&gt; ARRAY_STRING_TERMS =</span>
-<span class="source-line-no">180</span><span id="line-180">      ImmutableMap.&lt;OccurrenceSearchParameter, Term&gt;builder()</span>
-<span class="source-line-no">181</span><span id="line-181">          .put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)</span>
-<span class="source-line-no">182</span><span id="line-182">          .put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)</span>
-<span class="source-line-no">183</span><span id="line-183">          .put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID)</span>
-<span class="source-line-no">184</span><span id="line-184">          .put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID)</span>
-<span class="source-line-no">185</span><span id="line-185">          .put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID)</span>
-<span class="source-line-no">186</span><span id="line-186">          .put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName)</span>
-<span class="source-line-no">187</span><span id="line-187">          .put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers)</span>
-<span class="source-line-no">188</span><span id="line-188">          .put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy)</span>
-<span class="source-line-no">189</span><span id="line-189">          .put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy)</span>
-<span class="source-line-no">190</span><span id="line-190">          .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)</span>
-<span class="source-line-no">191</span><span id="line-191">          .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)</span>
-<span class="source-line-no">192</span><span id="line-192">          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)</span>
-<span class="source-line-no">193</span><span id="line-193">          .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)</span>
-<span class="source-line-no">194</span><span id="line-194">          .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)</span>
-<span class="source-line-no">195</span><span id="line-195">          .put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences)</span>
-<span class="source-line-no">196</span><span id="line-196">          .build();</span>
-<span class="source-line-no">197</span><span id="line-197"></span>
-<span class="source-line-no">198</span><span id="line-198">  private static final Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();</span>
+<span class="source-line-no">177</span><span id="line-177">          .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)</span>
+<span class="source-line-no">178</span><span id="line-178">          .build();</span>
+<span class="source-line-no">179</span><span id="line-179"></span>
+<span class="source-line-no">180</span><span id="line-180">  private static final Map&lt;? extends SearchParameter, Term&gt; ARRAY_STRING_TERMS =</span>
+<span class="source-line-no">181</span><span id="line-181">      ImmutableMap.&lt;OccurrenceSearchParameter, Term&gt;builder()</span>
+<span class="source-line-no">182</span><span id="line-182">          .put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)</span>
+<span class="source-line-no">183</span><span id="line-183">          .put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)</span>
+<span class="source-line-no">184</span><span id="line-184">          .put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID)</span>
+<span class="source-line-no">185</span><span id="line-185">          .put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID)</span>
+<span class="source-line-no">186</span><span id="line-186">          .put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID)</span>
+<span class="source-line-no">187</span><span id="line-187">          .put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName)</span>
+<span class="source-line-no">188</span><span id="line-188">          .put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers)</span>
+<span class="source-line-no">189</span><span id="line-189">          .put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy)</span>
+<span class="source-line-no">190</span><span id="line-190">          .put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy)</span>
+<span class="source-line-no">191</span><span id="line-191">          .put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations)</span>
+<span class="source-line-no">192</span><span id="line-192">          .put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)</span>
+<span class="source-line-no">193</span><span id="line-193">          .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)</span>
+<span class="source-line-no">194</span><span id="line-194">          .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)</span>
+<span class="source-line-no">195</span><span id="line-195">          .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)</span>
+<span class="source-line-no">196</span><span id="line-196">          .put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences)</span>
+<span class="source-line-no">197</span><span id="line-197">          .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)</span>
+<span class="source-line-no">198</span><span id="line-198">          .build();</span>
 <span class="source-line-no">199</span><span id="line-199"></span>
-<span class="source-line-no">200</span><span id="line-200">  @Override</span>
-<span class="source-line-no">201</span><span id="line-201">  public Term term(SearchParameter searchParameter) {</span>
-<span class="source-line-no">202</span><span id="line-202">    return PARAM_TO_TERM.get(searchParameter);</span>
-<span class="source-line-no">203</span><span id="line-203">  }</span>
-<span class="source-line-no">204</span><span id="line-204"></span>
-<span class="source-line-no">205</span><span id="line-205">  @Override</span>
-<span class="source-line-no">206</span><span id="line-206">  public boolean isArray(SearchParameter searchParameter) {</span>
-<span class="source-line-no">207</span><span id="line-207">    return ARRAY_STRING_TERMS.containsKey(searchParameter);</span>
-<span class="source-line-no">208</span><span id="line-208">  }</span>
-<span class="source-line-no">209</span><span id="line-209"></span>
-<span class="source-line-no">210</span><span id="line-210">  @Override</span>
-<span class="source-line-no">211</span><span id="line-211">  public Term getTermArray(SearchParameter searchParameter) {</span>
-<span class="source-line-no">212</span><span id="line-212">    return ARRAY_STRING_TERMS.get(searchParameter);</span>
-<span class="source-line-no">213</span><span id="line-213">  }</span>
-<span class="source-line-no">214</span><span id="line-214"></span>
-<span class="source-line-no">215</span><span id="line-215">  @Override</span>
-<span class="source-line-no">216</span><span id="line-216">  public boolean isDenormedTerm(SearchParameter searchParameter) {</span>
-<span class="source-line-no">217</span><span id="line-217">    return DENORMED_TERMS.containsKey(searchParameter);</span>
-<span class="source-line-no">218</span><span id="line-218">  }</span>
-<span class="source-line-no">219</span><span id="line-219"></span>
-<span class="source-line-no">220</span><span id="line-220">  @Override</span>
-<span class="source-line-no">221</span><span id="line-221">  public SearchParameter getDefaultGadmLevel() {</span>
-<span class="source-line-no">222</span><span id="line-222">    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;</span>
-<span class="source-line-no">223</span><span id="line-223">  }</span>
-<span class="source-line-no">224</span><span id="line-224"></span>
-<span class="source-line-no">225</span><span id="line-225">  @Override</span>
-<span class="source-line-no">226</span><span id="line-226">  public boolean includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {</span>
-<span class="source-line-no">227</span><span id="line-227">    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()</span>
-<span class="source-line-no">228</span><span id="line-228">        &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate</span>
-<span class="source-line-no">229</span><span id="line-229">            || predicate instanceof GreaterThanPredicate);</span>
-<span class="source-line-no">230</span><span id="line-230">  }</span>
-<span class="source-line-no">231</span><span id="line-231">}</span>
+<span class="source-line-no">200</span><span id="line-200">  private static final Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();</span>
+<span class="source-line-no">201</span><span id="line-201"></span>
+<span class="source-line-no">202</span><span id="line-202">  @Override</span>
+<span class="source-line-no">203</span><span id="line-203">  public Term term(SearchParameter searchParameter) {</span>
+<span class="source-line-no">204</span><span id="line-204">    return PARAM_TO_TERM.get(searchParameter);</span>
+<span class="source-line-no">205</span><span id="line-205">  }</span>
+<span class="source-line-no">206</span><span id="line-206"></span>
+<span class="source-line-no">207</span><span id="line-207">  @Override</span>
+<span class="source-line-no">208</span><span id="line-208">  public boolean isArray(SearchParameter searchParameter) {</span>
+<span class="source-line-no">209</span><span id="line-209">    return ARRAY_STRING_TERMS.containsKey(searchParameter);</span>
+<span class="source-line-no">210</span><span id="line-210">  }</span>
+<span class="source-line-no">211</span><span id="line-211"></span>
+<span class="source-line-no">212</span><span id="line-212">  @Override</span>
+<span class="source-line-no">213</span><span id="line-213">  public Term getTermArray(SearchParameter searchParameter) {</span>
+<span class="source-line-no">214</span><span id="line-214">    return ARRAY_STRING_TERMS.get(searchParameter);</span>
+<span class="source-line-no">215</span><span id="line-215">  }</span>
+<span class="source-line-no">216</span><span id="line-216"></span>
+<span class="source-line-no">217</span><span id="line-217">  @Override</span>
+<span class="source-line-no">218</span><span id="line-218">  public boolean isDenormedTerm(SearchParameter searchParameter) {</span>
+<span class="source-line-no">219</span><span id="line-219">    return DENORMED_TERMS.containsKey(searchParameter);</span>
+<span class="source-line-no">220</span><span id="line-220">  }</span>
+<span class="source-line-no">221</span><span id="line-221"></span>
+<span class="source-line-no">222</span><span id="line-222">  @Override</span>
+<span class="source-line-no">223</span><span id="line-223">  public SearchParameter getDefaultGadmLevel() {</span>
+<span class="source-line-no">224</span><span id="line-224">    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;</span>
+<span class="source-line-no">225</span><span id="line-225">  }</span>
+<span class="source-line-no">226</span><span id="line-226"></span>
+<span class="source-line-no">227</span><span id="line-227">  @Override</span>
+<span class="source-line-no">228</span><span id="line-228">  public boolean includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {</span>
+<span class="source-line-no">229</span><span id="line-229">    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()</span>
+<span class="source-line-no">230</span><span id="line-230">        &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate</span>
+<span class="source-line-no">231</span><span id="line-231">            || predicate instanceof GreaterThanPredicate);</span>
+<span class="source-line-no">232</span><span id="line-232">  }</span>
+<span class="source-line-no">233</span><span id="line-233">}</span>
 
 
 
