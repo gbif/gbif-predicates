@@ -174,6 +174,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy)
           .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)
           .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
+          .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
@@ -193,6 +194,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)
           .put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)
           .put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences)
+          .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)
           .build();
 
   private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();
