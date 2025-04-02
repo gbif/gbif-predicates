@@ -16,6 +16,8 @@ public interface EsFieldMapper<S extends SearchParameter> {
 
   boolean isVocabulary(S searchParameter);
 
+  String getChecklistField(String checklistKey, S searchParameter);
+
   /**
    * Adds an "is null" filter if the mapper instructs to do it for the specific predicate. Used
    * mostly in range queries to give specific semantics to null values.
