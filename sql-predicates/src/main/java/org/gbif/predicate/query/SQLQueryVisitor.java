@@ -51,10 +51,7 @@ import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
-import org.gbif.dwc.terms.DwcTerm;
-import org.gbif.dwc.terms.GadmTerm;
-import org.gbif.dwc.terms.GbifTerm;
-import org.gbif.dwc.terms.Term;
+import org.gbif.dwc.terms.*;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -252,6 +249,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     Boolean matchCase = null;
     List<String> values = new ArrayList<>();
     S parameter = null;
+    String checklistsKey = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       if (subPredicate instanceof EqualsPredicate) {
@@ -259,8 +257,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
+          checklistsKey = equalsSubPredicate.getChecklistKey();
         } else if (parameter != equalsSubPredicate.getKey()
-            || matchCase != equalsSubPredicate.isMatchCase()) {
+            || matchCase != equalsSubPredicate.isMatchCase()
+            || !Objects.equals(checklistsKey, equalsSubPredicate.getChecklistKey())) {
           useIn = false;
           break;
         }
@@ -285,7 +285,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
-      appendTaxonFilterList(NUB_KEYS, predicate.getValue());
+      appendTaxonKeyFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       appendGadmFilterList(GADM_GIDS, predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
@@ -571,13 +571,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
       }
       builder.append(')');
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
+    } else if (predicate.getKey().name().equals("TAXON_KEY")) {
       // Taxon keys must be expanded into a disjunction of in predicates
-      appendTaxonKeyFilter(predicate.getValues());
-    } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
+      appendTaxonKeyFilter(predicate);
+    } else if (predicate.getKey().name().equals("GADM_GID")) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
-    } else if (predicate.getKey() == OccurrenceSearchParameter.EVENT_DATE) {
+    } else if (predicate.getKey().name().equals("EVENT_DATE")) {
       // Event dates must be expanded into a disjunction of conjunction predicates (of comparisons)
       builder.append('(');
       Iterator<String> iterator = predicate.getValues().iterator();
@@ -666,8 +666,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
           String.format(IS_NOT_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
-    } else if (predicate.getParameter() == OccurrenceSearchParameter.TAXON_KEY) {
-      appendUnaryList(NUB_KEYS, IS_NOT_NULL_OPERATOR);
+    } else if (predicate.getParameter().name().equals("TAXON_KEY")) {
+      appendTaxonKeyUnary(IS_NOT_NULL_OPERATOR);
     } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
       appendUnaryList(GADM_GIDS, IS_NOT_NULL_OPERATOR);
     } else {
@@ -678,8 +678,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
-    if (predicate.getParameter() == OccurrenceSearchParameter.TAXON_KEY) {
-      appendUnaryList(NUB_KEYS, IS_NULL_OPERATOR);
+    if (predicate.getParameter().name().equals("TAXON_KEY")) {
+      appendTaxonKeyUnary(IS_NULL_OPERATOR);
     } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
       appendUnaryList(GADM_GIDS, IS_NULL_OPERATOR);
     } else {
@@ -692,6 +692,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         builder.append(IS_NULL_OPERATOR);
       }
     }
+  }
+
+  /**
+   * Searches any of the NUB keys in Hive of any rank.
+   *
+   * @param unaryOperator to append as filter
+   */
+  private void appendTaxonKeyUnary(String unaryOperator) {
+    builder.append('(');
+    builder.append(
+        NUB_KEYS.stream()
+            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)
+            .collect(Collectors.joining(CONJUNCTION_OPERATOR)));
+    builder.append(')');
   }
 
   public void visit(WithinPredicate within) throws QueryBuildingException {
@@ -919,15 +933,35 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return sqlTermsMapper.term(parameter);
   }
 
-  /** Creates a disjunction of all the given terms. */
-  private void appendTaxonFilterList(List<? extends Term> terms, String value) {
-    builder
-        .append('(')
-        .append(
-            terms.stream()
-                .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + value)
-                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
-        .append(')');
+  /**
+   * Searches any of the NUB keys in Hive of any rank.
+   *
+   * @param taxonKeyPredicate to append as filter
+   */
+  private void appendTaxonKeyFilter(EqualsPredicate<S> taxonKeyPredicate) {
+    if (taxonKeyPredicate.getChecklistKey() != null) {
+      builder
+          .append('(')
+          .append(
+              String.format(
+                  "stringArrayContains(%s['%s'], '%s', true)",
+                  SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.classifications),
+                  taxonKeyPredicate.getChecklistKey(),
+                  taxonKeyPredicate.getValue()))
+          .append(')');
+    } else {
+      builder
+          .append('(')
+          .append(
+              NUB_KEYS.stream()
+                  .map(
+                      term ->
+                          SQLColumnsUtils.getSQLQueryColumn(term)
+                              + EQUALS_OPERATOR
+                              + taxonKeyPredicate.getValue())
+                  .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+          .append(')');
+    }
   }
 
   /** Creates a disjunction of all the given terms. */
@@ -950,24 +984,49 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /**
    * Searches any of the NUB keys in Hive of any rank, for multiple keys.
    *
-   * @param taxonKeys to append as filter
+   * @param taxonKeyPredicate to append as filter
    */
-  private void appendTaxonKeyFilter(Collection<String> taxonKeys) {
-    builder.append('(');
-    boolean first = true;
-    for (Term term : NUB_KEYS) {
-      if (!first) {
-        builder.append(DISJUNCTION_OPERATOR);
+  private void appendTaxonKeyFilter(InPredicate<S> taxonKeyPredicate) {
+
+    Collection<String> taxonKeys = taxonKeyPredicate.getValues();
+
+    if (taxonKeyPredicate.getChecklistKey() != null) {
+      builder.append('(');
+      boolean first = true;
+      for (String taxonKey : taxonKeys) {
+        if (!first) {
+          builder.append(DISJUNCTION_OPERATOR);
+        }
+        builder
+            .append('(')
+            .append(
+                String.format(
+                    "stringArrayContains(%s['%s'], '%s', true)",
+                    SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.classifications),
+                    taxonKeyPredicate.getChecklistKey(),
+                    taxonKey))
+            .append(')');
+        first = false;
       }
-      builder
-          .append(SQLColumnsUtils.getSQLQueryColumn(term))
-          .append(IN_OPERATOR)
-          .append('(')
-          .append(COMMA_JOINER.join(taxonKeys))
-          .append(')');
-      first = false;
+      builder.append(')');
+    } else {
+
+      builder.append('(');
+      boolean first = true;
+      for (Term term : NUB_KEYS) {
+        if (!first) {
+          builder.append(DISJUNCTION_OPERATOR);
+        }
+        builder
+            .append(SQLColumnsUtils.getSQLQueryColumn(term))
+            .append(IN_OPERATOR)
+            .append('(')
+            .append(COMMA_JOINER.join(taxonKeys))
+            .append(')');
+        first = false;
+      }
+      builder.append(')');
     }
-    builder.append(')');
   }
 
   /**
