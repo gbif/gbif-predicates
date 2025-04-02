@@ -170,6 +170,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.MEMBER, DwcTerm.member)
           .put(OccurrenceSearchParameter.BED, DwcTerm.bed)
           .put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId)
+          .put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey)
           .put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime)
           .put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy)
           .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)
