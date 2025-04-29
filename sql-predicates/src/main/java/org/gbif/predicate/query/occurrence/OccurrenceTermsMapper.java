@@ -58,6 +58,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues)
           .put(OccurrenceSearchParameter.MEDIA_TYPE, GbifTerm.mediaType)
           .put(OccurrenceSearchParameter.ISSUE, GbifTerm.issue)
+          .put(OccurrenceSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue)
           .put(OccurrenceSearchParameter.KINGDOM_KEY, GbifTerm.kingdomKey)
           .put(OccurrenceSearchParameter.PHYLUM_KEY, GbifTerm.phylumKey)
           .put(OccurrenceSearchParameter.CLASS_KEY, GbifTerm.classKey)

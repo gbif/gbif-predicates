@@ -65,12 +65,24 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   private final EsFieldMapper<S> esFieldMapper;
 
   private String getExactMatchOrVerbatimField(SimplePredicate<S> predicate) {
+    if (predicate instanceof EqualsPredicate) {
+      EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
+      if (equalsPredicate.getChecklistKey() != null) {
+        return esFieldMapper.getChecklistField(
+            equalsPredicate.getChecklistKey(), predicate.getKey());
+      }
+    }
+
     return predicate.isMatchCase()
         ? esFieldMapper.getVerbatimFieldName(predicate.getKey())
         : esFieldMapper.getExactMatchFieldName(predicate.getKey());
   }
 
   private String getExactMatchOrVerbatimField(InPredicate<S> predicate) {
+    if (predicate.getChecklistKey() != null) {
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+    }
+
     return Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE)
         ? esFieldMapper.getVerbatimFieldName(predicate.getKey())
         : esFieldMapper.getExactMatchFieldName(predicate.getKey());
@@ -89,13 +101,13 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     return value;
   }
 
-  private String getChecklistExactMatchOrVerbatimField(EqualsPredicate<S> predicate) {
-    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
-  }
-
-  private String getChecklistExactMatchOrVerbatimField(InPredicate<S> predicate) {
-    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
-  }
+  //  private String getChecklistExactMatchOrVerbatimField(EqualsPredicate<S> predicate) {
+  //    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+  //  }
+  //
+  //  private String getChecklistExactMatchOrVerbatimField(InPredicate<S> predicate) {
+  //    return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+  //  }
 
   /**
    * Translates a valid {@link org.gbif.api.model.occurrence.Download} object and translates it into
@@ -296,21 +308,12 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       return;
     }
 
-    if (!Objects.isNull(predicate.getChecklistKey())) {
-      queryBuilder
-          .filter()
-          .add(
-              QueryBuilders.termQuery(
-                  getChecklistExactMatchOrVerbatimField(predicate),
-                  parseParamValue(predicate.getValue(), parameter)));
-    } else {
-      queryBuilder
-          .filter()
-          .add(
-              QueryBuilders.termQuery(
-                  getExactMatchOrVerbatimField(predicate),
-                  parseParamValue(predicate.getValue(), parameter)));
-    }
+    queryBuilder
+        .filter()
+        .add(
+            QueryBuilders.termQuery(
+                getExactMatchOrVerbatimField(predicate),
+                parseParamValue(predicate.getValue(), parameter)));
   }
 
   private Function<String, Object> parseDate =
@@ -442,25 +445,25 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
     } else {
 
-      if (predicate.getChecklistKey() != null) {
-        queryBuilder
-            .filter()
-            .add(
-                QueryBuilders.termsQuery(
-                    getChecklistExactMatchOrVerbatimField(predicate),
-                    predicate.getValues().stream()
-                        .map(v -> parseParamValue(v, parameter))
-                        .collect(Collectors.toList())));
-      } else {
-        queryBuilder
-            .filter()
-            .add(
-                QueryBuilders.termsQuery(
-                    getExactMatchOrVerbatimField(predicate),
-                    predicate.getValues().stream()
-                        .map(v -> parseParamValue(v, parameter))
-                        .collect(Collectors.toList())));
-      }
+      //      if (predicate.getChecklistKey() != null) {
+      //        queryBuilder
+      //            .filter()
+      //            .add(
+      //                QueryBuilders.termsQuery(
+      //                    getChecklistExactMatchOrVerbatimField(predicate),
+      //                    predicate.getValues().stream()
+      //                        .map(v -> parseParamValue(v, parameter))
+      //                        .collect(Collectors.toList())));
+      //      } else {
+      queryBuilder
+          .filter()
+          .add(
+              QueryBuilders.termsQuery(
+                  getExactMatchOrVerbatimField(predicate),
+                  predicate.getValues().stream()
+                      .map(v -> parseParamValue(v, parameter))
+                      .collect(Collectors.toList())));
+      //      }
     }
   }
 
