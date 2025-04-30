@@ -10,6 +10,25 @@ import org.gbif.api.model.predicate.SimplePredicate;
 
 public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSearchParameter> {
 
+  private String defaultChecklistKey = "defaultChecklistKey";
+
+  private static final Set<OccurrenceSearchParameter> TAXONOMIC_SET =
+      new HashSet<>(
+          Arrays.asList(
+              OccurrenceSearchParameter.ACCEPTED_TAXON_KEY,
+              OccurrenceSearchParameter.TAXON_KEY,
+              OccurrenceSearchParameter.KINGDOM_KEY,
+              OccurrenceSearchParameter.PHYLUM_KEY,
+              OccurrenceSearchParameter.CLASS_KEY,
+              OccurrenceSearchParameter.ORDER_KEY,
+              OccurrenceSearchParameter.FAMILY_KEY,
+              OccurrenceSearchParameter.GENUS_KEY,
+              OccurrenceSearchParameter.SUBGENUS_KEY,
+              OccurrenceSearchParameter.SPECIES_KEY,
+              OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+              OccurrenceSearchParameter.TAXONOMIC_STATUS,
+              OccurrenceSearchParameter.TAXONOMIC_ISSUE));
+
   private static final Set<OccurrenceSearchParameter> VOCABULARY_SET =
       new HashSet<>(
           Arrays.asList(
@@ -62,8 +81,15 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
+  public boolean isTaxonomic(OccurrenceSearchParameter searchParameter) {
+    return TAXONOMIC_SET.contains(searchParameter);
+  }
+
+  @Override
   public String getChecklistField(String checklistKey, OccurrenceSearchParameter searchParameter) {
-    return "classifications." + checklistKey + ".taxonKeys";
+    return "classifications."
+        + (checklistKey != null ? checklistKey : defaultChecklistKey)
+        + ".taxonKeys";
   }
 
   @Override

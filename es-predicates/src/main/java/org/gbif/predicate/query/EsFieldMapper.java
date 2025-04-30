@@ -19,6 +19,14 @@ public interface EsFieldMapper<S extends SearchParameter> {
   String getChecklistField(String checklistKey, S searchParameter);
 
   /**
+   * Returns true if the search parameter is taxonomic related and hence will be determined by which
+   * checklist is in use.
+   *
+   * @param searchParameter
+   * @return true if a taxonomic parameter
+   */
+  boolean isTaxonomic(S searchParameter);
+  /**
    * Adds an "is null" filter if the mapper instructs to do it for the specific predicate. Used
    * mostly in range queries to give specific semantics to null values.
    */

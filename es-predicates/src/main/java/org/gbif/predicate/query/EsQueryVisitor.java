@@ -67,7 +67,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   private String getExactMatchOrVerbatimField(SimplePredicate<S> predicate) {
     if (predicate instanceof EqualsPredicate) {
       EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
-      if (equalsPredicate.getChecklistKey() != null) {
+      if (esFieldMapper.isTaxonomic(equalsPredicate.getKey())) {
         return esFieldMapper.getChecklistField(
             equalsPredicate.getChecklistKey(), predicate.getKey());
       }
@@ -79,7 +79,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   }
 
   private String getExactMatchOrVerbatimField(InPredicate<S> predicate) {
-    if (predicate.getChecklistKey() != null) {
+    if (esFieldMapper.isTaxonomic(predicate.getKey())) {
       return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
     }
 
