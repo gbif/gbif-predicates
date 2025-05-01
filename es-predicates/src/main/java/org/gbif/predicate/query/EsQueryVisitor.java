@@ -66,8 +66,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(
-              predicate.getChecklistKey(), predicate.getParameter());
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -75,8 +74,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private String getExactMatchFieldName(IsNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(
-              predicate.getChecklistKey(), predicate.getParameter());
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -633,11 +631,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    * @param predicate ISNOTNULL predicate
    */
   public void visit(IsNotNullPredicate<S> predicate, BoolQueryBuilder queryBuilder) {
-    queryBuilder
-        .filter()
-        .add(
-            QueryBuilders.existsQuery(
-                getExactMatchFieldName(predicate)));
+    queryBuilder.filter().add(QueryBuilders.existsQuery(getExactMatchFieldName(predicate)));
   }
 
   /**
@@ -650,9 +644,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         .filter()
         .add(
             QueryBuilders.boolQuery()
-                .mustNot(
-                    QueryBuilders.existsQuery(
-                            getExactMatchFieldName(predicate))));
+                .mustNot(QueryBuilders.existsQuery(getExactMatchFieldName(predicate))));
   }
 
   private void visit(Object object, BoolQueryBuilder queryBuilder) throws QueryBuildingException {
