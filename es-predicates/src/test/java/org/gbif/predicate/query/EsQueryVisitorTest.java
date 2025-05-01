@@ -2192,4 +2192,70 @@ public class EsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testIsNotNullTaxonKeyPredicate() {
+
+    DisjunctionPredicate predicate =
+            new DisjunctionPredicate(
+                    Arrays.asList(
+                            new IsNotNullPredicate<>(
+                                    OccurrenceSearchParameter.SPECIES_KEY, "test-checklist-key"),
+                            new IsNullPredicate<>(
+                                    OccurrenceSearchParameter.KINGDOM_KEY, "test-checklist-key")
+                    ));
+    try {
+      String query = visitor.buildQuery(predicate);
+      String expectedQuery =
+              "{\n" +
+                      "  \"bool\" : {\n" +
+                      "    \"should\" : [\n" +
+                      "      {\n" +
+                      "        \"bool\" : {\n" +
+                      "          \"filter\" : [\n" +
+                      "            {\n" +
+                      "              \"exists\" : {\n" +
+                      "                \"field\" : \"classifications.test-checklist-key.taxonKeys\",\n" +
+                      "                \"boost\" : 1.0\n" +
+                      "              }\n" +
+                      "            }\n" +
+                      "          ],\n" +
+                      "          \"adjust_pure_negative\" : true,\n" +
+                      "          \"boost\" : 1.0\n" +
+                      "        }\n" +
+                      "      },\n" +
+                      "      {\n" +
+                      "        \"bool\" : {\n" +
+                      "          \"filter\" : [\n" +
+                      "            {\n" +
+                      "              \"bool\" : {\n" +
+                      "                \"must_not\" : [\n" +
+                      "                  {\n" +
+                      "                    \"exists\" : {\n" +
+                      "                      \"field\" : \"classifications.test-checklist-key.taxonKeys\",\n" +
+                      "                      \"boost\" : 1.0\n" +
+                      "                    }\n" +
+                      "                  }\n" +
+                      "                ],\n" +
+                      "                \"adjust_pure_negative\" : true,\n" +
+                      "                \"boost\" : 1.0\n" +
+                      "              }\n" +
+                      "            }\n" +
+                      "          ],\n" +
+                      "          \"adjust_pure_negative\" : true,\n" +
+                      "          \"boost\" : 1.0\n" +
+                      "        }\n" +
+                      "      }\n" +
+                      "    ],\n" +
+                      "    \"adjust_pure_negative\" : true,\n" +
+                      "    \"boost\" : 1.0\n" +
+                      "  }\n" +
+                      "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
 }
