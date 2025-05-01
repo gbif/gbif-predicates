@@ -88,6 +88,12 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
             equalsPredicate.getChecklistKey(), predicate.getKey());
       }
     }
+    if (predicate instanceof LikePredicate) {
+      LikePredicate<S> likePredicate = (LikePredicate<S>) predicate;
+      if (esFieldMapper.isTaxonomic(likePredicate.getKey())) {
+        return esFieldMapper.getChecklistField(likePredicate.getChecklistKey(), predicate.getKey());
+      }
+    }
 
     return predicate.isMatchCase()
         ? esFieldMapper.getVerbatimFieldName(predicate.getKey())

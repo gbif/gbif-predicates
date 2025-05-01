@@ -15,6 +15,9 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   private static final Set<OccurrenceSearchParameter> TAXONOMIC_SET =
       new HashSet<>(
           Arrays.asList(
+              OccurrenceSearchParameter.SCIENTIFIC_NAME,
+              OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME,
+              OccurrenceSearchParameter.ACCEPTED_TAXON_KEY,
               OccurrenceSearchParameter.ACCEPTED_TAXON_KEY,
               OccurrenceSearchParameter.TAXON_KEY,
               OccurrenceSearchParameter.KINGDOM_KEY,
@@ -87,6 +90,13 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
 
   @Override
   public String getChecklistField(String checklistKey, OccurrenceSearchParameter searchParameter) {
+
+    if (searchParameter == OccurrenceSearchParameter.SCIENTIFIC_NAME) {
+      return "classifications."
+          + (checklistKey != null ? checklistKey : defaultChecklistKey)
+          + ".usage.name";
+    }
+
     return "classifications."
         + (checklistKey != null ? checklistKey : defaultChecklistKey)
         + ".taxonKeys";

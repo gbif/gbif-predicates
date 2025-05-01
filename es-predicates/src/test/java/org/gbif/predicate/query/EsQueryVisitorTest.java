@@ -2256,4 +2256,36 @@ public class EsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testLikeScientificNamePredicateWithChecklist() {
+
+    LikePredicate predicate =
+        new LikePredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);
+    try {
+      String query = visitor.buildQuery(predicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"wildcard\" : {\n"
+              + "          \"classifications.test-checklist-key.usage.name\" : {\n"
+              + "            \"wildcard\" : \"Acacia\",\n"
+              + "            \"boost\" : 1.0\n"
+              + "          }\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }
