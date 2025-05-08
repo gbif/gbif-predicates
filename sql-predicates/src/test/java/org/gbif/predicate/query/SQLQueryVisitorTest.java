@@ -1173,4 +1173,69 @@ public class SQLQueryVisitorTest {
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.lte <= 15.0", query);
   }
+
+  @Test
+  public void testMultiTaxonomyEqualsPredicate() {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      assertEquals("(stringArrayContains(classifications['my-checklist-uuid'], '6', true))", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testMultiTaxonomyInPredicate() {
+    InPredicate<OccurrenceSearchParameter> inPredicate =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
+    try {
+      String query = visitor.buildQuery(inPredicate);
+      assertEquals(
+          "((stringArrayContains(classifications['my-checklist-uuid'], '6', true)) OR (stringArrayContains(classifications['my-checklist-uuid'], '7', true)))",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testMultiTaxonomyDisjunctionPredicate() {
+    DisjunctionPredicate predicate =
+        new DisjunctionPredicate(
+            Arrays.asList(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
+    try {
+      String query = visitor.buildQuery(predicate);
+      assertEquals(
+          "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) OR ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testMultiTaxonomyConjunctionPredicate() {
+    ConjunctionPredicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
+    try {
+      String query = visitor.buildQuery(predicate);
+      assertEquals(
+          "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+          query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }
