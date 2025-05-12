@@ -17,12 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -44,23 +39,7 @@ import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.geo.DistanceUnit;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
-import org.gbif.api.model.predicate.ConjunctionPredicate;
-import org.gbif.api.model.predicate.DisjunctionPredicate;
-import org.gbif.api.model.predicate.EqualsPredicate;
-import org.gbif.api.model.predicate.GeoDistancePredicate;
-import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.GreaterThanPredicate;
-import org.gbif.api.model.predicate.InPredicate;
-import org.gbif.api.model.predicate.IsNotNullPredicate;
-import org.gbif.api.model.predicate.IsNullPredicate;
-import org.gbif.api.model.predicate.LessThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.LessThanPredicate;
-import org.gbif.api.model.predicate.LikePredicate;
-import org.gbif.api.model.predicate.NotPredicate;
-import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.predicate.RangePredicate;
-import org.gbif.api.model.predicate.SimplePredicate;
-import org.gbif.api.model.predicate.WithinPredicate;
+import org.gbif.api.model.predicate.*;
 import org.gbif.api.query.QueryVisitor;
 import org.gbif.api.util.IsoDateInterval;
 import org.gbif.api.util.IsoDateParsingUtils;
@@ -85,13 +64,47 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
 
+  private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
+    if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
+    }
+
+    return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
+  }
+
+  private String getExactMatchFieldName(IsNullPredicate<S> predicate) {
+    if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
+    }
+
+    return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
+  }
+
   private String getExactMatchOrVerbatimField(SimplePredicate<S> predicate) {
+    if (predicate instanceof EqualsPredicate) {
+      EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
+      if (esFieldMapper.isTaxonomic(equalsPredicate.getKey())) {
+        return esFieldMapper.getChecklistField(
+            equalsPredicate.getChecklistKey(), predicate.getKey());
+      }
+    }
+    if (predicate instanceof LikePredicate) {
+      LikePredicate<S> likePredicate = (LikePredicate<S>) predicate;
+      if (esFieldMapper.isTaxonomic(likePredicate.getKey())) {
+        return esFieldMapper.getChecklistField(likePredicate.getChecklistKey(), predicate.getKey());
+      }
+    }
+
     return predicate.isMatchCase()
         ? esFieldMapper.getVerbatimFieldName(predicate.getKey())
         : esFieldMapper.getExactMatchFieldName(predicate.getKey());
   }
 
   private String getExactMatchOrVerbatimField(InPredicate<S> predicate) {
+    if (esFieldMapper.isTaxonomic(predicate.getKey())) {
+      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+    }
+
     return Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE)
         ? esFieldMapper.getVerbatimFieldName(predicate.getKey())
         : esFieldMapper.getExactMatchFieldName(predicate.getKey());
@@ -144,8 +157,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    * @param predicate conjunction predicate
    * @param queryBuilder root query builder
    */
-  public void visit(ConjunctionPredicate predicate, BoolQueryBuilder queryBuilder)
-      throws QueryBuildingException {
+  public void visit(ConjunctionPredicate predicate, BoolQueryBuilder queryBuilder) {
     // must query structure is equivalent to AND
     predicate
         .getPredicates()
@@ -167,8 +179,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    * @param predicate disjunction predicate
    * @param queryBuilder root query builder
    */
-  public void visit(DisjunctionPredicate predicate, BoolQueryBuilder queryBuilder)
-      throws QueryBuildingException {
+  public void visit(DisjunctionPredicate predicate, BoolQueryBuilder queryBuilder) {
     Map<S, List<EqualsPredicate<S>>> equalsPredicatesReplaceableByIn = groupEquals(predicate);
 
     predicate
@@ -217,6 +228,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   private Map<S, List<EqualsPredicate<S>>> groupEquals(DisjunctionPredicate predicate) {
     return predicate.getPredicates().stream()
         .filter(p -> p instanceof EqualsPredicate)
+        .filter(p -> ((EqualsPredicate<?>) p).getChecklistKey() == null)
         .map(p -> (EqualsPredicate<S>) p)
         .collect(Collectors.groupingBy(EqualsPredicate::getKey))
         .entrySet()
@@ -432,7 +444,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   Predicate subPredicate =
                       new EqualsPredicate<>(
-                          OccurrenceSearchParameter.EVENT_DATE, value, predicate.isMatchCase());
+                          OccurrenceSearchParameter.EVENT_DATE,
+                          value,
+                          predicate.isMatchCase(),
+                          predicate.getChecklistKey());
                   visit(subPredicate, shouldQueryBuilder);
                   queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
                 } catch (QueryBuildingException ex) {
@@ -441,6 +456,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
               });
 
     } else {
+
       queryBuilder
           .filter()
           .add(
@@ -621,11 +637,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    * @param predicate ISNOTNULL predicate
    */
   public void visit(IsNotNullPredicate<S> predicate, BoolQueryBuilder queryBuilder) {
-    queryBuilder
-        .filter()
-        .add(
-            QueryBuilders.existsQuery(
-                esFieldMapper.getExactMatchFieldName(predicate.getParameter())));
+    queryBuilder.filter().add(QueryBuilders.existsQuery(getExactMatchFieldName(predicate)));
   }
 
   /**
@@ -638,9 +650,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         .filter()
         .add(
             QueryBuilders.boolQuery()
-                .mustNot(
-                    QueryBuilders.existsQuery(
-                        esFieldMapper.getExactMatchFieldName(predicate.getParameter()))));
+                .mustNot(QueryBuilders.existsQuery(getExactMatchFieldName(predicate))));
   }
 
   private void visit(Object object, BoolQueryBuilder queryBuilder) throws QueryBuildingException {
