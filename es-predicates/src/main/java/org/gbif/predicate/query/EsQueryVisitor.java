@@ -267,7 +267,8 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   public void visit(EqualsPredicate<S> predicate, BoolQueryBuilder queryBuilder) {
     S parameter = predicate.getKey();
 
-    if (Number.class.isAssignableFrom(predicate.getKey().type())) {
+    if (Number.class.isAssignableFrom(predicate.getKey().type())
+        || predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
       if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
         Range<Double> decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());
         RangeQueryBuilder rqb =
@@ -278,6 +279,11 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         if (decimalRange.hasUpperBound()) {
           rqb.lte(decimalRange.upperEndpoint());
         }
+
+        if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+          rqb.relation("within");
+        }
+
         queryBuilder.filter().add(addNullableFieldPredicate(predicate, rqb));
         return;
       }
