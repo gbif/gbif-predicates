@@ -196,18 +196,38 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                 throw new RuntimeException(ex);
               }
             });
+
     if (!equalsPredicatesReplaceableByIn.isEmpty()) {
-      toInPredicates(equalsPredicatesReplaceableByIn)
-          .forEach(
-              ep ->
-                  queryBuilder
-                      .should()
-                      .add(
-                          QueryBuilders.termsQuery(
-                              getExactMatchOrVerbatimField(ep),
-                              ep.getValues().stream()
-                                  .map(v -> parseParamValue(v, ep.getKey()))
-                                  .collect(Collectors.toList()))));
+      if (equalsPredicatesReplaceableByIn.containsKey(OccurrenceSearchParameter.GEOLOGICAL_TIME)) {
+        List<QueryBuilder> queryBuilders = new ArrayList<>();
+        equalsPredicatesReplaceableByIn
+            .get(OccurrenceSearchParameter.GEOLOGICAL_TIME)
+            .forEach(
+                ep -> {
+                  queryBuilders.add(
+                      QueryBuilders.termQuery(getExactMatchOrVerbatimField(ep), ep.getValue()));
+                });
+
+        if (!queryBuilders.isEmpty()) {
+          queryBuilder.should().addAll(queryBuilders);
+        }
+
+        equalsPredicatesReplaceableByIn.remove(OccurrenceSearchParameter.GEOLOGICAL_TIME);
+      }
+
+      if (!equalsPredicatesReplaceableByIn.isEmpty()) {
+        toInPredicates(equalsPredicatesReplaceableByIn)
+            .forEach(
+                ep ->
+                    queryBuilder
+                        .should()
+                        .add(
+                            QueryBuilders.termsQuery(
+                                getExactMatchOrVerbatimField(ep),
+                                ep.getValues().stream()
+                                    .map(v -> parseParamValue(v, ep.getKey()))
+                                    .collect(Collectors.toList()))));
+      }
     }
   }
 
