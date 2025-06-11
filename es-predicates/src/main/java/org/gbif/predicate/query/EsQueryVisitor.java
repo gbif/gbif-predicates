@@ -191,6 +191,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   visit(subPredicate, shouldQueryBuilder);
                   queryBuilder.should(addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
+                  if (subPredicate instanceof SimplePredicate) {
+                    equalsPredicatesReplaceableByIn.remove(
+                        ((SimplePredicate) subPredicate).getKey());
+                  }
                 }
               } catch (QueryBuildingException ex) {
                 throw new RuntimeException(ex);
@@ -236,6 +240,13 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       Predicate predicate, Map<S, List<EqualsPredicate<S>>> equalsPredicatesReplaceableByIn) {
     if (!equalsPredicatesReplaceableByIn.isEmpty() && predicate instanceof EqualsPredicate) {
       EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
+
+      // check it is not a range predicate e.g. YEAR 2000,*
+      if (SearchTypeValidator.isNumericRange(equalsPredicate.getValue())
+          || SearchTypeValidator.isDateRange(equalsPredicate.getValue())) {
+        return false;
+      }
+
       return equalsPredicatesReplaceableByIn.containsKey(equalsPredicate.getKey())
           && equalsPredicatesReplaceableByIn
               .get(equalsPredicate.getKey())

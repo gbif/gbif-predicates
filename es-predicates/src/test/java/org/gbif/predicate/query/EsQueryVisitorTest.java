@@ -2288,4 +2288,102 @@ public class EsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testYearRange() {
+
+    EqualsPredicate predicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1900,*", false);
+    try {
+      String query = visitor.buildQuery(predicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"range\" : {\n"
+              + "          \"year\" : {\n"
+              + "            \"from\" : 1900.0,\n"
+              + "            \"to\" : null,\n"
+              + "            \"include_lower\" : true,\n"
+              + "            \"include_upper\" : true,\n"
+              + "            \"boost\" : 1.0\n"
+              + "          }\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
+
+  @Test
+  public void testTwoYearRanges() {
+
+    DisjunctionPredicate conjunctionPredicate =
+        new DisjunctionPredicate(
+            Arrays.asList(
+                new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1900,*", false),
+                new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000,*", false)));
+    try {
+      String query = visitor.buildQuery(conjunctionPredicate);
+      String expectedQuery =
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"should\" : [\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"range\" : {\n"
+              + "                \"year\" : {\n"
+              + "                  \"from\" : 1900.0,\n"
+              + "                  \"to\" : null,\n"
+              + "                  \"include_lower\" : true,\n"
+              + "                  \"include_upper\" : true,\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      },\n"
+              + "      {\n"
+              + "        \"bool\" : {\n"
+              + "          \"filter\" : [\n"
+              + "            {\n"
+              + "              \"range\" : {\n"
+              + "                \"year\" : {\n"
+              + "                  \"from\" : 2000.0,\n"
+              + "                  \"to\" : null,\n"
+              + "                  \"include_lower\" : true,\n"
+              + "                  \"include_upper\" : true,\n"
+              + "                  \"boost\" : 1.0\n"
+              + "                }\n"
+              + "              }\n"
+              + "            }\n"
+              + "          ],\n"
+              + "          \"adjust_pure_negative\" : true,\n"
+              + "          \"boost\" : 1.0\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
+      System.out.println(query);
+      assertEquals(expectedQuery, query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+  }
 }
