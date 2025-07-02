@@ -2327,29 +2327,29 @@ public class EsQueryVisitorTest {
   public void testYearRangeReversed() {
 
     EqualsPredicate predicate =
-            new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "*,1900", false);
+        new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "*,1900", false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
-              "{\n"
-                      + "  \"bool\" : {\n"
-                      + "    \"filter\" : [\n"
-                      + "      {\n"
-                      + "        \"range\" : {\n"
-                      + "          \"year\" : {\n"
-                      + "            \"from\" : null,\n"
-                      + "            \"to\" : 1900.0,\n"
-                      + "            \"include_lower\" : true,\n"
-                      + "            \"include_upper\" : true,\n"
-                      + "            \"boost\" : 1.0\n"
-                      + "          }\n"
-                      + "        }\n"
-                      + "      }\n"
-                      + "    ],\n"
-                      + "    \"adjust_pure_negative\" : true,\n"
-                      + "    \"boost\" : 1.0\n"
-                      + "  }\n"
-                      + "}";
+          "{\n"
+              + "  \"bool\" : {\n"
+              + "    \"filter\" : [\n"
+              + "      {\n"
+              + "        \"range\" : {\n"
+              + "          \"year\" : {\n"
+              + "            \"from\" : null,\n"
+              + "            \"to\" : 1900.0,\n"
+              + "            \"include_lower\" : true,\n"
+              + "            \"include_upper\" : true,\n"
+              + "            \"boost\" : 1.0\n"
+              + "          }\n"
+              + "        }\n"
+              + "      }\n"
+              + "    ],\n"
+              + "    \"adjust_pure_negative\" : true,\n"
+              + "    \"boost\" : 1.0\n"
+              + "  }\n"
+              + "}";
       System.out.println(query);
       assertEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
