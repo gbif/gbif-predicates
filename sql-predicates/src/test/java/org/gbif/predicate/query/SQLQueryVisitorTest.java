@@ -100,7 +100,7 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))) "
+        "(((taxonkey IN('1', '2') OR acceptedtaxonkey IN('1', '2') OR kingdomkey IN('1', '2') OR phylumkey IN('1', '2') OR classkey IN('1', '2') OR orderkey IN('1', '2') OR familykey IN('1', '2') OR genuskey IN('1', '2') OR specieskey IN('1', '2'))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -149,7 +149,7 @@ public class SQLQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",
+        "(taxonkey IN('1', '2') OR acceptedtaxonkey IN('1', '2') OR kingdomkey IN('1', '2') OR phylumkey IN('1', '2') OR classkey IN('1', '2') OR orderkey IN('1', '2') OR familykey IN('1', '2') OR genuskey IN('1', '2') OR specieskey IN('1', '2'))",
         query);
   }
 
@@ -295,7 +295,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList("1", "2"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN(1, 2) OR acceptedtaxonkey IN(1, 2) OR kingdomkey IN(1, 2) OR phylumkey IN(1, 2) OR classkey IN(1, 2) OR orderkey IN(1, 2) OR familykey IN(1, 2) OR genuskey IN(1, 2) OR specieskey IN(1, 2))",
+        "(taxonkey IN('1', '2') OR acceptedtaxonkey IN('1', '2') OR kingdomkey IN('1', '2') OR phylumkey IN('1', '2') OR classkey IN('1', '2') OR orderkey IN('1', '2') OR familykey IN('1', '2') OR genuskey IN('1', '2') OR specieskey IN('1', '2'))",
         query);
   }
 
