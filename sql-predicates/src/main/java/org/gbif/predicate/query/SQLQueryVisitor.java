@@ -109,7 +109,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       ImmutableList.of(
           GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
 
-  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();
+  private static final Joiner COMMA_JOINER = Joiner.on("', '").skipNulls();
 
   private StringBuilder builder;
 
@@ -1020,9 +1020,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         builder
             .append(SQLColumnsUtils.getSQLQueryColumn(term))
             .append(IN_OPERATOR)
-            .append('(')
+            .append("('")
             .append(COMMA_JOINER.join(taxonKeys))
-            .append(')');
+            .append("')");
         first = false;
       }
       builder.append(')');
