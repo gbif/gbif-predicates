@@ -118,7 +118,7 @@
 <span class="sourceLineNo">109</span><a id="line.109">      ImmutableList.of(</a>
 <span class="sourceLineNo">110</span><a id="line.110">          GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);</a>
 <span class="sourceLineNo">111</span><a id="line.111"></a>
-<span class="sourceLineNo">112</span><a id="line.112">  private static final Joiner COMMA_JOINER = Joiner.on(", ").skipNulls();</a>
+<span class="sourceLineNo">112</span><a id="line.112">  private static final Joiner COMMA_JOINER = Joiner.on("', '").skipNulls();</a>
 <span class="sourceLineNo">113</span><a id="line.113"></a>
 <span class="sourceLineNo">114</span><a id="line.114">  private StringBuilder builder;</a>
 <span class="sourceLineNo">115</span><a id="line.115"></a>
@@ -1029,9 +1029,9 @@
 <span class="sourceLineNo">1020</span><a id="line.1020">        builder</a>
 <span class="sourceLineNo">1021</span><a id="line.1021">            .append(SQLColumnsUtils.getSQLQueryColumn(term))</a>
 <span class="sourceLineNo">1022</span><a id="line.1022">            .append(IN_OPERATOR)</a>
-<span class="sourceLineNo">1023</span><a id="line.1023">            .append('(')</a>
+<span class="sourceLineNo">1023</span><a id="line.1023">            .append("('")</a>
 <span class="sourceLineNo">1024</span><a id="line.1024">            .append(COMMA_JOINER.join(taxonKeys))</a>
-<span class="sourceLineNo">1025</span><a id="line.1025">            .append(')');</a>
+<span class="sourceLineNo">1025</span><a id="line.1025">            .append("')");</a>
 <span class="sourceLineNo">1026</span><a id="line.1026">        first = false;</a>
 <span class="sourceLineNo">1027</span><a id="line.1027">      }</a>
 <span class="sourceLineNo">1028</span><a id="line.1028">      builder.append(')');</a>

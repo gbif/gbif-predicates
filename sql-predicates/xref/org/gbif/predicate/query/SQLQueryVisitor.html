@@ -117,7 +117,7 @@
 <a class="jxr_linenumber" name="L109" href="#L109">109</a>       ImmutableList.of(
 <a class="jxr_linenumber" name="L110" href="#L110">110</a>           GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
 <a class="jxr_linenumber" name="L111" href="#L111">111</a> 
-<a class="jxr_linenumber" name="L112" href="#L112">112</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Joiner COMMA_JOINER = Joiner.on(<span class="jxr_string">", "</span>).skipNulls();
+<a class="jxr_linenumber" name="L112" href="#L112">112</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Joiner COMMA_JOINER = Joiner.on(<span class="jxr_string">"', '"</span>).skipNulls();
 <a class="jxr_linenumber" name="L113" href="#L113">113</a> 
 <a class="jxr_linenumber" name="L114" href="#L114">114</a>   <strong class="jxr_keyword">private</strong> StringBuilder builder;
 <a class="jxr_linenumber" name="L115" href="#L115">115</a> 
@@ -1028,9 +1028,9 @@
 <a class="jxr_linenumber" name="L1020" href="#L1020">1020</a>         builder
 <a class="jxr_linenumber" name="L1021" href="#L1021">1021</a>             .append(SQLColumnsUtils.getSQLQueryColumn(term))
 <a class="jxr_linenumber" name="L1022" href="#L1022">1022</a>             .append(IN_OPERATOR)
-<a class="jxr_linenumber" name="L1023" href="#L1023">1023</a>             .append('(')
+<a class="jxr_linenumber" name="L1023" href="#L1023">1023</a>             .append(<span class="jxr_string">"('"</span>)
 <a class="jxr_linenumber" name="L1024" href="#L1024">1024</a>             .append(COMMA_JOINER.join(taxonKeys))
-<a class="jxr_linenumber" name="L1025" href="#L1025">1025</a>             .append(')');
+<a class="jxr_linenumber" name="L1025" href="#L1025">1025</a>             .append(<span class="jxr_string">"')"</span>);
 <a class="jxr_linenumber" name="L1026" href="#L1026">1026</a>         first = false;
 <a class="jxr_linenumber" name="L1027" href="#L1027">1027</a>       }
 <a class="jxr_linenumber" name="L1028" href="#L1028">1028</a>       builder.append(')');
