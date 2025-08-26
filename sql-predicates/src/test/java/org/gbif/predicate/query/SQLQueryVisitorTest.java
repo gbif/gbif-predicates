@@ -1005,6 +1005,14 @@ public class SQLQueryVisitorTest {
   public void testAllParamsExist() {
     List<Predicate> predicates = Lists.newArrayList();
     for (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
+      if (param == OccurrenceSearchParameter.EVENT_ID_HIERARCHY
+          || param == OccurrenceSearchParameter.EVENT_TYPE
+          || param == OccurrenceSearchParameter.VERBATIM_EVENT_TYPE
+          || param.name().startsWith("HUMBOLDT_")) {
+        // skip events-only parameters
+        continue;
+      }
+
       String value = "7";
 
       if (OccurrenceSearchParameter.GEOMETRY == param) {

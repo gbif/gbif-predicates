@@ -177,7 +177,9 @@ public class SQLColumnsUtils {
         || DwcTerm.higherGeography == term
         || GbifTerm.projectId == term
         || GbifTerm.lithostratigraphy == term
-        || GbifTerm.biostratigraphy == term;
+        || GbifTerm.biostratigraphy == term
+        || EcoTerm.targetLifeStageScope == term
+        || EcoTerm.targetDegreeOfEstablishmentScope == term;
   }
 
   public static boolean isVocabulary(Term term) {
