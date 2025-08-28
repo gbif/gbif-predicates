@@ -179,7 +179,9 @@ public class SQLColumnsUtils {
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
         || EcoTerm.targetLifeStageScope == term
-        || EcoTerm.targetDegreeOfEstablishmentScope == term;
+        || EcoTerm.targetDegreeOfEstablishmentScope == term
+        || EcoTerm.excludedLifeStageScope == term
+        || EcoTerm.excludedDegreeOfEstablishmentScope == term;
   }
 
   public static boolean isVocabulary(Term term) {
