@@ -1246,4 +1246,11 @@ public class SQLQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testHumboldtSearch() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
+    String query = visitor.buildQuery(p);
+    assertEquals("h.sitecount = 1", query);
+  }
 }

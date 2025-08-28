@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.*;
 
+// TODO: humboldt
 public class SQLColumnsUtils {
 
   // reserved hive words
@@ -108,6 +109,9 @@ public class SQLColumnsUtils {
   /** Gets the Hive column name of the term parameter. */
   public static String getSQLQueryColumn(Term term) {
     String columnName = getSQLColumn(term);
+    if (isHumboldtTerm(term)) {
+      columnName = "h." + columnName;
+    }
     return isVocabulary(term) ? columnName + ".lineage" : columnName;
   }
 
@@ -182,6 +186,10 @@ public class SQLColumnsUtils {
         || EcoTerm.targetDegreeOfEstablishmentScope == term
         || EcoTerm.excludedLifeStageScope == term
         || EcoTerm.excludedDegreeOfEstablishmentScope == term;
+  }
+
+  public static boolean isHumboldtTerm(Term term) {
+    return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;
   }
 
   public static boolean isVocabulary(Term term) {

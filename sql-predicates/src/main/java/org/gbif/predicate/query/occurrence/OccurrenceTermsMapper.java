@@ -11,6 +11,7 @@ import org.gbif.api.model.predicate.GreaterThanPredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 import org.gbif.dwc.terms.DcTerm;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.dwc.terms.EcoTerm;
 import org.gbif.dwc.terms.GadmTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
@@ -19,6 +20,9 @@ import org.gbif.dwc.terms.Term;
 import org.gbif.predicate.query.SQLTermsMapper;
 
 public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
+
+  // TODO: humboldt
+
   // parameters that map directly to Hive.
   // boundingBox, coordinate, taxonKey and gadmGid are treated specially!
   private static final Map<? extends SearchParameter, ? extends Term> PARAM_TO_TERM =
@@ -177,6 +181,52 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)
           .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
           .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)
+
+          // Humboldt
+        .put(OccurrenceSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount)
+        .put(OccurrenceSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames)
+        .put(OccurrenceSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_VALUE, EcoTerm.geospatialScopeAreaValue)
+        .put(OccurrenceSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_UNIT, EcoTerm.geospatialScopeAreaUnit)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_VALUE, EcoTerm.totalAreaSampledValue)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_UNIT, EcoTerm.totalAreaSampledUnit)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope)
+        .put(OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, GbifInternalTerm.humboldtEventDurationValueInMinutes)
+        .put(OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue)
+        .put(OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit)
+        // TODO
+//        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME, EcoTerm.targett)
+//        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY)
+//        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS, EcoTerm.taxonCompletenessProtocols)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_TAXONOMIC_SCOPE_FULLY_REPORTED, EcoTerm.isTaxonomicScopeFullyReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, EcoTerm.isAbsenceReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_HAS_NON_TARGET_TAXA, EcoTerm.hasNonTargetTaxa)
+        .put(OccurrenceSearchParameter.HUMBOLDT_ARE_NON_TARGET_TAXA_FULLY_REPORTED, EcoTerm.areNonTargetTaxaFullyReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_LIFE_STAGE_SCOPE, EcoTerm.targetLifeStageScope)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_LIFE_STAGE_SCOPE_FULLY_REPORTED, EcoTerm.isLifeStageScopeFullyReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_DEGREE_OF_ESTABLISHMENT_SCOPE, EcoTerm.targetDegreeOfEstablishmentScope)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED, EcoTerm.isDegreeOfEstablishmentScopeFullyReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_GROWTH_FORM_SCOPE, EcoTerm.targetGrowthFormScope)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_GROWTH_FORM_SCOPE_FULLY_REPORTED,EcoTerm.isGrowthFormScopeFullyReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_HAS_NON_TARGET_ORGANISMS, EcoTerm.hasNonTargetOrganisms)
+        .put(OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, EcoTerm.compilationTypes)
+        .put(OccurrenceSearchParameter.HUMBOLDT_COMPILATION_SOURCE_TYPES, EcoTerm.compilationSourceTypes)
+        .put(OccurrenceSearchParameter.HUMBOLDT_INVENTORY_TYPES, EcoTerm.inventoryTypes)
+        .put(OccurrenceSearchParameter.HUMBOLDT_PROTOCOL_NAMES, EcoTerm.protocolNames)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_ABUNDANCE_REPORTED, EcoTerm.isAbundanceReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_ABUNDANCE_CAP_REPORTED, EcoTerm.isAbundanceCapReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_ABUNDANCE_CAP, EcoTerm.abundanceCap)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_VEGETATION_COVER_REPORTED, EcoTerm.isVegetationCoverReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE, EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive)
+        .put(OccurrenceSearchParameter.HUMBOLDT_HAS_VOUCHERS, EcoTerm.hasVouchers)
+        .put(OccurrenceSearchParameter.HUMBOLDT_VOUCHER_INSTITUTIONS, EcoTerm.voucherInstitutions)
+        .put(OccurrenceSearchParameter.HUMBOLDT_HAS_MATERIAL_SAMPLES,EcoTerm.hasMaterialSamples)
+        .put(OccurrenceSearchParameter.HUMBOLDT_MATERIAL_SAMPLE_TYPES, EcoTerm.materialSampleTypes)
+        .put(OccurrenceSearchParameter.HUMBOLDT_SAMPLING_PERFORMED_BY, EcoTerm.samplingPerformedBy)
+        .put(OccurrenceSearchParameter.HUMBOLDT_IS_SAMPLING_EFFORT_REPORTED, EcoTerm.isSamplingEffortReported)
+        .put(OccurrenceSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue)
+        .put(OccurrenceSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit)
+
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
