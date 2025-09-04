@@ -67,6 +67,8 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 @Slf4j
 public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
+  // TODO: taxon queries humboldt
+
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
   private static final String EQUALS_OPERATOR = " = ";
@@ -234,6 +236,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(ConjunctionPredicate predicate) throws QueryBuildingException {
+
+    for (Predicate p : predicate.getPredicates()) {
+      if (p instanceof EqualsPredicate) {
+        EqualsPredicate eqPredicate = (EqualsPredicate) p;
+        if (eqPredicate.getKey() == OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE) {}
+      }
+    }
+
     visitCompoundPredicate(predicate, CONJUNCTION_OPERATOR);
   }
 
@@ -284,7 +294,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
-    if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
+    if (isHumboldtTaxonParameter(predicate.getKey())) {
+      appendHumboldtTaxonFilter(predicate);
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       appendTaxonKeyFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       appendGadmFilterList(GADM_GIDS, predicate.getValue());
@@ -385,7 +397,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
         builder.append(')');
       }
-    } else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+    }
+    // TODO: event duration in minutes
+
+    else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
       if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
         Range<Double> range = SearchTypeValidator.parseDecimalRange(predicate.getValue());
         if (range.hasLowerBound()) {
@@ -571,6 +586,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
       }
       builder.append(')');
+    } else if (isHumboldtTaxonParameter(predicate.getKey())) {
+      appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey().name().equals("TAXON_KEY")) {
       // Taxon keys must be expanded into a disjunction of in predicates
       appendTaxonKeyFilter(predicate);
@@ -662,7 +679,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
-    if (isSQLArray(predicate.getParameter())
+    if (isHumboldtTaxonParameter(predicate.getParameter())) {
+      appendHumboldtTaxonUnary(predicate.getChecklistKey(), IS_NOT_NULL_ARRAY_OPERATOR);
+    } else if (isSQLArray(predicate.getParameter())
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
           String.format(IS_NOT_NULL_ARRAY_OPERATOR, toSQLField(predicate.getParameter(), true)));
@@ -680,6 +699,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
     if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
+    } else if (isHumboldtTaxonParameter(predicate.getParameter())) {
+      appendHumboldtTaxonUnary(predicate.getChecklistKey(), IS_NULL_ARRAY_OPERATOR);
     } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
       appendUnaryList(GADM_GIDS, IS_NULL_OPERATOR);
     } else {
@@ -933,6 +954,63 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return sqlTermsMapper.term(parameter);
   }
 
+  private void appendHumboldtTaxonFilter(String checklistKey, S parameter, String value) {
+    Objects.requireNonNull(checklistKey);
+
+    String field = null;
+    if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
+      field = "usageKey";
+    } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
+      field = "usageName";
+    } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
+      field = "taxonKeys";
+    } else {
+      return;
+    }
+
+    builder
+        .append('(')
+        .append(
+            String.format(
+                "stringArrayContains(%s['%s']['%s'], '%s', true)",
+                SQLColumnsUtils.getSQLQueryColumn(
+                    GbifInternalTerm.humboldtTargetTaxonClassifications),
+                checklistKey,
+                field,
+                value))
+        .append(')');
+  }
+
+  private void appendHumboldtTaxonFilter(EqualsPredicate<S> taxonPredicate) {
+    appendHumboldtTaxonFilter(
+        taxonPredicate.getChecklistKey(), taxonPredicate.getKey(), taxonPredicate.getValue());
+  }
+
+  private void appendHumboldtTaxonFilter(InPredicate<S> taxonPredicate) {
+    builder.append('(');
+    boolean first = true;
+    for (String value : taxonPredicate.getValues()) {
+      if (!first) {
+        builder.append(DISJUNCTION_OPERATOR);
+      }
+      appendHumboldtTaxonFilter(taxonPredicate.getChecklistKey(), taxonPredicate.getKey(), value);
+      first = false;
+    }
+    builder.append(')');
+  }
+
+  private void appendHumboldtTaxonUnary(String checklistKey, String unaryOperator) {
+    Objects.requireNonNull(checklistKey);
+    builder.append('(');
+    builder.append(
+        String.format(
+            "%s['%s']['%s'] " + unaryOperator,
+            SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.humboldtTargetTaxonClassifications),
+            checklistKey,
+            "usageName"));
+    builder.append(')');
+  }
+
   /**
    * Searches any of the NUB keys in Hive of any rank.
    *
@@ -1143,5 +1221,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       log.info("Exception thrown while building the query", e);
       throw new QueryBuildingException(e);
     }
+  }
+
+  private boolean isHumboldtTaxonParameter(S parameter) {
+    return parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME
+        || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY
+        || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY;
   }
 }

@@ -103,6 +103,14 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
+  public String getNestedPath(OccurrenceSearchParameter param) {
+    if (param.name().startsWith("HUMBOLDT_")) {
+      return "event.humboldt";
+    }
+    return null;
+  }
+
+  @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return predicate.getKey() == OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS
         && (predicate instanceof GreaterThanOrEqualsPredicate

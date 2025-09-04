@@ -78,7 +78,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testEqualsPredicateMatchVerbatim() throws QueryBuildingException {
-    Predicate p = new EqualsPredicate<>(PARAM, "value", true);
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_SITE_COUNT, "1", true);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -2420,4 +2420,252 @@ public class EsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testEqualsNestedPredicate() throws QueryBuildingException {
+    Predicate p =
+        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value", false);
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"nested\" : {\n"
+            + "          \"query\" : {\n"
+            + "            \"bool\" : {\n"
+            + "              \"filter\" : [\n"
+            + "                {\n"
+            + "                  \"term\" : {\n"
+            + "                    \"humboldt_compilation_types.keyword\" : {\n"
+            + "                      \"value\" : \"value\",\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ],\n"
+            + "              \"adjust_pure_negative\" : true,\n"
+            + "              \"boost\" : 1.0\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"path\" : \"event.humboldt\",\n"
+            + "          \"ignore_unmapped\" : false,\n"
+            + "          \"score_mode\" : \"none\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testConjunctionNestedPredicate() throws QueryBuildingException {
+    Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
+    Predicate p2 =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_2", false);
+    Predicate p3 = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.MONTH, "12");
+    Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"term\" : {\n"
+            + "                \"catalog_number.keyword\" : {\n"
+            + "                  \"value\" : \"value_1\",\n"
+            + "                  \"boost\" : 1.0\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"range\" : {\n"
+            + "                \"month\" : {\n"
+            + "                  \"from\" : \"12\",\n"
+            + "                  \"to\" : null,\n"
+            + "                  \"include_lower\" : true,\n"
+            + "                  \"include_upper\" : true,\n"
+            + "                  \"boost\" : 1.0\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\" : {\n"
+            + "          \"query\" : {\n"
+            + "            \"bool\" : {\n"
+            + "              \"filter\" : [\n"
+            + "                {\n"
+            + "                  \"term\" : {\n"
+            + "                    \"humboldt_compilation_types.keyword\" : {\n"
+            + "                      \"value\" : \"value_2\",\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ],\n"
+            + "              \"adjust_pure_negative\" : true,\n"
+            + "              \"boost\" : 1.0\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"path\" : \"event.humboldt\",\n"
+            + "          \"ignore_unmapped\" : false,\n"
+            + "          \"score_mode\" : \"none\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testComplexNestedPredicate() throws QueryBuildingException {
+    Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
+    Predicate p2 = new LikePredicate<>(OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_1*", false);
+    Predicate p3 = new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
+
+    Predicate p4 = new DisjunctionPredicate(Arrays.asList(p1, p3));
+    Predicate p5 = new ConjunctionPredicate(Arrays.asList(p1, p2));
+
+    Predicate p = new ConjunctionPredicate(Arrays.asList(p4, new NotPredicate(p5)));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+      "{\n"
+        + "  \"bool\" : {\n"
+        + "    \"filter\" : [\n"
+        + "      {\n"
+        + "        \"bool\" : {\n"
+        + "          \"should\" : [\n"
+        + "            {\n"
+        + "              \"bool\" : {\n"
+        + "                \"filter\" : [\n"
+        + "                  {\n"
+        + "                    \"term\" : {\n"
+        + "                      \"catalog_number.keyword\" : {\n"
+        + "                        \"value\" : \"value_1\",\n"
+        + "                        \"boost\" : 1.0\n"
+        + "                      }\n"
+        + "                    }\n"
+        + "                  }\n"
+        + "                ],\n"
+        + "                \"adjust_pure_negative\" : true,\n"
+        + "                \"boost\" : 1.0\n"
+        + "              }\n"
+        + "            },\n"
+        + "            {\n"
+        + "              \"bool\" : {\n"
+        + "                \"filter\" : [\n"
+        + "                  {\n"
+        + "                    \"term\" : {\n"
+        + "                      \"institution_code.keyword\" : {\n"
+        + "                        \"value\" : \"value_2\",\n"
+        + "                        \"boost\" : 1.0\n"
+        + "                      }\n"
+        + "                    }\n"
+        + "                  }\n"
+        + "                ],\n"
+        + "                \"adjust_pure_negative\" : true,\n"
+        + "                \"boost\" : 1.0\n"
+        + "              }\n"
+        + "            }\n"
+        + "          ],\n"
+        + "          \"adjust_pure_negative\" : true,\n"
+        + "          \"boost\" : 1.0\n"
+        + "        }\n"
+        + "      },\n"
+        + "      {\n"
+        + "        \"bool\" : {\n"
+        + "          \"must_not\" : [\n"
+        + "            {\n"
+        + "              \"bool\" : {\n"
+        + "                \"filter\" : [\n"
+        + "                  {\n"
+        + "                    \"bool\" : {\n"
+        + "                      \"filter\" : [\n"
+        + "                        {\n"
+        + "                          \"term\" : {\n"
+        + "                            \"catalog_number.keyword\" : {\n"
+        + "                              \"value\" : \"value_1\",\n"
+        + "                              \"boost\" : 1.0\n"
+        + "                            }\n"
+        + "                          }\n"
+        + "                        }\n"
+        + "                      ],\n"
+        + "                      \"adjust_pure_negative\" : true,\n"
+        + "                      \"boost\" : 1.0\n"
+        + "                    }\n"
+        + "                  },\n"
+        + "                  {\n"
+        + "                    \"bool\" : {\n"
+        + "                      \"filter\" : [\n"
+        + "                        {\n"
+        + "                          \"wildcard\" : {\n"
+        + "                            \"catalog_number.keyword\" : {\n"
+        + "                              \"wildcard\" : \"value_1*\",\n"
+        + "                              \"boost\" : 1.0\n"
+        + "                            }\n"
+        + "                          }\n"
+        + "                        }\n"
+        + "                      ],\n"
+        + "                      \"adjust_pure_negative\" : true,\n"
+        + "                      \"boost\" : 1.0\n"
+        + "                    }\n"
+        + "                  }\n"
+        + "                ],\n"
+        + "                \"adjust_pure_negative\" : true,\n"
+        + "                \"boost\" : 1.0\n"
+        + "              }\n"
+        + "            }\n"
+        + "          ],\n"
+        + "          \"adjust_pure_negative\" : true,\n"
+        + "          \"boost\" : 1.0\n"
+        + "        }\n"
+        + "      }\n"
+        + "    ],\n"
+        + "    \"adjust_pure_negative\" : true,\n"
+        + "    \"boost\" : 1.0\n"
+        + "  }\n"
+        + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void testComplexNested2Predicate() throws QueryBuildingException {
+    Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
+    Predicate p2 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
+    Predicate p3 = new ConjunctionPredicate(Arrays.asList(p1, p2));
+    String query = visitor.buildQuery(new NotPredicate(p3));
+    System.out.println(query);
+    }
 }

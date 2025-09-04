@@ -1,5 +1,6 @@
 package org.gbif.predicate.query;
 
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
@@ -17,6 +18,12 @@ public interface EsFieldMapper<S extends SearchParameter> {
   boolean isVocabulary(S searchParameter);
 
   String getChecklistField(String checklistKey, S searchParameter);
+
+  String getNestedPath(S searchParameter);
+
+  default boolean isNestedField(S searchParameter) {
+    return !Strings.isNullOrEmpty(getNestedPath(searchParameter));
+  }
 
   /**
    * Returns true if the search parameter is taxonomic related and hence will be determined by which
