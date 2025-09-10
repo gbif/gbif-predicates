@@ -397,10 +397,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         }
         builder.append(')');
       }
-    }
-    // TODO: event duration in minutes
-
-    else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
       if (SearchTypeValidator.isNumericRange(predicate.getValue())) {
         Range<Double> range = SearchTypeValidator.parseDecimalRange(predicate.getValue());
         if (range.hasLowerBound()) {

@@ -199,17 +199,13 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
               EcoTerm.totalAreaSampledUnit)
           .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope)
           .put(
+              OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION,
+              GbifInternalTerm.humboldtEventDurationValueInMinutes)
+          .put(
               OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES,
               GbifInternalTerm.humboldtEventDurationValueInMinutes)
           .put(OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue)
           .put(OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit)
-          // TODO
-          //        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,
-          // EcoTerm.targett)
-          //        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
-          // HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY)
-          //        .put(OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
-          // HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY)
           .put(
               OccurrenceSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS,
               EcoTerm.taxonCompletenessProtocols)

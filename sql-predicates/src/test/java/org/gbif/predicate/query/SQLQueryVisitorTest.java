@@ -1248,9 +1248,73 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testHumboldtSearch() throws QueryBuildingException {
+  public void testHumboldtAlias() throws QueryBuildingException {
     Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
     String query = visitor.buildQuery(p);
     assertEquals("h.sitecount = 1", query);
+  }
+
+  @Test
+  public void testHumboldtEventDuration() throws QueryBuildingException {
+    Predicate p =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1", false);
+    String query = visitor.buildQuery(p);
+    assertEquals("h.humboldteventdurationvalueinminutes = 1", query);
+
+    p =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,3", false);
+    query = visitor.buildQuery(p);
+    assertEquals(
+        "((h.humboldteventdurationvalueinminutes >= 1.0) AND (h.humboldteventdurationvalueinminutes <= 3.0))",
+        query);
+
+    p =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,*", false);
+    query = visitor.buildQuery(p);
+    assertEquals("h.humboldteventdurationvalueinminutes >= 1.0", query);
+  }
+
+  @Test
+  public void testHumboldtTaxonomyEqualsPredicate() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, "def");
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals(
+        "(stringArrayContains(humboldttargettaxonclassifications['def']['taxonKeys'], '6', true))",
+        query);
+
+    equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, "def");
+    query = visitor.buildQuery(equalsPredicate);
+    assertEquals(
+        "(stringArrayContains(humboldttargettaxonclassifications['def']['usageKey'], '6', true))",
+        query);
+  }
+
+  @Test
+  public void testHumboldtFields() {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "1", false);
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      assertEquals("lower(h.verbatimsitenames) = lower('1')", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
+
+    equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, "def");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      assertEquals("h.isabsencereported = true", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
   }
 }

@@ -182,6 +182,19 @@ public class SQLColumnsUtils {
         || GbifTerm.projectId == term
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
+        || EcoTerm.voucherInstitutions == term
+        || EcoTerm.verbatimSiteNames == term
+        || EcoTerm.compilationSourceTypes == term
+        || EcoTerm.targetHabitatScope == term
+        || EcoTerm.targetGrowthFormScope == term
+        || EcoTerm.abundanceCap == term
+        || EcoTerm.taxonCompletenessProtocols == term
+        || EcoTerm.samplingPerformedBy == term
+        || EcoTerm.compilationTypes == term
+        || EcoTerm.materialSampleTypes == term
+        || EcoTerm.inventoryTypes == term
+        || EcoTerm.protocolNames == term
+        || EcoTerm.siteCount == term
         || EcoTerm.targetLifeStageScope == term
         || EcoTerm.targetDegreeOfEstablishmentScope == term
         || EcoTerm.excludedLifeStageScope == term

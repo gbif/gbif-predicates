@@ -76,7 +76,7 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.1.16-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.1.16-humboldt-SNAPSHOT</gbif-api.version>
     <dwc-api.version>2.1.7-humboldt-SNAPSHOT</dwc-api.version>
 
     <!-- Logging -->

@@ -66,9 +66,6 @@ import org.locationtech.jts.io.WKTReader;
 public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
-  private Map<String, List<QueryBuilder>> queriesByNestedPath;
-
-  //  List<QueryBuilder> nonNestedQueries = new ArrayList<>();
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
@@ -150,20 +147,8 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    */
   public Optional<QueryBuilder> getQueryBuilder(Predicate predicate) throws QueryBuildingException {
     if (predicate != null) {
-      queriesByNestedPath = new HashMap<>();
       BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
       visit(predicate, new QueryData(queryBuilder));
-
-      // add nested queries
-      queriesByNestedPath.forEach(
-          (key, value) -> {
-            BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
-            value.forEach(q -> nestedBoolQuery.filter().add(q));
-            queryBuilder
-                .filter()
-                .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
-          });
-
       return Optional.of(queryBuilder);
     }
     return Optional.empty();
@@ -177,45 +162,41 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
    */
   public void visit(ConjunctionPredicate predicate, QueryData queryData) {
     // must query structure is equivalent to AND
-    // TODO: do this in other places
-    Map<String, List<QueryBuilder>> queriesByNestedPathMap = new HashMap<>();
+    Map<String, List<QueryBuilder>> queriesByNestedPath = new HashMap<>();
+    boolean nonNestedQueriesFound = false;
 
-    predicate
-        .getPredicates()
-        .forEach(
-            subPredicate -> {
-              try {
-                BoolQueryBuilder mustQueryBuilder = QueryBuilders.boolQuery();
-                QueryData mustQueryData = new QueryData(mustQueryBuilder);
-                visit(subPredicate, mustQueryData);
-                QueryBuilder q = addNullableFieldPredicate(subPredicate, mustQueryBuilder);
+    for (Predicate subPredicate : predicate.getPredicates()) {
+      try {
+        BoolQueryBuilder mustQueryBuilder = QueryBuilders.boolQuery();
+        QueryData mustQueryData = new QueryData(mustQueryBuilder);
+        visit(subPredicate, mustQueryData);
 
-                if (mustQueryData.isNested()) {
-                  //                  addNestedQuery(q, mustQueryData.nestedPath);
-                  queriesByNestedPathMap
-                      .computeIfAbsent(mustQueryData.nestedPath, k -> new ArrayList<>())
-                      .add(q);
-                  //                  queryData.queryBuilder.filter(
-                  //                      QueryBuilders.nestedQuery(mustQueryData.nestedPath, q,
-                  // ScoreMode.None));
-                } else {
-                  queryData.queryBuilder.filter(q);
-                }
+        if (mustQueryData.isNested()) {
+          queriesByNestedPath
+              .computeIfAbsent(mustQueryData.nestedPath, k -> new ArrayList<>())
+              .add(addNullableFieldPredicate(subPredicate, mustQueryData.rawQueries.get(0)));
+        } else {
+          queryData.queryBuilder.filter(addNullableFieldPredicate(subPredicate, mustQueryBuilder));
+          nonNestedQueriesFound = true;
+        }
 
-              } catch (QueryBuildingException ex) {
-                throw new RuntimeException(ex);
-              }
-            });
+      } catch (QueryBuildingException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
 
-    queriesByNestedPathMap.forEach(
-        (key, value) -> {
-          BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
-          value.forEach(q -> nestedBoolQuery.filter().add(q));
-          queryData
-              .queryBuilder
-              .filter()
-              .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
-        });
+    for (Map.Entry<String, List<QueryBuilder>> entry : queriesByNestedPath.entrySet()) {
+      String key = entry.getKey();
+      List<QueryBuilder> value = entry.getValue();
+      BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
+      value.forEach(q -> nestedBoolQuery.filter().add(q));
+      queryData
+          .queryBuilder
+          .filter()
+          .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
+      queryData.nestedPath = !nonNestedQueriesFound ? key : null;
+      queryData.rawQueries = nestedBoolQuery.filter();
+    }
   }
 
   /**
@@ -227,35 +208,47 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   public void visit(DisjunctionPredicate predicate, QueryData queryData) {
     Map<S, List<EqualsPredicate<S>>> equalsPredicatesReplaceableByIn = groupEquals(predicate);
 
-    predicate
-        .getPredicates()
-        .forEach(
-            subPredicate -> {
-              try {
-                if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {
-                  BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
-                  QueryData shouldQueryData = new QueryData(shouldQueryBuilder);
-                  visit(subPredicate, shouldQueryData);
-                  QueryBuilder q = addNullableFieldPredicate(subPredicate, shouldQueryBuilder);
+    Map<String, List<QueryBuilder>> queriesByNestedPath = new HashMap<>();
+    boolean nonNestedQueriesFound = false;
 
-                  if (shouldQueryData.isNested()) {
-                    BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-                    boolQueryBuilder.should(q);
-                    addNestedQuery(boolQueryBuilder, shouldQueryData.nestedPath);
+    for (Predicate subPredicate : predicate.getPredicates()) {
+      try {
+        if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {
+          BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
+          QueryData shouldQueryData = new QueryData(shouldQueryBuilder);
+          visit(subPredicate, shouldQueryData);
+          QueryBuilder q = addNullableFieldPredicate(subPredicate, shouldQueryBuilder);
 
-                  } else {
-                    queryData.queryBuilder.should(q);
-                  }
+          if (shouldQueryData.isNested()) {
+            queriesByNestedPath
+                .computeIfAbsent(shouldQueryData.nestedPath, k -> new ArrayList<>())
+                .addAll(shouldQueryData.rawQueries);
+          } else {
+            nonNestedQueriesFound = true;
+            queryData.queryBuilder.should(q);
+          }
 
-                  if (subPredicate instanceof SimplePredicate) {
-                    equalsPredicatesReplaceableByIn.remove(
-                        ((SimplePredicate) subPredicate).getKey());
-                  }
-                }
-              } catch (QueryBuildingException ex) {
-                throw new RuntimeException(ex);
-              }
-            });
+          if (subPredicate instanceof SimplePredicate) {
+            equalsPredicatesReplaceableByIn.remove(((SimplePredicate) subPredicate).getKey());
+          }
+        }
+      } catch (QueryBuildingException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+
+    for (Map.Entry<String, List<QueryBuilder>> e : queriesByNestedPath.entrySet()) {
+      String s = e.getKey();
+      List<QueryBuilder> builders = e.getValue();
+      BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
+      builders.forEach(q -> nestedBoolQuery.should().add(q));
+      queryData
+          .queryBuilder
+          .should()
+          .add(QueryBuilders.nestedQuery(s, nestedBoolQuery, ScoreMode.None));
+      queryData.nestedPath = !nonNestedQueriesFound ? s : null;
+      queryData.rawQueries = nestedBoolQuery.should();
+    }
 
     if (!equalsPredicatesReplaceableByIn.isEmpty()) {
       if (equalsPredicatesReplaceableByIn.containsKey(OccurrenceSearchParameter.GEOLOGICAL_TIME)) {
@@ -269,6 +262,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                 });
 
         if (!queryBuilders.isEmpty()) {
+          nonNestedQueriesFound = true;
           queryData.queryBuilder.should().addAll(queryBuilders);
         }
 
@@ -276,23 +270,38 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       }
 
       if (!equalsPredicatesReplaceableByIn.isEmpty()) {
-        toInPredicates(equalsPredicatesReplaceableByIn)
-            .forEach(
-                ep -> {
-                  TermsQueryBuilder termsQueryBuilder =
-                      QueryBuilders.termsQuery(
-                          getExactMatchOrVerbatimField(ep),
-                          ep.getValues().stream()
-                              .map(v -> parseParamValue(v, ep.getKey()))
-                              .collect(Collectors.toList()));
+        Map<String, List<QueryBuilder>> replaceableQueriesByNestedPath = new HashMap<>();
+        for (InPredicate<S> ep : toInPredicates(equalsPredicatesReplaceableByIn)) {
+          TermsQueryBuilder termsQueryBuilder =
+              QueryBuilders.termsQuery(
+                  getExactMatchOrVerbatimField(ep),
+                  ep.getValues().stream()
+                      .map(v -> parseParamValue(v, ep.getKey()))
+                      .collect(Collectors.toList()));
 
-                  if (esFieldMapper.isNestedField(ep.getKey())) {
-                    addNestedQuery(termsQueryBuilder, ep.getKey());
-                  } else {
-                    queryData.queryBuilder.should().add(termsQueryBuilder);
-                    queryData.nestedPath = esFieldMapper.getNestedPath(ep.getKey());
-                  }
-                });
+          if (esFieldMapper.isNestedField(ep.getKey())) {
+            replaceableQueriesByNestedPath
+                .computeIfAbsent(esFieldMapper.getNestedPath(ep.getKey()), k -> new ArrayList<>())
+                .add(termsQueryBuilder);
+          } else {
+            queryData.queryBuilder.should().add(termsQueryBuilder);
+            nonNestedQueriesFound = true;
+          }
+        }
+
+        for (Map.Entry<String, List<QueryBuilder>> entry :
+            replaceableQueriesByNestedPath.entrySet()) {
+          String key = entry.getKey();
+          List<QueryBuilder> value = entry.getValue();
+          BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
+          value.forEach(q -> nestedBoolQuery.should().add(q));
+          queryData
+              .queryBuilder
+              .should()
+              .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
+          queryData.nestedPath = !nonNestedQueriesFound ? key : null;
+          queryData.rawQueries = nestedBoolQuery.should();
+        }
       }
     }
   }
@@ -420,17 +429,17 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
               parseParamValue(predicate.getValue(), parameter));
     }
 
-    // TODO: do this in other places
     if (esFieldMapper.isNestedField(parameter)) {
       queryData
           .queryBuilder
           .filter()
           .add(
               QueryBuilders.nestedQuery(esFieldMapper.getNestedPath(parameter), q, ScoreMode.None));
+      queryData.rawQueries = List.of(q);
+      queryData.nestedPath = esFieldMapper.getNestedPath(parameter);
     } else {
       queryData.queryBuilder.filter().add(q);
     }
-    //    addFilterQuery(q, queryData, parameter);
   }
 
   private Function<String, Object> parseDate =
@@ -454,11 +463,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       initialiseRangeQuery(predicate, rqb, parseDate);
     }
 
-    if (esFieldMapper.isNestedField(predicate.getKey())) {
-      addNestedQuery(rqb, predicate.getKey());
-    } else {
-      queryData.queryBuilder.filter().add(rqb);
-    }
+    addFilterQuery(rqb, queryData, predicate.getKey());
   }
 
   private void initialiseRangeQuery(
@@ -571,11 +576,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   .map(v -> parseParamValue(v, parameter))
                   .collect(Collectors.toList()));
 
-      if (esFieldMapper.isNestedField(predicate.getKey())) {
-        addNestedQuery(termsQueryBuilder, predicate.getKey());
-      } else {
-        queryData.queryBuilder.filter().add(termsQueryBuilder);
-      }
+      addFilterQuery(termsQueryBuilder, queryData, predicate.getKey());
     }
   }
 
@@ -634,14 +635,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     BoolQueryBuilder mustNotQueryBuilder = QueryBuilders.boolQuery();
     QueryData mustNotQueryData = new QueryData(mustNotQueryBuilder);
     visit(predicate.getPredicate(), mustNotQueryData);
-
-    if (mustNotQueryData.isNested()) {
-      BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
-      boolQueryBuilder = boolQueryBuilder.mustNot(mustNotQueryBuilder);
-      addNestedQuery(boolQueryBuilder, mustNotQueryData.nestedPath);
-    } else {
-      queryData.queryBuilder.mustNot(mustNotQueryBuilder);
-    }
+    queryData.queryBuilder.mustNot(mustNotQueryBuilder);
   }
 
   /**
@@ -795,21 +789,15 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     }
   }
 
-  private void addNestedQuery(QueryBuilder queryBuilder, String nestedPath) {
-    queriesByNestedPath.computeIfAbsent(nestedPath, k -> new ArrayList<>()).add(queryBuilder);
-  }
-
-  private void addNestedQuery(QueryBuilder queryBuilder, S searchParameter) {
-    if (esFieldMapper.isNestedField(searchParameter)) {
-      queriesByNestedPath
-          .computeIfAbsent(esFieldMapper.getNestedPath(searchParameter), k -> new ArrayList<>())
-          .add(queryBuilder);
-    }
-  }
-
   private void addFilterQuery(QueryBuilder q, QueryData queryData, S searchParameter) {
     if (esFieldMapper.isNestedField(searchParameter)) {
-      addNestedQuery(q, searchParameter);
+      queryData
+          .queryBuilder
+          .filter()
+          .add(
+              QueryBuilders.nestedQuery(
+                  esFieldMapper.getNestedPath(searchParameter), q, ScoreMode.None));
+      queryData.rawQueries = List.of(q);
       queryData.nestedPath = esFieldMapper.getNestedPath(searchParameter);
     } else {
       queryData.queryBuilder.filter().add(q);
@@ -819,6 +807,10 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
   @Data
   public static class QueryData {
     BoolQueryBuilder queryBuilder;
+    // raw queries that go inside a nested query. For complex predicates they need to be
+    // grouped into the same query so it's convenient to have them separated in this field.
+    // Otherwise they'd be inside a nested query
+    List<QueryBuilder> rawQueries;
     String nestedPath;
 
     QueryData(BoolQueryBuilder queryBuilder) {
