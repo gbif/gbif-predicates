@@ -67,8 +67,6 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 @Slf4j
 public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
-  // TODO: taxon queries humboldt
-
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
   private static final String EQUALS_OPERATOR = " = ";
