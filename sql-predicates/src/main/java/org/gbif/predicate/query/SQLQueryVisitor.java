@@ -4,6 +4,7 @@ import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
 import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.InvocationTargetException;
@@ -20,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
@@ -114,6 +116,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private StringBuilder builder;
 
   private final SQLTermsMapper<S> sqlTermsMapper;
+
+  @Nullable private String defaultChecklistKey;
+
+  public SQLQueryVisitor(SQLTermsMapper<S> sqlTermsMapper, String defaultChecklistKey) {
+    this.sqlTermsMapper = sqlTermsMapper;
+    this.defaultChecklistKey = defaultChecklistKey;
+  }
 
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
@@ -675,7 +684,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
     if (isHumboldtTaxonParameter(predicate.getParameter())) {
-      appendHumboldtTaxonUnary(predicate.getChecklistKey(), IS_NOT_NULL_ARRAY_OPERATOR);
+      appendHumboldtTaxonUnary(
+          getChecklistKey(predicate.getChecklistKey()), IS_NOT_NULL_ARRAY_OPERATOR);
     } else if (isSQLArray(predicate.getParameter())
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
@@ -695,7 +705,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (predicate.getParameter().name().equals("TAXON_KEY")) {
       appendTaxonKeyUnary(IS_NULL_OPERATOR);
     } else if (isHumboldtTaxonParameter(predicate.getParameter())) {
-      appendHumboldtTaxonUnary(predicate.getChecklistKey(), IS_NULL_ARRAY_OPERATOR);
+      appendHumboldtTaxonUnary(
+          getChecklistKey(predicate.getChecklistKey()), IS_NULL_ARRAY_OPERATOR);
     } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
       appendUnaryList(GADM_GIDS, IS_NULL_OPERATOR);
     } else {
@@ -978,7 +989,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private void appendHumboldtTaxonFilter(EqualsPredicate<S> taxonPredicate) {
     appendHumboldtTaxonFilter(
-        taxonPredicate.getChecklistKey(), taxonPredicate.getKey(), taxonPredicate.getValue());
+        getChecklistKey(taxonPredicate.getChecklistKey()),
+        taxonPredicate.getKey(),
+        taxonPredicate.getValue());
   }
 
   private void appendHumboldtTaxonFilter(InPredicate<S> taxonPredicate) {
@@ -988,7 +1001,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      appendHumboldtTaxonFilter(taxonPredicate.getChecklistKey(), taxonPredicate.getKey(), value);
+      appendHumboldtTaxonFilter(
+          getChecklistKey(taxonPredicate.getChecklistKey()), taxonPredicate.getKey(), value);
       first = false;
     }
     builder.append(')');
@@ -1222,5 +1236,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME
         || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY
         || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY;
+  }
+
+  private String getChecklistKey(String checklistKey) {
+    return !Strings.isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
   }
 }
