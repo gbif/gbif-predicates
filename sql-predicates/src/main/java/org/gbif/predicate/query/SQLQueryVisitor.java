@@ -965,11 +965,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
     String field = null;
     if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
-      field = "usageKey";
+      field = "usagekey";
     } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
-      field = "usageName";
+      field = "usagename";
     } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
-      field = "taxonKeys";
+      field = "taxonkeys";
     } else {
       return;
     }
