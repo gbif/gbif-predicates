@@ -979,8 +979,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "stringArrayContains(%s['%s']['%s'], '%s', true)",
-                SQLColumnsUtils.getSQLQueryColumn(
-                    GbifInternalTerm.humboldtTargetTaxonClassifications),
+                SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
                 checklistKey,
                 field,
                 value))
@@ -1014,7 +1013,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append(
         String.format(
             "%s['%s']['%s'] " + unaryOperator,
-            SQLColumnsUtils.getSQLQueryColumn(GbifInternalTerm.humboldtTargetTaxonClassifications),
+            SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
             checklistKey,
             "usageName"));
     builder.append(')');
