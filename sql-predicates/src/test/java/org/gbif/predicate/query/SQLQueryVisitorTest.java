@@ -1284,7 +1284,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, "def");
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(humboldttargettaxonclassifications['def']['taxonkeys'], '6', true))",
+        "(stringArrayContains(targettaxonomicscope['def']['taxonkeys'], '6', true))",
         query);
 
     equalsPredicate =
@@ -1292,7 +1292,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, "def");
     query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(humboldttargettaxonclassifications['def']['usagekey'], '6', true))",
+        "(stringArrayContains(targettaxonomicscope['def']['usagekey'], '6', true))",
         query);
   }
 
