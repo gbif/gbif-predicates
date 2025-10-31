@@ -1,7 +1,11 @@
 package org.gbif.predicate.query;
 
+import java.util.List;
+import java.util.Optional;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
@@ -15,11 +19,23 @@ public interface EsFieldMapper<S extends SearchParameter> {
 
   String getGeoShapeField();
 
+  String getSearchFieldName(S searchParameter);
+
   boolean isVocabulary(S searchParameter);
 
   String getChecklistField(String checklistKey, S searchParameter);
 
   String getNestedPath(S searchParameter);
+
+  String getFullTextField();
+
+  String getDefaultChecklistKey();
+
+  List<FieldSortBuilder> getDefaultSort();
+
+  default Optional<QueryBuilder> getDefaultFilter() {
+    return Optional.empty();
+  }
 
   default boolean isNestedField(S searchParameter) {
     return !Strings.isNullOrEmpty(getNestedPath(searchParameter));

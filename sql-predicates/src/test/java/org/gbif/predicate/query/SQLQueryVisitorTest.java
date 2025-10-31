@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -1005,16 +1006,7 @@ public class SQLQueryVisitorTest {
   public void testAllParamsExist() {
     List<Predicate> predicates = Lists.newArrayList();
     for (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
-      if (param == OccurrenceSearchParameter.EVENT_ID_HIERARCHY
-          || param == OccurrenceSearchParameter.EVENT_TYPE
-          || param == OccurrenceSearchParameter.VERBATIM_EVENT_TYPE
-          || param.name().startsWith("HUMBOLDT_")) {
-        // skip events-only parameters
-        continue;
-      }
-
       String value = "7";
-
       if (OccurrenceSearchParameter.GEOMETRY == param) {
         value = "POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))";
         predicates.add(new WithinPredicate(value));
@@ -1249,7 +1241,7 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testHumboldtAlias() throws QueryBuildingException {
-    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
+    Predicate p = new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
     String query = visitor.buildQuery(p);
     assertEquals("h.sitecount = 1", query);
   }
@@ -1258,13 +1250,13 @@ public class SQLQueryVisitorTest {
   public void testHumboldtEventDuration() throws QueryBuildingException {
     Predicate p =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1", false);
+            EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1", false);
     String query = visitor.buildQuery(p);
     assertEquals("h.humboldteventdurationvalueinminutes = 1", query);
 
     p =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,3", false);
+            EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,3", false);
     query = visitor.buildQuery(p);
     assertEquals(
         "((h.humboldteventdurationvalueinminutes >= 1.0) AND (h.humboldteventdurationvalueinminutes <= 3.0))",
@@ -1272,23 +1264,23 @@ public class SQLQueryVisitorTest {
 
     p =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,*", false);
+            EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES, "1,*", false);
     query = visitor.buildQuery(p);
     assertEquals("h.humboldteventdurationvalueinminutes >= 1.0", query);
   }
 
   @Test
   public void testHumboldtTaxonomyEqualsPredicate() throws QueryBuildingException {
-    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+    EqualsPredicate<EventSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, "def");
+            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, "def");
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
         "(stringArrayContains(h.targettaxonomicscope['def']['taxonkeys'], '6', true))", query);
 
     equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, "def");
+            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, "def");
     query = visitor.buildQuery(equalsPredicate);
     assertEquals(
         "(stringArrayContains(h.targettaxonomicscope['def']['usagekey'], '6', true))", query);
@@ -1296,8 +1288,8 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testHumboldtFields() {
-    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "1", false);
+    EqualsPredicate<EventSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "1", false);
     try {
       String query = visitor.buildQuery(equalsPredicate);
       assertEquals("lower(h.verbatimsitenames) = lower('1')", query);
@@ -1307,7 +1299,7 @@ public class SQLQueryVisitorTest {
 
     equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, "def");
+            EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, "def");
     try {
       String query = visitor.buildQuery(equalsPredicate);
       assertEquals("h.isabsencereported = true", query);
