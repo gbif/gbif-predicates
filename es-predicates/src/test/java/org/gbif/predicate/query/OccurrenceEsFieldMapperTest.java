@@ -138,4 +138,29 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
         && (predicate instanceof GreaterThanOrEqualsPredicate
             || predicate instanceof GreaterThanPredicate);
   }
+
+  @Override
+  public EsField getEsField(OccurrenceSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public EsField getEsFacetField(OccurrenceSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public boolean isDateField(EsField esField) {
+    return false;
+  }
+
+  @Override
+  public EsField getGeoDistanceEsField() {
+    return null;
+  }
+
+  @Override
+  public EsField getGeoShapeEsField() {
+    return null;
+  }
 }

@@ -126,4 +126,29 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
         && (predicate instanceof GreaterThanOrEqualsPredicate
             || predicate instanceof GreaterThanPredicate);
   }
+
+  @Override
+  public EsField getEsField(EventSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public EsField getEsFacetField(EventSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public boolean isDateField(EsField esField) {
+    return false;
+  }
+
+  @Override
+  public EsField getGeoDistanceEsField() {
+    return null;
+  }
+
+  @Override
+  public EsField getGeoShapeEsField() {
+    return null;
+  }
 }
