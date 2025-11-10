@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Set;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.event.search.EventSearchParameter;
-import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
-import org.gbif.api.model.predicate.GreaterThanPredicate;
 import org.gbif.api.model.predicate.SimplePredicate;
 
 public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParameter> {
@@ -122,9 +120,7 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
 
   @Override
   public boolean includeNullInPredicate(SimplePredicate<EventSearchParameter> predicate) {
-    return predicate.getKey() == EventSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS
-        && (predicate instanceof GreaterThanOrEqualsPredicate
-            || predicate instanceof GreaterThanPredicate);
+    return false;
   }
 
   @Override
