@@ -30,7 +30,7 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
               EventSearchParameter.SPECIES_KEY,
               EventSearchParameter.IUCN_RED_LIST_CATEGORY,
               EventSearchParameter.TAXONOMIC_STATUS,
-              EventSearchParameter.TAXONOMIC_ISSUE));
+              EventSearchParameter.HUMBOLDT_TAXONOMIC_ISSUE));
 
   private static final Set<EventSearchParameter> VOCABULARY_SET =
       new HashSet<>(
