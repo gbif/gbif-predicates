@@ -182,6 +182,7 @@ public class SQLColumnsUtils {
         || GbifTerm.projectId == term
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
+        || GbifTerm.nonTaxonomicIssue == term
         || EcoTerm.voucherInstitutions == term
         || EcoTerm.verbatimSiteNames == term
         || EcoTerm.verbatimSiteDescriptions == term
