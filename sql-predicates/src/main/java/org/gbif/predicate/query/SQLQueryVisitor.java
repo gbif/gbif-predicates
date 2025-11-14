@@ -588,7 +588,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
+    } else if (TAXON_SEARCH_PARAMETERS.contains((OccurrenceSearchParameter) predicate.getKey())) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
