@@ -588,17 +588,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
-    } else if (predicate.getKey().name().equals(OccurrenceSearchParameter.TAXON_KEY.getName())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
-    } else if (predicate
-        .getKey()
-        .name()
-        .equals(OccurrenceSearchParameter.TAXONOMIC_ISSUE.getName())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
-    } else if (predicate
-        .getKey()
-        .name()
-        .equals(OccurrenceSearchParameter.TAXONOMIC_STATUS.getName())) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, GbifInternalTerm.taxonomicStatuses);
     } else if (predicate.getKey().name().equals("GADM_GID")) {
       // GADM GIDs must be expanded into a disjunction of in predicates
