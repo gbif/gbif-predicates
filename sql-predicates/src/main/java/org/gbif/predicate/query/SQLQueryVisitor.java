@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
-import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -47,7 +46,6 @@ import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
 import org.gbif.dwc.terms.*;
-import org.jetbrains.annotations.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
@@ -109,12 +107,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final SQLTermsMapper<S> sqlTermsMapper;
 
-  @Nullable private String defaultChecklistKey = Constants.NUB_DATASET_KEY.toString();
-
-  public SQLQueryVisitor(SQLTermsMapper<S> sqlTermsMapper, String defaultChecklistKey) {
-    this.sqlTermsMapper = sqlTermsMapper;
-    this.defaultChecklistKey = defaultChecklistKey;
-  }
+  private final String defaultChecklistKey;
 
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
@@ -266,10 +259,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
-          checklistsKey = equalsSubPredicate.getChecklistKey();
+          checklistsKey = getChecklistKey(equalsSubPredicate.getChecklistKey());
         } else if (parameter != equalsSubPredicate.getKey()
             || matchCase != equalsSubPredicate.isMatchCase()
-            || !Objects.equals(checklistsKey, equalsSubPredicate.getChecklistKey())) {
+            || !Objects.equals(
+                checklistsKey, getChecklistKey(equalsSubPredicate.getChecklistKey()))) {
           useIn = false;
           break;
         }
@@ -987,7 +981,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             String.format(
                 "stringArrayContains(%s['%s']['%s'], '%s', true)",
                 SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-                checklistKey,
+                getChecklistKey(checklistKey),
                 field,
                 value))
         .append(')');
@@ -1021,7 +1015,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         String.format(
             "%s['%s']['%s'] " + unaryOperator,
             SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-            checklistKey,
+            getChecklistKey(checklistKey),
             "usageName"));
     builder.append(')');
   }
