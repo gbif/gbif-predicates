@@ -57,7 +57,9 @@ public class SQLQueryVisitorTest {
   private static final OccurrenceSearchParameter PARAM = OccurrenceSearchParameter.CATALOG_NUMBER;
   private static final OccurrenceSearchParameter PARAM2 =
       OccurrenceSearchParameter.INSTITUTION_CODE;
-  private final SQLQueryVisitor visitor = new SQLQueryVisitor(new OccurrenceTermsMapper());
+
+  private final SQLQueryVisitor visitor =
+      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey");
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
@@ -74,9 +76,7 @@ public class SQLQueryVisitorTest {
             Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((stringArrayContains(classifications['"
-            + Constants.NUB_DATASET_KEY.toString()
-            + "'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((stringArrayContains(classifications['defaultChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
@@ -104,7 +104,7 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "((((stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '1', true)) OR (stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '2', true)))) "
+        "((((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -153,7 +153,7 @@ public class SQLQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "((stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '1', true)) OR (stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '2', true)))",
+        "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
         query);
   }
 
@@ -299,7 +299,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList("1", "2"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "((stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '1', true)) OR (stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '2', true)))",
+        "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
         query);
   }
 
@@ -576,16 +576,14 @@ public class SQLQueryVisitorTest {
   public void testIsNotNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(classificationdetails['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c']['taxonkey'] != '')", query);
+    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] != '')", query);
   }
 
   @Test
   public void testIsNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(classificationdetails['" + Constants.NUB_DATASET_KEY + "']['taxonkey'] = '')", query);
+    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] = '')", query);
   }
 
   @Test
@@ -1153,7 +1151,7 @@ public class SQLQueryVisitorTest {
     try {
       String query = visitor.buildQuery(disjunctionPredicate);
       assertEquals(
-          "(((stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
+          "(((stringArrayContains(classifications['defaultChecklistKey'], '6', true))) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
           query);
     } catch (QueryBuildingException ex) {
       fail();
@@ -1410,9 +1408,7 @@ public class SQLQueryVisitorTest {
     IsNotNullPredicate eq = new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
     try {
       String query = visitor.buildQuery(eq);
-      assertEquals(
-          "(classificationdetails['" + Constants.NUB_DATASET_KEY + "']['kingdomkey'] != '')",
-          query);
+      assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] != '')", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
