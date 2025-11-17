@@ -1412,4 +1412,16 @@ public class SQLQueryVisitorTest {
       fail();
     }
   }
+
+    @Test
+    public void testTaxonKeyIsNotNullPredicateWithoutChecklistKey() {
+        IsNotNullPredicate eq =
+                new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
+        try {
+            String query = visitor.buildQuery(eq);
+            assertEquals("(classificationdetails['" + Constants.NUB_DATASET_KEY+ "']['kingdomkey'] != '')", query);
+        } catch (QueryBuildingException ex) {
+            fail();
+        }
+    }
 }

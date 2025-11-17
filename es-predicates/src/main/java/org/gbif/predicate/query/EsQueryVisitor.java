@@ -66,10 +66,27 @@ import org.locationtech.jts.io.WKTReader;
 public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
+  private final String defaultChecklistKey;
+
+  private String getChecklistKey(Predicate predicate) {
+
+    if (predicate == null) return null;
+
+    Class<?> clazz = predicate.getClass();
+
+    try {
+      Method m = clazz.getMethod("getChecklistKey");
+      String checklistKey = (String) m.invoke(predicate);
+      if (checklistKey != null) return checklistKey;
+      return defaultChecklistKey;
+    } catch (Exception e) {
+      return null;
+    }
+  }
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
+      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -77,7 +94,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private String getExactMatchFieldName(IsNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getParameter());
+      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -88,13 +105,13 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
       if (esFieldMapper.isTaxonomic(equalsPredicate.getKey())) {
         return esFieldMapper.getChecklistField(
-            equalsPredicate.getChecklistKey(), predicate.getKey());
+            getChecklistKey(equalsPredicate), predicate.getKey());
       }
     }
     if (predicate instanceof LikePredicate) {
       LikePredicate<S> likePredicate = (LikePredicate<S>) predicate;
       if (esFieldMapper.isTaxonomic(likePredicate.getKey())) {
-        return esFieldMapper.getChecklistField(likePredicate.getChecklistKey(), predicate.getKey());
+        return esFieldMapper.getChecklistField(getChecklistKey(likePredicate), predicate.getKey());
       }
     }
 
@@ -105,7 +122,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private String getExactMatchOrVerbatimField(InPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getKey())) {
-      return esFieldMapper.getChecklistField(predicate.getChecklistKey(), predicate.getKey());
+      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getKey());
     }
 
     return Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE)
@@ -559,7 +576,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                           OccurrenceSearchParameter.EVENT_DATE,
                           value,
                           predicate.isMatchCase(),
-                          predicate.getChecklistKey());
+                          getChecklistKey(predicate));
                   visit(subPredicate, new QueryData(shouldQueryBuilder));
                   queryData.queryBuilder.should(
                       addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
