@@ -50,7 +50,7 @@ public class EsQueryVisitorTest {
   private final EsFieldMapper<OccurrenceSearchParameter> fieldMapper =
       new OccurrenceEsFieldMapperTest();
   private final EsQueryVisitor<OccurrenceSearchParameter> visitor =
-      new EsQueryVisitor<>(fieldMapper);
+      new EsQueryVisitor<>(fieldMapper, "defaultChecklistKey");
 
   @Test
   public void testEqualsPredicate() throws QueryBuildingException {
