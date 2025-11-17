@@ -47,7 +47,8 @@ public class EventEsQueryVisitorTest {
   private static final EventSearchParameter PARAM2 = EventSearchParameter.INSTITUTION_CODE;
 
   private final EsFieldMapper<EventSearchParameter> fieldMapper = new EventEsFieldMapperTest();
-  private final EventEsQueryVisitor visitor = new EventEsQueryVisitor(fieldMapper);
+  private final EventEsQueryVisitor visitor =
+      new EventEsQueryVisitor(fieldMapper, "defaultChecklistKey");
 
   @Test
   public void testEqualsPredicate() throws QueryBuildingException {

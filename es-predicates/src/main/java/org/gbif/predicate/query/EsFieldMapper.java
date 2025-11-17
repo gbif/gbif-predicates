@@ -29,8 +29,6 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   String getFullTextField();
 
-  String getDefaultChecklistKey();
-
   List<FieldSortBuilder> getDefaultSort();
 
   default Optional<QueryBuilder> getDefaultFilter() {

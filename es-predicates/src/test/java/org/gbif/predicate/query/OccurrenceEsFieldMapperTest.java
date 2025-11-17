@@ -123,11 +123,6 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
-  public String getDefaultChecklistKey() {
-    return defaultChecklistKey;
-  }
-
-  @Override
   public List<FieldSortBuilder> getDefaultSort() {
     return List.of();
   }

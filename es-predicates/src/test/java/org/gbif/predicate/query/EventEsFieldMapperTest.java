@@ -109,11 +109,6 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
   }
 
   @Override
-  public String getDefaultChecklistKey() {
-    return defaultChecklistKey;
-  }
-
-  @Override
   public List<FieldSortBuilder> getDefaultSort() {
     return List.of();
   }

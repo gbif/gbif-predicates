@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.event.search.EventSearchParameter;
-import org.gbif.api.model.Constants;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
