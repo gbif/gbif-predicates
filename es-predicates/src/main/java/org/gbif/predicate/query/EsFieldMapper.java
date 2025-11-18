@@ -1,27 +1,41 @@
 package org.gbif.predicate.query;
 
+import java.util.List;
+import java.util.Optional;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
-public interface EsFieldMapper<S extends SearchParameter> {
+public interface EsFieldMapper<P extends SearchParameter> {
 
-  String getVerbatimFieldName(S searchParameter);
+  String getVerbatimFieldName(P searchParameter);
 
-  String getExactMatchFieldName(S searchParameter);
+  String getExactMatchFieldName(P searchParameter);
 
   String getGeoDistanceField();
 
   String getGeoShapeField();
 
-  boolean isVocabulary(S searchParameter);
+  String getSearchFieldName(P searchParameter);
 
-  String getChecklistField(String checklistKey, S searchParameter);
+  boolean isVocabulary(P searchParameter);
 
-  String getNestedPath(S searchParameter);
+  String getChecklistField(String checklistKey, P searchParameter);
 
-  default boolean isNestedField(S searchParameter) {
+  String getNestedPath(P searchParameter);
+
+  String getFullTextField();
+
+  List<FieldSortBuilder> getDefaultSort();
+
+  default Optional<QueryBuilder> getDefaultFilter() {
+    return Optional.empty();
+  }
+
+  default boolean isNestedField(P searchParameter) {
     return !Strings.isNullOrEmpty(getNestedPath(searchParameter));
   }
 
@@ -32,12 +46,13 @@ public interface EsFieldMapper<S extends SearchParameter> {
    * @param searchParameter
    * @return true if a taxonomic parameter
    */
-  boolean isTaxonomic(S searchParameter);
+  boolean isTaxonomic(P searchParameter);
+
   /**
    * Adds an "is null" filter if the mapper instructs to do it for the specific predicate. Used
    * mostly in range queries to give specific semantics to null values.
    */
-  default boolean includeNullInPredicate(SimplePredicate<S> predicate) {
+  default boolean includeNullInPredicate(SimplePredicate<P> predicate) {
     return false;
   }
 
@@ -45,7 +60,17 @@ public interface EsFieldMapper<S extends SearchParameter> {
    * Adds an "is null" filter if the mapper instructs to do it for the range query. Used mostly in
    * range queries to give specific semantics to null values.
    */
-  default boolean includeNullInRange(S param, RangeQueryBuilder rangeQueryBuilder) {
+  default boolean includeNullInRange(P param, RangeQueryBuilder rangeQueryBuilder) {
     return false;
   }
+
+  EsField getEsField(P parameter);
+
+  EsField getEsFacetField(P parameter);
+
+  boolean isDateField(EsField esField);
+
+  EsField getGeoDistanceEsField();
+
+  EsField getGeoShapeEsField();
 }

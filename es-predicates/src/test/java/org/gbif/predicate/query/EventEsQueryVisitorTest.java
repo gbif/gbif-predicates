@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.exception.QueryBuildingException;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
 import org.gbif.api.model.predicate.EqualsPredicate;
@@ -41,16 +41,14 @@ import org.gbif.api.util.RangeValue;
 import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */
-public class EsQueryVisitorTest {
+public class EventEsQueryVisitorTest {
 
-  private static final OccurrenceSearchParameter PARAM = OccurrenceSearchParameter.CATALOG_NUMBER;
-  private static final OccurrenceSearchParameter PARAM2 =
-      OccurrenceSearchParameter.INSTITUTION_CODE;
+  private static final EventSearchParameter PARAM = EventSearchParameter.CATALOG_NUMBER;
+  private static final EventSearchParameter PARAM2 = EventSearchParameter.INSTITUTION_CODE;
 
-  private final EsFieldMapper<OccurrenceSearchParameter> fieldMapper =
-      new OccurrenceEsFieldMapperTest();
-  private final EsQueryVisitor<OccurrenceSearchParameter> visitor =
-      new EsQueryVisitor<>(fieldMapper, "defaultChecklistKey");
+  private final EsFieldMapper<EventSearchParameter> fieldMapper = new EventEsFieldMapperTest();
+  private final EventEsQueryVisitor visitor =
+      new EventEsQueryVisitor(fieldMapper, "defaultChecklistKey");
 
   @Test
   public void testEqualsPredicate() throws QueryBuildingException {
@@ -102,7 +100,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testEqualsDatePredicate() throws QueryBuildingException {
-    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2021-09-16", false);
+    Predicate p = new EqualsPredicate<>(EventSearchParameter.EVENT_DATE, "2021-09-16", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -128,7 +126,7 @@ public class EsQueryVisitorTest {
     assertEquals(expectedQuery, query);
 
     // An InPredicate should be exactly the same
-    p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16"), false);
+    p = new InPredicate<>(EventSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16"), false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -163,7 +161,7 @@ public class EsQueryVisitorTest {
 
     p =
         new InPredicate<>(
-            OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16", "2024-01-17"), false);
+            EventSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16", "2024-01-17"), false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -219,7 +217,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testEqualsRangePredicate() throws QueryBuildingException {
-    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "-20.0,600", false);
+    Predicate p = new EqualsPredicate<>(EventSearchParameter.ELEVATION, "-20.0,600", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -243,7 +241,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "*,600", false);
+    p = new EqualsPredicate<>(EventSearchParameter.ELEVATION, "*,600", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -267,7 +265,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "-20.0,*", false);
+    p = new EqualsPredicate<>(EventSearchParameter.ELEVATION, "-20.0,*", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -297,7 +295,7 @@ public class EsQueryVisitorTest {
     // Occurrences will be returned if the occurrence date/date range is
     // *completely within* the query date or date range.
     Predicate p =
-        new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980-02,2021-09-16", false);
+        new EqualsPredicate<>(EventSearchParameter.EVENT_DATE, "1980-02,2021-09-16", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -322,7 +320,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980", false);
+    p = new EqualsPredicate<>(EventSearchParameter.EVENT_DATE, "1980", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -347,7 +345,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980,1990-05-06", false);
+    p = new EqualsPredicate<>(EventSearchParameter.EVENT_DATE, "1980,1990-05-06", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -372,7 +370,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1990-05-06", false);
+    p = new EqualsPredicate<>(EventSearchParameter.EVENT_DATE, "1990-05-06", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -402,7 +400,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testGreaterThanOrEqualPredicate() throws QueryBuildingException {
-    Predicate p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "222");
+    Predicate p = new GreaterThanOrEqualsPredicate<>(EventSearchParameter.ELEVATION, "222");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -426,9 +424,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p =
-        new GreaterThanOrEqualsPredicate<>(
-            OccurrenceSearchParameter.LAST_INTERPRETED, "2021-09-16");
+    p = new GreaterThanOrEqualsPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021-09-16");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -452,7 +448,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
+    p = new GreaterThanOrEqualsPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -479,7 +475,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testGreaterThanPredicate() throws QueryBuildingException {
-    Predicate p = new GreaterThanPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
+    Predicate p = new GreaterThanPredicate<>(EventSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -503,7 +499,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new GreaterThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-09-16");
+    p = new GreaterThanPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021-09-16");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -527,7 +523,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new GreaterThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
+    p = new GreaterThanPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -554,7 +550,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testLessThanOrEqualPredicate() throws QueryBuildingException {
-    Predicate p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
+    Predicate p = new LessThanOrEqualsPredicate<>(EventSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -578,7 +574,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-10-25");
+    p = new LessThanOrEqualsPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021-10-25");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -602,7 +598,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
+    p = new LessThanOrEqualsPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -629,7 +625,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testLessThanPredicate() throws QueryBuildingException {
-    Predicate p = new LessThanPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
+    Predicate p = new LessThanPredicate<>(EventSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -653,7 +649,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new LessThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-10-25");
+    p = new LessThanPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021-10-25");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -677,7 +673,7 @@ public class EsQueryVisitorTest {
             + "}";
     assertEquals(expectedQuery, query);
 
-    p = new LessThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
+    p = new LessThanPredicate<>(EventSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
@@ -706,7 +702,7 @@ public class EsQueryVisitorTest {
   public void testConjunctionPredicate() throws QueryBuildingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
-    Predicate p3 = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.MONTH, "12");
+    Predicate p3 = new GreaterThanOrEqualsPredicate<>(EventSearchParameter.MONTH, "12");
     Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));
     String query = visitor.buildQuery(p);
     String expectedQuery =
@@ -1048,7 +1044,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testLikePredicate() throws QueryBuildingException {
     // NB: ? and * are wildcards (as in ES).  SQL-like _ and % are literal.
-    LikePredicate<OccurrenceSearchParameter> likePredicate =
+    LikePredicate<EventSearchParameter> likePredicate =
         new LikePredicate<>(PARAM, "v?l*ue_%", false);
     String query = visitor.buildQuery(likePredicate);
     String expectedQuery =
@@ -1073,7 +1069,7 @@ public class EsQueryVisitorTest {
 
   @Test
   public void testLikeVerbatimPredicate() throws QueryBuildingException {
-    LikePredicate<OccurrenceSearchParameter> likePredicate =
+    LikePredicate<EventSearchParameter> likePredicate =
         new LikePredicate<>(PARAM, "v?l*ue_%", true);
     String query = visitor.buildQuery(likePredicate);
     String expectedQuery =
@@ -1617,7 +1613,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testVocabularyEqualsPredicate() {
 
-    Arrays.stream(OccurrenceSearchParameter.values())
+    Arrays.stream(EventSearchParameter.values())
         .filter(fieldMapper::isVocabulary)
         .forEach(
             param -> {
@@ -1630,13 +1626,21 @@ public class EsQueryVisitorTest {
                         + "  \"bool\" : {\n"
                         + "    \"filter\" : [\n"
                         + "      {\n"
-                        + "        \"term\" : {\n"
-                        + "          \""
+                        + "        \"nested\" : {\n"
+                        + "          \"query\" : {\n"
+                        + "            \"term\" : {\n"
+                        + "              \""
                         + searchFieldName
                         + "\" : {\n"
-                        + "            \"value\" : \"value\",\n"
-                        + "            \"boost\" : 1.0\n"
-                        + "          }\n"
+                        + "                \"value\" : \"value\",\n"
+                        + "                \"boost\" : 1.0\n"
+                        + "              }\n"
+                        + "            }\n"
+                        + "          },\n"
+                        + "          \"path\" : \"event.humboldt\",\n"
+                        + "          \"ignore_unmapped\" : false,\n"
+                        + "          \"score_mode\" : \"none\",\n"
+                        + "          \"boost\" : 1.0\n"
                         + "        }\n"
                         + "      }\n"
                         + "    ],\n"
@@ -1655,7 +1659,7 @@ public class EsQueryVisitorTest {
   public void testIntInclusiveRangeWithRangePredicate() throws QueryBuildingException {
 
     RangeValue rangeValue = new RangeValue("1990", null, "2011", null);
-    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -1684,7 +1688,7 @@ public class EsQueryVisitorTest {
   public void testIntExclusiveRangeWithRangePredicate() throws QueryBuildingException {
 
     RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");
-    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -1713,7 +1717,7 @@ public class EsQueryVisitorTest {
   public void testInclusiveExclusiveRangeWithRangePredicate() throws QueryBuildingException {
 
     RangeValue rangeValue = new RangeValue("1990", null, null, "2011");
-    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -1742,7 +1746,7 @@ public class EsQueryVisitorTest {
   public void testExclusiveInclusiveRangeWithRangePredicate() throws QueryBuildingException {
 
     RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);
-    Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
+    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -1767,227 +1771,12 @@ public class EsQueryVisitorTest {
     assertEquals(expectedQuery, query);
   }
 
-  @Test
-  public void testGreaterThanEqualsIncludingNull() {
-    GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
-        new GreaterThanOrEqualsPredicate<>(
-            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
-    try {
-      String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
-          "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"distance_from_centroid_in_meters\" : {\n"
-              + "                  \"from\" : \"10\",\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : true,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
-              + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
-  }
-
-  @Test
-  public void testGreaterThanIncludingNull() {
-    GreaterThanPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
-        new GreaterThanPredicate<>(
-            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
-    try {
-      String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
-          "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"distance_from_centroid_in_meters\" : {\n"
-              + "                  \"from\" : \"10\",\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : false,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
-              + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
-  }
-
-  @Test
-  public void testDisjunctionGreaterThanEqualsIncludingNull() {
-    GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
-        new GreaterThanOrEqualsPredicate<>(
-            OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
-    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false);
-    DisjunctionPredicate disjunctionPredicate =
-        new DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
-    try {
-      String query = visitor.buildQuery(disjunctionPredicate);
-      assertEquals(
-          "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"should\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.defaultChecklistKey.taxonKeys\" : {\n"
-              + "                  \"value\" : \"6\",\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"filter\" : [\n"
-              + "                  {\n"
-              + "                    \"bool\" : {\n"
-              + "                      \"should\" : [\n"
-              + "                        {\n"
-              + "                          \"range\" : {\n"
-              + "                            \"distance_from_centroid_in_meters\" : {\n"
-              + "                              \"from\" : \"10\",\n"
-              + "                              \"to\" : null,\n"
-              + "                              \"include_lower\" : true,\n"
-              + "                              \"include_upper\" : true,\n"
-              + "                              \"boost\" : 1.0\n"
-              + "                            }\n"
-              + "                          }\n"
-              + "                        },\n"
-              + "                        {\n"
-              + "                          \"bool\" : {\n"
-              + "                            \"must_not\" : [\n"
-              + "                              {\n"
-              + "                                \"exists\" : {\n"
-              + "                                  \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                                  \"boost\" : 1.0\n"
-              + "                                }\n"
-              + "                              }\n"
-              + "                            ],\n"
-              + "                            \"adjust_pure_negative\" : true,\n"
-              + "                            \"boost\" : 1.0\n"
-              + "                          }\n"
-              + "                        }\n"
-              + "                      ],\n"
-              + "                      \"adjust_pure_negative\" : true,\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
-              + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
-              + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
-  }
-
   /** Test a single taxon key query with a checklist key specified. */
   @Test
   public void testMultiTaxonomyPredicate() {
     EqualsPredicate equalsPredicate =
-        new EqualsPredicate<OccurrenceSearchParameter>(
-            OccurrenceSearchParameter.TAXON_KEY,
+        new EqualsPredicate<EventSearchParameter>(
+            EventSearchParameter.TAXON_KEY,
             "urn:lsid:marinespecies.org:taxname:368663",
             false,
             "2d59e5db-57ad-41ff-97d6-11f5fb264527");
@@ -2020,8 +1809,8 @@ public class EsQueryVisitorTest {
   @Test
   public void testMultiTaxonomyPredicates() {
     InPredicate inPredicate =
-        new InPredicate<OccurrenceSearchParameter>(
-            OccurrenceSearchParameter.TAXON_KEY,
+        new InPredicate<EventSearchParameter>(
+            EventSearchParameter.TAXON_KEY,
             List.of(
                 "urn:lsid:marinespecies.org:taxname:368663",
                 "urn:lsid:marinespecies.org:taxname:368664"),
@@ -2064,12 +1853,12 @@ public class EsQueryVisitorTest {
         new ConjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY,
+                    EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
                     "checklistkey1"),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY,
+                    EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
                     "checklistkey2")));
@@ -2134,12 +1923,12 @@ public class EsQueryVisitorTest {
         new DisjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY,
+                    EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
                     "checklistkey1"),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY,
+                    EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
                     "checklistkey2")));
@@ -2199,10 +1988,8 @@ public class EsQueryVisitorTest {
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
-                new IsNotNullPredicate<>(
-                    OccurrenceSearchParameter.SPECIES_KEY, "test-checklist-key"),
-                new IsNullPredicate<>(
-                    OccurrenceSearchParameter.KINGDOM_KEY, "test-checklist-key")));
+                new IsNotNullPredicate<>(EventSearchParameter.SPECIES_KEY, "test-checklist-key"),
+                new IsNullPredicate<>(EventSearchParameter.KINGDOM_KEY, "test-checklist-key")));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -2262,7 +2049,7 @@ public class EsQueryVisitorTest {
 
     LikePredicate predicate =
         new LikePredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);
+            EventSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -2292,8 +2079,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testYearRange() {
 
-    EqualsPredicate predicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1900,*", false);
+    EqualsPredicate predicate = new EqualsPredicate<>(EventSearchParameter.YEAR, "1900,*", false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -2326,8 +2112,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testYearRangeReversed() {
 
-    EqualsPredicate predicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "*,1900", false);
+    EqualsPredicate predicate = new EqualsPredicate<>(EventSearchParameter.YEAR, "*,1900", false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -2363,8 +2148,8 @@ public class EsQueryVisitorTest {
     DisjunctionPredicate conjunctionPredicate =
         new DisjunctionPredicate(
             Arrays.asList(
-                new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1900,*", false),
-                new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000,*", false)));
+                new EqualsPredicate<>(EventSearchParameter.YEAR, "1900,*", false),
+                new EqualsPredicate<>(EventSearchParameter.YEAR, "2000,*", false)));
     try {
       String query = visitor.buildQuery(conjunctionPredicate);
       String expectedQuery =
@@ -2424,7 +2209,7 @@ public class EsQueryVisitorTest {
   @Test
   public void testEqualsNestedPredicate() throws QueryBuildingException {
     Predicate p =
-        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value", false);
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
@@ -2458,9 +2243,8 @@ public class EsQueryVisitorTest {
   public void testConjunctionNestedMixedPredicate() throws QueryBuildingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 =
-        new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_2", false);
-    Predicate p3 = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.MONTH, "12");
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_2", false);
+    Predicate p3 = new GreaterThanOrEqualsPredicate<>(EventSearchParameter.MONTH, "12");
     Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));
     String query = visitor.buildQuery(p);
     String expectedQuery =
@@ -2538,10 +2322,9 @@ public class EsQueryVisitorTest {
   public void testComplexNestedPredicate() throws QueryBuildingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 =
-        new LikePredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_1*", false);
+        new LikePredicate<>(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_1*", false);
     Predicate p3 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
 
     Predicate p4 = new DisjunctionPredicate(Arrays.asList(p1, p3));
     Predicate p5 = new ConjunctionPredicate(Arrays.asList(p1, p2));
@@ -2668,10 +2451,9 @@ public class EsQueryVisitorTest {
   @Test
   public void testConjunctionNestedPredicate() throws QueryBuildingException {
     Predicate p1 =
-        new EqualsPredicate<>(
-            OccurrenceSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "value_1", false);
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "value_1", false);
     Predicate p2 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);
     Predicate p3 = new ConjunctionPredicate(Arrays.asList(p1, p2));
     String query = visitor.buildQuery(p3);
     String expectedQuery =

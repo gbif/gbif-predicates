@@ -63,7 +63,7 @@ import org.locationtech.jts.io.WKTReader;
  */
 @RequiredArgsConstructor
 @Slf4j
-public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
+public abstract class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
   private final String defaultChecklistKey;
@@ -268,10 +268,12 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     }
 
     if (!equalsPredicatesReplaceableByIn.isEmpty()) {
-      if (equalsPredicatesReplaceableByIn.containsKey(OccurrenceSearchParameter.GEOLOGICAL_TIME)) {
+      Optional<S> geoTimeParam = getParam(OccurrenceSearchParameter.GEOLOGICAL_TIME.name());
+      if (geoTimeParam.isPresent()
+          && equalsPredicatesReplaceableByIn.containsKey(geoTimeParam.get())) {
         List<QueryBuilder> queryBuilders = new ArrayList<>();
         equalsPredicatesReplaceableByIn
-            .get(OccurrenceSearchParameter.GEOLOGICAL_TIME)
+            .get(geoTimeParam.get())
             .forEach(
                 ep -> {
                   queryBuilders.add(
@@ -283,7 +285,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
           queryData.queryBuilder.should().addAll(queryBuilders);
         }
 
-        equalsPredicatesReplaceableByIn.remove(OccurrenceSearchParameter.GEOLOGICAL_TIME);
+        equalsPredicatesReplaceableByIn.remove(geoTimeParam.get());
       }
 
       if (!equalsPredicatesReplaceableByIn.isEmpty()) {
@@ -388,7 +390,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
     QueryBuilder q = null;
     if ((Number.class.isAssignableFrom(predicate.getKey().type())
-            || predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME)
+            || paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name()))
         && SearchTypeValidator.isNumericRange(predicate.getValue())) {
       Range<Double> decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());
       RangeQueryBuilder rqb =
@@ -400,7 +402,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
         rqb.lte(decimalRange.upperEndpoint());
       }
 
-      if (predicate.getKey() == OccurrenceSearchParameter.GEOLOGICAL_TIME) {
+      if (paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name())) {
         rqb.relation("within");
       }
 
@@ -459,12 +461,14 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     }
   }
 
-  private Function<String, Object> parseDate =
+  private final Function<String, Object> parseDate =
       d -> "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);
 
-  private Function<String, Object> parseInteger = d -> "*".equals(d) ? null : Integer.parseInt(d);
+  private final Function<String, Object> parseInteger =
+      d -> "*".equals(d) ? null : Integer.parseInt(d);
 
-  private Function<String, Object> parseDouble = d -> "*".equals(d) ? null : Double.parseDouble(d);
+  private final Function<String, Object> parseDouble =
+      d -> "*".equals(d) ? null : Double.parseDouble(d);
 
   public void visit(RangePredicate<S> predicate, QueryData queryData)
       throws QueryBuildingException {
@@ -564,7 +568,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
     S parameter = predicate.getKey();
 
     // EVENT_DATE needs special handling
-    if (parameter == OccurrenceSearchParameter.EVENT_DATE) {
+    if (paramEquals(parameter, OccurrenceSearchParameter.EVENT_DATE.name())) {
       predicate
           .getValues()
           .forEach(
@@ -573,7 +577,7 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
                   BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
                   Predicate subPredicate =
                       new EqualsPredicate<>(
-                          OccurrenceSearchParameter.EVENT_DATE,
+                          getParam(OccurrenceSearchParameter.EVENT_DATE.name()).get(),
                           value,
                           predicate.isMatchCase(),
                           getChecklistKey(predicate));
@@ -838,4 +842,11 @@ public class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
       return nestedPath != null;
     }
   }
+
+  private boolean paramEquals(S param1, String param2) {
+    Optional<S> param2Opt = getParam(param2);
+    return param2Opt.isPresent() && param1 == param2Opt.get();
+  }
+
+  protected abstract Optional<S> getParam(String name);
 }

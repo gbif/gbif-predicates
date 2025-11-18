@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
+import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.CompoundPredicate;
@@ -232,7 +233,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     for (Predicate p : predicate.getPredicates()) {
       if (p instanceof EqualsPredicate) {
         EqualsPredicate eqPredicate = (EqualsPredicate) p;
-        if (eqPredicate.getKey() == OccurrenceSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE) {}
+        if (eqPredicate.getKey() == EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE) {}
       }
     }
 
@@ -965,11 +966,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     Objects.requireNonNull(checklistKey);
 
     String field = null;
-    if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
+    if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
       field = "usagekey";
-    } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
+    } else if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
       field = "usagename";
-    } else if (parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
+    } else if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
       field = "taxonkeys";
     } else {
       return;
@@ -1248,9 +1249,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private boolean isHumboldtTaxonParameter(S parameter) {
-    return parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME
-        || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY
-        || parameter == OccurrenceSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY;
+    return parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME
+        || parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY
+        || parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY;
   }
 
   private String getChecklistKey(String checklistKey) {

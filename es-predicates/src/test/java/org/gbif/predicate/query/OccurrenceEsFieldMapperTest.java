@@ -2,7 +2,9 @@ package org.gbif.predicate.query;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;
@@ -79,6 +81,11 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
+  public String getSearchFieldName(OccurrenceSearchParameter searchParameter) {
+    return searchParameter.name();
+  }
+
+  @Override
   public boolean isVocabulary(OccurrenceSearchParameter searchParameter) {
     return VOCABULARY_SET.contains(searchParameter);
   }
@@ -111,9 +118,44 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
+  public String getFullTextField() {
+    return "all";
+  }
+
+  @Override
+  public List<FieldSortBuilder> getDefaultSort() {
+    return List.of();
+  }
+
+  @Override
   public boolean includeNullInPredicate(SimplePredicate<OccurrenceSearchParameter> predicate) {
     return predicate.getKey() == OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS
         && (predicate instanceof GreaterThanOrEqualsPredicate
             || predicate instanceof GreaterThanPredicate);
+  }
+
+  @Override
+  public EsField getEsField(OccurrenceSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public EsField getEsFacetField(OccurrenceSearchParameter parameter) {
+    return null;
+  }
+
+  @Override
+  public boolean isDateField(EsField esField) {
+    return false;
+  }
+
+  @Override
+  public EsField getGeoDistanceEsField() {
+    return null;
+  }
+
+  @Override
+  public EsField getGeoShapeEsField() {
+    return null;
   }
 }
