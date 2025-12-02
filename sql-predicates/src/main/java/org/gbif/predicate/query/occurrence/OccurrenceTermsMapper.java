@@ -22,8 +22,6 @@ import org.gbif.predicate.query.SQLTermsMapper;
 
 public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
 
-  // TODO: humboldt
-
   // parameters that map directly to Hive.
   // boundingBox, coordinate, taxonKey and gadmGid are treated specially!
   private static final Map<? extends SearchParameter, ? extends Term> PARAM_TO_TERM =
