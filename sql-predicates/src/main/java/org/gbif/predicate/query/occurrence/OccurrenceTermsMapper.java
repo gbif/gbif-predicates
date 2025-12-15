@@ -41,7 +41,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(EventSearchParameter.MODIFIED, DcTerm.modified)
           .put(EventSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude)
           .put(EventSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude)
-          .put(EventSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS, DwcTerm.coordinateUncertaintyInMeters)
+          .put(
+              EventSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,
+              DwcTerm.coordinateUncertaintyInMeters)
           .put(EventSearchParameter.COUNTRY, DwcTerm.country)
           .put(EventSearchParameter.GBIF_REGION, GbifTerm.gbifRegion)
           .put(EventSearchParameter.CONTINENT, DwcTerm.continent)
@@ -78,7 +80,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(EventSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey)
           .put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)
           .put(EventSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey)
-          .put(EventSearchParameter.HOSTING_ORGANIZATION_KEY, GbifInternalTerm.hostingOrganizationKey)
+          .put(
+              EventSearchParameter.HOSTING_ORGANIZATION_KEY,
+              GbifInternalTerm.hostingOrganizationKey)
           .put(EventSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId)
           .put(EventSearchParameter.PROJECT_ID, GbifTerm.projectId)
           .put(EventSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym)
