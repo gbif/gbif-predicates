@@ -16,7 +16,6 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
       new HashSet<>(
           Arrays.asList(
               EventSearchParameter.SCIENTIFIC_NAME,
-              EventSearchParameter.VERBATIM_SCIENTIFIC_NAME,
               EventSearchParameter.ACCEPTED_TAXON_KEY,
               EventSearchParameter.TAXON_KEY,
               EventSearchParameter.KINGDOM_KEY,
@@ -28,8 +27,7 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
               EventSearchParameter.SUBGENUS_KEY,
               EventSearchParameter.SPECIES_KEY,
               EventSearchParameter.IUCN_RED_LIST_CATEGORY,
-              EventSearchParameter.TAXONOMIC_STATUS,
-              EventSearchParameter.HUMBOLDT_TAXONOMIC_ISSUE));
+              EventSearchParameter.TAXONOMIC_STATUS));
 
   private static final Set<EventSearchParameter> VOCABULARY_SET =
       new HashSet<>(
