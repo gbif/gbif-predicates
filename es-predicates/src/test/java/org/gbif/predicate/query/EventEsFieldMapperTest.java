@@ -18,14 +18,6 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
               EventSearchParameter.SCIENTIFIC_NAME,
               EventSearchParameter.ACCEPTED_TAXON_KEY,
               EventSearchParameter.TAXON_KEY,
-              EventSearchParameter.KINGDOM_KEY,
-              EventSearchParameter.PHYLUM_KEY,
-              EventSearchParameter.CLASS_KEY,
-              EventSearchParameter.ORDER_KEY,
-              EventSearchParameter.FAMILY_KEY,
-              EventSearchParameter.GENUS_KEY,
-              EventSearchParameter.SUBGENUS_KEY,
-              EventSearchParameter.SPECIES_KEY,
               EventSearchParameter.IUCN_RED_LIST_CATEGORY,
               EventSearchParameter.TAXONOMIC_STATUS));
 

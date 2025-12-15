@@ -1988,8 +1988,8 @@ public class EventEsQueryVisitorTest {
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
-                new IsNotNullPredicate<>(EventSearchParameter.SPECIES_KEY, "test-checklist-key"),
-                new IsNullPredicate<>(EventSearchParameter.KINGDOM_KEY, "test-checklist-key")));
+                new IsNotNullPredicate<>(EventSearchParameter.TAXON_KEY, "test-checklist-key"),
+                new IsNullPredicate<>(EventSearchParameter.SCIENTIFIC_NAME, "test-checklist-key")));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -2018,7 +2018,7 @@ public class EventEsQueryVisitorTest {
               + "                \"must_not\" : [\n"
               + "                  {\n"
               + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"classifications.test-checklist-key.taxonKeys\",\n"
+              + "                      \"field\" : \"classifications.test-checklist-key.usage.name\",\n"
               + "                      \"boost\" : 1.0\n"
               + "                    }\n"
               + "                  }\n"
