@@ -3,11 +3,8 @@ package org.gbif.predicate.query;
 import com.google.common.collect.ImmutableSet;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.dwc.terms.*;
 
@@ -262,21 +259,4 @@ public class SQLColumnsUtils {
   public static boolean isExtensionTerm(Term term) {
     return EXTENSION_TERMS.contains(term);
   }
-
-  public static Map<SearchParameter, String> HUMBOLDT_TAXON_COLUMNS =
-      Map.of(
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
-          "usagekey",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,
-          "usagename",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_KEY,
-          "acceptedusagekey",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_NAME,
-          "acceptedusagename",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
-          "taxonkeys",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,
-          "iucnRedListCategoryCode",
-          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,
-          "issues");
 }

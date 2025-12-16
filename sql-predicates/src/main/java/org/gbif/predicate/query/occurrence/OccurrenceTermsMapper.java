@@ -22,157 +22,7 @@ import org.gbif.predicate.query.SQLTermsMapper;
 
 public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
 
-  static Map<? extends SearchParameter, ? extends Term> EVENTS_PARAM_TO_TERM =
-      ImmutableMap.<EventSearchParameter, Term>builder()
-          .put(EventSearchParameter.DATASET_KEY, GbifTerm.datasetKey)
-          .put(EventSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey)
-          .put(EventSearchParameter.YEAR, DwcTerm.year)
-          .put(EventSearchParameter.MONTH, DwcTerm.month)
-          .put(EventSearchParameter.DAY, DwcTerm.day)
-          .put(EventSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear)
-          .put(EventSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear)
-          .put(EventSearchParameter.EVENT_DATE, DwcTerm.eventDate)
-          .put(EventSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
-          .put(EventSearchParameter.EVENT_ID, DwcTerm.eventID)
-          .put(EventSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID)
-          .put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol)
-          .put(EventSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications)
-          .put(EventSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted)
-          .put(EventSearchParameter.MODIFIED, DcTerm.modified)
-          .put(EventSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude)
-          .put(EventSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude)
-          .put(
-              EventSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,
-              DwcTerm.coordinateUncertaintyInMeters)
-          .put(EventSearchParameter.COUNTRY, DwcTerm.country)
-          .put(EventSearchParameter.GBIF_REGION, GbifTerm.gbifRegion)
-          .put(EventSearchParameter.CONTINENT, DwcTerm.continent)
-          .put(EventSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry)
-          .put(EventSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion)
-          .put(EventSearchParameter.ELEVATION, GbifTerm.elevation)
-          .put(EventSearchParameter.DEPTH, GbifTerm.depth)
-          .put(EventSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode)
-          .put(EventSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode)
-          .put(EventSearchParameter.TAXON_KEY, GbifTerm.taxonKey)
-          .put(EventSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey)
-          .put(EventSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName)
-          .put(EventSearchParameter.TAXON_ID, DwcTerm.taxonID)
-          .put(EventSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus)
-          .put(EventSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue)
-          .put(EventSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory)
-          .put(EventSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate)
-          .put(EventSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues)
-          .put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType)
-          .put(EventSearchParameter.REPATRIATED, GbifTerm.repatriated)
-          .put(EventSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince)
-          .put(EventSearchParameter.WATER_BODY, DwcTerm.waterBody)
-          .put(EventSearchParameter.LOCALITY, DwcTerm.locality)
-          .put(EventSearchParameter.PROTOCOL, GbifTerm.protocol)
-          .put(EventSearchParameter.LICENSE, DcTerm.license)
-          .put(EventSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey)
-          .put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey)
-          .put(EventSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey)
-          .put(
-              EventSearchParameter.HOSTING_ORGANIZATION_KEY,
-              GbifInternalTerm.hostingOrganizationKey)
-          .put(EventSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId)
-          .put(EventSearchParameter.PROJECT_ID, GbifTerm.projectId)
-          .put(EventSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym)
-          .put(EventSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit)
-          .put(EventSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue)
-          .put(EventSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid)
-          .put(EventSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid)
-          .put(EventSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid)
-          .put(EventSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid)
-          .put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension)
-          .put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID)
-          .put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName)
-          .put(EventSearchParameter.ISLAND, DwcTerm.island)
-          .put(EventSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup)
-          .put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy)
-          .put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography)
-          .put(EventSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber)
-          .put(EventSearchParameter.GBIF_ID, GbifTerm.gbifID)
-          .put(EventSearchParameter.EVENT_TYPE, DwcTerm.eventType)
-          .put(EventSearchParameter.ISSUE, GbifTerm.issue)
-
-          // Humboldt
-          .put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount)
-          .put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames)
-          .put(
-              EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_VALUE,
-              EcoTerm.geospatialScopeAreaValue)
-          .put(
-              EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_UNIT,
-              EcoTerm.geospatialScopeAreaUnit)
-          .put(
-              EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_VALUE, EcoTerm.totalAreaSampledValue)
-          .put(EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_UNIT, EcoTerm.totalAreaSampledUnit)
-          .put(EventSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope)
-          .put(
-              EventSearchParameter.HUMBOLDT_EVENT_DURATION,
-              GbifInternalTerm.humboldtEventDurationValueInMinutes)
-          .put(
-              EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES,
-              GbifInternalTerm.humboldtEventDurationValueInMinutes)
-          .put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue)
-          .put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit)
-          .put(
-              EventSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS,
-              EcoTerm.taxonCompletenessProtocols)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_TAXONOMIC_SCOPE_FULLY_REPORTED,
-              EcoTerm.isTaxonomicScopeFullyReported)
-          .put(EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, EcoTerm.isAbsenceReported)
-          .put(EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_TAXA, EcoTerm.hasNonTargetTaxa)
-          .put(
-              EventSearchParameter.HUMBOLDT_ARE_NON_TARGET_TAXA_FULLY_REPORTED,
-              EcoTerm.areNonTargetTaxaFullyReported)
-          .put(EventSearchParameter.HUMBOLDT_TARGET_LIFE_STAGE_SCOPE, EcoTerm.targetLifeStageScope)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_LIFE_STAGE_SCOPE_FULLY_REPORTED,
-              EcoTerm.isLifeStageScopeFullyReported)
-          .put(
-              EventSearchParameter.HUMBOLDT_TARGET_DEGREE_OF_ESTABLISHMENT_SCOPE,
-              EcoTerm.targetDegreeOfEstablishmentScope)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED,
-              EcoTerm.isDegreeOfEstablishmentScopeFullyReported)
-          .put(
-              EventSearchParameter.HUMBOLDT_TARGET_GROWTH_FORM_SCOPE, EcoTerm.targetGrowthFormScope)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_GROWTH_FORM_SCOPE_FULLY_REPORTED,
-              EcoTerm.isGrowthFormScopeFullyReported)
-          .put(
-              EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_ORGANISMS, EcoTerm.hasNonTargetOrganisms)
-          .put(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, EcoTerm.compilationTypes)
-          .put(
-              EventSearchParameter.HUMBOLDT_COMPILATION_SOURCE_TYPES,
-              EcoTerm.compilationSourceTypes)
-          .put(EventSearchParameter.HUMBOLDT_INVENTORY_TYPES, EcoTerm.inventoryTypes)
-          .put(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, EcoTerm.protocolNames)
-          .put(EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_REPORTED, EcoTerm.isAbundanceReported)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_CAP_REPORTED,
-              EcoTerm.isAbundanceCapReported)
-          .put(EventSearchParameter.HUMBOLDT_ABUNDANCE_CAP, EcoTerm.abundanceCap)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_VEGETATION_COVER_REPORTED,
-              EcoTerm.isVegetationCoverReported)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE,
-              EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive)
-          .put(EventSearchParameter.HUMBOLDT_HAS_VOUCHERS, EcoTerm.hasVouchers)
-          .put(EventSearchParameter.HUMBOLDT_VOUCHER_INSTITUTIONS, EcoTerm.voucherInstitutions)
-          .put(EventSearchParameter.HUMBOLDT_HAS_MATERIAL_SAMPLES, EcoTerm.hasMaterialSamples)
-          .put(EventSearchParameter.HUMBOLDT_MATERIAL_SAMPLE_TYPES, EcoTerm.materialSampleTypes)
-          .put(EventSearchParameter.HUMBOLDT_SAMPLING_PERFORMED_BY, EcoTerm.samplingPerformedBy)
-          .put(
-              EventSearchParameter.HUMBOLDT_IS_SAMPLING_EFFORT_REPORTED,
-              EcoTerm.isSamplingEffortReported)
-          .put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue)
-          .put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit)
-          .build();
+  // TODO: humboldt
 
   // parameters that map directly to Hive.
   // boundingBox, coordinate, taxonKey and gadmGid are treated specially!
@@ -332,7 +182,83 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
           .put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy)
           .put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte)
           .put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID)
-          .putAll(EVENTS_PARAM_TO_TERM)
+
+          // Humboldt
+          .put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount)
+          .put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames)
+          .put(
+              EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_VALUE,
+              EcoTerm.geospatialScopeAreaValue)
+          .put(
+              EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_UNIT,
+              EcoTerm.geospatialScopeAreaUnit)
+          .put(
+              EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_VALUE, EcoTerm.totalAreaSampledValue)
+          .put(EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_UNIT, EcoTerm.totalAreaSampledUnit)
+          .put(EventSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope)
+          .put(
+              EventSearchParameter.HUMBOLDT_EVENT_DURATION,
+              GbifInternalTerm.humboldtEventDurationValueInMinutes)
+          .put(
+              EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES,
+              GbifInternalTerm.humboldtEventDurationValueInMinutes)
+          .put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue)
+          .put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit)
+          .put(
+              EventSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS,
+              EcoTerm.taxonCompletenessProtocols)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_TAXONOMIC_SCOPE_FULLY_REPORTED,
+              EcoTerm.isTaxonomicScopeFullyReported)
+          .put(EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, EcoTerm.isAbsenceReported)
+          .put(EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_TAXA, EcoTerm.hasNonTargetTaxa)
+          .put(
+              EventSearchParameter.HUMBOLDT_ARE_NON_TARGET_TAXA_FULLY_REPORTED,
+              EcoTerm.areNonTargetTaxaFullyReported)
+          .put(EventSearchParameter.HUMBOLDT_TARGET_LIFE_STAGE_SCOPE, EcoTerm.targetLifeStageScope)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_LIFE_STAGE_SCOPE_FULLY_REPORTED,
+              EcoTerm.isLifeStageScopeFullyReported)
+          .put(
+              EventSearchParameter.HUMBOLDT_TARGET_DEGREE_OF_ESTABLISHMENT_SCOPE,
+              EcoTerm.targetDegreeOfEstablishmentScope)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED,
+              EcoTerm.isDegreeOfEstablishmentScopeFullyReported)
+          .put(
+              EventSearchParameter.HUMBOLDT_TARGET_GROWTH_FORM_SCOPE, EcoTerm.targetGrowthFormScope)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_GROWTH_FORM_SCOPE_FULLY_REPORTED,
+              EcoTerm.isGrowthFormScopeFullyReported)
+          .put(
+              EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_ORGANISMS, EcoTerm.hasNonTargetOrganisms)
+          .put(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, EcoTerm.compilationTypes)
+          .put(
+              EventSearchParameter.HUMBOLDT_COMPILATION_SOURCE_TYPES,
+              EcoTerm.compilationSourceTypes)
+          .put(EventSearchParameter.HUMBOLDT_INVENTORY_TYPES, EcoTerm.inventoryTypes)
+          .put(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, EcoTerm.protocolNames)
+          .put(EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_REPORTED, EcoTerm.isAbundanceReported)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_CAP_REPORTED,
+              EcoTerm.isAbundanceCapReported)
+          .put(EventSearchParameter.HUMBOLDT_ABUNDANCE_CAP, EcoTerm.abundanceCap)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_VEGETATION_COVER_REPORTED,
+              EcoTerm.isVegetationCoverReported)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE,
+              EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive)
+          .put(EventSearchParameter.HUMBOLDT_HAS_VOUCHERS, EcoTerm.hasVouchers)
+          .put(EventSearchParameter.HUMBOLDT_VOUCHER_INSTITUTIONS, EcoTerm.voucherInstitutions)
+          .put(EventSearchParameter.HUMBOLDT_HAS_MATERIAL_SAMPLES, EcoTerm.hasMaterialSamples)
+          .put(EventSearchParameter.HUMBOLDT_MATERIAL_SAMPLE_TYPES, EcoTerm.materialSampleTypes)
+          .put(EventSearchParameter.HUMBOLDT_SAMPLING_PERFORMED_BY, EcoTerm.samplingPerformedBy)
+          .put(
+              EventSearchParameter.HUMBOLDT_IS_SAMPLING_EFFORT_REPORTED,
+              EcoTerm.isSamplingEffortReported)
+          .put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue)
+          .put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit)
           .build();
 
   private static final Map<? extends SearchParameter, Term> ARRAY_STRING_TERMS =
