@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.predicates</groupId>
   <artifactId>predicates-parent</artifactId>
-  <version>2.1.2-events-SNAPSHOT</version>
+  <version>2.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
