@@ -1,6 +1,7 @@
 package org.gbif.predicate.query;
 
 import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
+import static org.gbif.predicate.query.SQLColumnsUtils.HUMBOLDT_TAXON_COLUMNS;
 import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
 import com.google.common.base.Strings;
@@ -87,6 +88,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final Function<Term, String> ARRAY_LIKE_FN =
       t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
+  // TODO: handle derived taxon params for events
   private static final Set<OccurrenceSearchParameter> TAXON_SEARCH_PARAMETERS =
       Set.of(
           OccurrenceSearchParameter.KINGDOM_KEY,
@@ -965,14 +967,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private void appendHumboldtTaxonFilter(String checklistKey, S parameter, String value) {
     Objects.requireNonNull(checklistKey);
 
-    String field = null;
-    if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
-      field = "usagekey";
-    } else if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
-      field = "usagename";
-    } else if (parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
-      field = "taxonkeys";
-    } else {
+    String field = HUMBOLDT_TAXON_COLUMNS.getOrDefault(parameter, null);
+
+    if (field == null) {
       return;
     }
 
@@ -1249,9 +1246,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private boolean isHumboldtTaxonParameter(S parameter) {
-    return parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME
-        || parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY
-        || parameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY;
+    return HUMBOLDT_TAXON_COLUMNS.containsKey(parameter);
   }
 
   private String getChecklistKey(String checklistKey) {
