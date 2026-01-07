@@ -49,23 +49,6 @@
       <id>gbif-all</id>
       <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
-    <repository>
-      <id>ALA</id>
-      <url>https://nexus.ala.org.au/content/repositories/releases</url>
-    </repository>
-    <repository>
-      <id>ALA-snapshots</id>
-      <url>https://nexus.ala.org.au/content/repositories/snapshots</url>
-    </repository>
-    <repository>
-      <id>osgeo</id>
-      <name>Open Source Geospatial Foundation Repository</name>
-      <url>https://repo.osgeo.org/repository/release/</url>
-    </repository>
-    <repository>
-      <id>cloudera-release</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
   </repositories>
 
   <properties>
@@ -76,8 +59,8 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.2.1-SNAPSHOT</gbif-api.version>
-    <dwc-api.version>2.1.7-SNAPSHOT</dwc-api.version>
+    <gbif-api.version>2.2.2</gbif-api.version>
+    <dwc-api.version>2.1.8</dwc-api.version>
 
     <!-- Logging -->
     <slf4j.version>2.0.17</slf4j.version>
@@ -85,8 +68,13 @@
     <!-- Tools-->
     <lombok.version>1.18.42</lombok.version>
 
+    <!-- Libraries -->
+    <jts.version>1.19.0</jts.version>
+    <spatial4j.version>0.8</spatial4j.version>
+    <jakarta-annotation.version>3.0.0</jakarta-annotation.version>
+
     <!-- Tests -->
-    <junit-jupiter.version>5.12.2</junit-jupiter.version>
+    <junit-jupiter.version>5.14.1</junit-jupiter.version>
     <mockito.version>5.20.0</mockito.version>
     <hamcrest.version>3.0</hamcrest.version>
   </properties>
@@ -176,6 +164,7 @@
         <scope>provided</scope>
       </dependency>
 
+      <!-- GBIF APIs -->
       <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
@@ -186,6 +175,24 @@
         <artifactId>dwc-api</artifactId>
         <version>${dwc-api.version}</version>
       </dependency>
+
+      <!-- Libraries -->
+      <dependency>
+        <groupId>org.locationtech.jts</groupId>
+        <artifactId>jts-core</artifactId>
+        <version>${jts.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.locationtech.spatial4j</groupId>
+        <artifactId>spatial4j</artifactId>
+        <version>${spatial4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.annotation</groupId>
+        <artifactId>jakarta.annotation-api</artifactId>
+        <version>${jakarta-annotation.version}</version>
+      </dependency>
+
       <!-- Logging dependencies -->
       <dependency>
         <groupId>org.slf4j</groupId>
@@ -196,13 +203,7 @@
       <!-- Tests -->
       <dependency>
         <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>${junit-jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
+        <artifactId>junit-jupiter</artifactId>
         <version>${junit-jupiter.version}</version>
         <scope>test</scope>
       </dependency>
@@ -210,18 +211,6 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mockito.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-core</artifactId>
-        <version>${hamcrest.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>

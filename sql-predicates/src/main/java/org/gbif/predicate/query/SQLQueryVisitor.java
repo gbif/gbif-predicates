@@ -4,9 +4,7 @@ import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
 import static org.gbif.predicate.query.SQLColumnsUtils.HUMBOLDT_TAXON_COLUMNS;
 import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -103,8 +101,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           OccurrenceSearchParameter.ACCEPTED_TAXON_KEY);
 
   private static final List<GadmTerm> GADM_GIDS =
-      ImmutableList.of(
-          GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
+      List.of(GadmTerm.level0Gid, GadmTerm.level1Gid, GadmTerm.level2Gid, GadmTerm.level3Gid);
 
   private StringBuilder builder;
 
@@ -1186,15 +1183,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           key, String.valueOf(range.lowerEndpoint().doubleValue()));
     }
 
-    ImmutableList.Builder<Predicate> predicates =
-        new ImmutableList.Builder<Predicate>()
-            .add(
-                new GreaterThanOrEqualsPredicate<S>(
-                    key, String.valueOf(range.lowerEndpoint().doubleValue())))
-            .add(
-                new LessThanOrEqualsPredicate<S>(
-                    key, String.valueOf(range.upperEndpoint().doubleValue())));
-    return new ConjunctionPredicate(predicates.build());
+    List<Predicate> predicates =
+        List.of(
+            new GreaterThanOrEqualsPredicate<S>(
+                key, String.valueOf(range.lowerEndpoint().doubleValue())),
+            new LessThanOrEqualsPredicate<S>(
+                key, String.valueOf(range.upperEndpoint().doubleValue())));
+    return new ConjunctionPredicate(predicates);
   }
 
   /**
@@ -1211,15 +1206,12 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           key, String.valueOf(range.lowerEndpoint().intValue()));
     }
 
-    ImmutableList<Predicate> predicates =
-        new ImmutableList.Builder<Predicate>()
-            .add(
-                new GreaterThanOrEqualsPredicate<S>(
-                    key, String.valueOf(range.lowerEndpoint().intValue())))
-            .add(
-                new LessThanOrEqualsPredicate<S>(
-                    key, String.valueOf(range.upperEndpoint().intValue())))
-            .build();
+    List<Predicate> predicates =
+        List.of(
+            new GreaterThanOrEqualsPredicate<S>(
+                key, String.valueOf(range.lowerEndpoint().intValue())),
+            new LessThanOrEqualsPredicate<S>(
+                key, String.valueOf(range.upperEndpoint().intValue())));
     return new ConjunctionPredicate(predicates);
   }
 
@@ -1238,7 +1230,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       log.error(
           "This error shouldn't occur if all visit methods are public. Probably a programming error",
           e);
-      Throwables.propagate(e);
+      throw new RuntimeException(e);
     } catch (InvocationTargetException e) {
       log.info("Exception thrown while building the query", e);
       throw new QueryBuildingException(e);
@@ -1250,6 +1242,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private String getChecklistKey(String checklistKey) {
-    return !Strings.isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
+    return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
+  }
+
+  public static boolean isNullOrEmpty(@Nullable String string) {
+    return string == null || string.isEmpty();
   }
 }
