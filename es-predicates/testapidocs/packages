@@ -1,5 +1,8 @@
 org.gbif.predicate.query
 org.gbif.predicate.query
+org.gbif.predicate.query
+org.gbif.predicate.query
+org.gbif.api.jackson
 org.gbif.api.jackson
 org.gbif.api.jackson
 org.gbif.api.jackson
@@ -87,6 +90,7 @@ org.gbif.api.util
 org.gbif.api.util
 org.gbif.api.util
 org.gbif.api.util
+org.gbif.api.vocabulary
 org.gbif.api.vocabulary
 org.gbif.api.vocabulary
 org.gbif.api.vocabulary
