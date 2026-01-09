@@ -80,7 +80,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(
         EventSearchParameter.HOSTING_ORGANIZATION_KEY, GbifInternalTerm.hostingOrganizationKey);
     eventsMap.put(EventSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);
-    eventsMap.put(EventSearchParameter.PROJECT_ID, GbifTerm.projectId);
     eventsMap.put(EventSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym);
     eventsMap.put(EventSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit);
     eventsMap.put(EventSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue);
@@ -99,6 +98,10 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.GBIF_ID, GbifTerm.gbifID);
     eventsMap.put(EventSearchParameter.EVENT_TYPE, DwcTerm.eventType);
     eventsMap.put(EventSearchParameter.ISSUE, GbifTerm.issue);
+    eventsMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);
+    eventsMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
+    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
+    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
     // Humboldt
     eventsMap.put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount);
     eventsMap.put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames);
