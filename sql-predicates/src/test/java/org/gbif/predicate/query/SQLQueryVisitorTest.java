@@ -16,13 +16,8 @@ package org.gbif.predicate.query;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.google.common.collect.Lists;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -71,8 +66,7 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(OccurrenceSearchParameter.HAS_COORDINATE, "true", false);
 
     ConjunctionPredicate p =
-        new ConjunctionPredicate(
-            Lists.newArrayList(aves, UK, passer, before1989, georeferencedPredicate));
+        new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
         "(((stringArrayContains(classifications['defaultChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
@@ -83,24 +77,23 @@ public class SQLQueryVisitorTest {
   public void testMoreComplexQuery() throws QueryBuildingException {
     Predicate taxon1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
     Predicate taxon2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
-    DisjunctionPredicate taxa = new DisjunctionPredicate(Lists.newArrayList(taxon1, taxon2));
+    DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
         new InPredicate<>(
             OccurrenceSearchParameter.BASIS_OF_RECORD,
-            Lists.newArrayList("HUMAN_OBSERVATION", "MACHINE_OBSERVATION"),
+            List.of("HUMAN_OBSERVATION", "MACHINE_OBSERVATION"),
             false);
 
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
     Predicate IE = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "IE", false);
-    DisjunctionPredicate countries = new DisjunctionPredicate(Lists.newArrayList(UK, IE));
+    DisjunctionPredicate countries = new DisjunctionPredicate(List.of(UK, IE));
 
     Predicate before1989 = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1989");
     Predicate in2000 = new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000", false);
-    DisjunctionPredicate years = new DisjunctionPredicate(Lists.newArrayList(before1989, in2000));
+    DisjunctionPredicate years = new DisjunctionPredicate(List.of(before1989, in2000));
 
-    ConjunctionPredicate p =
-        new ConjunctionPredicate(Lists.newArrayList(taxa, basis, countries, years));
+    ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
         "((((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))) "
@@ -115,7 +108,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
 
-    ConjunctionPredicate p = new ConjunctionPredicate(Lists.newArrayList(p1, p2));
+    ConjunctionPredicate p = new ConjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
         "((lower(catalognumber) = lower(\'value_1\')) AND (lower(institutioncode) = lower(\'value_2\')))",
@@ -127,7 +120,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
         "((lower(catalognumber) = lower(\'value_1\')) OR (lower(institutioncode) = lower(\'value_2\')))",
@@ -139,7 +132,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM, "value_2", false);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals("(lower(catalognumber) IN(lower(\'value_1\'), lower(\'value_2\')))", query);
   }
@@ -149,7 +142,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
     Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
         "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
@@ -161,7 +154,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.GADM_GID, "IRL_1", false);
     Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.GADM_GID, "GBR.2_1", false);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
         "(level0gid IN('IRL_1', 'GBR.2_1') OR level1gid IN('IRL_1', 'GBR.2_1') OR level2gid IN('IRL_1', 'GBR.2_1') OR level3gid IN('IRL_1', 'GBR.2_1'))",
@@ -173,7 +166,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.MEDIA_TYPE, "StillImage", false);
     Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.MEDIA_TYPE, "Sound", false);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
         "(stringArrayContains(mediatype,'StillImage',true) OR stringArrayContains(mediatype,'Sound',true))",
@@ -185,13 +178,13 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", true);
     Predicate p2 = new EqualsPredicate<>(PARAM, "value_2", true);
 
-    DisjunctionPredicate p = new DisjunctionPredicate(Lists.newArrayList(p1, p2));
+    DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals("(catalognumber IN('value_1', 'value_2'))", query);
 
     Predicate p3 = new EqualsPredicate<>(PARAM, "value_3", false);
 
-    p = new DisjunctionPredicate(Lists.newArrayList(p1, p2, p3));
+    p = new DisjunctionPredicate(List.of(p1, p2, p3));
     query = visitor.buildQuery(p);
     assertEquals(
         "((catalognumber = 'value_1') OR (catalognumber = 'value_2') OR (lower(catalognumber) = lower('value_3')))",
@@ -276,8 +269,7 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testInPredicate() throws QueryBuildingException {
-    Predicate p =
-        new InPredicate<>(PARAM, Lists.newArrayList("value_1", "value_2", "value_3"), false);
+    Predicate p = new InPredicate<>(PARAM, List.of("value_1", "value_2", "value_3"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(lower(catalognumber) IN(lower(\'value_1\'), lower(\'value_2\'), lower(\'value_3\')))",
@@ -286,16 +278,14 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testInVerbatimPredicate() throws QueryBuildingException {
-    Predicate p =
-        new InPredicate<>(PARAM, Lists.newArrayList("value_1", "value_2", "value_3"), true);
+    Predicate p = new InPredicate<>(PARAM, List.of("value_1", "value_2", "value_3"), true);
     String query = visitor.buildQuery(p);
     assertEquals("(catalognumber IN(\'value_1\', \'value_2\', \'value_3\'))", query);
   }
 
   @Test
   public void testInPredicateTaxonKey() throws QueryBuildingException {
-    Predicate p =
-        new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, Lists.newArrayList("1", "2"), false);
+    Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
         "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
@@ -305,8 +295,7 @@ public class SQLQueryVisitorTest {
   @Test
   public void testInPredicateGadmGid() throws QueryBuildingException {
     Predicate p =
-        new InPredicate<>(
-            OccurrenceSearchParameter.GADM_GID, Lists.newArrayList("IRL_1", "GBR.2_1"), false);
+        new InPredicate<>(OccurrenceSearchParameter.GADM_GID, List.of("IRL_1", "GBR.2_1"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(level0gid IN('IRL_1', 'GBR.2_1') OR level1gid IN('IRL_1', 'GBR.2_1') OR level2gid IN('IRL_1', 'GBR.2_1') OR level3gid IN('IRL_1', 'GBR.2_1'))",
@@ -317,7 +306,7 @@ public class SQLQueryVisitorTest {
   public void testInPredicateMediaType() throws QueryBuildingException {
     Predicate p =
         new InPredicate<>(
-            OccurrenceSearchParameter.MEDIA_TYPE, Lists.newArrayList("StillImage", "Sound"), false);
+            OccurrenceSearchParameter.MEDIA_TYPE, List.of("StillImage", "Sound"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(stringArrayContains(mediatype,'StillImage',true) OR stringArrayContains(mediatype,'Sound',true))",
@@ -350,7 +339,7 @@ public class SQLQueryVisitorTest {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
 
-    ConjunctionPredicate cp = new ConjunctionPredicate(Lists.newArrayList(p1, p2));
+    ConjunctionPredicate cp = new ConjunctionPredicate(List.of(p1, p2));
 
     Predicate p = new NotPredicate(cp);
     String query = visitor.buildQuery(p);
@@ -964,7 +953,7 @@ public class SQLQueryVisitorTest {
         visitor.buildQuery(
             new InPredicate<>(
                 OccurrenceSearchParameter.ISSUE,
-                Lists.newArrayList("TAXON_MATCH_HIGHERRANK", "TAXON_MATCH_NONE"),
+                List.of("TAXON_MATCH_HIGHERRANK", "TAXON_MATCH_NONE"),
                 false));
     assertEquals(
         "(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))",
@@ -990,7 +979,7 @@ public class SQLQueryVisitorTest {
         visitor.buildQuery(
             new NotPredicate(
                 new DisjunctionPredicate(
-                    Lists.newArrayList(
+                    List.of(
                         new EqualsPredicate<>(
                             OccurrenceSearchParameter.ISSUE, "COORDINATE_INVALID", false),
                         new EqualsPredicate<>(
@@ -1010,7 +999,7 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testAllParamsExist() {
-    List<Predicate> predicates = Lists.newArrayList();
+    List<Predicate> predicates = new ArrayList<>();
     for (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
       String value = "7";
       if (OccurrenceSearchParameter.GEOMETRY == param) {
@@ -1068,7 +1057,7 @@ public class SQLQueryVisitorTest {
                 // InPredicate
                 query =
                     visitor.buildQuery(
-                        new InPredicate<>(param, Lists.newArrayList("value_1", "value_2"), false));
+                        new InPredicate<>(param, List.of("value_1", "value_2"), false));
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
@@ -1203,6 +1192,7 @@ public class SQLQueryVisitorTest {
           "((stringArrayContains(classifications['my-checklist-uuid'], '6', true)) OR (stringArrayContains(classifications['my-checklist-uuid'], '7', true)))",
           query);
     } catch (QueryBuildingException ex) {
+      ex.printStackTrace();
       fail();
     }
   }

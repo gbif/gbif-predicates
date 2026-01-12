@@ -1,6 +1,5 @@
 package org.gbif.predicate.query;
 
-import com.google.common.collect.ImmutableSet;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Set;
@@ -12,8 +11,7 @@ import org.gbif.dwc.terms.*;
 public class SQLColumnsUtils {
 
   // reserved hive words
-  public static final ImmutableSet<String> SQL_RESERVED_WORDS =
-      new ImmutableSet.Builder<String>().add("date", "order", "format", "group").build();
+  public static final Set<String> SQL_RESERVED_WORDS = Set.of("date", "order", "format", "group");
 
   // prefix for extension columns
   private static final String EXTENSION_PRE = "ext_";
@@ -24,21 +22,19 @@ public class SQLColumnsUtils {
           .collect(Collectors.toSet());
 
   private static final Set<? extends Term> INTERPRETED_LOCAL_DATES_SECONDS =
-      ImmutableSet.of(
-          DwcTerm.dateIdentified, GbifInternalTerm.eventDateGte, GbifInternalTerm.eventDateLte);
+      Set.of(DwcTerm.dateIdentified, GbifInternalTerm.eventDateGte, GbifInternalTerm.eventDateLte);
 
-  private static final Set<? extends Term> INTERPRETED_UTC_DATES_SECONDS =
-      ImmutableSet.of(DcTerm.modified);
+  private static final Set<? extends Term> INTERPRETED_UTC_DATES_SECONDS = Set.of(DcTerm.modified);
 
   private static final Set<? extends Term> INTERPRETED_UTC_DATES_MILLISECONDS =
-      ImmutableSet.of(
+      Set.of(
           GbifTerm.lastInterpreted,
           GbifTerm.lastParsed,
           GbifTerm.lastCrawled,
           GbifInternalTerm.fragmentCreated);
 
-  private static final Set<? extends Term> INTERPRETED_NUM =
-      ImmutableSet.of(
+  private static final Set<Term> INTERPRETED_NUM =
+      Set.of(
           DwcTerm.year,
           DwcTerm.month,
           DwcTerm.day,
@@ -57,10 +53,10 @@ public class SQLColumnsUtils {
           GbifInternalTerm.identifierCount);
 
   private static final Set<? extends Term> INTERPRETED_BOOLEAN =
-      ImmutableSet.of(GbifTerm.hasCoordinate, GbifTerm.hasGeospatialIssues);
+      Set.of(GbifTerm.hasCoordinate, GbifTerm.hasGeospatialIssues);
 
   private static final Set<? extends Term> COMPLEX_TYPE =
-      ImmutableSet.of(
+      Set.of(
           GbifTerm.mediaType,
           GbifTerm.issue,
           GbifInternalTerm.networkKey,
@@ -79,7 +75,7 @@ public class SQLColumnsUtils {
           DwcTerm.samplingProtocol);
 
   private static final Set<? extends Term> INTERPRETED_DOUBLE =
-      ImmutableSet.of(
+      Set.of(
           DwcTerm.decimalLatitude,
           DwcTerm.decimalLongitude,
           GbifTerm.coordinateAccuracy,
@@ -223,40 +219,40 @@ public class SQLColumnsUtils {
 
   /** @return true if the term is an interpreted local date (timezone not relevant) */
   public static boolean isInterpretedLocalDateSeconds(Term term) {
-    return INTERPRETED_LOCAL_DATES_SECONDS.contains(term);
+    return term != null && INTERPRETED_LOCAL_DATES_SECONDS.contains(term);
   }
 
   /** @return true if the term is an interpreted UTC date stored in seconds */
   public static boolean isInterpretedUtcDateSeconds(Term term) {
-    return INTERPRETED_UTC_DATES_SECONDS.contains(term);
+    return term != null && INTERPRETED_UTC_DATES_SECONDS.contains(term);
   }
 
   /** @return true if the term is an interpreted UTC date stored in milliseconds */
   public static boolean isInterpretedUtcDateMilliseconds(Term term) {
-    return INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);
+    return term != null && INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);
   }
 
   /** @return true if the term is an interpreted numerical */
   public static boolean isInterpretedNumerical(Term term) {
-    return INTERPRETED_NUM.contains(term);
+    return term != null && INTERPRETED_NUM.contains(term);
   }
 
   /** @return true if the term is an interpreted double */
   public static boolean isInterpretedDouble(Term term) {
-    return INTERPRETED_DOUBLE.contains(term);
+    return term != null && INTERPRETED_DOUBLE.contains(term);
   }
 
   /** @return true if the term is an interpreted boolean */
   public static boolean isInterpretedBoolean(Term term) {
-    return INTERPRETED_BOOLEAN.contains(term);
+    return term != null && INTERPRETED_BOOLEAN.contains(term);
   }
 
   /** @return true if the term is a complex type in Hive: array, struct, json, etc. */
   public static boolean isComplexType(Term term) {
-    return COMPLEX_TYPE.contains(term);
+    return term != null && COMPLEX_TYPE.contains(term);
   }
 
   public static boolean isExtensionTerm(Term term) {
-    return EXTENSION_TERMS.contains(term);
+    return term != null && EXTENSION_TERMS.contains(term);
   }
 }

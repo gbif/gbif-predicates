@@ -16,8 +16,6 @@
     <description>SQL support for the predicate API</description>
 
     <properties>
-        <guava.version>18.0</guava.version>
-
         <!-- Tools-->
         <lombok.version>1.18.20</lombok.version>
     </properties>
@@ -28,7 +26,6 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>gbif-api</artifactId>
@@ -36,12 +33,6 @@
         <dependency>
             <groupId>org.gbif</groupId>
             <artifactId>dwc-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
         </dependency>
 
         <!-- Tests -->
