@@ -1074,27 +1074,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @param taxonomicPredicate to append as filter
    */
   private void appendTaxonomicArrayFilter(InPredicate<S> taxonomicPredicate, Term term) {
+    Set<String> taxonKeys =
+        taxonomicPredicate.getValues().stream()
+            .map(v -> toSQLValue(taxonomicPredicate.getKey(), v, true))
+            .collect(Collectors.toSet());
 
-    Collection<String> taxonKeys = taxonomicPredicate.getValues();
-
-    builder.append('(');
-    boolean first = true;
-    for (String taxonKey : taxonKeys) {
-      if (!first) {
-        builder.append(DISJUNCTION_OPERATOR);
-      }
-      builder
-          .append('(')
-          .append(
-              String.format(
-                  "stringArrayContains(%s['%s'], '%s', true)",
-                  SQLColumnsUtils.getSQLQueryColumn(term),
-                  getChecklistKey(taxonomicPredicate.getChecklistKey()),
-                  taxonKey))
-          .append(')');
-      first = false;
-    }
-    builder.append(')');
+    builder
+        .append('(')
+        .append(
+            String.format(
+                "arrays_overlap(%s['%s'], array(%s))",
+                SQLColumnsUtils.getSQLQueryColumn(term),
+                getChecklistKey(taxonomicPredicate.getChecklistKey()),
+                String.join(",", taxonKeys)))
+        .append(')');
   }
 
   /**

@@ -101,7 +101,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "((((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))) "
+        "(((arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -149,9 +149,7 @@ public class SQLQueryVisitorTest {
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
-        query);
+    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -292,9 +290,7 @@ public class SQLQueryVisitorTest {
   public void testInPredicateTaxonKey() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "((stringArrayContains(classifications['defaultChecklistKey'], '1', true)) OR (stringArrayContains(classifications['defaultChecklistKey'], '2', true)))",
-        query);
+    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -1193,9 +1189,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
     try {
       String query = visitor.buildQuery(inPredicate);
-      assertEquals(
-          "((stringArrayContains(classifications['my-checklist-uuid'], '6', true)) OR (stringArrayContains(classifications['my-checklist-uuid'], '7', true)))",
-          query);
+      assertEquals("(arrays_overlap(classifications['my-checklist-uuid'], array('7','6')))", query);
     } catch (QueryBuildingException ex) {
       fail();
     }
