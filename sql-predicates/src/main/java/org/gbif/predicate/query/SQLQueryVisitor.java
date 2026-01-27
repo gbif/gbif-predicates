@@ -990,17 +990,27 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private void appendHumboldtTaxonFilter(InPredicate<S> taxonPredicate) {
-    builder.append('(');
-    boolean first = true;
-    for (String value : taxonPredicate.getValues()) {
-      if (!first) {
-        builder.append(DISJUNCTION_OPERATOR);
-      }
-      appendHumboldtTaxonFilter(
-          getChecklistKey(taxonPredicate.getChecklistKey()), taxonPredicate.getKey(), value);
-      first = false;
+    String field = HUMBOLDT_TAXON_COLUMNS.getOrDefault(taxonPredicate.getKey(), null);
+
+    if (field == null) {
+      return;
     }
-    builder.append(')');
+
+    Set<String> taxonKeys =
+      taxonPredicate.getValues().stream()
+        .map(v -> toSQLValue(taxonPredicate.getKey(), v, true))
+        .collect(Collectors.toSet());
+
+    builder
+      .append('(')
+      .append(
+        String.format(
+          "arrays_overlap(%s['%s']['%s'], array(%s))",
+          SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
+          getChecklistKey(taxonPredicate.getChecklistKey()),
+          field,
+          String.join(",", taxonKeys)))
+      .append(')');
   }
 
   private void appendHumboldtTaxonUnary(String checklistKey, String unaryOperator) {
