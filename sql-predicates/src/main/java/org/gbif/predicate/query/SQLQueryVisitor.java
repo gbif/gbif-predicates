@@ -997,20 +997,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     Set<String> taxonKeys =
-      taxonPredicate.getValues().stream()
-        .map(v -> toSQLValue(taxonPredicate.getKey(), v, true))
-        .collect(Collectors.toSet());
+        taxonPredicate.getValues().stream()
+            .map(v -> toSQLValue(taxonPredicate.getKey(), v, true))
+            .collect(Collectors.toSet());
 
     builder
-      .append('(')
-      .append(
-        String.format(
-          "arrays_overlap(%s['%s']['%s'], array(%s))",
-          SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-          getChecklistKey(taxonPredicate.getChecklistKey()),
-          field,
-          String.join(",", taxonKeys)))
-      .append(')');
+        .append('(')
+        .append(
+            String.format(
+                "arrays_overlap(%s['%s']['%s'], array(%s))",
+                SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
+                getChecklistKey(taxonPredicate.getChecklistKey()),
+                field,
+                String.join(",", taxonKeys)))
+        .append(')');
   }
 
   private void appendHumboldtTaxonUnary(String checklistKey, String unaryOperator) {
