@@ -1003,265 +1003,268 @@
 <span class="source-line-no">990</span><span id="line-990">  }</span>
 <span class="source-line-no">991</span><span id="line-991"></span>
 <span class="source-line-no">992</span><span id="line-992">  private void appendHumboldtTaxonFilter(InPredicate&lt;S&gt; taxonPredicate) {</span>
-<span class="source-line-no">993</span><span id="line-993">    builder.append('(');</span>
-<span class="source-line-no">994</span><span id="line-994">    boolean first = true;</span>
-<span class="source-line-no">995</span><span id="line-995">    for (String value : taxonPredicate.getValues()) {</span>
-<span class="source-line-no">996</span><span id="line-996">      if (!first) {</span>
-<span class="source-line-no">997</span><span id="line-997">        builder.append(DISJUNCTION_OPERATOR);</span>
-<span class="source-line-no">998</span><span id="line-998">      }</span>
-<span class="source-line-no">999</span><span id="line-999">      appendHumboldtTaxonFilter(</span>
-<span class="source-line-no">1000</span><span id="line-1000">          getChecklistKey(taxonPredicate.getChecklistKey()), taxonPredicate.getKey(), value);</span>
-<span class="source-line-no">1001</span><span id="line-1001">      first = false;</span>
-<span class="source-line-no">1002</span><span id="line-1002">    }</span>
-<span class="source-line-no">1003</span><span id="line-1003">    builder.append(')');</span>
-<span class="source-line-no">1004</span><span id="line-1004">  }</span>
-<span class="source-line-no">1005</span><span id="line-1005"></span>
-<span class="source-line-no">1006</span><span id="line-1006">  private void appendHumboldtTaxonUnary(String checklistKey, String unaryOperator) {</span>
-<span class="source-line-no">1007</span><span id="line-1007">    Objects.requireNonNull(checklistKey);</span>
-<span class="source-line-no">1008</span><span id="line-1008">    builder.append('(');</span>
-<span class="source-line-no">1009</span><span id="line-1009">    builder.append(</span>
-<span class="source-line-no">1010</span><span id="line-1010">        String.format(</span>
-<span class="source-line-no">1011</span><span id="line-1011">            "%s['%s']['%s'] " + unaryOperator,</span>
-<span class="source-line-no">1012</span><span id="line-1012">            SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),</span>
-<span class="source-line-no">1013</span><span id="line-1013">            getChecklistKey(checklistKey),</span>
-<span class="source-line-no">1014</span><span id="line-1014">            "usageName"));</span>
-<span class="source-line-no">1015</span><span id="line-1015">    builder.append(')');</span>
-<span class="source-line-no">1016</span><span id="line-1016">  }</span>
-<span class="source-line-no">1017</span><span id="line-1017"></span>
-<span class="source-line-no">1018</span><span id="line-1018">  /**</span>
-<span class="source-line-no">1019</span><span id="line-1019">   * Searches any of the NUB keys in Hive of any rank.</span>
-<span class="source-line-no">1020</span><span id="line-1020">   *</span>
-<span class="source-line-no">1021</span><span id="line-1021">   * @param taxonKeyPredicate to append as filter</span>
-<span class="source-line-no">1022</span><span id="line-1022">   */</span>
-<span class="source-line-no">1023</span><span id="line-1023">  private void appendTaxonomicArrayFilter(EqualsPredicate&lt;S&gt; taxonKeyPredicate, Term term) {</span>
-<span class="source-line-no">1024</span><span id="line-1024"></span>
-<span class="source-line-no">1025</span><span id="line-1025">    builder</span>
-<span class="source-line-no">1026</span><span id="line-1026">        .append('(')</span>
-<span class="source-line-no">1027</span><span id="line-1027">        .append(</span>
-<span class="source-line-no">1028</span><span id="line-1028">            String.format(</span>
-<span class="source-line-no">1029</span><span id="line-1029">                "stringArrayContains(%s['%s'], '%s', true)",</span>
-<span class="source-line-no">1030</span><span id="line-1030">                SQLColumnsUtils.getSQLQueryColumn(term),</span>
-<span class="source-line-no">1031</span><span id="line-1031">                getChecklistKey(taxonKeyPredicate.getChecklistKey()),</span>
-<span class="source-line-no">1032</span><span id="line-1032">                taxonKeyPredicate.getValue()))</span>
-<span class="source-line-no">1033</span><span id="line-1033">        .append(')');</span>
-<span class="source-line-no">1034</span><span id="line-1034">  }</span>
-<span class="source-line-no">1035</span><span id="line-1035"></span>
-<span class="source-line-no">1036</span><span id="line-1036">  /**</span>
-<span class="source-line-no">1037</span><span id="line-1037">   * Searches any of the NUB keys in Hive of any rank.</span>
-<span class="source-line-no">1038</span><span id="line-1038">   *</span>
-<span class="source-line-no">1039</span><span id="line-1039">   * @param taxonKeyPredicate to append as filter</span>
-<span class="source-line-no">1040</span><span id="line-1040">   */</span>
-<span class="source-line-no">1041</span><span id="line-1041">  private void appendTaxonomicSingleValueFilter(EqualsPredicate&lt;S&gt; taxonKeyPredicate, Term term) {</span>
-<span class="source-line-no">1042</span><span id="line-1042"></span>
-<span class="source-line-no">1043</span><span id="line-1043">    builder</span>
-<span class="source-line-no">1044</span><span id="line-1044">        .append('(')</span>
-<span class="source-line-no">1045</span><span id="line-1045">        .append(</span>
-<span class="source-line-no">1046</span><span id="line-1046">            String.format(</span>
-<span class="source-line-no">1047</span><span id="line-1047">                "%s['%s'] = '%s'",</span>
-<span class="source-line-no">1048</span><span id="line-1048">                SQLColumnsUtils.getSQLQueryColumn(term),</span>
-<span class="source-line-no">1049</span><span id="line-1049">                getChecklistKey(taxonKeyPredicate.getChecklistKey()),</span>
-<span class="source-line-no">1050</span><span id="line-1050">                taxonKeyPredicate.getValue()))</span>
-<span class="source-line-no">1051</span><span id="line-1051">        .append(')');</span>
-<span class="source-line-no">1052</span><span id="line-1052">  }</span>
-<span class="source-line-no">1053</span><span id="line-1053"></span>
-<span class="source-line-no">1054</span><span id="line-1054">  /** Creates a disjunction of all the given terms. */</span>
-<span class="source-line-no">1055</span><span id="line-1055">  private void appendGadmFilterList(List&lt;? extends Term&gt; terms, String value) {</span>
-<span class="source-line-no">1056</span><span id="line-1056">    builder</span>
-<span class="source-line-no">1057</span><span id="line-1057">        .append('(')</span>
-<span class="source-line-no">1058</span><span id="line-1058">        .append(</span>
-<span class="source-line-no">1059</span><span id="line-1059">            terms.stream()</span>
-<span class="source-line-no">1060</span><span id="line-1060">                .map(</span>
-<span class="source-line-no">1061</span><span id="line-1061">                    term -&gt;</span>
-<span class="source-line-no">1062</span><span id="line-1062">                        SQLColumnsUtils.getSQLQueryColumn(term)</span>
-<span class="source-line-no">1063</span><span id="line-1063">                            + EQUALS_OPERATOR</span>
-<span class="source-line-no">1064</span><span id="line-1064">                            + "'"</span>
-<span class="source-line-no">1065</span><span id="line-1065">                            + value</span>
-<span class="source-line-no">1066</span><span id="line-1066">                            + "'")</span>
-<span class="source-line-no">1067</span><span id="line-1067">                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))</span>
-<span class="source-line-no">1068</span><span id="line-1068">        .append(')');</span>
-<span class="source-line-no">1069</span><span id="line-1069">  }</span>
-<span class="source-line-no">1070</span><span id="line-1070"></span>
-<span class="source-line-no">1071</span><span id="line-1071">  /**</span>
-<span class="source-line-no">1072</span><span id="line-1072">   * Searches any of the NUB keys in Hive of any rank, for multiple keys.</span>
-<span class="source-line-no">1073</span><span id="line-1073">   *</span>
-<span class="source-line-no">1074</span><span id="line-1074">   * @param taxonomicPredicate to append as filter</span>
-<span class="source-line-no">1075</span><span id="line-1075">   */</span>
-<span class="source-line-no">1076</span><span id="line-1076">  private void appendTaxonomicArrayFilter(InPredicate&lt;S&gt; taxonomicPredicate, Term term) {</span>
-<span class="source-line-no">1077</span><span id="line-1077"></span>
-<span class="source-line-no">1078</span><span id="line-1078">    Collection&lt;String&gt; taxonKeys = taxonomicPredicate.getValues();</span>
-<span class="source-line-no">1079</span><span id="line-1079"></span>
-<span class="source-line-no">1080</span><span id="line-1080">    builder.append('(');</span>
-<span class="source-line-no">1081</span><span id="line-1081">    boolean first = true;</span>
-<span class="source-line-no">1082</span><span id="line-1082">    for (String taxonKey : taxonKeys) {</span>
-<span class="source-line-no">1083</span><span id="line-1083">      if (!first) {</span>
-<span class="source-line-no">1084</span><span id="line-1084">        builder.append(DISJUNCTION_OPERATOR);</span>
-<span class="source-line-no">1085</span><span id="line-1085">      }</span>
-<span class="source-line-no">1086</span><span id="line-1086">      builder</span>
-<span class="source-line-no">1087</span><span id="line-1087">          .append('(')</span>
-<span class="source-line-no">1088</span><span id="line-1088">          .append(</span>
-<span class="source-line-no">1089</span><span id="line-1089">              String.format(</span>
-<span class="source-line-no">1090</span><span id="line-1090">                  "stringArrayContains(%s['%s'], '%s', true)",</span>
-<span class="source-line-no">1091</span><span id="line-1091">                  SQLColumnsUtils.getSQLQueryColumn(term),</span>
-<span class="source-line-no">1092</span><span id="line-1092">                  getChecklistKey(taxonomicPredicate.getChecklistKey()),</span>
-<span class="source-line-no">1093</span><span id="line-1093">                  taxonKey))</span>
-<span class="source-line-no">1094</span><span id="line-1094">          .append(')');</span>
-<span class="source-line-no">1095</span><span id="line-1095">      first = false;</span>
-<span class="source-line-no">1096</span><span id="line-1096">    }</span>
-<span class="source-line-no">1097</span><span id="line-1097">    builder.append(')');</span>
-<span class="source-line-no">1098</span><span id="line-1098">  }</span>
-<span class="source-line-no">1099</span><span id="line-1099"></span>
-<span class="source-line-no">1100</span><span id="line-1100">  /**</span>
-<span class="source-line-no">1101</span><span id="line-1101">   * Searches any of the NUB keys in Hive of any rank, for multiple keys.</span>
-<span class="source-line-no">1102</span><span id="line-1102">   *</span>
-<span class="source-line-no">1103</span><span id="line-1103">   * @param taxonomicPredicate to append as filter</span>
-<span class="source-line-no">1104</span><span id="line-1104">   */</span>
-<span class="source-line-no">1105</span><span id="line-1105">  private void appendTaxonomicSingleValueFilter(InPredicate&lt;S&gt; taxonomicPredicate, Term term) {</span>
-<span class="source-line-no">1106</span><span id="line-1106"></span>
-<span class="source-line-no">1107</span><span id="line-1107">    Collection&lt;String&gt; taxonKeys = taxonomicPredicate.getValues();</span>
-<span class="source-line-no">1108</span><span id="line-1108"></span>
-<span class="source-line-no">1109</span><span id="line-1109">    builder.append('(');</span>
-<span class="source-line-no">1110</span><span id="line-1110">    boolean first = true;</span>
-<span class="source-line-no">1111</span><span id="line-1111">    for (String taxonKey : taxonKeys) {</span>
-<span class="source-line-no">1112</span><span id="line-1112">      if (!first) {</span>
-<span class="source-line-no">1113</span><span id="line-1113">        builder.append(DISJUNCTION_OPERATOR);</span>
-<span class="source-line-no">1114</span><span id="line-1114">      }</span>
-<span class="source-line-no">1115</span><span id="line-1115">      builder</span>
-<span class="source-line-no">1116</span><span id="line-1116">          .append('(')</span>
-<span class="source-line-no">1117</span><span id="line-1117">          .append(</span>
-<span class="source-line-no">1118</span><span id="line-1118">              String.format(</span>
-<span class="source-line-no">1119</span><span id="line-1119">                  "%s['%s'] = '%s'",</span>
-<span class="source-line-no">1120</span><span id="line-1120">                  SQLColumnsUtils.getSQLQueryColumn(term),</span>
-<span class="source-line-no">1121</span><span id="line-1121">                  getChecklistKey(taxonomicPredicate.getChecklistKey()),</span>
-<span class="source-line-no">1122</span><span id="line-1122">                  taxonKey))</span>
-<span class="source-line-no">1123</span><span id="line-1123">          .append(')');</span>
-<span class="source-line-no">1124</span><span id="line-1124">      first = false;</span>
-<span class="source-line-no">1125</span><span id="line-1125">    }</span>
-<span class="source-line-no">1126</span><span id="line-1126">    builder.append(')');</span>
-<span class="source-line-no">1127</span><span id="line-1127">  }</span>
-<span class="source-line-no">1128</span><span id="line-1128"></span>
-<span class="source-line-no">1129</span><span id="line-1129">  /**</span>
-<span class="source-line-no">1130</span><span id="line-1130">   * Searches every level of GADM GID in Hive for multiple keys.</span>
-<span class="source-line-no">1131</span><span id="line-1131">   *</span>
-<span class="source-line-no">1132</span><span id="line-1132">   * @param gadmGids to append as filter</span>
-<span class="source-line-no">1133</span><span id="line-1133">   */</span>
-<span class="source-line-no">1134</span><span id="line-1134">  private void appendGadmGidFilter(Collection&lt;String&gt; gadmGids) {</span>
-<span class="source-line-no">1135</span><span id="line-1135">    builder.append('(');</span>
-<span class="source-line-no">1136</span><span id="line-1136">    boolean first = true;</span>
-<span class="source-line-no">1137</span><span id="line-1137">    for (Term term : GADM_GIDS) {</span>
-<span class="source-line-no">1138</span><span id="line-1138">      if (!first) {</span>
-<span class="source-line-no">1139</span><span id="line-1139">        builder.append(DISJUNCTION_OPERATOR);</span>
-<span class="source-line-no">1140</span><span id="line-1140">      }</span>
-<span class="source-line-no">1141</span><span id="line-1141">      builder.append(SQLColumnsUtils.getSQLQueryColumn(term)).append(IN_OPERATOR).append('(');</span>
-<span class="source-line-no">1142</span><span id="line-1142">      Iterator&lt;String&gt; iterator = gadmGids.iterator();</span>
-<span class="source-line-no">1143</span><span id="line-1143">      while (iterator.hasNext()) {</span>
-<span class="source-line-no">1144</span><span id="line-1144">        // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.</span>
-<span class="source-line-no">1145</span><span id="line-1145">        // Using .toUpperCase() is safe, GIDs must be ASCII anyway.</span>
-<span class="source-line-no">1146</span><span id="line-1146">        builder.append(</span>
-<span class="source-line-no">1147</span><span id="line-1147">            toSQLValue(sqlTermsMapper.getDefaultGadmLevel(), iterator.next().toUpperCase(), true));</span>
-<span class="source-line-no">1148</span><span id="line-1148">        if (iterator.hasNext()) {</span>
-<span class="source-line-no">1149</span><span id="line-1149">          builder.append(", ");</span>
-<span class="source-line-no">1150</span><span id="line-1150">        }</span>
-<span class="source-line-no">1151</span><span id="line-1151">      }</span>
-<span class="source-line-no">1152</span><span id="line-1152">      builder.append(")");</span>
-<span class="source-line-no">1153</span><span id="line-1153">      first = false;</span>
-<span class="source-line-no">1154</span><span id="line-1154">    }</span>
-<span class="source-line-no">1155</span><span id="line-1155">    builder.append(')');</span>
-<span class="source-line-no">1156</span><span id="line-1156">  }</span>
-<span class="source-line-no">1157</span><span id="line-1157"></span>
-<span class="source-line-no">1158</span><span id="line-1158">  /**</span>
-<span class="source-line-no">1159</span><span id="line-1159">   * Searches any of the NUB keys in Hive of any rank.</span>
-<span class="source-line-no">1160</span><span id="line-1160">   *</span>
-<span class="source-line-no">1161</span><span id="line-1161">   * @param unaryOperator to append as filter</span>
-<span class="source-line-no">1162</span><span id="line-1162">   */</span>
-<span class="source-line-no">1163</span><span id="line-1163">  private void appendUnaryList(List&lt;? extends Term&gt; terms, String unaryOperator) {</span>
-<span class="source-line-no">1164</span><span id="line-1164">    builder.append('(');</span>
-<span class="source-line-no">1165</span><span id="line-1165">    builder.append(</span>
-<span class="source-line-no">1166</span><span id="line-1166">        terms.stream()</span>
-<span class="source-line-no">1167</span><span id="line-1167">            .map(term -&gt; SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)</span>
-<span class="source-line-no">1168</span><span id="line-1168">            .collect(Collectors.joining(CONJUNCTION_OPERATOR)));</span>
-<span class="source-line-no">1169</span><span id="line-1169">    builder.append(')');</span>
-<span class="source-line-no">1170</span><span id="line-1170">  }</span>
-<span class="source-line-no">1171</span><span id="line-1171"></span>
-<span class="source-line-no">1172</span><span id="line-1172">  /**</span>
-<span class="source-line-no">1173</span><span id="line-1173">   * Converts decimal range into a predicate with the form: field &gt;= range.lower AND field &lt;=</span>
-<span class="source-line-no">1174</span><span id="line-1174">   * range.upper.</span>
-<span class="source-line-no">1175</span><span id="line-1175">   */</span>
-<span class="source-line-no">1176</span><span id="line-1176">  private Predicate toNumberRangePredicate(Range&lt;Double&gt; range, S key) {</span>
-<span class="source-line-no">1177</span><span id="line-1177">    if (!range.hasLowerBound()) {</span>
-<span class="source-line-no">1178</span><span id="line-1178">      return new LessThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1179</span><span id="line-1179">          key, String.valueOf(range.upperEndpoint().doubleValue()));</span>
-<span class="source-line-no">1180</span><span id="line-1180">    }</span>
-<span class="source-line-no">1181</span><span id="line-1181">    if (!range.hasUpperBound()) {</span>
-<span class="source-line-no">1182</span><span id="line-1182">      return new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1183</span><span id="line-1183">          key, String.valueOf(range.lowerEndpoint().doubleValue()));</span>
-<span class="source-line-no">1184</span><span id="line-1184">    }</span>
-<span class="source-line-no">1185</span><span id="line-1185"></span>
-<span class="source-line-no">1186</span><span id="line-1186">    List&lt;Predicate&gt; predicates =</span>
-<span class="source-line-no">1187</span><span id="line-1187">        List.of(</span>
-<span class="source-line-no">1188</span><span id="line-1188">            new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1189</span><span id="line-1189">                key, String.valueOf(range.lowerEndpoint().doubleValue())),</span>
-<span class="source-line-no">1190</span><span id="line-1190">            new LessThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1191</span><span id="line-1191">                key, String.valueOf(range.upperEndpoint().doubleValue())));</span>
-<span class="source-line-no">1192</span><span id="line-1192">    return new ConjunctionPredicate(predicates);</span>
-<span class="source-line-no">1193</span><span id="line-1193">  }</span>
-<span class="source-line-no">1194</span><span id="line-1194"></span>
-<span class="source-line-no">1195</span><span id="line-1195">  /**</span>
-<span class="source-line-no">1196</span><span id="line-1196">   * Converts integer range into a predicate with the form: field &gt;= range.lower AND field &lt;=</span>
-<span class="source-line-no">1197</span><span id="line-1197">   * range.upper.</span>
-<span class="source-line-no">1198</span><span id="line-1198">   */</span>
-<span class="source-line-no">1199</span><span id="line-1199">  private Predicate toIntegerRangePredicate(Range&lt;Integer&gt; range, S key) {</span>
-<span class="source-line-no">1200</span><span id="line-1200">    if (!range.hasLowerBound()) {</span>
-<span class="source-line-no">1201</span><span id="line-1201">      return new LessThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1202</span><span id="line-1202">          key, String.valueOf(range.upperEndpoint().intValue()));</span>
-<span class="source-line-no">1203</span><span id="line-1203">    }</span>
-<span class="source-line-no">1204</span><span id="line-1204">    if (!range.hasUpperBound()) {</span>
-<span class="source-line-no">1205</span><span id="line-1205">      return new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1206</span><span id="line-1206">          key, String.valueOf(range.lowerEndpoint().intValue()));</span>
-<span class="source-line-no">1207</span><span id="line-1207">    }</span>
-<span class="source-line-no">1208</span><span id="line-1208"></span>
-<span class="source-line-no">1209</span><span id="line-1209">    List&lt;Predicate&gt; predicates =</span>
-<span class="source-line-no">1210</span><span id="line-1210">        List.of(</span>
-<span class="source-line-no">1211</span><span id="line-1211">            new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1212</span><span id="line-1212">                key, String.valueOf(range.lowerEndpoint().intValue())),</span>
-<span class="source-line-no">1213</span><span id="line-1213">            new LessThanOrEqualsPredicate&lt;S&gt;(</span>
-<span class="source-line-no">1214</span><span id="line-1214">                key, String.valueOf(range.upperEndpoint().intValue())));</span>
-<span class="source-line-no">1215</span><span id="line-1215">    return new ConjunctionPredicate(predicates);</span>
-<span class="source-line-no">1216</span><span id="line-1216">  }</span>
-<span class="source-line-no">1217</span><span id="line-1217"></span>
-<span class="source-line-no">1218</span><span id="line-1218">  private void visit(Object object) throws QueryBuildingException {</span>
-<span class="source-line-no">1219</span><span id="line-1219">    Method method = null;</span>
-<span class="source-line-no">1220</span><span id="line-1220">    try {</span>
-<span class="source-line-no">1221</span><span id="line-1221">      method = getClass().getMethod("visit", new Class[] {object.getClass()});</span>
-<span class="source-line-no">1222</span><span id="line-1222">    } catch (NoSuchMethodException e) {</span>
-<span class="source-line-no">1223</span><span id="line-1223">      log.warn(</span>
-<span class="source-line-no">1224</span><span id="line-1224">          "Visit method could not be found. That means a unknown Predicate has been passed", e);</span>
-<span class="source-line-no">1225</span><span id="line-1225">      throw new IllegalArgumentException("Unknown Predicate", e);</span>
-<span class="source-line-no">1226</span><span id="line-1226">    }</span>
-<span class="source-line-no">1227</span><span id="line-1227">    try {</span>
-<span class="source-line-no">1228</span><span id="line-1228">      method.invoke(this, object);</span>
-<span class="source-line-no">1229</span><span id="line-1229">    } catch (IllegalAccessException e) {</span>
-<span class="source-line-no">1230</span><span id="line-1230">      log.error(</span>
-<span class="source-line-no">1231</span><span id="line-1231">          "This error shouldn't occur if all visit methods are public. Probably a programming error",</span>
-<span class="source-line-no">1232</span><span id="line-1232">          e);</span>
-<span class="source-line-no">1233</span><span id="line-1233">      throw new RuntimeException(e);</span>
-<span class="source-line-no">1234</span><span id="line-1234">    } catch (InvocationTargetException e) {</span>
-<span class="source-line-no">1235</span><span id="line-1235">      log.info("Exception thrown while building the query", e);</span>
-<span class="source-line-no">1236</span><span id="line-1236">      throw new QueryBuildingException(e);</span>
-<span class="source-line-no">1237</span><span id="line-1237">    }</span>
-<span class="source-line-no">1238</span><span id="line-1238">  }</span>
-<span class="source-line-no">1239</span><span id="line-1239"></span>
-<span class="source-line-no">1240</span><span id="line-1240">  private boolean isHumboldtTaxonParameter(S parameter) {</span>
-<span class="source-line-no">1241</span><span id="line-1241">    return HUMBOLDT_TAXON_COLUMNS.containsKey(parameter);</span>
-<span class="source-line-no">1242</span><span id="line-1242">  }</span>
-<span class="source-line-no">1243</span><span id="line-1243"></span>
-<span class="source-line-no">1244</span><span id="line-1244">  private String getChecklistKey(String checklistKey) {</span>
-<span class="source-line-no">1245</span><span id="line-1245">    return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;</span>
-<span class="source-line-no">1246</span><span id="line-1246">  }</span>
-<span class="source-line-no">1247</span><span id="line-1247"></span>
-<span class="source-line-no">1248</span><span id="line-1248">  public static boolean isNullOrEmpty(@Nullable String string) {</span>
-<span class="source-line-no">1249</span><span id="line-1249">    return string == null || string.isEmpty();</span>
-<span class="source-line-no">1250</span><span id="line-1250">  }</span>
-<span class="source-line-no">1251</span><span id="line-1251">}</span>
+<span class="source-line-no">993</span><span id="line-993">    String field = HUMBOLDT_TAXON_COLUMNS.getOrDefault(taxonPredicate.getKey(), null);</span>
+<span class="source-line-no">994</span><span id="line-994"></span>
+<span class="source-line-no">995</span><span id="line-995">    if (field == null) {</span>
+<span class="source-line-no">996</span><span id="line-996">      return;</span>
+<span class="source-line-no">997</span><span id="line-997">    }</span>
+<span class="source-line-no">998</span><span id="line-998"></span>
+<span class="source-line-no">999</span><span id="line-999">    Set&lt;String&gt; taxonKeys =</span>
+<span class="source-line-no">1000</span><span id="line-1000">        taxonPredicate.getValues().stream()</span>
+<span class="source-line-no">1001</span><span id="line-1001">            .map(v -&gt; toSQLValue(taxonPredicate.getKey(), v, true))</span>
+<span class="source-line-no">1002</span><span id="line-1002">            .collect(Collectors.toSet());</span>
+<span class="source-line-no">1003</span><span id="line-1003"></span>
+<span class="source-line-no">1004</span><span id="line-1004">    builder</span>
+<span class="source-line-no">1005</span><span id="line-1005">        .append('(')</span>
+<span class="source-line-no">1006</span><span id="line-1006">        .append(</span>
+<span class="source-line-no">1007</span><span id="line-1007">            String.format(</span>
+<span class="source-line-no">1008</span><span id="line-1008">                "arrays_overlap(%s['%s']['%s'], array(%s))",</span>
+<span class="source-line-no">1009</span><span id="line-1009">                SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),</span>
+<span class="source-line-no">1010</span><span id="line-1010">                getChecklistKey(taxonPredicate.getChecklistKey()),</span>
+<span class="source-line-no">1011</span><span id="line-1011">                field,</span>
+<span class="source-line-no">1012</span><span id="line-1012">                String.join(",", taxonKeys)))</span>
+<span class="source-line-no">1013</span><span id="line-1013">        .append(')');</span>
+<span class="source-line-no">1014</span><span id="line-1014">  }</span>
+<span class="source-line-no">1015</span><span id="line-1015"></span>
+<span class="source-line-no">1016</span><span id="line-1016">  private void appendHumboldtTaxonUnary(String checklistKey, String unaryOperator) {</span>
+<span class="source-line-no">1017</span><span id="line-1017">    Objects.requireNonNull(checklistKey);</span>
+<span class="source-line-no">1018</span><span id="line-1018">    builder.append('(');</span>
+<span class="source-line-no">1019</span><span id="line-1019">    builder.append(</span>
+<span class="source-line-no">1020</span><span id="line-1020">        String.format(</span>
+<span class="source-line-no">1021</span><span id="line-1021">            "%s['%s']['%s'] " + unaryOperator,</span>
+<span class="source-line-no">1022</span><span id="line-1022">            SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),</span>
+<span class="source-line-no">1023</span><span id="line-1023">            getChecklistKey(checklistKey),</span>
+<span class="source-line-no">1024</span><span id="line-1024">            "usageName"));</span>
+<span class="source-line-no">1025</span><span id="line-1025">    builder.append(')');</span>
+<span class="source-line-no">1026</span><span id="line-1026">  }</span>
+<span class="source-line-no">1027</span><span id="line-1027"></span>
+<span class="source-line-no">1028</span><span id="line-1028">  /**</span>
+<span class="source-line-no">1029</span><span id="line-1029">   * Searches any of the NUB keys in Hive of any rank.</span>
+<span class="source-line-no">1030</span><span id="line-1030">   *</span>
+<span class="source-line-no">1031</span><span id="line-1031">   * @param taxonKeyPredicate to append as filter</span>
+<span class="source-line-no">1032</span><span id="line-1032">   */</span>
+<span class="source-line-no">1033</span><span id="line-1033">  private void appendTaxonomicArrayFilter(EqualsPredicate&lt;S&gt; taxonKeyPredicate, Term term) {</span>
+<span class="source-line-no">1034</span><span id="line-1034"></span>
+<span class="source-line-no">1035</span><span id="line-1035">    builder</span>
+<span class="source-line-no">1036</span><span id="line-1036">        .append('(')</span>
+<span class="source-line-no">1037</span><span id="line-1037">        .append(</span>
+<span class="source-line-no">1038</span><span id="line-1038">            String.format(</span>
+<span class="source-line-no">1039</span><span id="line-1039">                "stringArrayContains(%s['%s'], '%s', true)",</span>
+<span class="source-line-no">1040</span><span id="line-1040">                SQLColumnsUtils.getSQLQueryColumn(term),</span>
+<span class="source-line-no">1041</span><span id="line-1041">                getChecklistKey(taxonKeyPredicate.getChecklistKey()),</span>
+<span class="source-line-no">1042</span><span id="line-1042">                taxonKeyPredicate.getValue()))</span>
+<span class="source-line-no">1043</span><span id="line-1043">        .append(')');</span>
+<span class="source-line-no">1044</span><span id="line-1044">  }</span>
+<span class="source-line-no">1045</span><span id="line-1045"></span>
+<span class="source-line-no">1046</span><span id="line-1046">  /**</span>
+<span class="source-line-no">1047</span><span id="line-1047">   * Searches any of the NUB keys in Hive of any rank.</span>
+<span class="source-line-no">1048</span><span id="line-1048">   *</span>
+<span class="source-line-no">1049</span><span id="line-1049">   * @param taxonKeyPredicate to append as filter</span>
+<span class="source-line-no">1050</span><span id="line-1050">   */</span>
+<span class="source-line-no">1051</span><span id="line-1051">  private void appendTaxonomicSingleValueFilter(EqualsPredicate&lt;S&gt; taxonKeyPredicate, Term term) {</span>
+<span class="source-line-no">1052</span><span id="line-1052"></span>
+<span class="source-line-no">1053</span><span id="line-1053">    builder</span>
+<span class="source-line-no">1054</span><span id="line-1054">        .append('(')</span>
+<span class="source-line-no">1055</span><span id="line-1055">        .append(</span>
+<span class="source-line-no">1056</span><span id="line-1056">            String.format(</span>
+<span class="source-line-no">1057</span><span id="line-1057">                "%s['%s'] = '%s'",</span>
+<span class="source-line-no">1058</span><span id="line-1058">                SQLColumnsUtils.getSQLQueryColumn(term),</span>
+<span class="source-line-no">1059</span><span id="line-1059">                getChecklistKey(taxonKeyPredicate.getChecklistKey()),</span>
+<span class="source-line-no">1060</span><span id="line-1060">                taxonKeyPredicate.getValue()))</span>
+<span class="source-line-no">1061</span><span id="line-1061">        .append(')');</span>
+<span class="source-line-no">1062</span><span id="line-1062">  }</span>
+<span class="source-line-no">1063</span><span id="line-1063"></span>
+<span class="source-line-no">1064</span><span id="line-1064">  /** Creates a disjunction of all the given terms. */</span>
+<span class="source-line-no">1065</span><span id="line-1065">  private void appendGadmFilterList(List&lt;? extends Term&gt; terms, String value) {</span>
+<span class="source-line-no">1066</span><span id="line-1066">    builder</span>
+<span class="source-line-no">1067</span><span id="line-1067">        .append('(')</span>
+<span class="source-line-no">1068</span><span id="line-1068">        .append(</span>
+<span class="source-line-no">1069</span><span id="line-1069">            terms.stream()</span>
+<span class="source-line-no">1070</span><span id="line-1070">                .map(</span>
+<span class="source-line-no">1071</span><span id="line-1071">                    term -&gt;</span>
+<span class="source-line-no">1072</span><span id="line-1072">                        SQLColumnsUtils.getSQLQueryColumn(term)</span>
+<span class="source-line-no">1073</span><span id="line-1073">                            + EQUALS_OPERATOR</span>
+<span class="source-line-no">1074</span><span id="line-1074">                            + "'"</span>
+<span class="source-line-no">1075</span><span id="line-1075">                            + value</span>
+<span class="source-line-no">1076</span><span id="line-1076">                            + "'")</span>
+<span class="source-line-no">1077</span><span id="line-1077">                .collect(Collectors.joining(DISJUNCTION_OPERATOR)))</span>
+<span class="source-line-no">1078</span><span id="line-1078">        .append(')');</span>
+<span class="source-line-no">1079</span><span id="line-1079">  }</span>
+<span class="source-line-no">1080</span><span id="line-1080"></span>
+<span class="source-line-no">1081</span><span id="line-1081">  /**</span>
+<span class="source-line-no">1082</span><span id="line-1082">   * Searches any of the NUB keys in Hive of any rank, for multiple keys.</span>
+<span class="source-line-no">1083</span><span id="line-1083">   *</span>
+<span class="source-line-no">1084</span><span id="line-1084">   * @param taxonomicPredicate to append as filter</span>
+<span class="source-line-no">1085</span><span id="line-1085">   */</span>
+<span class="source-line-no">1086</span><span id="line-1086">  private void appendTaxonomicArrayFilter(InPredicate&lt;S&gt; taxonomicPredicate, Term term) {</span>
+<span class="source-line-no">1087</span><span id="line-1087">    Set&lt;String&gt; taxonKeys =</span>
+<span class="source-line-no">1088</span><span id="line-1088">        taxonomicPredicate.getValues().stream()</span>
+<span class="source-line-no">1089</span><span id="line-1089">            .map(v -&gt; toSQLValue(taxonomicPredicate.getKey(), v, true))</span>
+<span class="source-line-no">1090</span><span id="line-1090">            .collect(Collectors.toSet());</span>
+<span class="source-line-no">1091</span><span id="line-1091"></span>
+<span class="source-line-no">1092</span><span id="line-1092">    builder</span>
+<span class="source-line-no">1093</span><span id="line-1093">        .append('(')</span>
+<span class="source-line-no">1094</span><span id="line-1094">        .append(</span>
+<span class="source-line-no">1095</span><span id="line-1095">            String.format(</span>
+<span class="source-line-no">1096</span><span id="line-1096">                "arrays_overlap(%s['%s'], array(%s))",</span>
+<span class="source-line-no">1097</span><span id="line-1097">                SQLColumnsUtils.getSQLQueryColumn(term),</span>
+<span class="source-line-no">1098</span><span id="line-1098">                getChecklistKey(taxonomicPredicate.getChecklistKey()),</span>
+<span class="source-line-no">1099</span><span id="line-1099">                String.join(",", taxonKeys)))</span>
+<span class="source-line-no">1100</span><span id="line-1100">        .append(')');</span>
+<span class="source-line-no">1101</span><span id="line-1101">  }</span>
+<span class="source-line-no">1102</span><span id="line-1102"></span>
+<span class="source-line-no">1103</span><span id="line-1103">  /**</span>
+<span class="source-line-no">1104</span><span id="line-1104">   * Searches any of the NUB keys in Hive of any rank, for multiple keys.</span>
+<span class="source-line-no">1105</span><span id="line-1105">   *</span>
+<span class="source-line-no">1106</span><span id="line-1106">   * @param taxonomicPredicate to append as filter</span>
+<span class="source-line-no">1107</span><span id="line-1107">   */</span>
+<span class="source-line-no">1108</span><span id="line-1108">  private void appendTaxonomicSingleValueFilter(InPredicate&lt;S&gt; taxonomicPredicate, Term term) {</span>
+<span class="source-line-no">1109</span><span id="line-1109"></span>
+<span class="source-line-no">1110</span><span id="line-1110">    Collection&lt;String&gt; taxonKeys = taxonomicPredicate.getValues();</span>
+<span class="source-line-no">1111</span><span id="line-1111"></span>
+<span class="source-line-no">1112</span><span id="line-1112">    builder.append('(');</span>
+<span class="source-line-no">1113</span><span id="line-1113">    boolean first = true;</span>
+<span class="source-line-no">1114</span><span id="line-1114">    for (String taxonKey : taxonKeys) {</span>
+<span class="source-line-no">1115</span><span id="line-1115">      if (!first) {</span>
+<span class="source-line-no">1116</span><span id="line-1116">        builder.append(DISJUNCTION_OPERATOR);</span>
+<span class="source-line-no">1117</span><span id="line-1117">      }</span>
+<span class="source-line-no">1118</span><span id="line-1118">      builder</span>
+<span class="source-line-no">1119</span><span id="line-1119">          .append('(')</span>
+<span class="source-line-no">1120</span><span id="line-1120">          .append(</span>
+<span class="source-line-no">1121</span><span id="line-1121">              String.format(</span>
+<span class="source-line-no">1122</span><span id="line-1122">                  "%s['%s'] = '%s'",</span>
+<span class="source-line-no">1123</span><span id="line-1123">                  SQLColumnsUtils.getSQLQueryColumn(term),</span>
+<span class="source-line-no">1124</span><span id="line-1124">                  getChecklistKey(taxonomicPredicate.getChecklistKey()),</span>
+<span class="source-line-no">1125</span><span id="line-1125">                  taxonKey))</span>
+<span class="source-line-no">1126</span><span id="line-1126">          .append(')');</span>
+<span class="source-line-no">1127</span><span id="line-1127">      first = false;</span>
+<span class="source-line-no">1128</span><span id="line-1128">    }</span>
+<span class="source-line-no">1129</span><span id="line-1129">    builder.append(')');</span>
+<span class="source-line-no">1130</span><span id="line-1130">  }</span>
+<span class="source-line-no">1131</span><span id="line-1131"></span>
+<span class="source-line-no">1132</span><span id="line-1132">  /**</span>
+<span class="source-line-no">1133</span><span id="line-1133">   * Searches every level of GADM GID in Hive for multiple keys.</span>
+<span class="source-line-no">1134</span><span id="line-1134">   *</span>
+<span class="source-line-no">1135</span><span id="line-1135">   * @param gadmGids to append as filter</span>
+<span class="source-line-no">1136</span><span id="line-1136">   */</span>
+<span class="source-line-no">1137</span><span id="line-1137">  private void appendGadmGidFilter(Collection&lt;String&gt; gadmGids) {</span>
+<span class="source-line-no">1138</span><span id="line-1138">    builder.append('(');</span>
+<span class="source-line-no">1139</span><span id="line-1139">    boolean first = true;</span>
+<span class="source-line-no">1140</span><span id="line-1140">    for (Term term : GADM_GIDS) {</span>
+<span class="source-line-no">1141</span><span id="line-1141">      if (!first) {</span>
+<span class="source-line-no">1142</span><span id="line-1142">        builder.append(DISJUNCTION_OPERATOR);</span>
+<span class="source-line-no">1143</span><span id="line-1143">      }</span>
+<span class="source-line-no">1144</span><span id="line-1144">      builder.append(SQLColumnsUtils.getSQLQueryColumn(term)).append(IN_OPERATOR).append('(');</span>
+<span class="source-line-no">1145</span><span id="line-1145">      Iterator&lt;String&gt; iterator = gadmGids.iterator();</span>
+<span class="source-line-no">1146</span><span id="line-1146">      while (iterator.hasNext()) {</span>
+<span class="source-line-no">1147</span><span id="line-1147">        // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.</span>
+<span class="source-line-no">1148</span><span id="line-1148">        // Using .toUpperCase() is safe, GIDs must be ASCII anyway.</span>
+<span class="source-line-no">1149</span><span id="line-1149">        builder.append(</span>
+<span class="source-line-no">1150</span><span id="line-1150">            toSQLValue(sqlTermsMapper.getDefaultGadmLevel(), iterator.next().toUpperCase(), true));</span>
+<span class="source-line-no">1151</span><span id="line-1151">        if (iterator.hasNext()) {</span>
+<span class="source-line-no">1152</span><span id="line-1152">          builder.append(", ");</span>
+<span class="source-line-no">1153</span><span id="line-1153">        }</span>
+<span class="source-line-no">1154</span><span id="line-1154">      }</span>
+<span class="source-line-no">1155</span><span id="line-1155">      builder.append(")");</span>
+<span class="source-line-no">1156</span><span id="line-1156">      first = false;</span>
+<span class="source-line-no">1157</span><span id="line-1157">    }</span>
+<span class="source-line-no">1158</span><span id="line-1158">    builder.append(')');</span>
+<span class="source-line-no">1159</span><span id="line-1159">  }</span>
+<span class="source-line-no">1160</span><span id="line-1160"></span>
+<span class="source-line-no">1161</span><span id="line-1161">  /**</span>
+<span class="source-line-no">1162</span><span id="line-1162">   * Searches any of the NUB keys in Hive of any rank.</span>
+<span class="source-line-no">1163</span><span id="line-1163">   *</span>
+<span class="source-line-no">1164</span><span id="line-1164">   * @param unaryOperator to append as filter</span>
+<span class="source-line-no">1165</span><span id="line-1165">   */</span>
+<span class="source-line-no">1166</span><span id="line-1166">  private void appendUnaryList(List&lt;? extends Term&gt; terms, String unaryOperator) {</span>
+<span class="source-line-no">1167</span><span id="line-1167">    builder.append('(');</span>
+<span class="source-line-no">1168</span><span id="line-1168">    builder.append(</span>
+<span class="source-line-no">1169</span><span id="line-1169">        terms.stream()</span>
+<span class="source-line-no">1170</span><span id="line-1170">            .map(term -&gt; SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)</span>
+<span class="source-line-no">1171</span><span id="line-1171">            .collect(Collectors.joining(CONJUNCTION_OPERATOR)));</span>
+<span class="source-line-no">1172</span><span id="line-1172">    builder.append(')');</span>
+<span class="source-line-no">1173</span><span id="line-1173">  }</span>
+<span class="source-line-no">1174</span><span id="line-1174"></span>
+<span class="source-line-no">1175</span><span id="line-1175">  /**</span>
+<span class="source-line-no">1176</span><span id="line-1176">   * Converts decimal range into a predicate with the form: field &gt;= range.lower AND field &lt;=</span>
+<span class="source-line-no">1177</span><span id="line-1177">   * range.upper.</span>
+<span class="source-line-no">1178</span><span id="line-1178">   */</span>
+<span class="source-line-no">1179</span><span id="line-1179">  private Predicate toNumberRangePredicate(Range&lt;Double&gt; range, S key) {</span>
+<span class="source-line-no">1180</span><span id="line-1180">    if (!range.hasLowerBound()) {</span>
+<span class="source-line-no">1181</span><span id="line-1181">      return new LessThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1182</span><span id="line-1182">          key, String.valueOf(range.upperEndpoint().doubleValue()));</span>
+<span class="source-line-no">1183</span><span id="line-1183">    }</span>
+<span class="source-line-no">1184</span><span id="line-1184">    if (!range.hasUpperBound()) {</span>
+<span class="source-line-no">1185</span><span id="line-1185">      return new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1186</span><span id="line-1186">          key, String.valueOf(range.lowerEndpoint().doubleValue()));</span>
+<span class="source-line-no">1187</span><span id="line-1187">    }</span>
+<span class="source-line-no">1188</span><span id="line-1188"></span>
+<span class="source-line-no">1189</span><span id="line-1189">    List&lt;Predicate&gt; predicates =</span>
+<span class="source-line-no">1190</span><span id="line-1190">        List.of(</span>
+<span class="source-line-no">1191</span><span id="line-1191">            new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1192</span><span id="line-1192">                key, String.valueOf(range.lowerEndpoint().doubleValue())),</span>
+<span class="source-line-no">1193</span><span id="line-1193">            new LessThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1194</span><span id="line-1194">                key, String.valueOf(range.upperEndpoint().doubleValue())));</span>
+<span class="source-line-no">1195</span><span id="line-1195">    return new ConjunctionPredicate(predicates);</span>
+<span class="source-line-no">1196</span><span id="line-1196">  }</span>
+<span class="source-line-no">1197</span><span id="line-1197"></span>
+<span class="source-line-no">1198</span><span id="line-1198">  /**</span>
+<span class="source-line-no">1199</span><span id="line-1199">   * Converts integer range into a predicate with the form: field &gt;= range.lower AND field &lt;=</span>
+<span class="source-line-no">1200</span><span id="line-1200">   * range.upper.</span>
+<span class="source-line-no">1201</span><span id="line-1201">   */</span>
+<span class="source-line-no">1202</span><span id="line-1202">  private Predicate toIntegerRangePredicate(Range&lt;Integer&gt; range, S key) {</span>
+<span class="source-line-no">1203</span><span id="line-1203">    if (!range.hasLowerBound()) {</span>
+<span class="source-line-no">1204</span><span id="line-1204">      return new LessThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1205</span><span id="line-1205">          key, String.valueOf(range.upperEndpoint().intValue()));</span>
+<span class="source-line-no">1206</span><span id="line-1206">    }</span>
+<span class="source-line-no">1207</span><span id="line-1207">    if (!range.hasUpperBound()) {</span>
+<span class="source-line-no">1208</span><span id="line-1208">      return new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1209</span><span id="line-1209">          key, String.valueOf(range.lowerEndpoint().intValue()));</span>
+<span class="source-line-no">1210</span><span id="line-1210">    }</span>
+<span class="source-line-no">1211</span><span id="line-1211"></span>
+<span class="source-line-no">1212</span><span id="line-1212">    List&lt;Predicate&gt; predicates =</span>
+<span class="source-line-no">1213</span><span id="line-1213">        List.of(</span>
+<span class="source-line-no">1214</span><span id="line-1214">            new GreaterThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1215</span><span id="line-1215">                key, String.valueOf(range.lowerEndpoint().intValue())),</span>
+<span class="source-line-no">1216</span><span id="line-1216">            new LessThanOrEqualsPredicate&lt;S&gt;(</span>
+<span class="source-line-no">1217</span><span id="line-1217">                key, String.valueOf(range.upperEndpoint().intValue())));</span>
+<span class="source-line-no">1218</span><span id="line-1218">    return new ConjunctionPredicate(predicates);</span>
+<span class="source-line-no">1219</span><span id="line-1219">  }</span>
+<span class="source-line-no">1220</span><span id="line-1220"></span>
+<span class="source-line-no">1221</span><span id="line-1221">  private void visit(Object object) throws QueryBuildingException {</span>
+<span class="source-line-no">1222</span><span id="line-1222">    Method method = null;</span>
+<span class="source-line-no">1223</span><span id="line-1223">    try {</span>
+<span class="source-line-no">1224</span><span id="line-1224">      method = getClass().getMethod("visit", new Class[] {object.getClass()});</span>
+<span class="source-line-no">1225</span><span id="line-1225">    } catch (NoSuchMethodException e) {</span>
+<span class="source-line-no">1226</span><span id="line-1226">      log.warn(</span>
+<span class="source-line-no">1227</span><span id="line-1227">          "Visit method could not be found. That means a unknown Predicate has been passed", e);</span>
+<span class="source-line-no">1228</span><span id="line-1228">      throw new IllegalArgumentException("Unknown Predicate", e);</span>
+<span class="source-line-no">1229</span><span id="line-1229">    }</span>
+<span class="source-line-no">1230</span><span id="line-1230">    try {</span>
+<span class="source-line-no">1231</span><span id="line-1231">      method.invoke(this, object);</span>
+<span class="source-line-no">1232</span><span id="line-1232">    } catch (IllegalAccessException e) {</span>
+<span class="source-line-no">1233</span><span id="line-1233">      log.error(</span>
+<span class="source-line-no">1234</span><span id="line-1234">          "This error shouldn't occur if all visit methods are public. Probably a programming error",</span>
+<span class="source-line-no">1235</span><span id="line-1235">          e);</span>
+<span class="source-line-no">1236</span><span id="line-1236">      throw new RuntimeException(e);</span>
+<span class="source-line-no">1237</span><span id="line-1237">    } catch (InvocationTargetException e) {</span>
+<span class="source-line-no">1238</span><span id="line-1238">      log.info("Exception thrown while building the query", e);</span>
+<span class="source-line-no">1239</span><span id="line-1239">      throw new QueryBuildingException(e);</span>
+<span class="source-line-no">1240</span><span id="line-1240">    }</span>
+<span class="source-line-no">1241</span><span id="line-1241">  }</span>
+<span class="source-line-no">1242</span><span id="line-1242"></span>
+<span class="source-line-no">1243</span><span id="line-1243">  private boolean isHumboldtTaxonParameter(S parameter) {</span>
+<span class="source-line-no">1244</span><span id="line-1244">    return HUMBOLDT_TAXON_COLUMNS.containsKey(parameter);</span>
+<span class="source-line-no">1245</span><span id="line-1245">  }</span>
+<span class="source-line-no">1246</span><span id="line-1246"></span>
+<span class="source-line-no">1247</span><span id="line-1247">  private String getChecklistKey(String checklistKey) {</span>
+<span class="source-line-no">1248</span><span id="line-1248">    return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;</span>
+<span class="source-line-no">1249</span><span id="line-1249">  }</span>
+<span class="source-line-no">1250</span><span id="line-1250"></span>
+<span class="source-line-no">1251</span><span id="line-1251">  public static boolean isNullOrEmpty(@Nullable String string) {</span>
+<span class="source-line-no">1252</span><span id="line-1252">    return string == null || string.isEmpty();</span>
+<span class="source-line-no">1253</span><span id="line-1253">  }</span>
+<span class="source-line-no">1254</span><span id="line-1254">}</span>
 
 
 
