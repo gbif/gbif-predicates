@@ -59,8 +59,8 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.2.4-SNAPSHOT</gbif-api.version>
-    <dwc-api.version>2.1.9-SNAPSHOT</dwc-api.version>
+    <gbif-api.version>2.3.0</gbif-api.version>
+    <dwc-api.version>2.1.9</dwc-api.version>
 
     <!-- Logging -->
     <slf4j.version>2.0.17</slf4j.version>
