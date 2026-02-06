@@ -228,14 +228,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(ConjunctionPredicate predicate) throws QueryBuildingException {
-
-    for (Predicate p : predicate.getPredicates()) {
-      if (p instanceof EqualsPredicate) {
-        EqualsPredicate eqPredicate = (EqualsPredicate) p;
-        if (eqPredicate.getKey() == EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE) {}
-      }
-    }
-
     visitCompoundPredicate(predicate, CONJUNCTION_OPERATOR);
   }
 
