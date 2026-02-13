@@ -204,9 +204,7 @@ public class SQLColumnsUtils {
         || EcoTerm.excludedDegreeOfEstablishmentScope == term
         || DwcTerm.projectTitle == term
         || DwcTerm.fundingAttribution == term
-        || DwcTerm.fundingAttributionID == term
-        || DwcTerm.measurementType == term
-        || ObisTerm.measurementTypeID == term;
+        || DwcTerm.fundingAttributionID == term;
   }
 
   public static boolean isHumboldtTerm(Term term) {
