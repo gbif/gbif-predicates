@@ -17,6 +17,7 @@ import org.gbif.dwc.terms.GadmTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.IucnTerm;
+import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.predicate.query.SQLTermsMapper;
 
@@ -102,6 +103,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
     eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
     eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
+    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     // Humboldt
     eventsMap.put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount);
     eventsMap.put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames);
@@ -336,6 +339,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
     paramMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     // Add all from EVENTS_PARAM_TO_TERM
     paramMap.putAll(EVENTS_PARAM_TO_TERM);
     PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);
@@ -358,6 +363,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
     arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);
     arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);
   }
 
