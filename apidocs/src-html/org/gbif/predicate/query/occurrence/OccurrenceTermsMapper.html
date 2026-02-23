@@ -30,384 +30,406 @@
 <span class="source-line-no">017</span><span id="line-17">import org.gbif.dwc.terms.GbifInternalTerm;</span>
 <span class="source-line-no">018</span><span id="line-18">import org.gbif.dwc.terms.GbifTerm;</span>
 <span class="source-line-no">019</span><span id="line-19">import org.gbif.dwc.terms.IucnTerm;</span>
-<span class="source-line-no">020</span><span id="line-20">import org.gbif.dwc.terms.Term;</span>
-<span class="source-line-no">021</span><span id="line-21">import org.gbif.predicate.query.SQLTermsMapper;</span>
-<span class="source-line-no">022</span><span id="line-22"></span>
-<span class="source-line-no">023</span><span id="line-23">public class OccurrenceTermsMapper implements SQLTermsMapper&lt;SearchParameter&gt; {</span>
-<span class="source-line-no">024</span><span id="line-24"></span>
-<span class="source-line-no">025</span><span id="line-25">  static Map&lt;? extends SearchParameter, ? extends Term&gt; EVENTS_PARAM_TO_TERM;</span>
-<span class="source-line-no">026</span><span id="line-26">  private static final Map&lt;? extends SearchParameter, ? extends Term&gt; PARAM_TO_TERM;</span>
-<span class="source-line-no">027</span><span id="line-27">  private static final Map&lt;? extends SearchParameter, Term&gt; ARRAY_STRING_TERMS;</span>
-<span class="source-line-no">028</span><span id="line-28"></span>
-<span class="source-line-no">029</span><span id="line-29">  static {</span>
-<span class="source-line-no">030</span><span id="line-30">    // Build EVENTS_PARAM_TO_TERM with LinkedHashMap to preserve insertion order</span>
-<span class="source-line-no">031</span><span id="line-31">    Map&lt;SearchParameter, Term&gt; eventsMap = new LinkedHashMap&lt;&gt;();</span>
-<span class="source-line-no">032</span><span id="line-32">    eventsMap.put(EventSearchParameter.DATASET_KEY, GbifTerm.datasetKey);</span>
-<span class="source-line-no">033</span><span id="line-33">    eventsMap.put(EventSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);</span>
-<span class="source-line-no">034</span><span id="line-34">    eventsMap.put(EventSearchParameter.YEAR, DwcTerm.year);</span>
-<span class="source-line-no">035</span><span id="line-35">    eventsMap.put(EventSearchParameter.MONTH, DwcTerm.month);</span>
-<span class="source-line-no">036</span><span id="line-36">    eventsMap.put(EventSearchParameter.DAY, DwcTerm.day);</span>
-<span class="source-line-no">037</span><span id="line-37">    eventsMap.put(EventSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear);</span>
-<span class="source-line-no">038</span><span id="line-38">    eventsMap.put(EventSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear);</span>
-<span class="source-line-no">039</span><span id="line-39">    eventsMap.put(EventSearchParameter.EVENT_DATE, DwcTerm.eventDate);</span>
-<span class="source-line-no">040</span><span id="line-40">    eventsMap.put(EventSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);</span>
+<span class="source-line-no">020</span><span id="line-20">import org.gbif.dwc.terms.ObisTerm;</span>
+<span class="source-line-no">021</span><span id="line-21">import org.gbif.dwc.terms.Term;</span>
+<span class="source-line-no">022</span><span id="line-22">import org.gbif.predicate.query.SQLTermsMapper;</span>
+<span class="source-line-no">023</span><span id="line-23"></span>
+<span class="source-line-no">024</span><span id="line-24">public class OccurrenceTermsMapper implements SQLTermsMapper&lt;SearchParameter&gt; {</span>
+<span class="source-line-no">025</span><span id="line-25"></span>
+<span class="source-line-no">026</span><span id="line-26">  static Map&lt;? extends SearchParameter, ? extends Term&gt; EVENTS_PARAM_TO_TERM;</span>
+<span class="source-line-no">027</span><span id="line-27">  private static final Map&lt;? extends SearchParameter, ? extends Term&gt; PARAM_TO_TERM;</span>
+<span class="source-line-no">028</span><span id="line-28">  private static final Map&lt;? extends SearchParameter, Term&gt; ARRAY_STRING_TERMS;</span>
+<span class="source-line-no">029</span><span id="line-29"></span>
+<span class="source-line-no">030</span><span id="line-30">  static {</span>
+<span class="source-line-no">031</span><span id="line-31">    // Build EVENTS_PARAM_TO_TERM with LinkedHashMap to preserve insertion order</span>
+<span class="source-line-no">032</span><span id="line-32">    Map&lt;SearchParameter, Term&gt; eventsMap = new LinkedHashMap&lt;&gt;();</span>
+<span class="source-line-no">033</span><span id="line-33">    eventsMap.put(EventSearchParameter.DATASET_KEY, GbifTerm.datasetKey);</span>
+<span class="source-line-no">034</span><span id="line-34">    eventsMap.put(EventSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);</span>
+<span class="source-line-no">035</span><span id="line-35">    eventsMap.put(EventSearchParameter.YEAR, DwcTerm.year);</span>
+<span class="source-line-no">036</span><span id="line-36">    eventsMap.put(EventSearchParameter.MONTH, DwcTerm.month);</span>
+<span class="source-line-no">037</span><span id="line-37">    eventsMap.put(EventSearchParameter.DAY, DwcTerm.day);</span>
+<span class="source-line-no">038</span><span id="line-38">    eventsMap.put(EventSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear);</span>
+<span class="source-line-no">039</span><span id="line-39">    eventsMap.put(EventSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear);</span>
+<span class="source-line-no">040</span><span id="line-40">    eventsMap.put(EventSearchParameter.EVENT_DATE, DwcTerm.eventDate);</span>
 <span class="source-line-no">041</span><span id="line-41">    eventsMap.put(EventSearchParameter.EVENT_ID, DwcTerm.eventID);</span>
 <span class="source-line-no">042</span><span id="line-42">    eventsMap.put(EventSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID);</span>
 <span class="source-line-no">043</span><span id="line-43">    eventsMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
-<span class="source-line-no">044</span><span id="line-44">    eventsMap.put(EventSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications);</span>
-<span class="source-line-no">045</span><span id="line-45">    eventsMap.put(EventSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted);</span>
-<span class="source-line-no">046</span><span id="line-46">    eventsMap.put(EventSearchParameter.MODIFIED, DcTerm.modified);</span>
-<span class="source-line-no">047</span><span id="line-47">    eventsMap.put(EventSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude);</span>
-<span class="source-line-no">048</span><span id="line-48">    eventsMap.put(EventSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude);</span>
-<span class="source-line-no">049</span><span id="line-49">    eventsMap.put(</span>
-<span class="source-line-no">050</span><span id="line-50">        EventSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,</span>
-<span class="source-line-no">051</span><span id="line-51">        DwcTerm.coordinateUncertaintyInMeters);</span>
-<span class="source-line-no">052</span><span id="line-52">    eventsMap.put(EventSearchParameter.COUNTRY, DwcTerm.country);</span>
-<span class="source-line-no">053</span><span id="line-53">    eventsMap.put(EventSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);</span>
-<span class="source-line-no">054</span><span id="line-54">    eventsMap.put(EventSearchParameter.CONTINENT, DwcTerm.continent);</span>
-<span class="source-line-no">055</span><span id="line-55">    eventsMap.put(EventSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry);</span>
-<span class="source-line-no">056</span><span id="line-56">    eventsMap.put(EventSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);</span>
-<span class="source-line-no">057</span><span id="line-57">    eventsMap.put(EventSearchParameter.ELEVATION, GbifTerm.elevation);</span>
-<span class="source-line-no">058</span><span id="line-58">    eventsMap.put(EventSearchParameter.DEPTH, GbifTerm.depth);</span>
-<span class="source-line-no">059</span><span id="line-59">    eventsMap.put(EventSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode);</span>
-<span class="source-line-no">060</span><span id="line-60">    eventsMap.put(EventSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode);</span>
-<span class="source-line-no">061</span><span id="line-61">    eventsMap.put(EventSearchParameter.TAXON_KEY, GbifTerm.taxonKey);</span>
-<span class="source-line-no">062</span><span id="line-62">    eventsMap.put(EventSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey);</span>
-<span class="source-line-no">063</span><span id="line-63">    eventsMap.put(EventSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName);</span>
-<span class="source-line-no">064</span><span id="line-64">    eventsMap.put(EventSearchParameter.TAXON_ID, DwcTerm.taxonID);</span>
-<span class="source-line-no">065</span><span id="line-65">    eventsMap.put(EventSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus);</span>
-<span class="source-line-no">066</span><span id="line-66">    eventsMap.put(EventSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue);</span>
-<span class="source-line-no">067</span><span id="line-67">    eventsMap.put(EventSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);</span>
-<span class="source-line-no">068</span><span id="line-68">    eventsMap.put(EventSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate);</span>
-<span class="source-line-no">069</span><span id="line-69">    eventsMap.put(EventSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues);</span>
-<span class="source-line-no">070</span><span id="line-70">    eventsMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);</span>
-<span class="source-line-no">071</span><span id="line-71">    eventsMap.put(EventSearchParameter.REPATRIATED, GbifTerm.repatriated);</span>
-<span class="source-line-no">072</span><span id="line-72">    eventsMap.put(EventSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince);</span>
-<span class="source-line-no">073</span><span id="line-73">    eventsMap.put(EventSearchParameter.WATER_BODY, DwcTerm.waterBody);</span>
-<span class="source-line-no">074</span><span id="line-74">    eventsMap.put(EventSearchParameter.LOCALITY, DwcTerm.locality);</span>
-<span class="source-line-no">075</span><span id="line-75">    eventsMap.put(EventSearchParameter.PROTOCOL, GbifTerm.protocol);</span>
-<span class="source-line-no">076</span><span id="line-76">    eventsMap.put(EventSearchParameter.LICENSE, DcTerm.license);</span>
-<span class="source-line-no">077</span><span id="line-77">    eventsMap.put(EventSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey);</span>
-<span class="source-line-no">078</span><span id="line-78">    eventsMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
-<span class="source-line-no">079</span><span id="line-79">    eventsMap.put(EventSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);</span>
-<span class="source-line-no">080</span><span id="line-80">    eventsMap.put(</span>
-<span class="source-line-no">081</span><span id="line-81">        EventSearchParameter.HOSTING_ORGANIZATION_KEY, GbifInternalTerm.hostingOrganizationKey);</span>
-<span class="source-line-no">082</span><span id="line-82">    eventsMap.put(EventSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);</span>
-<span class="source-line-no">083</span><span id="line-83">    eventsMap.put(EventSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym);</span>
-<span class="source-line-no">084</span><span id="line-84">    eventsMap.put(EventSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit);</span>
-<span class="source-line-no">085</span><span id="line-85">    eventsMap.put(EventSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue);</span>
-<span class="source-line-no">086</span><span id="line-86">    eventsMap.put(EventSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid);</span>
-<span class="source-line-no">087</span><span id="line-87">    eventsMap.put(EventSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid);</span>
-<span class="source-line-no">088</span><span id="line-88">    eventsMap.put(EventSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid);</span>
-<span class="source-line-no">089</span><span id="line-89">    eventsMap.put(EventSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid);</span>
-<span class="source-line-no">090</span><span id="line-90">    eventsMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
-<span class="source-line-no">091</span><span id="line-91">    eventsMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
-<span class="source-line-no">092</span><span id="line-92">    eventsMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
-<span class="source-line-no">093</span><span id="line-93">    eventsMap.put(EventSearchParameter.ISLAND, DwcTerm.island);</span>
-<span class="source-line-no">094</span><span id="line-94">    eventsMap.put(EventSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);</span>
-<span class="source-line-no">095</span><span id="line-95">    eventsMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);</span>
-<span class="source-line-no">096</span><span id="line-96">    eventsMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);</span>
-<span class="source-line-no">097</span><span id="line-97">    eventsMap.put(EventSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);</span>
-<span class="source-line-no">098</span><span id="line-98">    eventsMap.put(EventSearchParameter.GBIF_ID, GbifTerm.gbifID);</span>
-<span class="source-line-no">099</span><span id="line-99">    eventsMap.put(EventSearchParameter.EVENT_TYPE, DwcTerm.eventType);</span>
-<span class="source-line-no">100</span><span id="line-100">    eventsMap.put(EventSearchParameter.ISSUE, GbifTerm.issue);</span>
-<span class="source-line-no">101</span><span id="line-101">    eventsMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);</span>
-<span class="source-line-no">102</span><span id="line-102">    eventsMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);</span>
-<span class="source-line-no">103</span><span id="line-103">    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);</span>
-<span class="source-line-no">104</span><span id="line-104">    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);</span>
-<span class="source-line-no">105</span><span id="line-105">    // Humboldt</span>
-<span class="source-line-no">106</span><span id="line-106">    eventsMap.put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount);</span>
-<span class="source-line-no">107</span><span id="line-107">    eventsMap.put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames);</span>
-<span class="source-line-no">108</span><span id="line-108">    eventsMap.put(</span>
-<span class="source-line-no">109</span><span id="line-109">        EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_VALUE,</span>
-<span class="source-line-no">110</span><span id="line-110">        EcoTerm.geospatialScopeAreaValue);</span>
-<span class="source-line-no">111</span><span id="line-111">    eventsMap.put(</span>
-<span class="source-line-no">112</span><span id="line-112">        EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_UNIT, EcoTerm.geospatialScopeAreaUnit);</span>
-<span class="source-line-no">113</span><span id="line-113">    eventsMap.put(</span>
-<span class="source-line-no">114</span><span id="line-114">        EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_VALUE, EcoTerm.totalAreaSampledValue);</span>
-<span class="source-line-no">115</span><span id="line-115">    eventsMap.put(</span>
-<span class="source-line-no">116</span><span id="line-116">        EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_UNIT, EcoTerm.totalAreaSampledUnit);</span>
-<span class="source-line-no">117</span><span id="line-117">    eventsMap.put(EventSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope);</span>
-<span class="source-line-no">118</span><span id="line-118">    eventsMap.put(</span>
-<span class="source-line-no">119</span><span id="line-119">        EventSearchParameter.HUMBOLDT_EVENT_DURATION,</span>
-<span class="source-line-no">120</span><span id="line-120">        GbifInternalTerm.humboldtEventDurationValueInMinutes);</span>
-<span class="source-line-no">121</span><span id="line-121">    eventsMap.put(</span>
-<span class="source-line-no">122</span><span id="line-122">        EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES,</span>
-<span class="source-line-no">123</span><span id="line-123">        GbifInternalTerm.humboldtEventDurationValueInMinutes);</span>
-<span class="source-line-no">124</span><span id="line-124">    eventsMap.put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue);</span>
-<span class="source-line-no">125</span><span id="line-125">    eventsMap.put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit);</span>
-<span class="source-line-no">126</span><span id="line-126">    eventsMap.put(</span>
-<span class="source-line-no">127</span><span id="line-127">        EventSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS,</span>
-<span class="source-line-no">128</span><span id="line-128">        EcoTerm.taxonCompletenessProtocols);</span>
-<span class="source-line-no">129</span><span id="line-129">    eventsMap.put(</span>
-<span class="source-line-no">130</span><span id="line-130">        EventSearchParameter.HUMBOLDT_IS_TAXONOMIC_SCOPE_FULLY_REPORTED,</span>
-<span class="source-line-no">131</span><span id="line-131">        EcoTerm.isTaxonomicScopeFullyReported);</span>
-<span class="source-line-no">132</span><span id="line-132">    eventsMap.put(EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, EcoTerm.isAbsenceReported);</span>
-<span class="source-line-no">133</span><span id="line-133">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_TAXA, EcoTerm.hasNonTargetTaxa);</span>
-<span class="source-line-no">134</span><span id="line-134">    eventsMap.put(</span>
-<span class="source-line-no">135</span><span id="line-135">        EventSearchParameter.HUMBOLDT_ARE_NON_TARGET_TAXA_FULLY_REPORTED,</span>
-<span class="source-line-no">136</span><span id="line-136">        EcoTerm.areNonTargetTaxaFullyReported);</span>
-<span class="source-line-no">137</span><span id="line-137">    eventsMap.put(</span>
-<span class="source-line-no">138</span><span id="line-138">        EventSearchParameter.HUMBOLDT_TARGET_LIFE_STAGE_SCOPE, EcoTerm.targetLifeStageScope);</span>
-<span class="source-line-no">139</span><span id="line-139">    eventsMap.put(</span>
-<span class="source-line-no">140</span><span id="line-140">        EventSearchParameter.HUMBOLDT_IS_LIFE_STAGE_SCOPE_FULLY_REPORTED,</span>
-<span class="source-line-no">141</span><span id="line-141">        EcoTerm.isLifeStageScopeFullyReported);</span>
-<span class="source-line-no">142</span><span id="line-142">    eventsMap.put(</span>
-<span class="source-line-no">143</span><span id="line-143">        EventSearchParameter.HUMBOLDT_TARGET_DEGREE_OF_ESTABLISHMENT_SCOPE,</span>
-<span class="source-line-no">144</span><span id="line-144">        EcoTerm.targetDegreeOfEstablishmentScope);</span>
-<span class="source-line-no">145</span><span id="line-145">    eventsMap.put(</span>
-<span class="source-line-no">146</span><span id="line-146">        EventSearchParameter.HUMBOLDT_IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED,</span>
-<span class="source-line-no">147</span><span id="line-147">        EcoTerm.isDegreeOfEstablishmentScopeFullyReported);</span>
-<span class="source-line-no">148</span><span id="line-148">    eventsMap.put(</span>
-<span class="source-line-no">149</span><span id="line-149">        EventSearchParameter.HUMBOLDT_TARGET_GROWTH_FORM_SCOPE, EcoTerm.targetGrowthFormScope);</span>
-<span class="source-line-no">150</span><span id="line-150">    eventsMap.put(</span>
-<span class="source-line-no">151</span><span id="line-151">        EventSearchParameter.HUMBOLDT_IS_GROWTH_FORM_SCOPE_FULLY_REPORTED,</span>
-<span class="source-line-no">152</span><span id="line-152">        EcoTerm.isGrowthFormScopeFullyReported);</span>
-<span class="source-line-no">153</span><span id="line-153">    eventsMap.put(</span>
-<span class="source-line-no">154</span><span id="line-154">        EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_ORGANISMS, EcoTerm.hasNonTargetOrganisms);</span>
-<span class="source-line-no">155</span><span id="line-155">    eventsMap.put(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, EcoTerm.compilationTypes);</span>
-<span class="source-line-no">156</span><span id="line-156">    eventsMap.put(</span>
-<span class="source-line-no">157</span><span id="line-157">        EventSearchParameter.HUMBOLDT_COMPILATION_SOURCE_TYPES, EcoTerm.compilationSourceTypes);</span>
-<span class="source-line-no">158</span><span id="line-158">    eventsMap.put(EventSearchParameter.HUMBOLDT_INVENTORY_TYPES, EcoTerm.inventoryTypes);</span>
-<span class="source-line-no">159</span><span id="line-159">    eventsMap.put(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, EcoTerm.protocolNames);</span>
-<span class="source-line-no">160</span><span id="line-160">    eventsMap.put(EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_REPORTED, EcoTerm.isAbundanceReported);</span>
-<span class="source-line-no">161</span><span id="line-161">    eventsMap.put(</span>
-<span class="source-line-no">162</span><span id="line-162">        EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_CAP_REPORTED, EcoTerm.isAbundanceCapReported);</span>
-<span class="source-line-no">163</span><span id="line-163">    eventsMap.put(EventSearchParameter.HUMBOLDT_ABUNDANCE_CAP, EcoTerm.abundanceCap);</span>
-<span class="source-line-no">164</span><span id="line-164">    eventsMap.put(</span>
-<span class="source-line-no">165</span><span id="line-165">        EventSearchParameter.HUMBOLDT_IS_VEGETATION_COVER_REPORTED,</span>
-<span class="source-line-no">166</span><span id="line-166">        EcoTerm.isVegetationCoverReported);</span>
-<span class="source-line-no">167</span><span id="line-167">    eventsMap.put(</span>
-<span class="source-line-no">168</span><span id="line-168">        EventSearchParameter.HUMBOLDT_IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE,</span>
-<span class="source-line-no">169</span><span id="line-169">        EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive);</span>
-<span class="source-line-no">170</span><span id="line-170">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_VOUCHERS, EcoTerm.hasVouchers);</span>
-<span class="source-line-no">171</span><span id="line-171">    eventsMap.put(EventSearchParameter.HUMBOLDT_VOUCHER_INSTITUTIONS, EcoTerm.voucherInstitutions);</span>
-<span class="source-line-no">172</span><span id="line-172">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_MATERIAL_SAMPLES, EcoTerm.hasMaterialSamples);</span>
-<span class="source-line-no">173</span><span id="line-173">    eventsMap.put(EventSearchParameter.HUMBOLDT_MATERIAL_SAMPLE_TYPES, EcoTerm.materialSampleTypes);</span>
-<span class="source-line-no">174</span><span id="line-174">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_PERFORMED_BY, EcoTerm.samplingPerformedBy);</span>
-<span class="source-line-no">175</span><span id="line-175">    eventsMap.put(</span>
-<span class="source-line-no">176</span><span id="line-176">        EventSearchParameter.HUMBOLDT_IS_SAMPLING_EFFORT_REPORTED,</span>
-<span class="source-line-no">177</span><span id="line-177">        EcoTerm.isSamplingEffortReported);</span>
-<span class="source-line-no">178</span><span id="line-178">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue);</span>
-<span class="source-line-no">179</span><span id="line-179">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit);</span>
-<span class="source-line-no">180</span><span id="line-180">    EVENTS_PARAM_TO_TERM = Collections.unmodifiableMap(eventsMap);</span>
-<span class="source-line-no">181</span><span id="line-181"></span>
-<span class="source-line-no">182</span><span id="line-182">    // Build PARAM_TO_TERM with LinkedHashMap to preserve insertion order</span>
-<span class="source-line-no">183</span><span id="line-183">    // parameters that map directly to Hive.</span>
-<span class="source-line-no">184</span><span id="line-184">    // boundingBox, coordinate, taxonKey and gadmGid are treated specially!</span>
-<span class="source-line-no">185</span><span id="line-185">    Map&lt;SearchParameter, Term&gt; paramMap = new LinkedHashMap&lt;&gt;();</span>
-<span class="source-line-no">186</span><span id="line-186">    paramMap.put(OccurrenceSearchParameter.DATASET_KEY, GbifTerm.datasetKey);</span>
-<span class="source-line-no">187</span><span id="line-187">    paramMap.put(OccurrenceSearchParameter.SEX, DwcTerm.sex);</span>
-<span class="source-line-no">188</span><span id="line-188">    paramMap.put(OccurrenceSearchParameter.YEAR, DwcTerm.year);</span>
-<span class="source-line-no">189</span><span id="line-189">    paramMap.put(OccurrenceSearchParameter.MONTH, DwcTerm.month);</span>
-<span class="source-line-no">190</span><span id="line-190">    paramMap.put(OccurrenceSearchParameter.DAY, DwcTerm.day);</span>
-<span class="source-line-no">191</span><span id="line-191">    paramMap.put(OccurrenceSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude);</span>
-<span class="source-line-no">192</span><span id="line-192">    paramMap.put(OccurrenceSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude);</span>
-<span class="source-line-no">193</span><span id="line-193">    paramMap.put(OccurrenceSearchParameter.ELEVATION, GbifTerm.elevation);</span>
-<span class="source-line-no">194</span><span id="line-194">    paramMap.put(OccurrenceSearchParameter.DEPTH, GbifTerm.depth);</span>
-<span class="source-line-no">195</span><span id="line-195">    paramMap.put(OccurrenceSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode);</span>
-<span class="source-line-no">196</span><span id="line-196">    paramMap.put(OccurrenceSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode);</span>
-<span class="source-line-no">197</span><span id="line-197">    paramMap.put(OccurrenceSearchParameter.CATALOG_NUMBER, DwcTerm.catalogNumber);</span>
-<span class="source-line-no">198</span><span id="line-198">    paramMap.put(OccurrenceSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName);</span>
-<span class="source-line-no">199</span><span id="line-199">    paramMap.put(OccurrenceSearchParameter.OCCURRENCE_ID, DwcTerm.occurrenceID);</span>
-<span class="source-line-no">200</span><span id="line-200">    paramMap.put(OccurrenceSearchParameter.ESTABLISHMENT_MEANS, DwcTerm.establishmentMeans);</span>
-<span class="source-line-no">201</span><span id="line-201">    paramMap.put(OccurrenceSearchParameter.DEGREE_OF_ESTABLISHMENT, DwcTerm.degreeOfEstablishment);</span>
-<span class="source-line-no">202</span><span id="line-202">    paramMap.put(OccurrenceSearchParameter.PATHWAY, DwcTerm.pathway);</span>
-<span class="source-line-no">203</span><span id="line-203">    // the following need some value transformation</span>
-<span class="source-line-no">204</span><span id="line-204">    paramMap.put(OccurrenceSearchParameter.EVENT_DATE, DwcTerm.eventDate);</span>
-<span class="source-line-no">205</span><span id="line-205">    paramMap.put(OccurrenceSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear);</span>
-<span class="source-line-no">206</span><span id="line-206">    paramMap.put(OccurrenceSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear);</span>
-<span class="source-line-no">207</span><span id="line-207">    paramMap.put(OccurrenceSearchParameter.MODIFIED, DcTerm.modified);</span>
-<span class="source-line-no">208</span><span id="line-208">    paramMap.put(OccurrenceSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted);</span>
-<span class="source-line-no">209</span><span id="line-209">    paramMap.put(OccurrenceSearchParameter.BASIS_OF_RECORD, DwcTerm.basisOfRecord);</span>
-<span class="source-line-no">210</span><span id="line-210">    paramMap.put(OccurrenceSearchParameter.COUNTRY, DwcTerm.countryCode);</span>
-<span class="source-line-no">211</span><span id="line-211">    paramMap.put(OccurrenceSearchParameter.CONTINENT, DwcTerm.continent);</span>
-<span class="source-line-no">212</span><span id="line-212">    paramMap.put(OccurrenceSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry);</span>
-<span class="source-line-no">213</span><span id="line-213">    paramMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);</span>
-<span class="source-line-no">214</span><span id="line-214">    paramMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);</span>
-<span class="source-line-no">215</span><span id="line-215">    paramMap.put(OccurrenceSearchParameter.RECORD_NUMBER, DwcTerm.recordNumber);</span>
-<span class="source-line-no">216</span><span id="line-216">    paramMap.put(OccurrenceSearchParameter.TYPE_STATUS, DwcTerm.typeStatus);</span>
-<span class="source-line-no">217</span><span id="line-217">    paramMap.put(OccurrenceSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate);</span>
-<span class="source-line-no">218</span><span id="line-218">    paramMap.put(OccurrenceSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues);</span>
-<span class="source-line-no">219</span><span id="line-219">    paramMap.put(OccurrenceSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);</span>
-<span class="source-line-no">220</span><span id="line-220">    paramMap.put(OccurrenceSearchParameter.ISSUE, GbifTerm.issue);</span>
-<span class="source-line-no">221</span><span id="line-221">    paramMap.put(OccurrenceSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue);</span>
-<span class="source-line-no">222</span><span id="line-222">    paramMap.put(OccurrenceSearchParameter.TAXON_KEY, GbifTerm.taxonKey);</span>
-<span class="source-line-no">223</span><span id="line-223">    paramMap.put(OccurrenceSearchParameter.KINGDOM_KEY, GbifTerm.kingdomKey);</span>
-<span class="source-line-no">224</span><span id="line-224">    paramMap.put(OccurrenceSearchParameter.PHYLUM_KEY, GbifTerm.phylumKey);</span>
-<span class="source-line-no">225</span><span id="line-225">    paramMap.put(OccurrenceSearchParameter.CLASS_KEY, GbifTerm.classKey);</span>
-<span class="source-line-no">226</span><span id="line-226">    paramMap.put(OccurrenceSearchParameter.ORDER_KEY, GbifTerm.orderKey);</span>
-<span class="source-line-no">227</span><span id="line-227">    paramMap.put(OccurrenceSearchParameter.FAMILY_KEY, GbifTerm.familyKey);</span>
-<span class="source-line-no">228</span><span id="line-228">    paramMap.put(OccurrenceSearchParameter.GENUS_KEY, GbifTerm.genusKey);</span>
-<span class="source-line-no">229</span><span id="line-229">    paramMap.put(OccurrenceSearchParameter.SUBGENUS_KEY, GbifTerm.subgenusKey);</span>
-<span class="source-line-no">230</span><span id="line-230">    paramMap.put(OccurrenceSearchParameter.SPECIES_KEY, GbifTerm.speciesKey);</span>
-<span class="source-line-no">231</span><span id="line-231">    paramMap.put(OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey);</span>
-<span class="source-line-no">232</span><span id="line-232">    paramMap.put(OccurrenceSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus);</span>
-<span class="source-line-no">233</span><span id="line-233">    paramMap.put(OccurrenceSearchParameter.REPATRIATED, GbifTerm.repatriated);</span>
-<span class="source-line-no">234</span><span id="line-234">    paramMap.put(OccurrenceSearchParameter.ORGANISM_ID, DwcTerm.organismID);</span>
-<span class="source-line-no">235</span><span id="line-235">    paramMap.put(OccurrenceSearchParameter.LOCALITY, DwcTerm.locality);</span>
-<span class="source-line-no">236</span><span id="line-236">    paramMap.put(</span>
-<span class="source-line-no">237</span><span id="line-237">        OccurrenceSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,</span>
-<span class="source-line-no">238</span><span id="line-238">        DwcTerm.coordinateUncertaintyInMeters);</span>
-<span class="source-line-no">239</span><span id="line-239">    paramMap.put(OccurrenceSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince);</span>
-<span class="source-line-no">240</span><span id="line-240">    paramMap.put(OccurrenceSearchParameter.WATER_BODY, DwcTerm.waterBody);</span>
-<span class="source-line-no">241</span><span id="line-241">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid);</span>
-<span class="source-line-no">242</span><span id="line-242">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid);</span>
-<span class="source-line-no">243</span><span id="line-243">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid);</span>
-<span class="source-line-no">244</span><span id="line-244">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid);</span>
-<span class="source-line-no">245</span><span id="line-245">    paramMap.put(OccurrenceSearchParameter.PROTOCOL, GbifTerm.protocol);</span>
-<span class="source-line-no">246</span><span id="line-246">    paramMap.put(OccurrenceSearchParameter.LICENSE, DcTerm.license);</span>
-<span class="source-line-no">247</span><span id="line-247">    paramMap.put(OccurrenceSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey);</span>
-<span class="source-line-no">248</span><span id="line-248">    paramMap.put(</span>
-<span class="source-line-no">249</span><span id="line-249">        OccurrenceSearchParameter.HOSTING_ORGANIZATION_KEY,</span>
-<span class="source-line-no">250</span><span id="line-250">        GbifInternalTerm.hostingOrganizationKey);</span>
-<span class="source-line-no">251</span><span id="line-251">    paramMap.put(OccurrenceSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);</span>
-<span class="source-line-no">252</span><span id="line-252">    paramMap.put(OccurrenceSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);</span>
-<span class="source-line-no">253</span><span id="line-253">    paramMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
-<span class="source-line-no">254</span><span id="line-254">    paramMap.put(OccurrenceSearchParameter.EVENT_ID, DwcTerm.eventID);</span>
-<span class="source-line-no">255</span><span id="line-255">    paramMap.put(OccurrenceSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID);</span>
-<span class="source-line-no">256</span><span id="line-256">    paramMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
-<span class="source-line-no">257</span><span id="line-257">    paramMap.put(OccurrenceSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym);</span>
-<span class="source-line-no">258</span><span id="line-258">    paramMap.put(</span>
-<span class="source-line-no">259</span><span id="line-259">        OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME, GbifTerm.verbatimScientificName);</span>
-<span class="source-line-no">260</span><span id="line-260">    paramMap.put(OccurrenceSearchParameter.TAXON_ID, DwcTerm.taxonID);</span>
-<span class="source-line-no">261</span><span id="line-261">    paramMap.put(OccurrenceSearchParameter.TAXON_CONCEPT_ID, DwcTerm.taxonConceptID);</span>
-<span class="source-line-no">262</span><span id="line-262">    paramMap.put(OccurrenceSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit);</span>
-<span class="source-line-no">263</span><span id="line-263">    paramMap.put(OccurrenceSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue);</span>
-<span class="source-line-no">264</span><span id="line-264">    paramMap.put(</span>
-<span class="source-line-no">265</span><span id="line-265">        OccurrenceSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications);</span>
-<span class="source-line-no">266</span><span id="line-266">    paramMap.put(OccurrenceSearchParameter.ORGANISM_QUANTITY, DwcTerm.organismQuantity);</span>
-<span class="source-line-no">267</span><span id="line-267">    paramMap.put(OccurrenceSearchParameter.ORGANISM_QUANTITY_TYPE, DwcTerm.organismQuantityType);</span>
-<span class="source-line-no">268</span><span id="line-268">    paramMap.put(</span>
-<span class="source-line-no">269</span><span id="line-269">        OccurrenceSearchParameter.RELATIVE_ORGANISM_QUANTITY, GbifTerm.relativeOrganismQuantity);</span>
-<span class="source-line-no">270</span><span id="line-270">    paramMap.put(OccurrenceSearchParameter.COLLECTION_KEY, GbifInternalTerm.collectionKey);</span>
-<span class="source-line-no">271</span><span id="line-271">    paramMap.put(OccurrenceSearchParameter.INSTITUTION_KEY, GbifInternalTerm.institutionKey);</span>
-<span class="source-line-no">272</span><span id="line-272">    paramMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);</span>
-<span class="source-line-no">273</span><span id="line-273">    paramMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);</span>
-<span class="source-line-no">274</span><span id="line-274">    paramMap.put(OccurrenceSearchParameter.OCCURRENCE_STATUS, DwcTerm.occurrenceStatus);</span>
-<span class="source-line-no">275</span><span id="line-275">    paramMap.put(OccurrenceSearchParameter.LIFE_STAGE, DwcTerm.lifeStage);</span>
-<span class="source-line-no">276</span><span id="line-276">    paramMap.put(OccurrenceSearchParameter.IS_IN_CLUSTER, GbifInternalTerm.isInCluster);</span>
-<span class="source-line-no">277</span><span id="line-277">    paramMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
-<span class="source-line-no">278</span><span id="line-278">    paramMap.put(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);</span>
-<span class="source-line-no">279</span><span id="line-279">    paramMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
-<span class="source-line-no">280</span><span id="line-280">    paramMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
-<span class="source-line-no">281</span><span id="line-281">    paramMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);</span>
-<span class="source-line-no">282</span><span id="line-282">    paramMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);</span>
-<span class="source-line-no">283</span><span id="line-283">    paramMap.put(</span>
-<span class="source-line-no">284</span><span id="line-284">        OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,</span>
-<span class="source-line-no">285</span><span id="line-285">        GbifTerm.distanceFromCentroidInMeters);</span>
-<span class="source-line-no">286</span><span id="line-286">    paramMap.put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID);</span>
-<span class="source-line-no">287</span><span id="line-287">    paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);</span>
-<span class="source-line-no">288</span><span id="line-288">    paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte);</span>
-<span class="source-line-no">289</span><span id="line-289">    paramMap.put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);</span>
-<span class="source-line-no">290</span><span id="line-290">    paramMap.put(</span>
-<span class="source-line-no">291</span><span id="line-291">        OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);</span>
-<span class="source-line-no">292</span><span id="line-292">    paramMap.put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced);</span>
-<span class="source-line-no">293</span><span id="line-293">    paramMap.put(OccurrenceSearchParameter.ISLAND, DwcTerm.island);</span>
-<span class="source-line-no">294</span><span id="line-294">    paramMap.put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);</span>
-<span class="source-line-no">295</span><span id="line-295">    paramMap.put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);</span>
-<span class="source-line-no">296</span><span id="line-296">    paramMap.put(</span>
-<span class="source-line-no">297</span><span id="line-297">        OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,</span>
-<span class="source-line-no">298</span><span id="line-298">        DwcTerm.earliestEonOrLowestEonothem);</span>
-<span class="source-line-no">299</span><span id="line-299">    paramMap.put(</span>
-<span class="source-line-no">300</span><span id="line-300">        OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,</span>
-<span class="source-line-no">301</span><span id="line-301">        DwcTerm.latestEonOrHighestEonothem);</span>
-<span class="source-line-no">302</span><span id="line-302">    paramMap.put(</span>
-<span class="source-line-no">303</span><span id="line-303">        OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,</span>
-<span class="source-line-no">304</span><span id="line-304">        DwcTerm.earliestEraOrLowestErathem);</span>
-<span class="source-line-no">305</span><span id="line-305">    paramMap.put(</span>
-<span class="source-line-no">306</span><span id="line-306">        OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM, DwcTerm.latestEraOrHighestErathem);</span>
-<span class="source-line-no">307</span><span id="line-307">    paramMap.put(</span>
-<span class="source-line-no">308</span><span id="line-308">        OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,</span>
-<span class="source-line-no">309</span><span id="line-309">        DwcTerm.earliestPeriodOrLowestSystem);</span>
-<span class="source-line-no">310</span><span id="line-310">    paramMap.put(</span>
-<span class="source-line-no">311</span><span id="line-311">        OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,</span>
-<span class="source-line-no">312</span><span id="line-312">        DwcTerm.latestPeriodOrHighestSystem);</span>
-<span class="source-line-no">313</span><span id="line-313">    paramMap.put(</span>
-<span class="source-line-no">314</span><span id="line-314">        OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,</span>
-<span class="source-line-no">315</span><span id="line-315">        DwcTerm.earliestEpochOrLowestSeries);</span>
-<span class="source-line-no">316</span><span id="line-316">    paramMap.put(</span>
-<span class="source-line-no">317</span><span id="line-317">        OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,</span>
-<span class="source-line-no">318</span><span id="line-318">        DwcTerm.latestEpochOrHighestSeries);</span>
-<span class="source-line-no">319</span><span id="line-319">    paramMap.put(</span>
-<span class="source-line-no">320</span><span id="line-320">        OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE, DwcTerm.earliestAgeOrLowestStage);</span>
-<span class="source-line-no">321</span><span id="line-321">    paramMap.put(</span>
-<span class="source-line-no">322</span><span id="line-322">        OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE, DwcTerm.latestAgeOrHighestStage);</span>
-<span class="source-line-no">323</span><span id="line-323">    paramMap.put(</span>
-<span class="source-line-no">324</span><span id="line-324">        OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE, DwcTerm.lowestBiostratigraphicZone);</span>
-<span class="source-line-no">325</span><span id="line-325">    paramMap.put(</span>
-<span class="source-line-no">326</span><span id="line-326">        OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,</span>
-<span class="source-line-no">327</span><span id="line-327">        DwcTerm.highestBiostratigraphicZone);</span>
-<span class="source-line-no">328</span><span id="line-328">    paramMap.put(OccurrenceSearchParameter.GROUP, DwcTerm.group);</span>
-<span class="source-line-no">329</span><span id="line-329">    paramMap.put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation);</span>
-<span class="source-line-no">330</span><span id="line-330">    paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);</span>
-<span class="source-line-no">331</span><span id="line-331">    paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);</span>
-<span class="source-line-no">332</span><span id="line-332">    paramMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);</span>
-<span class="source-line-no">333</span><span id="line-333">    paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);</span>
-<span class="source-line-no">334</span><span id="line-334">    paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);</span>
-<span class="source-line-no">335</span><span id="line-335">    paramMap.put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy);</span>
-<span class="source-line-no">336</span><span id="line-336">    paramMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);</span>
-<span class="source-line-no">337</span><span id="line-337">    paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);</span>
-<span class="source-line-no">338</span><span id="line-338">    paramMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);</span>
-<span class="source-line-no">339</span><span id="line-339">    // Add all from EVENTS_PARAM_TO_TERM</span>
-<span class="source-line-no">340</span><span id="line-340">    paramMap.putAll(EVENTS_PARAM_TO_TERM);</span>
-<span class="source-line-no">341</span><span id="line-341">    PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);</span>
-<span class="source-line-no">342</span><span id="line-342"></span>
-<span class="source-line-no">343</span><span id="line-343">    // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order</span>
-<span class="source-line-no">344</span><span id="line-344">    Map&lt;SearchParameter, Term&gt; arrayMap = new LinkedHashMap&lt;&gt;();</span>
-<span class="source-line-no">345</span><span id="line-345">    arrayMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
-<span class="source-line-no">346</span><span id="line-346">    arrayMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
-<span class="source-line-no">347</span><span id="line-347">    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);</span>
-<span class="source-line-no">348</span><span id="line-348">    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);</span>
-<span class="source-line-no">349</span><span id="line-349">    arrayMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
-<span class="source-line-no">350</span><span id="line-350">    arrayMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
-<span class="source-line-no">351</span><span id="line-351">    arrayMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);</span>
-<span class="source-line-no">352</span><span id="line-352">    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);</span>
-<span class="source-line-no">353</span><span id="line-353">    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);</span>
-<span class="source-line-no">354</span><span id="line-354">    arrayMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);</span>
-<span class="source-line-no">355</span><span id="line-355">    arrayMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
-<span class="source-line-no">356</span><span id="line-356">    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);</span>
-<span class="source-line-no">357</span><span id="line-357">    arrayMap.put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);</span>
-<span class="source-line-no">358</span><span id="line-358">    arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);</span>
-<span class="source-line-no">359</span><span id="line-359">    arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);</span>
-<span class="source-line-no">360</span><span id="line-360">    arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);</span>
-<span class="source-line-no">361</span><span id="line-361">    ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);</span>
-<span class="source-line-no">362</span><span id="line-362">  }</span>
-<span class="source-line-no">363</span><span id="line-363"></span>
-<span class="source-line-no">364</span><span id="line-364">  private static final Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();</span>
-<span class="source-line-no">365</span><span id="line-365"></span>
-<span class="source-line-no">366</span><span id="line-366">  @Override</span>
-<span class="source-line-no">367</span><span id="line-367">  public Term term(SearchParameter searchParameter) {</span>
-<span class="source-line-no">368</span><span id="line-368">    return PARAM_TO_TERM.get(searchParameter);</span>
-<span class="source-line-no">369</span><span id="line-369">  }</span>
-<span class="source-line-no">370</span><span id="line-370"></span>
-<span class="source-line-no">371</span><span id="line-371">  @Override</span>
-<span class="source-line-no">372</span><span id="line-372">  public boolean isArray(SearchParameter searchParameter) {</span>
-<span class="source-line-no">373</span><span id="line-373">    return ARRAY_STRING_TERMS.containsKey(searchParameter);</span>
-<span class="source-line-no">374</span><span id="line-374">  }</span>
-<span class="source-line-no">375</span><span id="line-375"></span>
-<span class="source-line-no">376</span><span id="line-376">  @Override</span>
-<span class="source-line-no">377</span><span id="line-377">  public Term getTermArray(SearchParameter searchParameter) {</span>
-<span class="source-line-no">378</span><span id="line-378">    return ARRAY_STRING_TERMS.get(searchParameter);</span>
-<span class="source-line-no">379</span><span id="line-379">  }</span>
-<span class="source-line-no">380</span><span id="line-380"></span>
-<span class="source-line-no">381</span><span id="line-381">  @Override</span>
-<span class="source-line-no">382</span><span id="line-382">  public boolean isDenormedTerm(SearchParameter searchParameter) {</span>
-<span class="source-line-no">383</span><span id="line-383">    return DENORMED_TERMS.containsKey(searchParameter);</span>
+<span class="source-line-no">044</span><span id="line-44">    eventsMap.put(EventSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted);</span>
+<span class="source-line-no">045</span><span id="line-45">    eventsMap.put(EventSearchParameter.MODIFIED, DcTerm.modified);</span>
+<span class="source-line-no">046</span><span id="line-46">    eventsMap.put(EventSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude);</span>
+<span class="source-line-no">047</span><span id="line-47">    eventsMap.put(EventSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude);</span>
+<span class="source-line-no">048</span><span id="line-48">    eventsMap.put(</span>
+<span class="source-line-no">049</span><span id="line-49">        EventSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,</span>
+<span class="source-line-no">050</span><span id="line-50">        DwcTerm.coordinateUncertaintyInMeters);</span>
+<span class="source-line-no">051</span><span id="line-51">    eventsMap.put(EventSearchParameter.COUNTRY, DwcTerm.country);</span>
+<span class="source-line-no">052</span><span id="line-52">    eventsMap.put(EventSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);</span>
+<span class="source-line-no">053</span><span id="line-53">    eventsMap.put(EventSearchParameter.CONTINENT, DwcTerm.continent);</span>
+<span class="source-line-no">054</span><span id="line-54">    eventsMap.put(EventSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry);</span>
+<span class="source-line-no">055</span><span id="line-55">    eventsMap.put(EventSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);</span>
+<span class="source-line-no">056</span><span id="line-56">    eventsMap.put(EventSearchParameter.ELEVATION, GbifTerm.elevation);</span>
+<span class="source-line-no">057</span><span id="line-57">    eventsMap.put(EventSearchParameter.DEPTH, GbifTerm.depth);</span>
+<span class="source-line-no">058</span><span id="line-58">    eventsMap.put(EventSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode);</span>
+<span class="source-line-no">059</span><span id="line-59">    eventsMap.put(EventSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode);</span>
+<span class="source-line-no">060</span><span id="line-60">    eventsMap.put(EventSearchParameter.TAXON_KEY, GbifTerm.taxonKey);</span>
+<span class="source-line-no">061</span><span id="line-61">    eventsMap.put(EventSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey);</span>
+<span class="source-line-no">062</span><span id="line-62">    eventsMap.put(EventSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName);</span>
+<span class="source-line-no">063</span><span id="line-63">    eventsMap.put(EventSearchParameter.TAXON_ID, DwcTerm.taxonID);</span>
+<span class="source-line-no">064</span><span id="line-64">    eventsMap.put(EventSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus);</span>
+<span class="source-line-no">065</span><span id="line-65">    eventsMap.put(EventSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue);</span>
+<span class="source-line-no">066</span><span id="line-66">    eventsMap.put(EventSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);</span>
+<span class="source-line-no">067</span><span id="line-67">    eventsMap.put(EventSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate);</span>
+<span class="source-line-no">068</span><span id="line-68">    eventsMap.put(EventSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues);</span>
+<span class="source-line-no">069</span><span id="line-69">    eventsMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);</span>
+<span class="source-line-no">070</span><span id="line-70">    eventsMap.put(EventSearchParameter.REPATRIATED, GbifTerm.repatriated);</span>
+<span class="source-line-no">071</span><span id="line-71">    eventsMap.put(EventSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince);</span>
+<span class="source-line-no">072</span><span id="line-72">    eventsMap.put(EventSearchParameter.WATER_BODY, DwcTerm.waterBody);</span>
+<span class="source-line-no">073</span><span id="line-73">    eventsMap.put(EventSearchParameter.LOCALITY, DwcTerm.locality);</span>
+<span class="source-line-no">074</span><span id="line-74">    eventsMap.put(EventSearchParameter.PROTOCOL, GbifTerm.protocol);</span>
+<span class="source-line-no">075</span><span id="line-75">    eventsMap.put(EventSearchParameter.LICENSE, DcTerm.license);</span>
+<span class="source-line-no">076</span><span id="line-76">    eventsMap.put(EventSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey);</span>
+<span class="source-line-no">077</span><span id="line-77">    eventsMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
+<span class="source-line-no">078</span><span id="line-78">    eventsMap.put(EventSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);</span>
+<span class="source-line-no">079</span><span id="line-79">    eventsMap.put(</span>
+<span class="source-line-no">080</span><span id="line-80">        EventSearchParameter.HOSTING_ORGANIZATION_KEY, GbifInternalTerm.hostingOrganizationKey);</span>
+<span class="source-line-no">081</span><span id="line-81">    eventsMap.put(EventSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);</span>
+<span class="source-line-no">082</span><span id="line-82">    eventsMap.put(EventSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym);</span>
+<span class="source-line-no">083</span><span id="line-83">    eventsMap.put(EventSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit);</span>
+<span class="source-line-no">084</span><span id="line-84">    eventsMap.put(EventSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue);</span>
+<span class="source-line-no">085</span><span id="line-85">    eventsMap.put(EventSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid);</span>
+<span class="source-line-no">086</span><span id="line-86">    eventsMap.put(EventSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid);</span>
+<span class="source-line-no">087</span><span id="line-87">    eventsMap.put(EventSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid);</span>
+<span class="source-line-no">088</span><span id="line-88">    eventsMap.put(EventSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid);</span>
+<span class="source-line-no">089</span><span id="line-89">    eventsMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
+<span class="source-line-no">090</span><span id="line-90">    eventsMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
+<span class="source-line-no">091</span><span id="line-91">    eventsMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
+<span class="source-line-no">092</span><span id="line-92">    eventsMap.put(EventSearchParameter.ISLAND, DwcTerm.island);</span>
+<span class="source-line-no">093</span><span id="line-93">    eventsMap.put(EventSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);</span>
+<span class="source-line-no">094</span><span id="line-94">    eventsMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);</span>
+<span class="source-line-no">095</span><span id="line-95">    eventsMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);</span>
+<span class="source-line-no">096</span><span id="line-96">    eventsMap.put(EventSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);</span>
+<span class="source-line-no">097</span><span id="line-97">    eventsMap.put(EventSearchParameter.GBIF_ID, GbifTerm.gbifID);</span>
+<span class="source-line-no">098</span><span id="line-98">    eventsMap.put(EventSearchParameter.EVENT_TYPE, DwcTerm.eventType);</span>
+<span class="source-line-no">099</span><span id="line-99">    eventsMap.put(EventSearchParameter.ISSUE, GbifTerm.issue);</span>
+<span class="source-line-no">100</span><span id="line-100">    eventsMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);</span>
+<span class="source-line-no">101</span><span id="line-101">    eventsMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);</span>
+<span class="source-line-no">102</span><span id="line-102">    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);</span>
+<span class="source-line-no">103</span><span id="line-103">    eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);</span>
+<span class="source-line-no">104</span><span id="line-104">    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);</span>
+<span class="source-line-no">105</span><span id="line-105">    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);</span>
+<span class="source-line-no">106</span><span id="line-106">    // Humboldt</span>
+<span class="source-line-no">107</span><span id="line-107">    eventsMap.put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount);</span>
+<span class="source-line-no">108</span><span id="line-108">    eventsMap.put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames);</span>
+<span class="source-line-no">109</span><span id="line-109">    eventsMap.put(</span>
+<span class="source-line-no">110</span><span id="line-110">        EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_VALUE,</span>
+<span class="source-line-no">111</span><span id="line-111">        EcoTerm.geospatialScopeAreaValue);</span>
+<span class="source-line-no">112</span><span id="line-112">    eventsMap.put(</span>
+<span class="source-line-no">113</span><span id="line-113">        EventSearchParameter.HUMBOLDT_GEOSPATIAL_SCOPE_AREA_UNIT, EcoTerm.geospatialScopeAreaUnit);</span>
+<span class="source-line-no">114</span><span id="line-114">    eventsMap.put(</span>
+<span class="source-line-no">115</span><span id="line-115">        EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_VALUE, EcoTerm.totalAreaSampledValue);</span>
+<span class="source-line-no">116</span><span id="line-116">    eventsMap.put(</span>
+<span class="source-line-no">117</span><span id="line-117">        EventSearchParameter.HUMBOLDT_TOTAL_AREA_SAMPLED_UNIT, EcoTerm.totalAreaSampledUnit);</span>
+<span class="source-line-no">118</span><span id="line-118">    eventsMap.put(EventSearchParameter.HUMBOLDT_TARGET_HABITAT_SCOPE, EcoTerm.targetHabitatScope);</span>
+<span class="source-line-no">119</span><span id="line-119">    eventsMap.put(</span>
+<span class="source-line-no">120</span><span id="line-120">        EventSearchParameter.HUMBOLDT_EVENT_DURATION,</span>
+<span class="source-line-no">121</span><span id="line-121">        GbifInternalTerm.humboldtEventDurationValueInMinutes);</span>
+<span class="source-line-no">122</span><span id="line-122">    eventsMap.put(</span>
+<span class="source-line-no">123</span><span id="line-123">        EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE_IN_MINUTES,</span>
+<span class="source-line-no">124</span><span id="line-124">        GbifInternalTerm.humboldtEventDurationValueInMinutes);</span>
+<span class="source-line-no">125</span><span id="line-125">    eventsMap.put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_VALUE, EcoTerm.eventDurationValue);</span>
+<span class="source-line-no">126</span><span id="line-126">    eventsMap.put(EventSearchParameter.HUMBOLDT_EVENT_DURATION_UNIT, EcoTerm.eventDurationUnit);</span>
+<span class="source-line-no">127</span><span id="line-127">    eventsMap.put(</span>
+<span class="source-line-no">128</span><span id="line-128">        EventSearchParameter.HUMBOLDT_TAXON_COMPLETENESS_PROTOCOLS,</span>
+<span class="source-line-no">129</span><span id="line-129">        EcoTerm.taxonCompletenessProtocols);</span>
+<span class="source-line-no">130</span><span id="line-130">    eventsMap.put(</span>
+<span class="source-line-no">131</span><span id="line-131">        EventSearchParameter.HUMBOLDT_IS_TAXONOMIC_SCOPE_FULLY_REPORTED,</span>
+<span class="source-line-no">132</span><span id="line-132">        EcoTerm.isTaxonomicScopeFullyReported);</span>
+<span class="source-line-no">133</span><span id="line-133">    eventsMap.put(EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, EcoTerm.isAbsenceReported);</span>
+<span class="source-line-no">134</span><span id="line-134">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_TAXA, EcoTerm.hasNonTargetTaxa);</span>
+<span class="source-line-no">135</span><span id="line-135">    eventsMap.put(</span>
+<span class="source-line-no">136</span><span id="line-136">        EventSearchParameter.HUMBOLDT_ARE_NON_TARGET_TAXA_FULLY_REPORTED,</span>
+<span class="source-line-no">137</span><span id="line-137">        EcoTerm.areNonTargetTaxaFullyReported);</span>
+<span class="source-line-no">138</span><span id="line-138">    eventsMap.put(</span>
+<span class="source-line-no">139</span><span id="line-139">        EventSearchParameter.HUMBOLDT_TARGET_LIFE_STAGE_SCOPE, EcoTerm.targetLifeStageScope);</span>
+<span class="source-line-no">140</span><span id="line-140">    eventsMap.put(</span>
+<span class="source-line-no">141</span><span id="line-141">        EventSearchParameter.HUMBOLDT_IS_LIFE_STAGE_SCOPE_FULLY_REPORTED,</span>
+<span class="source-line-no">142</span><span id="line-142">        EcoTerm.isLifeStageScopeFullyReported);</span>
+<span class="source-line-no">143</span><span id="line-143">    eventsMap.put(</span>
+<span class="source-line-no">144</span><span id="line-144">        EventSearchParameter.HUMBOLDT_TARGET_DEGREE_OF_ESTABLISHMENT_SCOPE,</span>
+<span class="source-line-no">145</span><span id="line-145">        EcoTerm.targetDegreeOfEstablishmentScope);</span>
+<span class="source-line-no">146</span><span id="line-146">    eventsMap.put(</span>
+<span class="source-line-no">147</span><span id="line-147">        EventSearchParameter.HUMBOLDT_IS_DEGREE_OF_ESTABLISHMENT_SCOPE_FULLY_REPORTED,</span>
+<span class="source-line-no">148</span><span id="line-148">        EcoTerm.isDegreeOfEstablishmentScopeFullyReported);</span>
+<span class="source-line-no">149</span><span id="line-149">    eventsMap.put(</span>
+<span class="source-line-no">150</span><span id="line-150">        EventSearchParameter.HUMBOLDT_TARGET_GROWTH_FORM_SCOPE, EcoTerm.targetGrowthFormScope);</span>
+<span class="source-line-no">151</span><span id="line-151">    eventsMap.put(</span>
+<span class="source-line-no">152</span><span id="line-152">        EventSearchParameter.HUMBOLDT_IS_GROWTH_FORM_SCOPE_FULLY_REPORTED,</span>
+<span class="source-line-no">153</span><span id="line-153">        EcoTerm.isGrowthFormScopeFullyReported);</span>
+<span class="source-line-no">154</span><span id="line-154">    eventsMap.put(</span>
+<span class="source-line-no">155</span><span id="line-155">        EventSearchParameter.HUMBOLDT_HAS_NON_TARGET_ORGANISMS, EcoTerm.hasNonTargetOrganisms);</span>
+<span class="source-line-no">156</span><span id="line-156">    eventsMap.put(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, EcoTerm.compilationTypes);</span>
+<span class="source-line-no">157</span><span id="line-157">    eventsMap.put(</span>
+<span class="source-line-no">158</span><span id="line-158">        EventSearchParameter.HUMBOLDT_COMPILATION_SOURCE_TYPES, EcoTerm.compilationSourceTypes);</span>
+<span class="source-line-no">159</span><span id="line-159">    eventsMap.put(EventSearchParameter.HUMBOLDT_INVENTORY_TYPES, EcoTerm.inventoryTypes);</span>
+<span class="source-line-no">160</span><span id="line-160">    eventsMap.put(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, EcoTerm.protocolNames);</span>
+<span class="source-line-no">161</span><span id="line-161">    eventsMap.put(EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_REPORTED, EcoTerm.isAbundanceReported);</span>
+<span class="source-line-no">162</span><span id="line-162">    eventsMap.put(</span>
+<span class="source-line-no">163</span><span id="line-163">        EventSearchParameter.HUMBOLDT_IS_ABUNDANCE_CAP_REPORTED, EcoTerm.isAbundanceCapReported);</span>
+<span class="source-line-no">164</span><span id="line-164">    eventsMap.put(EventSearchParameter.HUMBOLDT_ABUNDANCE_CAP, EcoTerm.abundanceCap);</span>
+<span class="source-line-no">165</span><span id="line-165">    eventsMap.put(</span>
+<span class="source-line-no">166</span><span id="line-166">        EventSearchParameter.HUMBOLDT_IS_VEGETATION_COVER_REPORTED,</span>
+<span class="source-line-no">167</span><span id="line-167">        EcoTerm.isVegetationCoverReported);</span>
+<span class="source-line-no">168</span><span id="line-168">    eventsMap.put(</span>
+<span class="source-line-no">169</span><span id="line-169">        EventSearchParameter.HUMBOLDT_IS_LEAST_SPECIFIC_TARGET_CATEGORY_QUANTITY_INCLUSIVE,</span>
+<span class="source-line-no">170</span><span id="line-170">        EcoTerm.isLeastSpecificTargetCategoryQuantityInclusive);</span>
+<span class="source-line-no">171</span><span id="line-171">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_VOUCHERS, EcoTerm.hasVouchers);</span>
+<span class="source-line-no">172</span><span id="line-172">    eventsMap.put(EventSearchParameter.HUMBOLDT_VOUCHER_INSTITUTIONS, EcoTerm.voucherInstitutions);</span>
+<span class="source-line-no">173</span><span id="line-173">    eventsMap.put(EventSearchParameter.HUMBOLDT_HAS_MATERIAL_SAMPLES, EcoTerm.hasMaterialSamples);</span>
+<span class="source-line-no">174</span><span id="line-174">    eventsMap.put(EventSearchParameter.HUMBOLDT_MATERIAL_SAMPLE_TYPES, EcoTerm.materialSampleTypes);</span>
+<span class="source-line-no">175</span><span id="line-175">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_PERFORMED_BY, EcoTerm.samplingPerformedBy);</span>
+<span class="source-line-no">176</span><span id="line-176">    eventsMap.put(</span>
+<span class="source-line-no">177</span><span id="line-177">        EventSearchParameter.HUMBOLDT_IS_SAMPLING_EFFORT_REPORTED,</span>
+<span class="source-line-no">178</span><span id="line-178">        EcoTerm.isSamplingEffortReported);</span>
+<span class="source-line-no">179</span><span id="line-179">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue);</span>
+<span class="source-line-no">180</span><span id="line-180">    eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit);</span>
+<span class="source-line-no">181</span><span id="line-181">    EVENTS_PARAM_TO_TERM = Collections.unmodifiableMap(eventsMap);</span>
+<span class="source-line-no">182</span><span id="line-182"></span>
+<span class="source-line-no">183</span><span id="line-183">    // Build PARAM_TO_TERM with LinkedHashMap to preserve insertion order</span>
+<span class="source-line-no">184</span><span id="line-184">    // parameters that map directly to Hive.</span>
+<span class="source-line-no">185</span><span id="line-185">    // boundingBox, coordinate, taxonKey and gadmGid are treated specially!</span>
+<span class="source-line-no">186</span><span id="line-186">    Map&lt;SearchParameter, Term&gt; paramMap = new LinkedHashMap&lt;&gt;();</span>
+<span class="source-line-no">187</span><span id="line-187">    paramMap.put(OccurrenceSearchParameter.DATASET_KEY, GbifTerm.datasetKey);</span>
+<span class="source-line-no">188</span><span id="line-188">    paramMap.put(OccurrenceSearchParameter.SEX, DwcTerm.sex);</span>
+<span class="source-line-no">189</span><span id="line-189">    paramMap.put(OccurrenceSearchParameter.YEAR, DwcTerm.year);</span>
+<span class="source-line-no">190</span><span id="line-190">    paramMap.put(OccurrenceSearchParameter.MONTH, DwcTerm.month);</span>
+<span class="source-line-no">191</span><span id="line-191">    paramMap.put(OccurrenceSearchParameter.DAY, DwcTerm.day);</span>
+<span class="source-line-no">192</span><span id="line-192">    paramMap.put(OccurrenceSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude);</span>
+<span class="source-line-no">193</span><span id="line-193">    paramMap.put(OccurrenceSearchParameter.DECIMAL_LONGITUDE, DwcTerm.decimalLongitude);</span>
+<span class="source-line-no">194</span><span id="line-194">    paramMap.put(OccurrenceSearchParameter.ELEVATION, GbifTerm.elevation);</span>
+<span class="source-line-no">195</span><span id="line-195">    paramMap.put(OccurrenceSearchParameter.DEPTH, GbifTerm.depth);</span>
+<span class="source-line-no">196</span><span id="line-196">    paramMap.put(OccurrenceSearchParameter.INSTITUTION_CODE, DwcTerm.institutionCode);</span>
+<span class="source-line-no">197</span><span id="line-197">    paramMap.put(OccurrenceSearchParameter.COLLECTION_CODE, DwcTerm.collectionCode);</span>
+<span class="source-line-no">198</span><span id="line-198">    paramMap.put(OccurrenceSearchParameter.CATALOG_NUMBER, DwcTerm.catalogNumber);</span>
+<span class="source-line-no">199</span><span id="line-199">    paramMap.put(OccurrenceSearchParameter.SCIENTIFIC_NAME, DwcTerm.scientificName);</span>
+<span class="source-line-no">200</span><span id="line-200">    paramMap.put(OccurrenceSearchParameter.OCCURRENCE_ID, DwcTerm.occurrenceID);</span>
+<span class="source-line-no">201</span><span id="line-201">    paramMap.put(OccurrenceSearchParameter.ESTABLISHMENT_MEANS, DwcTerm.establishmentMeans);</span>
+<span class="source-line-no">202</span><span id="line-202">    paramMap.put(OccurrenceSearchParameter.DEGREE_OF_ESTABLISHMENT, DwcTerm.degreeOfEstablishment);</span>
+<span class="source-line-no">203</span><span id="line-203">    paramMap.put(OccurrenceSearchParameter.PATHWAY, DwcTerm.pathway);</span>
+<span class="source-line-no">204</span><span id="line-204">    // the following need some value transformation</span>
+<span class="source-line-no">205</span><span id="line-205">    paramMap.put(OccurrenceSearchParameter.EVENT_DATE, DwcTerm.eventDate);</span>
+<span class="source-line-no">206</span><span id="line-206">    paramMap.put(OccurrenceSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear);</span>
+<span class="source-line-no">207</span><span id="line-207">    paramMap.put(OccurrenceSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear);</span>
+<span class="source-line-no">208</span><span id="line-208">    paramMap.put(OccurrenceSearchParameter.MODIFIED, DcTerm.modified);</span>
+<span class="source-line-no">209</span><span id="line-209">    paramMap.put(OccurrenceSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted);</span>
+<span class="source-line-no">210</span><span id="line-210">    paramMap.put(OccurrenceSearchParameter.BASIS_OF_RECORD, DwcTerm.basisOfRecord);</span>
+<span class="source-line-no">211</span><span id="line-211">    paramMap.put(OccurrenceSearchParameter.COUNTRY, DwcTerm.countryCode);</span>
+<span class="source-line-no">212</span><span id="line-212">    paramMap.put(OccurrenceSearchParameter.CONTINENT, DwcTerm.continent);</span>
+<span class="source-line-no">213</span><span id="line-213">    paramMap.put(OccurrenceSearchParameter.PUBLISHING_COUNTRY, GbifTerm.publishingCountry);</span>
+<span class="source-line-no">214</span><span id="line-214">    paramMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);</span>
+<span class="source-line-no">215</span><span id="line-215">    paramMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);</span>
+<span class="source-line-no">216</span><span id="line-216">    paramMap.put(OccurrenceSearchParameter.RECORD_NUMBER, DwcTerm.recordNumber);</span>
+<span class="source-line-no">217</span><span id="line-217">    paramMap.put(OccurrenceSearchParameter.TYPE_STATUS, DwcTerm.typeStatus);</span>
+<span class="source-line-no">218</span><span id="line-218">    paramMap.put(OccurrenceSearchParameter.HAS_COORDINATE, GbifTerm.hasCoordinate);</span>
+<span class="source-line-no">219</span><span id="line-219">    paramMap.put(OccurrenceSearchParameter.HAS_GEOSPATIAL_ISSUE, GbifTerm.hasGeospatialIssues);</span>
+<span class="source-line-no">220</span><span id="line-220">    paramMap.put(OccurrenceSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);</span>
+<span class="source-line-no">221</span><span id="line-221">    paramMap.put(OccurrenceSearchParameter.ISSUE, GbifTerm.issue);</span>
+<span class="source-line-no">222</span><span id="line-222">    paramMap.put(OccurrenceSearchParameter.TAXONOMIC_ISSUE, GbifTerm.taxonomicIssue);</span>
+<span class="source-line-no">223</span><span id="line-223">    paramMap.put(OccurrenceSearchParameter.TAXON_KEY, GbifTerm.taxonKey);</span>
+<span class="source-line-no">224</span><span id="line-224">    paramMap.put(OccurrenceSearchParameter.KINGDOM_KEY, GbifTerm.kingdomKey);</span>
+<span class="source-line-no">225</span><span id="line-225">    paramMap.put(OccurrenceSearchParameter.PHYLUM_KEY, GbifTerm.phylumKey);</span>
+<span class="source-line-no">226</span><span id="line-226">    paramMap.put(OccurrenceSearchParameter.CLASS_KEY, GbifTerm.classKey);</span>
+<span class="source-line-no">227</span><span id="line-227">    paramMap.put(OccurrenceSearchParameter.ORDER_KEY, GbifTerm.orderKey);</span>
+<span class="source-line-no">228</span><span id="line-228">    paramMap.put(OccurrenceSearchParameter.FAMILY_KEY, GbifTerm.familyKey);</span>
+<span class="source-line-no">229</span><span id="line-229">    paramMap.put(OccurrenceSearchParameter.GENUS_KEY, GbifTerm.genusKey);</span>
+<span class="source-line-no">230</span><span id="line-230">    paramMap.put(OccurrenceSearchParameter.SUBGENUS_KEY, GbifTerm.subgenusKey);</span>
+<span class="source-line-no">231</span><span id="line-231">    paramMap.put(OccurrenceSearchParameter.SPECIES_KEY, GbifTerm.speciesKey);</span>
+<span class="source-line-no">232</span><span id="line-232">    paramMap.put(OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, GbifTerm.acceptedTaxonKey);</span>
+<span class="source-line-no">233</span><span id="line-233">    paramMap.put(OccurrenceSearchParameter.TAXONOMIC_STATUS, DwcTerm.taxonomicStatus);</span>
+<span class="source-line-no">234</span><span id="line-234">    paramMap.put(OccurrenceSearchParameter.REPATRIATED, GbifTerm.repatriated);</span>
+<span class="source-line-no">235</span><span id="line-235">    paramMap.put(OccurrenceSearchParameter.ORGANISM_ID, DwcTerm.organismID);</span>
+<span class="source-line-no">236</span><span id="line-236">    paramMap.put(OccurrenceSearchParameter.LOCALITY, DwcTerm.locality);</span>
+<span class="source-line-no">237</span><span id="line-237">    paramMap.put(</span>
+<span class="source-line-no">238</span><span id="line-238">        OccurrenceSearchParameter.COORDINATE_UNCERTAINTY_IN_METERS,</span>
+<span class="source-line-no">239</span><span id="line-239">        DwcTerm.coordinateUncertaintyInMeters);</span>
+<span class="source-line-no">240</span><span id="line-240">    paramMap.put(OccurrenceSearchParameter.STATE_PROVINCE, DwcTerm.stateProvince);</span>
+<span class="source-line-no">241</span><span id="line-241">    paramMap.put(OccurrenceSearchParameter.WATER_BODY, DwcTerm.waterBody);</span>
+<span class="source-line-no">242</span><span id="line-242">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_0_GID, GadmTerm.level0Gid);</span>
+<span class="source-line-no">243</span><span id="line-243">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_1_GID, GadmTerm.level1Gid);</span>
+<span class="source-line-no">244</span><span id="line-244">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_2_GID, GadmTerm.level2Gid);</span>
+<span class="source-line-no">245</span><span id="line-245">    paramMap.put(OccurrenceSearchParameter.GADM_LEVEL_3_GID, GadmTerm.level3Gid);</span>
+<span class="source-line-no">246</span><span id="line-246">    paramMap.put(OccurrenceSearchParameter.PROTOCOL, GbifTerm.protocol);</span>
+<span class="source-line-no">247</span><span id="line-247">    paramMap.put(OccurrenceSearchParameter.LICENSE, DcTerm.license);</span>
+<span class="source-line-no">248</span><span id="line-248">    paramMap.put(OccurrenceSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey);</span>
+<span class="source-line-no">249</span><span id="line-249">    paramMap.put(</span>
+<span class="source-line-no">250</span><span id="line-250">        OccurrenceSearchParameter.HOSTING_ORGANIZATION_KEY,</span>
+<span class="source-line-no">251</span><span id="line-251">        GbifInternalTerm.hostingOrganizationKey);</span>
+<span class="source-line-no">252</span><span id="line-252">    paramMap.put(OccurrenceSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);</span>
+<span class="source-line-no">253</span><span id="line-253">    paramMap.put(OccurrenceSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);</span>
+<span class="source-line-no">254</span><span id="line-254">    paramMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
+<span class="source-line-no">255</span><span id="line-255">    paramMap.put(OccurrenceSearchParameter.EVENT_ID, DwcTerm.eventID);</span>
+<span class="source-line-no">256</span><span id="line-256">    paramMap.put(OccurrenceSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID);</span>
+<span class="source-line-no">257</span><span id="line-257">    paramMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
+<span class="source-line-no">258</span><span id="line-258">    paramMap.put(OccurrenceSearchParameter.PROGRAMME, GbifInternalTerm.programmeAcronym);</span>
+<span class="source-line-no">259</span><span id="line-259">    paramMap.put(</span>
+<span class="source-line-no">260</span><span id="line-260">        OccurrenceSearchParameter.VERBATIM_SCIENTIFIC_NAME, GbifTerm.verbatimScientificName);</span>
+<span class="source-line-no">261</span><span id="line-261">    paramMap.put(OccurrenceSearchParameter.TAXON_ID, DwcTerm.taxonID);</span>
+<span class="source-line-no">262</span><span id="line-262">    paramMap.put(OccurrenceSearchParameter.TAXON_CONCEPT_ID, DwcTerm.taxonConceptID);</span>
+<span class="source-line-no">263</span><span id="line-263">    paramMap.put(OccurrenceSearchParameter.SAMPLE_SIZE_UNIT, DwcTerm.sampleSizeUnit);</span>
+<span class="source-line-no">264</span><span id="line-264">    paramMap.put(OccurrenceSearchParameter.SAMPLE_SIZE_VALUE, DwcTerm.sampleSizeValue);</span>
+<span class="source-line-no">265</span><span id="line-265">    paramMap.put(</span>
+<span class="source-line-no">266</span><span id="line-266">        OccurrenceSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications);</span>
+<span class="source-line-no">267</span><span id="line-267">    paramMap.put(OccurrenceSearchParameter.ORGANISM_QUANTITY, DwcTerm.organismQuantity);</span>
+<span class="source-line-no">268</span><span id="line-268">    paramMap.put(OccurrenceSearchParameter.ORGANISM_QUANTITY_TYPE, DwcTerm.organismQuantityType);</span>
+<span class="source-line-no">269</span><span id="line-269">    paramMap.put(</span>
+<span class="source-line-no">270</span><span id="line-270">        OccurrenceSearchParameter.RELATIVE_ORGANISM_QUANTITY, GbifTerm.relativeOrganismQuantity);</span>
+<span class="source-line-no">271</span><span id="line-271">    paramMap.put(OccurrenceSearchParameter.COLLECTION_KEY, GbifInternalTerm.collectionKey);</span>
+<span class="source-line-no">272</span><span id="line-272">    paramMap.put(OccurrenceSearchParameter.INSTITUTION_KEY, GbifInternalTerm.institutionKey);</span>
+<span class="source-line-no">273</span><span id="line-273">    paramMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);</span>
+<span class="source-line-no">274</span><span id="line-274">    paramMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);</span>
+<span class="source-line-no">275</span><span id="line-275">    paramMap.put(OccurrenceSearchParameter.OCCURRENCE_STATUS, DwcTerm.occurrenceStatus);</span>
+<span class="source-line-no">276</span><span id="line-276">    paramMap.put(OccurrenceSearchParameter.LIFE_STAGE, DwcTerm.lifeStage);</span>
+<span class="source-line-no">277</span><span id="line-277">    paramMap.put(OccurrenceSearchParameter.IS_IN_CLUSTER, GbifInternalTerm.isInCluster);</span>
+<span class="source-line-no">278</span><span id="line-278">    paramMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
+<span class="source-line-no">279</span><span id="line-279">    paramMap.put(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);</span>
+<span class="source-line-no">280</span><span id="line-280">    paramMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
+<span class="source-line-no">281</span><span id="line-281">    paramMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
+<span class="source-line-no">282</span><span id="line-282">    paramMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);</span>
+<span class="source-line-no">283</span><span id="line-283">    paramMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);</span>
+<span class="source-line-no">284</span><span id="line-284">    paramMap.put(</span>
+<span class="source-line-no">285</span><span id="line-285">        OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,</span>
+<span class="source-line-no">286</span><span id="line-286">        GbifTerm.distanceFromCentroidInMeters);</span>
+<span class="source-line-no">287</span><span id="line-287">    paramMap.put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID);</span>
+<span class="source-line-no">288</span><span id="line-288">    paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);</span>
+<span class="source-line-no">289</span><span id="line-289">    paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte);</span>
+<span class="source-line-no">290</span><span id="line-290">    paramMap.put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);</span>
+<span class="source-line-no">291</span><span id="line-291">    paramMap.put(</span>
+<span class="source-line-no">292</span><span id="line-292">        OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);</span>
+<span class="source-line-no">293</span><span id="line-293">    paramMap.put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced);</span>
+<span class="source-line-no">294</span><span id="line-294">    paramMap.put(OccurrenceSearchParameter.ISLAND, DwcTerm.island);</span>
+<span class="source-line-no">295</span><span id="line-295">    paramMap.put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);</span>
+<span class="source-line-no">296</span><span id="line-296">    paramMap.put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);</span>
+<span class="source-line-no">297</span><span id="line-297">    paramMap.put(</span>
+<span class="source-line-no">298</span><span id="line-298">        OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,</span>
+<span class="source-line-no">299</span><span id="line-299">        DwcTerm.earliestEonOrLowestEonothem);</span>
+<span class="source-line-no">300</span><span id="line-300">    paramMap.put(</span>
+<span class="source-line-no">301</span><span id="line-301">        OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,</span>
+<span class="source-line-no">302</span><span id="line-302">        DwcTerm.latestEonOrHighestEonothem);</span>
+<span class="source-line-no">303</span><span id="line-303">    paramMap.put(</span>
+<span class="source-line-no">304</span><span id="line-304">        OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,</span>
+<span class="source-line-no">305</span><span id="line-305">        DwcTerm.earliestEraOrLowestErathem);</span>
+<span class="source-line-no">306</span><span id="line-306">    paramMap.put(</span>
+<span class="source-line-no">307</span><span id="line-307">        OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM, DwcTerm.latestEraOrHighestErathem);</span>
+<span class="source-line-no">308</span><span id="line-308">    paramMap.put(</span>
+<span class="source-line-no">309</span><span id="line-309">        OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,</span>
+<span class="source-line-no">310</span><span id="line-310">        DwcTerm.earliestPeriodOrLowestSystem);</span>
+<span class="source-line-no">311</span><span id="line-311">    paramMap.put(</span>
+<span class="source-line-no">312</span><span id="line-312">        OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,</span>
+<span class="source-line-no">313</span><span id="line-313">        DwcTerm.latestPeriodOrHighestSystem);</span>
+<span class="source-line-no">314</span><span id="line-314">    paramMap.put(</span>
+<span class="source-line-no">315</span><span id="line-315">        OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,</span>
+<span class="source-line-no">316</span><span id="line-316">        DwcTerm.earliestEpochOrLowestSeries);</span>
+<span class="source-line-no">317</span><span id="line-317">    paramMap.put(</span>
+<span class="source-line-no">318</span><span id="line-318">        OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,</span>
+<span class="source-line-no">319</span><span id="line-319">        DwcTerm.latestEpochOrHighestSeries);</span>
+<span class="source-line-no">320</span><span id="line-320">    paramMap.put(</span>
+<span class="source-line-no">321</span><span id="line-321">        OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE, DwcTerm.earliestAgeOrLowestStage);</span>
+<span class="source-line-no">322</span><span id="line-322">    paramMap.put(</span>
+<span class="source-line-no">323</span><span id="line-323">        OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE, DwcTerm.latestAgeOrHighestStage);</span>
+<span class="source-line-no">324</span><span id="line-324">    paramMap.put(</span>
+<span class="source-line-no">325</span><span id="line-325">        OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE, DwcTerm.lowestBiostratigraphicZone);</span>
+<span class="source-line-no">326</span><span id="line-326">    paramMap.put(</span>
+<span class="source-line-no">327</span><span id="line-327">        OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,</span>
+<span class="source-line-no">328</span><span id="line-328">        DwcTerm.highestBiostratigraphicZone);</span>
+<span class="source-line-no">329</span><span id="line-329">    paramMap.put(OccurrenceSearchParameter.GROUP, DwcTerm.group);</span>
+<span class="source-line-no">330</span><span id="line-330">    paramMap.put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation);</span>
+<span class="source-line-no">331</span><span id="line-331">    paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);</span>
+<span class="source-line-no">332</span><span id="line-332">    paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);</span>
+<span class="source-line-no">333</span><span id="line-333">    paramMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);</span>
+<span class="source-line-no">334</span><span id="line-334">    paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);</span>
+<span class="source-line-no">335</span><span id="line-335">    paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);</span>
+<span class="source-line-no">336</span><span id="line-336">    paramMap.put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy);</span>
+<span class="source-line-no">337</span><span id="line-337">    paramMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);</span>
+<span class="source-line-no">338</span><span id="line-338">    paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);</span>
+<span class="source-line-no">339</span><span id="line-339">    paramMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);</span>
+<span class="source-line-no">340</span><span id="line-340">    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);</span>
+<span class="source-line-no">341</span><span id="line-341">    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);</span>
+<span class="source-line-no">342</span><span id="line-342">    // Add all from EVENTS_PARAM_TO_TERM</span>
+<span class="source-line-no">343</span><span id="line-343">    paramMap.putAll(EVENTS_PARAM_TO_TERM);</span>
+<span class="source-line-no">344</span><span id="line-344">    PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);</span>
+<span class="source-line-no">345</span><span id="line-345"></span>
+<span class="source-line-no">346</span><span id="line-346">    // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order</span>
+<span class="source-line-no">347</span><span id="line-347">    Map&lt;SearchParameter, Term&gt; arrayMap = new LinkedHashMap&lt;&gt;();</span>
+<span class="source-line-no">348</span><span id="line-348">    arrayMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
+<span class="source-line-no">349</span><span id="line-349">    arrayMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
+<span class="source-line-no">350</span><span id="line-350">    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);</span>
+<span class="source-line-no">351</span><span id="line-351">    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);</span>
+<span class="source-line-no">352</span><span id="line-352">    arrayMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
+<span class="source-line-no">353</span><span id="line-353">    arrayMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
+<span class="source-line-no">354</span><span id="line-354">    arrayMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);</span>
+<span class="source-line-no">355</span><span id="line-355">    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);</span>
+<span class="source-line-no">356</span><span id="line-356">    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);</span>
+<span class="source-line-no">357</span><span id="line-357">    arrayMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);</span>
+<span class="source-line-no">358</span><span id="line-358">    arrayMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
+<span class="source-line-no">359</span><span id="line-359">    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);</span>
+<span class="source-line-no">360</span><span id="line-360">    arrayMap.put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);</span>
+<span class="source-line-no">361</span><span id="line-361">    arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);</span>
+<span class="source-line-no">362</span><span id="line-362">    arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);</span>
+<span class="source-line-no">363</span><span id="line-363">    arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);</span>
+<span class="source-line-no">364</span><span id="line-364">    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);</span>
+<span class="source-line-no">365</span><span id="line-365">    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);</span>
+<span class="source-line-no">366</span><span id="line-366"></span>
+<span class="source-line-no">367</span><span id="line-367">    // event array params</span>
+<span class="source-line-no">368</span><span id="line-368">    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);</span>
+<span class="source-line-no">369</span><span id="line-369">    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);</span>
+<span class="source-line-no">370</span><span id="line-370">    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);</span>
+<span class="source-line-no">371</span><span id="line-371">    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);</span>
+<span class="source-line-no">372</span><span id="line-372">    arrayMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);</span>
+<span class="source-line-no">373</span><span id="line-373">    arrayMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);</span>
+<span class="source-line-no">374</span><span id="line-374">    arrayMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);</span>
+<span class="source-line-no">375</span><span id="line-375">    arrayMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);</span>
+<span class="source-line-no">376</span><span id="line-376">    arrayMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);</span>
+<span class="source-line-no">377</span><span id="line-377">    arrayMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);</span>
+<span class="source-line-no">378</span><span id="line-378">    arrayMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);</span>
+<span class="source-line-no">379</span><span id="line-379">    arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);</span>
+<span class="source-line-no">380</span><span id="line-380">    arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);</span>
+<span class="source-line-no">381</span><span id="line-381">    arrayMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);</span>
+<span class="source-line-no">382</span><span id="line-382"></span>
+<span class="source-line-no">383</span><span id="line-383">    ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);</span>
 <span class="source-line-no">384</span><span id="line-384">  }</span>
 <span class="source-line-no">385</span><span id="line-385"></span>
-<span class="source-line-no">386</span><span id="line-386">  @Override</span>
-<span class="source-line-no">387</span><span id="line-387">  public SearchParameter getDefaultGadmLevel() {</span>
-<span class="source-line-no">388</span><span id="line-388">    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;</span>
-<span class="source-line-no">389</span><span id="line-389">  }</span>
-<span class="source-line-no">390</span><span id="line-390"></span>
-<span class="source-line-no">391</span><span id="line-391">  @Override</span>
-<span class="source-line-no">392</span><span id="line-392">  public boolean includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {</span>
-<span class="source-line-no">393</span><span id="line-393">    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()</span>
-<span class="source-line-no">394</span><span id="line-394">        &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate</span>
-<span class="source-line-no">395</span><span id="line-395">            || predicate instanceof GreaterThanPredicate);</span>
+<span class="source-line-no">386</span><span id="line-386">  private static final Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();</span>
+<span class="source-line-no">387</span><span id="line-387"></span>
+<span class="source-line-no">388</span><span id="line-388">  @Override</span>
+<span class="source-line-no">389</span><span id="line-389">  public Term term(SearchParameter searchParameter) {</span>
+<span class="source-line-no">390</span><span id="line-390">    return PARAM_TO_TERM.get(searchParameter);</span>
+<span class="source-line-no">391</span><span id="line-391">  }</span>
+<span class="source-line-no">392</span><span id="line-392"></span>
+<span class="source-line-no">393</span><span id="line-393">  @Override</span>
+<span class="source-line-no">394</span><span id="line-394">  public boolean isArray(SearchParameter searchParameter) {</span>
+<span class="source-line-no">395</span><span id="line-395">    return ARRAY_STRING_TERMS.containsKey(searchParameter);</span>
 <span class="source-line-no">396</span><span id="line-396">  }</span>
-<span class="source-line-no">397</span><span id="line-397">}</span>
+<span class="source-line-no">397</span><span id="line-397"></span>
+<span class="source-line-no">398</span><span id="line-398">  @Override</span>
+<span class="source-line-no">399</span><span id="line-399">  public Term getTermArray(SearchParameter searchParameter) {</span>
+<span class="source-line-no">400</span><span id="line-400">    return ARRAY_STRING_TERMS.get(searchParameter);</span>
+<span class="source-line-no">401</span><span id="line-401">  }</span>
+<span class="source-line-no">402</span><span id="line-402"></span>
+<span class="source-line-no">403</span><span id="line-403">  @Override</span>
+<span class="source-line-no">404</span><span id="line-404">  public boolean isDenormedTerm(SearchParameter searchParameter) {</span>
+<span class="source-line-no">405</span><span id="line-405">    return DENORMED_TERMS.containsKey(searchParameter);</span>
+<span class="source-line-no">406</span><span id="line-406">  }</span>
+<span class="source-line-no">407</span><span id="line-407"></span>
+<span class="source-line-no">408</span><span id="line-408">  @Override</span>
+<span class="source-line-no">409</span><span id="line-409">  public SearchParameter getDefaultGadmLevel() {</span>
+<span class="source-line-no">410</span><span id="line-410">    return OccurrenceSearchParameter.GADM_LEVEL_0_GID;</span>
+<span class="source-line-no">411</span><span id="line-411">  }</span>
+<span class="source-line-no">412</span><span id="line-412"></span>
+<span class="source-line-no">413</span><span id="line-413">  @Override</span>
+<span class="source-line-no">414</span><span id="line-414">  public boolean includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {</span>
+<span class="source-line-no">415</span><span id="line-415">    return OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()</span>
+<span class="source-line-no">416</span><span id="line-416">        &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate</span>
+<span class="source-line-no">417</span><span id="line-417">            || predicate instanceof GreaterThanPredicate);</span>
+<span class="source-line-no">418</span><span id="line-418">  }</span>
+<span class="source-line-no">419</span><span id="line-419">}</span>
 
 
 
