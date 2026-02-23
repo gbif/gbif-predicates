@@ -17,6 +17,7 @@ import org.gbif.dwc.terms.GadmTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.IucnTerm;
+import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.predicate.query.SQLTermsMapper;
 
@@ -37,11 +38,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.START_DAY_OF_YEAR, DwcTerm.startDayOfYear);
     eventsMap.put(EventSearchParameter.END_DAY_OF_YEAR, DwcTerm.endDayOfYear);
     eventsMap.put(EventSearchParameter.EVENT_DATE, DwcTerm.eventDate);
-    eventsMap.put(EventSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
     eventsMap.put(EventSearchParameter.EVENT_ID, DwcTerm.eventID);
     eventsMap.put(EventSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID);
     eventsMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
-    eventsMap.put(EventSearchParameter.PREVIOUS_IDENTIFICATIONS, DwcTerm.previousIdentifications);
     eventsMap.put(EventSearchParameter.LAST_INTERPRETED, GbifTerm.lastInterpreted);
     eventsMap.put(EventSearchParameter.MODIFIED, DcTerm.modified);
     eventsMap.put(EventSearchParameter.DECIMAL_LATITUDE, DwcTerm.decimalLatitude);
@@ -102,6 +101,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
     eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
     eventsMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
+    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    eventsMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     // Humboldt
     eventsMap.put(EventSearchParameter.HUMBOLDT_SITE_COUNT, EcoTerm.siteCount);
     eventsMap.put(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, EcoTerm.verbatimSiteNames);
@@ -336,6 +337,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
     paramMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     // Add all from EVENTS_PARAM_TO_TERM
     paramMap.putAll(EVENTS_PARAM_TO_TERM);
     PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);
@@ -358,6 +361,25 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
     arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);
     arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
+
+    // event array params
+    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
+    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
+    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
+    arrayMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
+    arrayMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);
+    arrayMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);
+    arrayMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
+    arrayMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);
+    arrayMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    arrayMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
+    arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
+    arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
+    arrayMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);
+
     ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);
   }
 
