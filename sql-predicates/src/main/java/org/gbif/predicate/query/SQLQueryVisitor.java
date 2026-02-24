@@ -86,7 +86,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
   // TODO: handle derived taxon params for events
-  private static final Set<OccurrenceSearchParameter> TAXON_SEARCH_PARAMETERS =
+  private static final Set<SearchParameter> TAXON_SEARCH_PARAMETERS =
       Set.of(
           OccurrenceSearchParameter.KINGDOM_KEY,
           OccurrenceSearchParameter.PHYLUM_KEY,
@@ -573,7 +573,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
-    } else if (TAXON_SEARCH_PARAMETERS.contains((OccurrenceSearchParameter) predicate.getKey())) {
+    } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
