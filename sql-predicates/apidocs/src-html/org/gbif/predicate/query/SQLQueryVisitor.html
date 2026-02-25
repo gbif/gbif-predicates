@@ -99,7 +99,7 @@
 <span class="source-line-no">086</span><span id="line-86">      t -&gt; "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";</span>
 <span class="source-line-no">087</span><span id="line-87"></span>
 <span class="source-line-no">088</span><span id="line-88">  // TODO: handle derived taxon params for events</span>
-<span class="source-line-no">089</span><span id="line-89">  private static final Set&lt;OccurrenceSearchParameter&gt; TAXON_SEARCH_PARAMETERS =</span>
+<span class="source-line-no">089</span><span id="line-89">  private static final Set&lt;SearchParameter&gt; TAXON_SEARCH_PARAMETERS =</span>
 <span class="source-line-no">090</span><span id="line-90">      Set.of(</span>
 <span class="source-line-no">091</span><span id="line-91">          OccurrenceSearchParameter.KINGDOM_KEY,</span>
 <span class="source-line-no">092</span><span id="line-92">          OccurrenceSearchParameter.PHYLUM_KEY,</span>
@@ -586,7 +586,7 @@
 <span class="source-line-no">573</span><span id="line-573">      builder.append(')');</span>
 <span class="source-line-no">574</span><span id="line-574">    } else if (isHumboldtTaxonParameter(predicate.getKey())) {</span>
 <span class="source-line-no">575</span><span id="line-575">      appendHumboldtTaxonFilter(predicate);</span>
-<span class="source-line-no">576</span><span id="line-576">    } else if (TAXON_SEARCH_PARAMETERS.contains((OccurrenceSearchParameter) predicate.getKey())) {</span>
+<span class="source-line-no">576</span><span id="line-576">    } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {</span>
 <span class="source-line-no">577</span><span id="line-577">      appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);</span>
 <span class="source-line-no">578</span><span id="line-578">    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {</span>
 <span class="source-line-no">579</span><span id="line-579">      appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);</span>

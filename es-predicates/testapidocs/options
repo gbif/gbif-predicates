@@ -18,11 +18,11 @@
 -docfilessubdirs
 -Xdoclint:none
 -doctitle
-'Predicates :: Elasticsearch support 2.1.4-SNAPSHOT Test API'
+'Predicates :: Elasticsearch support 2.1.5-SNAPSHOT Test API'
 -link
 '../apidocs'
 -linksource
 -use
 -version
 -windowtitle
-'Predicates :: Elasticsearch support 2.1.4-SNAPSHOT Test API'
+'Predicates :: Elasticsearch support 2.1.5-SNAPSHOT Test API'

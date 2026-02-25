@@ -94,7 +94,7 @@
 <a class="jxr_linenumber" name="L86" href="#L86">86</a>        t -&gt; <span class="jxr_string">"stringArrayLike("</span> + SQLColumnsUtils.getSQLQueryColumn(t) + <span class="jxr_string">",'%s',%b)"</span>;
 <a class="jxr_linenumber" name="L87" href="#L87">87</a>  
 <a class="jxr_linenumber" name="L88" href="#L88">88</a>    <em class="jxr_comment">// TODO: handle derived taxon params for events</em>
-<a class="jxr_linenumber" name="L89" href="#L89">89</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Set&lt;OccurrenceSearchParameter&gt; TAXON_SEARCH_PARAMETERS =
+<a class="jxr_linenumber" name="L89" href="#L89">89</a>    <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Set&lt;SearchParameter&gt; TAXON_SEARCH_PARAMETERS =
 <a class="jxr_linenumber" name="L90" href="#L90">90</a>        Set.of(
 <a class="jxr_linenumber" name="L91" href="#L91">91</a>            OccurrenceSearchParameter.KINGDOM_KEY,
 <a class="jxr_linenumber" name="L92" href="#L92">92</a>            OccurrenceSearchParameter.PHYLUM_KEY,
@@ -581,7 +581,7 @@
 <a class="jxr_linenumber" name="L573" href="#L573">573</a>       builder.append(')');
 <a class="jxr_linenumber" name="L574" href="#L574">574</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (isHumboldtTaxonParameter(predicate.getKey())) {
 <a class="jxr_linenumber" name="L575" href="#L575">575</a>       appendHumboldtTaxonFilter(predicate);
-<a class="jxr_linenumber" name="L576" href="#L576">576</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (TAXON_SEARCH_PARAMETERS.contains((OccurrenceSearchParameter) predicate.getKey())) {
+<a class="jxr_linenumber" name="L576" href="#L576">576</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
 <a class="jxr_linenumber" name="L577" href="#L577">577</a>       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
 <a class="jxr_linenumber" name="L578" href="#L578">578</a>     } <strong class="jxr_keyword">else</strong> <strong class="jxr_keyword">if</strong> (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
 <a class="jxr_linenumber" name="L579" href="#L579">579</a>       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
