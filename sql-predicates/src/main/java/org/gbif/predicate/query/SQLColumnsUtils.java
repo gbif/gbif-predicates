@@ -223,37 +223,51 @@ public class SQLColumnsUtils {
     }
   }
 
-  /** @return true if the term is an interpreted local date (timezone not relevant) */
+  /**
+   * @return true if the term is an interpreted local date (timezone not relevant)
+   */
   public static boolean isInterpretedLocalDateSeconds(Term term) {
     return term != null && INTERPRETED_LOCAL_DATES_SECONDS.contains(term);
   }
 
-  /** @return true if the term is an interpreted UTC date stored in seconds */
+  /**
+   * @return true if the term is an interpreted UTC date stored in seconds
+   */
   public static boolean isInterpretedUtcDateSeconds(Term term) {
     return term != null && INTERPRETED_UTC_DATES_SECONDS.contains(term);
   }
 
-  /** @return true if the term is an interpreted UTC date stored in milliseconds */
+  /**
+   * @return true if the term is an interpreted UTC date stored in milliseconds
+   */
   public static boolean isInterpretedUtcDateMilliseconds(Term term) {
     return term != null && INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);
   }
 
-  /** @return true if the term is an interpreted numerical */
+  /**
+   * @return true if the term is an interpreted numerical
+   */
   public static boolean isInterpretedNumerical(Term term) {
     return term != null && INTERPRETED_NUM.contains(term);
   }
 
-  /** @return true if the term is an interpreted double */
+  /**
+   * @return true if the term is an interpreted double
+   */
   public static boolean isInterpretedDouble(Term term) {
     return term != null && INTERPRETED_DOUBLE.contains(term);
   }
 
-  /** @return true if the term is an interpreted boolean */
+  /**
+   * @return true if the term is an interpreted boolean
+   */
   public static boolean isInterpretedBoolean(Term term) {
     return term != null && INTERPRETED_BOOLEAN.contains(term);
   }
 
-  /** @return true if the term is a complex type in Hive: array, struct, json, etc. */
+  /**
+   * @return true if the term is a complex type in Hive: array, struct, json, etc.
+   */
   public static boolean isComplexType(Term term) {
     return term != null && COMPLEX_TYPE.contains(term);
   }

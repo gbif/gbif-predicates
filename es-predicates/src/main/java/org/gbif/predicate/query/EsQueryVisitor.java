@@ -13,7 +13,16 @@
  */
 package org.gbif.predicate.query;
 
-import java.io.IOException;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeFieldQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import jakarta.json.stream.JsonGenerator;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -23,21 +32,6 @@ import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.common.geo.ShapeRelation;
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
-import org.elasticsearch.common.geo.builders.LineStringBuilder;
-import org.elasticsearch.common.geo.builders.MultiPolygonBuilder;
-import org.elasticsearch.common.geo.builders.PointBuilder;
-import org.elasticsearch.common.geo.builders.PolygonBuilder;
-import org.elasticsearch.common.geo.builders.ShapeBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.GeoDistanceQueryBuilder;
-import org.elasticsearch.index.query.GeoShapeQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.geo.DistanceUnit;
@@ -150,9 +144,27 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param predicate to translate
    * @return body clause
    */
+  private static final JsonpMapper JSONP_MAPPER = new JacksonJsonpMapper();
+
   @Override
   public String buildQuery(Predicate predicate) throws QueryBuildingException {
-    return getQueryBuilder(predicate).orElse(QueryBuilders.matchAllQuery()).toString();
+    return getQueryBuilder(predicate)
+        .map(EsQueryVisitor::queryToJson)
+        .orElseGet(EsQueryVisitor::matchAllQueryJson);
+  }
+
+  private static String queryToJson(Query query) {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = JSONP_MAPPER.jsonProvider().createGenerator(sw)) {
+      query.serialize(g, JSONP_MAPPER);
+    } catch (Exception e) {
+      throw new IllegalStateException(e);
+    }
+    return sw.toString();
+  }
+
+  private static String matchAllQueryJson() {
+    return queryToJson(Query.of(q -> q.matchAll(m -> m)));
   }
 
   /**
@@ -162,13 +174,87 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param predicate to translate
    * @return body clause
    */
-  public Optional<QueryBuilder> getQueryBuilder(Predicate predicate) throws QueryBuildingException {
+  public Optional<Query> getQueryBuilder(Predicate predicate) throws QueryBuildingException {
     if (predicate != null) {
-      BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
-      visit(predicate, new QueryData(queryBuilder));
-      return Optional.of(queryBuilder);
+      QueryData queryData = new QueryData();
+      visit(predicate, queryData);
+      return Optional.of(buildRootBoolQuery(queryData));
     }
     return Optional.empty();
+  }
+
+  private static Query buildRootBoolQuery(QueryData queryData) {
+    return buildBoolQuery(
+        queryData.filterQueries, queryData.shouldQueries, queryData.mustNotQueries);
+  }
+
+  private static Query buildBoolQuery(List<Query> filter, List<Query> should, List<Query> mustNot) {
+    return Query.of(
+        q ->
+            q.bool(
+                b -> {
+                  if (filter != null && !filter.isEmpty()) b.filter(filter);
+                  if (should != null && !should.isEmpty()) b.should(should);
+                  if (mustNot != null && !mustNot.isEmpty()) b.mustNot(mustNot);
+                  return b;
+                }));
+  }
+
+  private static Query termQuery(String field, Object value) {
+    return Query.of(q -> q.term(t -> t.field(field).value(FieldValue.of(value))));
+  }
+
+  private static Query termsQuery(String field, List<Object> values) {
+    return Query.of(
+        q ->
+            q.terms(
+                t ->
+                    t.field(field)
+                        .terms(
+                            v ->
+                                v.value(
+                                    values.stream()
+                                        .map(FieldValue::of)
+                                        .collect(Collectors.toList())))));
+  }
+
+  private static Query existsQuery(String field) {
+    return Query.of(q -> q.exists(e -> e.field(field)));
+  }
+
+  private static Query wildcardQuery(String field, String value) {
+    return Query.of(q -> q.wildcard(w -> w.field(field).value(value)));
+  }
+
+  private static Query nestedQuery(String path, Query inner) {
+    return Query.of(q -> q.nested(n -> n.path(path).query(inner).scoreMode(ChildScoreMode.None)));
+  }
+
+  /**
+   * Relation for range fields: "within", "contains", or "intersects". Null = default (intersects).
+   */
+  /** Ensure value serializes to JSON (e.g. LocalDate -> string) to avoid Jackson errors. */
+  private static Object toJsonSafe(Object value) {
+    if (value == null) return null;
+    if (value instanceof LocalDate) return value.toString();
+    return value;
+  }
+
+  private static Query rangeQuery(
+      String field, Object gte, Object lte, Object gt, Object lt, String relation) {
+    return Query.of(
+        q ->
+            q.range(
+                r ->
+                    r.untyped(
+                        u -> {
+                          u.field(field);
+                          if (gte != null) u.gte(JsonData.of(toJsonSafe(gte)));
+                          if (lte != null) u.lte(JsonData.of(toJsonSafe(lte)));
+                          if (gt != null) u.gt(JsonData.of(toJsonSafe(gt)));
+                          if (lt != null) u.lt(JsonData.of(toJsonSafe(lt)));
+                          return u;
+                        })));
   }
 
   /**
@@ -178,42 +264,41 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param queryData data with the root query builder and the nested path
    */
   public void visit(ConjunctionPredicate predicate, QueryData queryData) {
-    // must query structure is equivalent to AND
-    Map<String, List<QueryBuilder>> queriesByNestedPath = new HashMap<>();
+    Map<String, List<Query>> queriesByNestedPath = new HashMap<>();
     boolean nonNestedQueriesFound = false;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       try {
-        BoolQueryBuilder mustQueryBuilder = QueryBuilders.boolQuery();
-        QueryData mustQueryData = new QueryData(mustQueryBuilder);
+        QueryData mustQueryData = new QueryData();
         visit(subPredicate, mustQueryData);
 
         if (mustQueryData.isNested()) {
+          Query inner = addNullableFieldPredicate(subPredicate, mustQueryData.rawQueries.get(0));
           queriesByNestedPath
               .computeIfAbsent(mustQueryData.nestedPath, k -> new ArrayList<>())
-              .add(addNullableFieldPredicate(subPredicate, mustQueryData.rawQueries.get(0)));
+              .add(inner);
         } else {
-          queryData.queryBuilder.filter(addNullableFieldPredicate(subPredicate, mustQueryBuilder));
+          Query combined = buildBoolFromQueryData(mustQueryData);
+          queryData.filterQueries.add(addNullableFieldPredicate(subPredicate, combined));
           nonNestedQueriesFound = true;
         }
-
       } catch (QueryBuildingException ex) {
         throw new RuntimeException(ex);
       }
     }
 
-    for (Map.Entry<String, List<QueryBuilder>> entry : queriesByNestedPath.entrySet()) {
+    for (Map.Entry<String, List<Query>> entry : queriesByNestedPath.entrySet()) {
       String key = entry.getKey();
-      List<QueryBuilder> value = entry.getValue();
-      BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
-      value.forEach(q -> nestedBoolQuery.filter().add(q));
-      queryData
-          .queryBuilder
-          .filter()
-          .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
+      List<Query> value = entry.getValue();
+      Query nestedBool = buildBoolQuery(value, Collections.emptyList(), Collections.emptyList());
+      queryData.filterQueries.add(nestedQuery(key, nestedBool));
       queryData.nestedPath = !nonNestedQueriesFound ? key : null;
-      queryData.rawQueries = nestedBoolQuery.filter();
+      queryData.rawQueries = value;
     }
+  }
+
+  private static Query buildBoolFromQueryData(QueryData d) {
+    return buildBoolQuery(d.filterQueries, d.shouldQueries, d.mustNotQueries);
   }
 
   /**
@@ -225,16 +310,16 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   public void visit(DisjunctionPredicate predicate, QueryData queryData) {
     Map<S, List<EqualsPredicate<S>>> equalsPredicatesReplaceableByIn = groupEquals(predicate);
 
-    Map<String, List<QueryBuilder>> queriesByNestedPath = new HashMap<>();
+    Map<String, List<Query>> queriesByNestedPath = new HashMap<>();
     boolean nonNestedQueriesFound = false;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       try {
         if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {
-          BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
-          QueryData shouldQueryData = new QueryData(shouldQueryBuilder);
+          QueryData shouldQueryData = new QueryData();
           visit(subPredicate, shouldQueryData);
-          QueryBuilder q = addNullableFieldPredicate(subPredicate, shouldQueryBuilder);
+          Query q =
+              addNullableFieldPredicate(subPredicate, buildBoolFromQueryData(shouldQueryData));
 
           if (shouldQueryData.isNested()) {
             queriesByNestedPath
@@ -242,7 +327,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
                 .addAll(shouldQueryData.rawQueries);
           } else {
             nonNestedQueriesFound = true;
-            queryData.queryBuilder.should(q);
+            queryData.shouldQueries.add(q);
           }
 
           if (subPredicate instanceof SimplePredicate) {
@@ -254,45 +339,41 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       }
     }
 
-    for (Map.Entry<String, List<QueryBuilder>> e : queriesByNestedPath.entrySet()) {
+    for (Map.Entry<String, List<Query>> e : queriesByNestedPath.entrySet()) {
       String s = e.getKey();
-      List<QueryBuilder> builders = e.getValue();
-      BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
-      builders.forEach(q -> nestedBoolQuery.should().add(q));
-      queryData
-          .queryBuilder
-          .should()
-          .add(QueryBuilders.nestedQuery(s, nestedBoolQuery, ScoreMode.None));
+      List<Query> builders = e.getValue();
+      Query nestedBool = buildBoolQuery(Collections.emptyList(), builders, Collections.emptyList());
+      queryData.shouldQueries.add(nestedQuery(s, nestedBool));
       queryData.nestedPath = !nonNestedQueriesFound ? s : null;
-      queryData.rawQueries = nestedBoolQuery.should();
+      queryData.rawQueries = builders;
     }
 
     if (!equalsPredicatesReplaceableByIn.isEmpty()) {
       Optional<S> geoTimeParam = getParam(OccurrenceSearchParameter.GEOLOGICAL_TIME.name());
       if (geoTimeParam.isPresent()
           && equalsPredicatesReplaceableByIn.containsKey(geoTimeParam.get())) {
-        List<QueryBuilder> queryBuilders = new ArrayList<>();
+        List<Query> queryBuilders = new ArrayList<>();
         equalsPredicatesReplaceableByIn
             .get(geoTimeParam.get())
             .forEach(
-                ep -> {
-                  queryBuilders.add(
-                      QueryBuilders.termQuery(getExactMatchOrVerbatimField(ep), ep.getValue()));
-                });
+                ep ->
+                    queryBuilders.add(
+                        termQuery(
+                            getExactMatchOrVerbatimField(ep),
+                            parseParamValue(ep.getValue(), ep.getKey()))));
 
         if (!queryBuilders.isEmpty()) {
           nonNestedQueriesFound = true;
-          queryData.queryBuilder.should().addAll(queryBuilders);
+          queryData.shouldQueries.addAll(queryBuilders);
         }
-
         equalsPredicatesReplaceableByIn.remove(geoTimeParam.get());
       }
 
       if (!equalsPredicatesReplaceableByIn.isEmpty()) {
-        Map<String, List<QueryBuilder>> replaceableQueriesByNestedPath = new HashMap<>();
+        Map<String, List<Query>> replaceableQueriesByNestedPath = new HashMap<>();
         for (InPredicate<S> ep : toInPredicates(equalsPredicatesReplaceableByIn)) {
-          TermsQueryBuilder termsQueryBuilder =
-              QueryBuilders.termsQuery(
+          Query termsQ =
+              termsQuery(
                   getExactMatchOrVerbatimField(ep),
                   ep.getValues().stream()
                       .map(v -> parseParamValue(v, ep.getKey()))
@@ -301,25 +382,21 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
           if (esFieldMapper.isNestedField(ep.getKey())) {
             replaceableQueriesByNestedPath
                 .computeIfAbsent(esFieldMapper.getNestedPath(ep.getKey()), k -> new ArrayList<>())
-                .add(termsQueryBuilder);
+                .add(termsQ);
           } else {
-            queryData.queryBuilder.should().add(termsQueryBuilder);
+            queryData.shouldQueries.add(termsQ);
             nonNestedQueriesFound = true;
           }
         }
 
-        for (Map.Entry<String, List<QueryBuilder>> entry :
-            replaceableQueriesByNestedPath.entrySet()) {
+        for (Map.Entry<String, List<Query>> entry : replaceableQueriesByNestedPath.entrySet()) {
           String key = entry.getKey();
-          List<QueryBuilder> value = entry.getValue();
-          BoolQueryBuilder nestedBoolQuery = QueryBuilders.boolQuery();
-          value.forEach(q -> nestedBoolQuery.should().add(q));
-          queryData
-              .queryBuilder
-              .should()
-              .add(QueryBuilders.nestedQuery(key, nestedBoolQuery, ScoreMode.None));
+          List<Query> value = entry.getValue();
+          Query nestedBool =
+              buildBoolQuery(Collections.emptyList(), value, Collections.emptyList());
+          queryData.shouldQueries.add(nestedQuery(key, nestedBool));
           queryData.nestedPath = !nonNestedQueriesFound ? key : null;
-          queryData.rawQueries = nestedBoolQuery.should();
+          queryData.rawQueries = value;
         }
       }
     }
@@ -387,78 +464,41 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   public void visit(EqualsPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
+    String field = esFieldMapper.getExactMatchFieldName(parameter);
+    Query q;
 
-    QueryBuilder q = null;
     if ((Number.class.isAssignableFrom(predicate.getKey().type())
             || paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name()))
         && SearchTypeValidator.isNumericRange(predicate.getValue())) {
       Range<Double> decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());
-      RangeQueryBuilder rqb =
-          QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
-      if (decimalRange.hasLowerBound()) {
-        rqb.gte(decimalRange.lowerEndpoint());
-      }
-      if (decimalRange.hasUpperBound()) {
-        rqb.lte(decimalRange.upperEndpoint());
-      }
-
-      if (paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name())) {
-        rqb.relation("within");
-      }
-
-      q = addNullableFieldPredicate(predicate, rqb);
+      Double gte = decimalRange.hasLowerBound() ? decimalRange.lowerEndpoint() : null;
+      Double lte = decimalRange.hasUpperBound() ? decimalRange.upperEndpoint() : null;
+      String rel =
+          paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name())
+              ? "within"
+              : null;
+      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, lte, null, null, rel));
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())
         && SearchTypeValidator.isDateRange(predicate.getValue())) {
-      // The date range is closed-open, so we need lower ≤ date < upper.
       Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
-      RangeQueryBuilder rqb =
-          QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
-      if (dateRange.hasLowerBound()) {
-        rqb.gte(dateRange.lowerEndpoint());
-      }
-      if (dateRange.hasUpperBound()) {
-        rqb.lt(dateRange.upperEndpoint());
-      }
-      // For a match, the occurrence's date range must be entirely within the search query date
-      // range.
-      // i.e. Q:eventDate=1980 will match rec:eventDate=1980-02, but not
-      // rec:eventDate=1980-10-01/1982-02-02.
-      rqb.relation("within");
-      q = addNullableFieldPredicate(predicate, rqb);
+      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;
+      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;
+      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));
     } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {
       Range<LocalDate> dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());
-      RangeQueryBuilder rqb =
-          QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter));
-      if (dateRange.hasLowerBound()) {
-        rqb.gte(dateRange.lowerEndpoint());
-      }
-      if (dateRange.hasUpperBound()) {
-        rqb.lt(dateRange.upperEndpoint());
-      }
-      // For a match, the occurrence's date range must be entirely within the search query date
-      // range.
-      // i.e. Q:eventDate=1980 will match rec:eventDate=1980-02, but not
-      // rec:eventDate=1980-10-01/1982-02-02.
-      rqb.relation("within");
-      q = addNullableFieldPredicate(predicate, rqb);
+      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;
+      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;
+      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));
     } else {
       q =
-          QueryBuilders.termQuery(
-              getExactMatchOrVerbatimField(predicate),
-              parseParamValue(predicate.getValue(), parameter));
+          addNullableFieldPredicate(
+              predicate,
+              termQuery(
+                  getExactMatchOrVerbatimField(predicate),
+                  parseParamValue(predicate.getValue(), parameter)));
     }
 
-    if (esFieldMapper.isNestedField(parameter)) {
-      queryData
-          .queryBuilder
-          .filter()
-          .add(
-              QueryBuilders.nestedQuery(esFieldMapper.getNestedPath(parameter), q, ScoreMode.None));
-      queryData.rawQueries = List.of(q);
-      queryData.nestedPath = esFieldMapper.getNestedPath(parameter);
-    } else {
-      queryData.queryBuilder.filter().add(q);
-    }
+    addFilterQuery(q, queryData, parameter);
   }
 
   private final Function<String, Object> parseDate =
@@ -472,35 +512,27 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   public void visit(RangePredicate<S> predicate, QueryData queryData)
       throws QueryBuildingException {
-
-    RangeQueryBuilder rqb =
-        QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(predicate.getKey()));
-
+    String field = esFieldMapper.getExactMatchFieldName(predicate.getKey());
+    Object gte = null, lte = null, gt = null, lt = null;
+    Function<String, Object> initialiser;
     if (Integer.class.isAssignableFrom(predicate.getKey().type())) {
-      initialiseRangeQuery(predicate, rqb, parseInteger);
+      initialiser = parseInteger;
     } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {
-      initialiseRangeQuery(predicate, rqb, parseDouble);
+      initialiser = parseDouble;
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
-      initialiseRangeQuery(predicate, rqb, parseDate);
+      initialiser = parseDate;
+    } else {
+      addFilterQuery(Query.of(q -> q.matchAll(m -> m)), queryData, predicate.getKey());
+      return;
     }
-
+    if (predicate.getValue().getGte() != null)
+      gte = initialiser.apply(predicate.getValue().getGte());
+    if (predicate.getValue().getLte() != null)
+      lte = initialiser.apply(predicate.getValue().getLte());
+    if (predicate.getValue().getGt() != null) gt = initialiser.apply(predicate.getValue().getGt());
+    if (predicate.getValue().getLt() != null) lt = initialiser.apply(predicate.getValue().getLt());
+    Query rqb = rangeQuery(field, gte, lte, gt, lt, null);
     addFilterQuery(rqb, queryData, predicate.getKey());
-  }
-
-  private void initialiseRangeQuery(
-      RangePredicate<S> predicate, RangeQueryBuilder rqb, Function<String, Object> initialiser) {
-    if (predicate.getValue().getGte() != null) {
-      rqb.gte(initialiser.apply(predicate.getValue().getGte()));
-    }
-    if (predicate.getValue().getLte() != null) {
-      rqb.lte(initialiser.apply(predicate.getValue().getLte()));
-    }
-    if (predicate.getValue().getGt() != null) {
-      rqb.gt(initialiser.apply(predicate.getValue().getGt()));
-    }
-    if (predicate.getValue().getLt() != null) {
-      rqb.lt(initialiser.apply(predicate.getValue().getLt()));
-    }
   }
 
   private static LocalDate parseDate(String d) {
@@ -515,11 +547,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   public void visit(GreaterThanOrEqualsPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
-    QueryBuilder q =
+    Object val = parseParamValue(predicate.getValue(), parameter);
+    Query q =
         addNullableFieldPredicate(
             predicate,
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .gte(parseParamValue(predicate.getValue(), parameter)));
+            rangeQuery(
+                esFieldMapper.getExactMatchFieldName(parameter), val, null, null, null, null));
     addFilterQuery(q, queryData, predicate.getKey());
   }
 
@@ -527,17 +560,14 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * Adds an "is null" filter if the mapper instructs to. Used mostly in range queries to give
    * specific semantics to null values.
    */
-  private QueryBuilder addNullableFieldPredicate(Predicate predicate, QueryBuilder filter) {
+  private Query addNullableFieldPredicate(Predicate predicate, Query filter) {
     if (predicate instanceof SimplePredicate
         && esFieldMapper.includeNullInPredicate((SimplePredicate<S>) predicate)) {
-      return QueryBuilders.boolQuery()
-          .should(filter)
-          .should(
-              QueryBuilders.boolQuery()
-                  .mustNot(
-                      QueryBuilders.existsQuery(
-                          esFieldMapper.getExactMatchFieldName(
-                              ((SimplePredicate<S>) predicate).getKey()))));
+      String field =
+          esFieldMapper.getExactMatchFieldName(((SimplePredicate<S>) predicate).getKey());
+      Query missing = Query.of(q -> q.bool(b -> b.mustNot(existsQuery(field))));
+      return buildBoolQuery(
+          Collections.emptyList(), List.of(filter, missing), Collections.emptyList());
     }
     return filter;
   }
@@ -550,11 +580,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   public void visit(GreaterThanPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
-    QueryBuilder q =
+    Object val = parseParamValue(predicate.getValue(), parameter);
+    Query q =
         addNullableFieldPredicate(
             predicate,
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .gt(parseParamValue(predicate.getValue(), parameter)));
+            rangeQuery(
+                esFieldMapper.getExactMatchFieldName(parameter), null, null, val, null, null));
     addFilterQuery(q, queryData, parameter);
   }
 
@@ -567,96 +598,75 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   public void visit(InPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
 
-    // EVENT_DATE needs special handling
     if (paramEquals(parameter, OccurrenceSearchParameter.EVENT_DATE.name())) {
       predicate
           .getValues()
           .forEach(
               value -> {
                 try {
-                  BoolQueryBuilder shouldQueryBuilder = QueryBuilders.boolQuery();
+                  QueryData shouldQueryData = new QueryData();
                   Predicate subPredicate =
                       new EqualsPredicate<>(
                           getParam(OccurrenceSearchParameter.EVENT_DATE.name()).get(),
                           value,
                           predicate.isMatchCase(),
                           getChecklistKey(predicate));
-                  visit(subPredicate, new QueryData(shouldQueryBuilder));
-                  queryData.queryBuilder.should(
-                      addNullableFieldPredicate(subPredicate, shouldQueryBuilder));
+                  visit(subPredicate, shouldQueryData);
+                  queryData.shouldQueries.add(
+                      addNullableFieldPredicate(
+                          subPredicate, buildBoolFromQueryData(shouldQueryData)));
                 } catch (QueryBuildingException ex) {
                   throw new RuntimeException(ex);
                 }
               });
     } else {
-
-      TermsQueryBuilder termsQueryBuilder =
-          QueryBuilders.termsQuery(
+      Query termsQ =
+          termsQuery(
               getExactMatchOrVerbatimField(predicate),
               predicate.getValues().stream()
                   .map(v -> parseParamValue(v, parameter))
                   .collect(Collectors.toList()));
-
-      addFilterQuery(termsQueryBuilder, queryData, predicate.getKey());
+      addFilterQuery(termsQ, queryData, predicate.getKey());
     }
   }
 
-  /**
-   * handles less than or equals predicate
-   *
-   * @param predicate less than or equals
-   * @param queryData data with the root query builder and the nested path
-   */
+  /** handles less than or equals predicate */
   public void visit(LessThanOrEqualsPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
-    QueryBuilder q =
+    Object val = parseParamValue(predicate.getValue(), parameter);
+    Query q =
         addNullableFieldPredicate(
             predicate,
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .lte(parseParamValue(predicate.getValue(), parameter)));
+            rangeQuery(
+                esFieldMapper.getExactMatchFieldName(parameter), null, val, null, null, null));
     addFilterQuery(q, queryData, parameter);
   }
 
-  /**
-   * handles less than predicate
-   *
-   * @param predicate less than predicate
-   * @param queryData data with the root query builder and the nested path
-   */
+  /** handles less than predicate */
   public void visit(LessThanPredicate<S> predicate, QueryData queryData) {
     S parameter = predicate.getKey();
-    QueryBuilder q =
+    Object val = parseParamValue(predicate.getValue(), parameter);
+    Query q =
         addNullableFieldPredicate(
             predicate,
-            QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(parameter))
-                .lt(parseParamValue(predicate.getValue(), parameter)));
+            rangeQuery(
+                esFieldMapper.getExactMatchFieldName(parameter), null, null, null, val, null));
     addFilterQuery(q, queryData, parameter);
   }
 
-  /**
-   * handles like predicate
-   *
-   * @param predicate like predicate
-   * @param queryData data with the root query builder and the nested path
-   */
+  /** handles like predicate */
   public void visit(LikePredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        QueryBuilders.wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
+        wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
         queryData,
         predicate.getKey());
   }
 
-  /**
-   * handles not predicate
-   *
-   * @param predicate NOT predicate
-   * @param queryData data with the root query builder and the nested path
-   */
+  /** handles not predicate */
   public void visit(NotPredicate predicate, QueryData queryData) throws QueryBuildingException {
-    BoolQueryBuilder mustNotQueryBuilder = QueryBuilders.boolQuery();
-    QueryData mustNotQueryData = new QueryData(mustNotQueryBuilder);
+    QueryData mustNotQueryData = new QueryData();
     visit(predicate.getPredicate(), mustNotQueryData);
-    queryData.queryBuilder.mustNot(mustNotQueryBuilder);
+    queryData.mustNotQueries.add(buildBoolFromQueryData(mustNotQueryData));
   }
 
   /**
@@ -666,11 +676,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param queryData data with the root query builder and the nested path
    */
   public void visit(WithinPredicate within, QueryData queryData) {
-    QueryBuilder q = buildGeoShapeQuery(within.getGeometry());
-    queryData.queryBuilder.filter(q);
+    Query q = buildGeoShapeQuery(within.getGeometry());
+    queryData.filterQueries.add(q);
   }
 
-  public GeoShapeQueryBuilder buildGeoShapeQuery(String wkt) {
+  /** Builds a geo_shape query (WITHIN relation) from WKT geometry. */
+  public Query buildGeoShapeQuery(String wkt) {
     Geometry geometry;
     try {
       geometry = new WKTReader().read(wkt);
@@ -678,54 +689,64 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       throw new IllegalArgumentException(e.getMessage(), e);
     }
 
-    Function<Polygon, PolygonBuilder> polygonToBuilder =
-        polygon -> {
-          PolygonBuilder polygonBuilder =
-              new PolygonBuilder(
-                  new CoordinatesBuilder()
-                      .coordinates(
-                          normalizePolygonCoordinates(polygon.getExteriorRing().getCoordinates())));
-          for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-            polygonBuilder.hole(
-                new LineStringBuilder(
-                    new CoordinatesBuilder()
-                        .coordinates(
-                            normalizePolygonCoordinates(
-                                polygon.getInteriorRingN(i).getCoordinates()))));
-          }
-          return polygonBuilder;
-        };
-
     String type =
         "LinearRing".equals(geometry.getGeometryType())
             ? "LINESTRING"
             : geometry.getGeometryType().toUpperCase();
 
-    ShapeBuilder shapeBuilder = null;
+    Object geoJson;
     if (("POINT").equals(type)) {
-      shapeBuilder = new PointBuilder(geometry.getCoordinate().x, geometry.getCoordinate().y);
+      Coordinate c = geometry.getCoordinate();
+      geoJson = Map.of("type", "Point", "coordinates", List.of(c.x, c.y));
     } else if ("LINESTRING".equals(type)) {
-      shapeBuilder = new LineStringBuilder(Arrays.asList(geometry.getCoordinates()));
+      geoJson =
+          Map.of(
+              "type",
+              "LineString",
+              "coordinates",
+              Arrays.stream(geometry.getCoordinates())
+                  .map(c -> List.of(c.x, c.y))
+                  .collect(Collectors.toList()));
     } else if ("POLYGON".equals(type)) {
-      shapeBuilder = polygonToBuilder.apply((Polygon) geometry);
-    } else if ("MULTIPOLYGON".equals(type)) {
-      // multipolygon
-      MultiPolygonBuilder multiPolygonBuilder = new MultiPolygonBuilder();
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
-        multiPolygonBuilder.polygon(polygonToBuilder.apply((Polygon) geometry.getGeometryN(i)));
+      Polygon poly = (Polygon) geometry;
+      List<List<List<Double>>> rings = new ArrayList<>();
+      rings.add(
+          Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))
+              .map(c -> List.<Double>of(c.x, c.y))
+              .collect(Collectors.toList()));
+      for (int i = 0; i < poly.getNumInteriorRing(); i++) {
+        rings.add(
+            Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(i).getCoordinates()))
+                .map(c -> List.<Double>of(c.x, c.y))
+                .collect(Collectors.toList()));
       }
-      shapeBuilder = multiPolygonBuilder;
+      geoJson = Map.of("type", "Polygon", "coordinates", rings);
+    } else if ("MULTIPOLYGON".equals(type)) {
+      List<List<List<List<Double>>>> polygons = new ArrayList<>();
+      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+        Polygon poly = (Polygon) geometry.getGeometryN(i);
+        List<List<List<Double>>> rings = new ArrayList<>();
+        rings.add(
+            Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))
+                .map(c -> List.<Double>of(c.x, c.y))
+                .collect(Collectors.toList()));
+        for (int h = 0; h < poly.getNumInteriorRing(); h++) {
+          rings.add(
+              Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(h).getCoordinates()))
+                  .map(c -> List.<Double>of(c.x, c.y))
+                  .collect(Collectors.toList()));
+        }
+        polygons.add(rings);
+      }
+      geoJson = Map.of("type", "MultiPolygon", "coordinates", polygons);
     } else {
       throw new IllegalArgumentException(type + " shape is not supported");
     }
 
-    try {
-      return QueryBuilders.geoShapeQuery(
-              esFieldMapper.getGeoShapeField(), shapeBuilder.buildGeometry())
-          .relation(ShapeRelation.WITHIN);
-    } catch (IOException e) {
-      throw new IllegalStateException(e.getMessage(), e);
-    }
+    GeoShapeFieldQuery shapeQuery =
+        GeoShapeFieldQuery.of(s -> s.shape(JsonData.of(geoJson)).relation(GeoShapeRelation.Within));
+    return Query.of(
+        q -> q.geoShape(g -> g.field(esFieldMapper.getGeoShapeField()).shape(shapeQuery)));
   }
 
   /** Eliminates consecutive duplicates. The order is preserved. */
@@ -745,45 +766,37 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     return normalizedCoordinates.toArray(new Coordinate[0]);
   }
 
-  /**
-   * handles geoDistance predicate
-   *
-   * @param geoDistance GeoDistance predicate
-   * @param queryData data with the root query builder and the nested path
-   */
+  /** handles geoDistance predicate */
   public void visit(GeoDistancePredicate geoDistance, QueryData queryData) {
-    QueryBuilder q = buildGeoDistanceQuery(geoDistance.getGeoDistance());
-    queryData.queryBuilder.filter(q);
+    Query q = buildGeoDistanceQuery(geoDistance.getGeoDistance());
+    queryData.filterQueries.add(q);
   }
 
-  /** Builds a GeoDistance query. */
-  private GeoDistanceQueryBuilder buildGeoDistanceQuery(DistanceUnit.GeoDistance geoDistance) {
-    return QueryBuilders.geoDistanceQuery(esFieldMapper.getGeoDistanceField())
-        .distance(geoDistance.getDistance().toString())
-        .point(geoDistance.getLatitude(), geoDistance.getLongitude());
+  private Query buildGeoDistanceQuery(DistanceUnit.GeoDistance geoDistance) {
+    return Query.of(
+        q ->
+            q.geoDistance(
+                g ->
+                    g.field(esFieldMapper.getGeoDistanceField())
+                        .distance(geoDistance.getDistance().toString())
+                        .location(
+                            loc ->
+                                loc.latlon(
+                                    ll ->
+                                        ll.lat(geoDistance.getLatitude())
+                                            .lon(geoDistance.getLongitude())))));
   }
 
-  /**
-   * handles ISNOTNULL Predicate
-   *
-   * @param predicate ISNOTNULL predicate
-   */
+  /** handles ISNOTNULL Predicate */
   public void visit(IsNotNullPredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        QueryBuilders.existsQuery(getExactMatchFieldName(predicate)),
-        queryData,
-        predicate.getParameter());
+        existsQuery(getExactMatchFieldName(predicate)), queryData, predicate.getParameter());
   }
 
-  /**
-   * handles ISNULL Predicate
-   *
-   * @param predicate ISNULL predicate
-   */
+  /** handles ISNULL Predicate */
   public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        QueryBuilders.boolQuery()
-            .mustNot(QueryBuilders.existsQuery(getExactMatchFieldName(predicate))),
+        Query.of(q -> q.bool(b -> b.mustNot(existsQuery(getExactMatchFieldName(predicate))))),
         queryData,
         predicate.getParameter());
   }
@@ -810,33 +823,28 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     }
   }
 
-  private void addFilterQuery(QueryBuilder q, QueryData queryData, S searchParameter) {
+  private void addFilterQuery(Query q, QueryData queryData, S searchParameter) {
     if (esFieldMapper.isNestedField(searchParameter)) {
-      queryData
-          .queryBuilder
-          .filter()
-          .add(
-              QueryBuilders.nestedQuery(
-                  esFieldMapper.getNestedPath(searchParameter), q, ScoreMode.None));
+      queryData.filterQueries.add(nestedQuery(esFieldMapper.getNestedPath(searchParameter), q));
       queryData.rawQueries = List.of(q);
       queryData.nestedPath = esFieldMapper.getNestedPath(searchParameter);
     } else {
-      queryData.queryBuilder.filter().add(q);
+      queryData.filterQueries.add(q);
     }
   }
 
   @Data
   public static class QueryData {
-    BoolQueryBuilder queryBuilder;
-    // raw queries that go inside a nested query. For complex predicates they need to be
-    // grouped into the same query so it's convenient to have them separated in this field.
-    // Otherwise they'd be inside a nested query
-    List<QueryBuilder> rawQueries;
+    List<Query> filterQueries = new ArrayList<>();
+    List<Query> shouldQueries = new ArrayList<>();
+    List<Query> mustNotQueries = new ArrayList<>();
+
+    /** Raw queries that go inside a nested query. */
+    List<Query> rawQueries = new ArrayList<>();
+
     String nestedPath;
 
-    QueryData(BoolQueryBuilder queryBuilder) {
-      this.queryBuilder = queryBuilder;
-    }
+    QueryData() {}
 
     boolean isNested() {
       return nestedPath != null;

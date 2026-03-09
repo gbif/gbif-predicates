@@ -1,10 +1,10 @@
 package org.gbif.predicate.query;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;
@@ -123,7 +123,7 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
-  public List<FieldSortBuilder> getDefaultSort() {
+  public List<SortOptions> getDefaultSort() {
     return List.of();
   }
 

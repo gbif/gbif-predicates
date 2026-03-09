@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.common.search.SearchParameter;
-import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.CompoundPredicate;
