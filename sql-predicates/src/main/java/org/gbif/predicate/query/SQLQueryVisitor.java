@@ -1056,7 +1056,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(SQLColumnsUtils.getSQLQueryColumn(term))
           .append(IN_OPERATOR)
           .append("('")
-          .append(String.join(",", taxonKeys))
+          .append(String.join("','", taxonKeys))
           .append("')");
       first = false;
     }
