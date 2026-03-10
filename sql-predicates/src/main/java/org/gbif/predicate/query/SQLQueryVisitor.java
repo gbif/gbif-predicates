@@ -87,17 +87,17 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
 
   private static final List<GbifTerm> NUB_KEYS =
-    List.of(
-      GbifTerm.taxonKey,
-      GbifTerm.acceptedTaxonKey,
-      GbifTerm.kingdomKey,
-      GbifTerm.phylumKey,
-      GbifTerm.classKey,
-      GbifTerm.orderKey,
-      GbifTerm.familyKey,
-      GbifTerm.genusKey,
-      // GbifTerm.subgenusKey, Excluded as it is not populated by interpretation.
-      GbifTerm.speciesKey);
+      List.of(
+          GbifTerm.taxonKey,
+          GbifTerm.acceptedTaxonKey,
+          GbifTerm.kingdomKey,
+          GbifTerm.phylumKey,
+          GbifTerm.classKey,
+          GbifTerm.orderKey,
+          GbifTerm.familyKey,
+          GbifTerm.genusKey,
+          // GbifTerm.subgenusKey, Excluded as it is not populated by interpretation.
+          GbifTerm.speciesKey);
 
   // TODO: handle derived taxon params for events
   private static final Set<SearchParameter> TAXON_SEARCH_PARAMETERS =
@@ -586,9 +586,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY && (predicate.getChecklistKey() == null || Constants.NUB_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
-      // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make downloads with 10,000s of
-      // taxon identifiers, and performance of this will need to be adequate before the classifications column can be used.
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
+        && (predicate.getChecklistKey() == null
+            || Constants.NUB_DATASET_KEY
+                .toString()
+                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+      // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make
+      // downloads with 10,000s of taxon identifiers, and performance of this will need to be
+      // adequate before the classifications column can be used.
       appendTaxonomicBackboneArrayFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
@@ -1048,11 +1053,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         builder.append(DISJUNCTION_OPERATOR);
       }
       builder
-        .append(SQLColumnsUtils.getSQLQueryColumn(term))
-        .append(IN_OPERATOR)
-        .append("('")
-        .append(String.join(",", taxonKeys))
-        .append("')");
+          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(IN_OPERATOR)
+          .append("('")
+          .append(String.join(",", taxonKeys))
+          .append("')");
       first = false;
     }
     builder.append(')');

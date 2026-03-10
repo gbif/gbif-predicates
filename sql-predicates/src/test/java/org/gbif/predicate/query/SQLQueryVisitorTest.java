@@ -63,7 +63,9 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
-    Predicate aves = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, "someChecklistKey");
+    Predicate aves =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "212", false, "someChecklistKey");
     Predicate passer =
         new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
@@ -81,8 +83,10 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testMoreComplexQuery() throws QueryBuildingException {
-    Predicate taxon1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
-    Predicate taxon2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
+    Predicate taxon1 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate taxon2 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
     DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
@@ -145,8 +149,10 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testDisjunctionToInTaxonPredicate() throws QueryBuildingException {
-    Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
-    Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
+    Predicate p1 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate p2 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
@@ -291,19 +297,30 @@ public class SQLQueryVisitorTest {
   public void testInPredicateDefaultTaxonKey() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals("(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))", query);
+    assertEquals(
+        "(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))",
+        query);
   }
 
   @Test
   public void testInPredicateBackboneTaxonKey() throws QueryBuildingException {
-    Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, Constants.NUB_DATASET_KEY.toString());
+    Predicate p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            List.of("1", "2"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals("(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))", query);
+    assertEquals(
+        "(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))",
+        query);
   }
 
   @Test
   public void testInPredicateTaxonKey() throws QueryBuildingException {
-    Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
+    Predicate p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
     assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
   }
@@ -1188,10 +1205,16 @@ public class SQLQueryVisitorTest {
   @Test
   public void testBackboneTaxonomyEqualsPredicate() {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
-      new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            "6",
+            false,
+            "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
     try {
       String query = visitor.buildQuery(equalsPredicate);
-      assertEquals("(stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))", query);
+      assertEquals(
+          "(stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))",
+          query);
     } catch (QueryBuildingException ex) {
       fail();
     }
