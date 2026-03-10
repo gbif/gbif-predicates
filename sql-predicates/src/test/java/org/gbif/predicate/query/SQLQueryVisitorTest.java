@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -62,7 +63,7 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
-    Predicate aves = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false);
+    Predicate aves = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, "someChecklistKey");
     Predicate passer =
         new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
@@ -74,14 +75,14 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((stringArrayContains(classifications['defaultChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((stringArrayContains(classifications['someChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
   @Test
   public void testMoreComplexQuery() throws QueryBuildingException {
-    Predicate taxon1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
-    Predicate taxon2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
+    Predicate taxon1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate taxon2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
     DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
@@ -101,7 +102,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))) "
+        "(((arrays_overlap(classifications['someChecklistKey'], array('2','1')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -144,12 +145,12 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testDisjunctionToInTaxonPredicate() throws QueryBuildingException {
-    Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
-    Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
+    Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
+    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -287,10 +288,24 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testInPredicateTaxonKey() throws QueryBuildingException {
+  public void testInPredicateDefaultTaxonKey() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
+    assertEquals("(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))", query);
+  }
+
+  @Test
+  public void testInPredicateBackboneTaxonKey() throws QueryBuildingException {
+    Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))", query);
+  }
+
+  @Test
+  public void testInPredicateTaxonKey() throws QueryBuildingException {
+    Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
+    String query = visitor.buildQuery(p);
+    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -1168,6 +1183,18 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "*,15", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.lte <= 15.0", query);
+  }
+
+  @Test
+  public void testBackboneTaxonomyEqualsPredicate() {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+      new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+    try {
+      String query = visitor.buildQuery(equalsPredicate);
+      assertEquals("(stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))", query);
+    } catch (QueryBuildingException ex) {
+      fail();
+    }
   }
 
   @Test

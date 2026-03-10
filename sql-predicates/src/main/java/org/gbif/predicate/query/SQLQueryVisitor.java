@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -84,6 +85,19 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final Function<Term, String> ARRAY_LIKE_FN =
       t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+
+  private static final List<GbifTerm> NUB_KEYS =
+    List.of(
+      GbifTerm.taxonKey,
+      GbifTerm.acceptedTaxonKey,
+      GbifTerm.kingdomKey,
+      GbifTerm.phylumKey,
+      GbifTerm.classKey,
+      GbifTerm.orderKey,
+      GbifTerm.familyKey,
+      GbifTerm.genusKey,
+      // GbifTerm.subgenusKey, Excluded as it is not populated by interpretation.
+      GbifTerm.speciesKey);
 
   // TODO: handle derived taxon params for events
   private static final Set<SearchParameter> TAXON_SEARCH_PARAMETERS =
@@ -266,7 +280,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     if (useIn) {
-      visit(new InPredicate<>(parameter, values, matchCase));
+      visit(new InPredicate<>(parameter, values, matchCase, checklistsKey));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
     }
@@ -554,7 +568,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
   public void visit(InPredicate<S> predicate) throws QueryBuildingException {
-
     log.info("InPredicate " + predicate);
 
     boolean isMatchCase = Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE);
@@ -573,6 +586,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(')');
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY && (predicate.getChecklistKey() == null || Constants.NUB_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
+      // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make downloads with 10,000s of
+      // taxon identifiers, and performance of this will need to be adequate before the classifications column can be used.
+      appendTaxonomicBackboneArrayFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
@@ -1017,7 +1034,32 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /**
-   * Searches any of the NUB keys in Hive of any rank.
+   * Searches any of the backbone keys in Hive of any rank, for multiple keys.
+   *
+   * @param taxonKeyPredicate to append as filter
+   */
+  private void appendTaxonomicBackboneArrayFilter(InPredicate<S> taxonKeyPredicate) {
+    Collection<String> taxonKeys = taxonKeyPredicate.getValues();
+
+    builder.append('(');
+    boolean first = true;
+    for (Term term : NUB_KEYS) {
+      if (!first) {
+        builder.append(DISJUNCTION_OPERATOR);
+      }
+      builder
+        .append(SQLColumnsUtils.getSQLQueryColumn(term))
+        .append(IN_OPERATOR)
+        .append("('")
+        .append(String.join(",", taxonKeys))
+        .append("')");
+      first = false;
+    }
+    builder.append(')');
+  }
+
+  /**
+   * Searches any of the taxonomic classification keys in Hive of any rank.
    *
    * @param taxonKeyPredicate to append as filter
    */
