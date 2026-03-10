@@ -311,7 +311,7 @@
 <span class="source-line-no">298</span><span id="line-298">    Predicate p = new InPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);</span>
 <span class="source-line-no">299</span><span id="line-299">    String query = visitor.buildQuery(p);</span>
 <span class="source-line-no">300</span><span id="line-300">    assertEquals(</span>
-<span class="source-line-no">301</span><span id="line-301">        "(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))",</span>
+<span class="source-line-no">301</span><span id="line-301">        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",</span>
 <span class="source-line-no">302</span><span id="line-302">        query);</span>
 <span class="source-line-no">303</span><span id="line-303">  }</span>
 <span class="source-line-no">304</span><span id="line-304"></span>
@@ -325,7 +325,7 @@
 <span class="source-line-no">312</span><span id="line-312">            Constants.NUB_DATASET_KEY.toString());</span>
 <span class="source-line-no">313</span><span id="line-313">    String query = visitor.buildQuery(p);</span>
 <span class="source-line-no">314</span><span id="line-314">    assertEquals(</span>
-<span class="source-line-no">315</span><span id="line-315">        "(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))",</span>
+<span class="source-line-no">315</span><span id="line-315">        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",</span>
 <span class="source-line-no">316</span><span id="line-316">        query);</span>
 <span class="source-line-no">317</span><span id="line-317">  }</span>
 <span class="source-line-no">318</span><span id="line-318"></span>

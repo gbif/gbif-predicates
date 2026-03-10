@@ -306,7 +306,7 @@
 <a class="jxr_linenumber" name="L298" href="#L298">298</a>     Predicate p = <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(OccurrenceSearchParameter.TAXON_KEY, List.of(<span class="jxr_string">"1"</span>, <span class="jxr_string">"2"</span>), false);
 <a class="jxr_linenumber" name="L299" href="#L299">299</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L300" href="#L300">300</a>     assertEquals(
-<a class="jxr_linenumber" name="L301" href="#L301">301</a>         <span class="jxr_string">"(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))"</span>,
+<a class="jxr_linenumber" name="L301" href="#L301">301</a>         <span class="jxr_string">"(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))"</span>,
 <a class="jxr_linenumber" name="L302" href="#L302">302</a>         query);
 <a class="jxr_linenumber" name="L303" href="#L303">303</a>   }
 <a class="jxr_linenumber" name="L304" href="#L304">304</a> 
@@ -320,7 +320,7 @@
 <a class="jxr_linenumber" name="L312" href="#L312">312</a>             Constants.NUB_DATASET_KEY.toString());
 <a class="jxr_linenumber" name="L313" href="#L313">313</a>     String query = visitor.buildQuery(p);
 <a class="jxr_linenumber" name="L314" href="#L314">314</a>     assertEquals(
-<a class="jxr_linenumber" name="L315" href="#L315">315</a>         <span class="jxr_string">"(taxonkey IN('1,2') OR acceptedtaxonkey IN('1,2') OR kingdomkey IN('1,2') OR phylumkey IN('1,2') OR classkey IN('1,2') OR orderkey IN('1,2') OR familykey IN('1,2') OR genuskey IN('1,2') OR specieskey IN('1,2'))"</span>,
+<a class="jxr_linenumber" name="L315" href="#L315">315</a>         <span class="jxr_string">"(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))"</span>,
 <a class="jxr_linenumber" name="L316" href="#L316">316</a>         query);
 <a class="jxr_linenumber" name="L317" href="#L317">317</a>   }
 <a class="jxr_linenumber" name="L318" href="#L318">318</a> 

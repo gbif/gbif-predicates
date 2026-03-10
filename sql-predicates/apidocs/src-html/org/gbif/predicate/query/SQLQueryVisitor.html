@@ -1069,7 +1069,7 @@
 <span class="source-line-no">1056</span><span id="line-1056">          .append(SQLColumnsUtils.getSQLQueryColumn(term))</span>
 <span class="source-line-no">1057</span><span id="line-1057">          .append(IN_OPERATOR)</span>
 <span class="source-line-no">1058</span><span id="line-1058">          .append("('")</span>
-<span class="source-line-no">1059</span><span id="line-1059">          .append(String.join(",", taxonKeys))</span>
+<span class="source-line-no">1059</span><span id="line-1059">          .append(String.join("','", taxonKeys))</span>
 <span class="source-line-no">1060</span><span id="line-1060">          .append("')");</span>
 <span class="source-line-no">1061</span><span id="line-1061">      first = false;</span>
 <span class="source-line-no">1062</span><span id="line-1062">    }</span>
