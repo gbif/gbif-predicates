@@ -294,6 +294,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
+    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
+        && (predicate.getChecklistKey() == null
+            || Constants.NUB_DATASET_KEY
+                .toString()
+                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+      // Use the taxonkey, specieskey etc columns as the classification one currently lacks synonyms.
+      // (It's also faster.)
+      appendTaxonomicBackboneSingleValueFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
@@ -313,7 +321,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(
           String.format(
               getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
-    } else if (sqlTermsMapper.isArray(predicate.getKey())) {
+    } else if (isSQLArray(predicate.getKey())) {
       builder.append(
           String.format(
               getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
@@ -601,7 +609,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, GbifInternalTerm.taxonomicStatuses);
-    } else if (predicate.getKey().name().equals("GADM_GID")) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
     } else if (predicate.getKey().name().equals("EVENT_DATE")) {
@@ -1058,6 +1066,29 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append("('")
           .append(String.join("','", taxonKeys))
           .append("')");
+      first = false;
+    }
+    builder.append(')');
+  }
+
+  /**
+   * Searches any of the backbone keys in Hive of any rank.
+   *
+   * @param taxonKeyPredicate to append as filter
+   */
+  private void appendTaxonomicBackboneSingleValueFilter(EqualsPredicate<S> taxonKeyPredicate) {
+    builder.append('(');
+    boolean first = true;
+    for (Term term : NUB_KEYS) {
+      if (!first) {
+        builder.append(DISJUNCTION_OPERATOR);
+      }
+      builder
+          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(EQUALS_OPERATOR)
+          .append('\'')
+          .append(taxonKeyPredicate.getValue())
+          .append('\'');
       first = false;
     }
     builder.append(')');

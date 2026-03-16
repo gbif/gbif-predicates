@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>59</version>
+    <version>61</version>
   </parent>
 
   <groupId>org.gbif.predicates</groupId>
@@ -59,7 +59,7 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.4.0</gbif-api.version>
+    <gbif-api.version>2.4.1</gbif-api.version>
     <dwc-api.version>2.1.10</dwc-api.version>
 
     <!-- Logging -->
