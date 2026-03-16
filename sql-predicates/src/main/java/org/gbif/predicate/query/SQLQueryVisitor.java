@@ -299,7 +299,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             || Constants.NUB_DATASET_KEY
                 .toString()
                 .equalsIgnoreCase(predicate.getChecklistKey()))) {
-      // Use the taxonkey, specieskey etc columns as the classification one currently lacks synonyms.
+      // Use the taxonkey, specieskey etc columns as the classification one currently lacks
+      // synonyms.
       // (It's also faster.)
       appendTaxonomicBackboneSingleValueFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
