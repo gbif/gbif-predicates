@@ -178,6 +178,7 @@ public class SQLColumnsUtils {
         || DwcTerm.samplingProtocol == term
         || DwcTerm.georeferencedBy == term
         || DwcTerm.higherGeography == term
+        || DwcTerm.associatedSequences == term
         || GbifTerm.projectId == term
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
