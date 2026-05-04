@@ -180,6 +180,47 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit);
     EVENTS_PARAM_TO_TERM = Collections.unmodifiableMap(eventsMap);
 
+    // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order
+    Map<SearchParameter, Term> arrayMap = new LinkedHashMap<>();
+    arrayMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    arrayMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
+    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);
+    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);
+    arrayMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);
+    arrayMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);
+    arrayMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);
+    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);
+    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);
+    arrayMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);
+    arrayMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
+    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);
+    arrayMap.put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
+    arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
+    arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);
+    arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
+    arrayMap.put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy);
+    arrayMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);
+
+    // event array params
+    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
+    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
+    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
+    arrayMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
+    arrayMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);
+    arrayMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);
+    arrayMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
+    arrayMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);
+    arrayMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    arrayMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
+    arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
+    arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
+    arrayMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);
+
+    ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);
+
     // Build PARAM_TO_TERM with LinkedHashMap to preserve insertion order
     // parameters that map directly to Hive.
     // boundingBox, coordinate, taxonKey and gadmGid are treated specially!
@@ -333,54 +374,13 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);
     paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
-    paramMap.put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy);
-    paramMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
-    paramMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
     eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
     eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     // Add all from EVENTS_PARAM_TO_TERM
     paramMap.putAll(EVENTS_PARAM_TO_TERM);
+    paramMap.putAll(ARRAY_STRING_TERMS);
     PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);
-
-    // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order
-    Map<SearchParameter, Term> arrayMap = new LinkedHashMap<>();
-    arrayMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
-    arrayMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
-    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);
-    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);
-    arrayMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);
-    arrayMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);
-    arrayMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);
-    arrayMap.put(OccurrenceSearchParameter.RECORDED_BY, DwcTerm.recordedBy);
-    arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);
-    arrayMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);
-    arrayMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
-    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);
-    arrayMap.put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
-    arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
-    arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);
-    arrayMap.put(OccurrenceSearchParameter.DNA_SEQUENCE_ID, GbifTerm.dnaSequenceID);
-    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
-    arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
-
-    // event array params
-    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
-    arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
-    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION_ID, DwcTerm.fundingAttributionID);
-    arrayMap.put(EventSearchParameter.FUNDING_ATTRIBUTION, DwcTerm.fundingAttribution);
-    arrayMap.put(EventSearchParameter.PROJECT_TITLE, DwcTerm.projectTitle);
-    arrayMap.put(EventSearchParameter.DATASET_ID, DwcTerm.datasetID);
-    arrayMap.put(EventSearchParameter.DATASET_NAME, DwcTerm.datasetName);
-    arrayMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
-    arrayMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);
-    arrayMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
-    arrayMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
-    arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
-    arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
-    arrayMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);
-
-    ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);
   }
 
   private static final Map<SearchParameter, Term> DENORMED_TERMS = Collections.emptyMap();

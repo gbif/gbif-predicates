@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -62,7 +63,9 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
-    Predicate aves = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false);
+    Predicate aves =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "212", false, "someChecklistKey");
     Predicate passer =
         new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
@@ -74,14 +77,16 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((stringArrayContains(classifications['defaultChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((stringArrayContains(classifications['someChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
   @Test
   public void testMoreComplexQuery() throws QueryBuildingException {
-    Predicate taxon1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
-    Predicate taxon2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
+    Predicate taxon1 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate taxon2 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
     DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
@@ -101,7 +106,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))) "
+        "(((arrays_overlap(classifications['someChecklistKey'], array('2','1')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -144,12 +149,14 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testDisjunctionToInTaxonPredicate() throws QueryBuildingException {
-    Predicate p1 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false);
-    Predicate p2 = new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false);
+    Predicate p1 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+    Predicate p2 =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
+    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -287,10 +294,35 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testInPredicateTaxonKey() throws QueryBuildingException {
+  public void testInPredicateDefaultTaxonKey() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['defaultChecklistKey'], array('2','1')))", query);
+    assertEquals(
+        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",
+        query);
+  }
+
+  @Test
+  public void testInPredicateBackboneTaxonKey() throws QueryBuildingException {
+    Predicate p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            List.of("1", "2"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",
+        query);
+  }
+
+  @Test
+  public void testInPredicateTaxonKey() throws QueryBuildingException {
+    Predicate p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
+    String query = visitor.buildQuery(p);
+    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
   }
 
   @Test
@@ -1002,37 +1034,46 @@ public class SQLQueryVisitorTest {
   public void testAllParamsExist() {
     List<Predicate> predicates = new ArrayList<>();
     for (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
-      String value = "7";
+      String value1 = "7";
+      String value2 = "9";
       if (OccurrenceSearchParameter.GEOMETRY == param) {
-        value = "POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))";
-        predicates.add(new WithinPredicate(value));
-      } else if (UUID.class.isAssignableFrom(param.type())) {
-        value = UUID.randomUUID().toString();
-      } else if (Boolean.class.isAssignableFrom(param.type())) {
-        value = "true";
-      } else if (Country.class.isAssignableFrom(param.type())) {
-        value = Country.GERMANY.getIso2LetterCode();
-      } else if (Language.class.isAssignableFrom(param.type())) {
-        value = Language.GERMAN.getIso2LetterCode();
-      } else if (Enum.class.isAssignableFrom(param.type())) {
-        Enum<?>[] values = ((Class<Enum>) param.type()).getEnumConstants();
-        value = values[0].name();
-      } else if (Date.class.isAssignableFrom(param.type())) {
-        value = "2014-01-23";
-      } else if (IsoDateInterval.class.isAssignableFrom(param.type())) {
-        value = "2014-01-23,2015-05";
+        predicates.add(new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"));
+        continue;
       } else if (OccurrenceSearchParameter.GEO_DISTANCE == param) {
         predicates.add(new GeoDistancePredicate("10", "20", "10km"));
+        continue;
+      } else if (UUID.class.isAssignableFrom(param.type())) {
+        value1 = UUID.randomUUID().toString();
+        value2 = UUID.randomUUID().toString();
+      } else if (Boolean.class.isAssignableFrom(param.type())) {
+        value1 = "true";
+        value2 = "false";
+      } else if (Country.class.isAssignableFrom(param.type())) {
+        value1 = Country.GERMANY.getIso2LetterCode();
+        value2 = Country.FRANCE.getIso3LetterCode();
+      } else if (Language.class.isAssignableFrom(param.type())) {
+        value1 = Language.GERMAN.getIso2LetterCode();
+        value2 = Language.FRENCH.getIso3LetterCode();
+      } else if (Enum.class.isAssignableFrom(param.type())) {
+        Enum<?>[] values = ((Class<Enum>) param.type()).getEnumConstants();
+        value1 = values[0].name();
+        value2 = values[1].name();
+      } else if (Date.class.isAssignableFrom(param.type())) {
+        value1 = "2014-01-23";
+        value2 = null;
+      } else if (IsoDateInterval.class.isAssignableFrom(param.type())) {
+        value1 = "2014-01-23,2015-05";
+        value2 = null;
       }
 
-      if (OccurrenceSearchParameter.GEOMETRY != param
-          && OccurrenceSearchParameter.GEO_DISTANCE != param) {
-        predicates.add(new EqualsPredicate<>(param, value, false));
+      predicates.add(new EqualsPredicate<>(param, value1, false));
+      if (value2 != null) {
+        predicates.add(new InPredicate<>(param, List.of(value1, value2), false));
       }
     }
     ConjunctionPredicate and = new ConjunctionPredicate(predicates);
     try {
-      visitor.buildQuery(and);
+      String allParams = visitor.buildQuery(and);
     } catch (QueryBuildingException e) {
       fail(e);
     }
@@ -1101,35 +1142,28 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testGreaterThanEqualsIncludingNull() {
+  public void testGreaterThanEqualsIncludingNull() throws QueryBuildingException {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanOrEqualsPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
-    try {
-      String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
-          "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(distanceFromCentroidPredicate);
+    assertEquals(
+        "(distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)", query);
   }
 
   @Test
-  public void testGreaterThanIncludingNull() {
+  public void testGreaterThanIncludingNull() throws QueryBuildingException {
     GreaterThanPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
-    try {
-      String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
-          "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL)", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+
+    String query = visitor.buildQuery(distanceFromCentroidPredicate);
+    assertEquals(
+        "(distancefromcentroidinmeters > 10 OR distancefromcentroidinmeters IS NULL)", query);
   }
 
   @Test
-  public void testDisjunctionGreaterThanEqualsIncludingNull() {
+  public void testDisjunctionGreaterThanEqualsIncludingNull() throws QueryBuildingException {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanOrEqualsPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
@@ -1137,14 +1171,10 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false);
     DisjunctionPredicate disjunctionPredicate =
         new DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
-    try {
-      String query = visitor.buildQuery(disjunctionPredicate);
-      assertEquals(
-          "(((stringArrayContains(classifications['defaultChecklistKey'], '6', true))) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(disjunctionPredicate);
+    assertEquals(
+        "(((taxonkey = '6' OR acceptedtaxonkey = '6' OR kingdomkey = '6' OR phylumkey = '6' OR classkey = '6' OR orderkey = '6' OR familykey = '6' OR genuskey = '6' OR specieskey = '6')) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
+        query);
   }
 
   @Test
@@ -1171,32 +1201,39 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testMultiTaxonomyEqualsPredicate() {
+  public void testBackboneTaxonomyEqualsPredicate() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
-    try {
-      String query = visitor.buildQuery(equalsPredicate);
-      assertEquals("(stringArrayContains(classifications['my-checklist-uuid'], '6', true))", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            "6",
+            false,
+            "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals(
+        "(taxonkey = '6' OR acceptedtaxonkey = '6' OR kingdomkey = '6' OR phylumkey = '6' OR classkey = '6' OR orderkey = '6' OR familykey = '6' OR genuskey = '6' OR specieskey = '6')",
+        query);
   }
 
   @Test
-  public void testMultiTaxonomyInPredicate() {
+  public void testMultiTaxonomyEqualsPredicate() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("(stringArrayContains(classifications['my-checklist-uuid'], '6', true))", query);
+  }
+
+  @Test
+  public void testMultiTaxonomyInPredicate() throws QueryBuildingException {
     InPredicate<OccurrenceSearchParameter> inPredicate =
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
-    try {
-      String query = visitor.buildQuery(inPredicate);
-      assertEquals("(arrays_overlap(classifications['my-checklist-uuid'], array('7','6')))", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(inPredicate);
+    assertEquals("(arrays_overlap(classifications['my-checklist-uuid'], array('7','6')))", query);
   }
 
   @Test
-  public void testMultiTaxonomyDisjunctionPredicate() {
+  public void testMultiTaxonomyDisjunctionPredicate() throws QueryBuildingException {
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
@@ -1204,18 +1241,14 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
-    try {
-      String query = visitor.buildQuery(predicate);
-      assertEquals(
-          "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) OR ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(predicate);
+    assertEquals(
+        "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) OR ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+        query);
   }
 
   @Test
-  public void testMultiTaxonomyConjunctionPredicate() {
+  public void testMultiTaxonomyConjunctionPredicate() throws QueryBuildingException {
     ConjunctionPredicate predicate =
         new ConjunctionPredicate(
             Arrays.asList(
@@ -1223,63 +1256,46 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
-    try {
-      String query = visitor.buildQuery(predicate);
-      assertEquals(
-          "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(predicate);
+    assertEquals(
+        "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+        query);
   }
 
   @Test
-  public void testTaxonomicIssuePredicate() {
+  public void testTaxonomicIssuePredicate() throws QueryBuildingException {
     EqualsPredicate eq =
         new EqualsPredicate<>(
             OccurrenceSearchParameter.TAXONOMIC_ISSUE, "6", false, "my-checklist-uuid-1");
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals(
-          "(stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals("(stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))", query);
   }
 
   @Test
-  public void testTaxonomicStatusPredicate() {
+  public void testTaxonomicStatusPredicate() throws QueryBuildingException {
     EqualsPredicate eq =
         new EqualsPredicate<>(
             OccurrenceSearchParameter.TAXONOMIC_STATUS, "SYNONYM", false, "my-checklist-uuid-1");
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals("(taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM')", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals("(taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM')", query);
   }
 
   @Test
-  public void testTaxonomicStatusMultiplePredicate() {
+  public void testTaxonomicStatusMultiplePredicate() throws QueryBuildingException {
     InPredicate eq =
         new InPredicate<>(
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             List.of("SYNONYM", "ACCEPTED"),
             false,
             "my-checklist-uuid-1");
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals(
-          "((taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM') OR (taxonomicstatuses['my-checklist-uuid-1'] = 'ACCEPTED'))",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals(
+        "((taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM') OR (taxonomicstatuses['my-checklist-uuid-1'] = 'ACCEPTED'))",
+        query);
   }
 
   @Test
-  public void testTaxonomicIssueConjunctionPredicate() {
+  public void testTaxonomicIssueConjunctionPredicate() throws QueryBuildingException {
     ConjunctionPredicate predicate =
         new ConjunctionPredicate(
             Arrays.asList(
@@ -1287,14 +1303,10 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXONOMIC_ISSUE, "6", false, "my-checklist-uuid-1"),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXONOMIC_ISSUE, "7", false, "my-checklist-uuid-2")));
-    try {
-      String query = visitor.buildQuery(predicate);
-      assertEquals(
-          "(((stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(taxonomicissue['my-checklist-uuid-2'], '7', true))))",
-          query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(predicate);
+    assertEquals(
+        "(((stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(taxonomicissue['my-checklist-uuid-2'], '7', true))))",
+        query);
   }
 
   @Test
@@ -1345,59 +1357,39 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testHumboldtFields() {
+  public void testHumboldtFields() throws QueryBuildingException {
     EqualsPredicate<EventSearchParameter> equalsPredicate =
-        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "1", false);
-    try {
-      String query = visitor.buildQuery(equalsPredicate);
-      assertEquals("lower(h.verbatimsitenames) = lower('1')", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+        new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("h.sitecount = 1", query);
 
     equalsPredicate =
         new EqualsPredicate<>(
             EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, "def");
-    try {
-      String query = visitor.buildQuery(equalsPredicate);
-      assertEquals("h.isabsencereported = true", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    query = visitor.buildQuery(equalsPredicate);
+    assertEquals("h.isabsencereported = true", query);
   }
 
   @Test
-  public void testTaxonKeyIsNullPredicate() {
+  public void testTaxonKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate eq =
         new IsNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] = '')", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] = '')", query);
   }
 
   @Test
-  public void testTaxonKeyIsNotNullPredicate() {
+  public void testTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate eq =
         new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] != '')", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] != '')", query);
   }
 
   @Test
-  public void testTaxonKeyIsNotNullPredicateWithoutChecklistKey() {
+  public void testTaxonKeyIsNotNullPredicateWithoutChecklistKey() throws QueryBuildingException {
     IsNotNullPredicate eq = new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
-    try {
-      String query = visitor.buildQuery(eq);
-      assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] != '')", query);
-    } catch (QueryBuildingException ex) {
-      fail();
-    }
+    String query = visitor.buildQuery(eq);
+    assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] != '')", query);
   }
 }
