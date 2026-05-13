@@ -18,11 +18,11 @@
 -docfilessubdirs
 -Xdoclint:none
 -doctitle
-'Predicates :: SQL support 2.1.9-SNAPSHOT Test API'
+'Predicates :: SQL support 2.1.10-SNAPSHOT Test API'
 -link
 '../apidocs'
 -linksource
 -use
 -version
 -windowtitle
-'Predicates :: SQL support 2.1.9-SNAPSHOT Test API'
+'Predicates :: SQL support 2.1.10-SNAPSHOT Test API'
