@@ -101,6 +101,8 @@ public class SQLColumnsUtils {
     String columnName = term.simpleName().toLowerCase();
     if (SQL_RESERVED_WORDS.contains(columnName)) {
       return columnName + '_';
+    } else if (isNucleotideTerm(term)) {
+      return columnName.replace("nucleotide_", "");
     }
     return columnName;
   }
@@ -110,7 +112,10 @@ public class SQLColumnsUtils {
     String columnName = getSQLColumn(term);
     if (isHumboldtTerm(term)) {
       columnName = "h." + columnName;
+    } else if (isNucleotideTerm(term)) {
+      columnName = "dna." + columnName;
     }
+
     return isVocabulary(term) ? columnName + ".lineage" : columnName;
   }
 
@@ -212,6 +217,10 @@ public class SQLColumnsUtils {
 
   public static boolean isHumboldtTerm(Term term) {
     return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;
+  }
+
+  public static boolean isNucleotideTerm(Term term) {
+    return term.simpleName().startsWith("nucleotide_") || term == MixsTerm.target_gene;
   }
 
   public static boolean isVocabulary(Term term) {
