@@ -63,6 +63,7 @@ public class SQLColumnsUtils {
           GbifTerm.mediaType,
           GbifTerm.issue,
           GbifInternalTerm.networkKey,
+          GbifInternalTerm.datasetCategory,
           DwcTerm.identifiedByID,
           DwcTerm.recordedByID,
           GbifInternalTerm.dwcaExtension,
@@ -165,6 +166,7 @@ public class SQLColumnsUtils {
     return GbifTerm.mediaType == term
         || GbifTerm.issue == term
         || GbifInternalTerm.networkKey == term
+        || GbifInternalTerm.datasetCategory == term
         || DwcTerm.identifiedByID == term
         || DwcTerm.recordedByID == term
         || GbifInternalTerm.dwcaExtension == term
