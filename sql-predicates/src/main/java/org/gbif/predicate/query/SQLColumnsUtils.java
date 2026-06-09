@@ -108,7 +108,7 @@ public class SQLColumnsUtils {
       return columnName.replace("nucleotide_", "");
     } else if (term == GbifTerm.datasetKey) {
       // ambiguous column that can exist in more than 1 table
-      return disambiguationTable + "." + columnName;
+      return disambiguationTable != null ? disambiguationTable + "." + columnName : columnName;
     }
 
     return columnName;
