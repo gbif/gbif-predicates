@@ -90,11 +90,14 @@ public class SQLColumnsUtils {
           DwcTerm.coordinateUncertaintyInMeters,
           DwcTerm.coordinatePrecision);
 
-  private SQLColumnsUtils() {
-    // empty constructor
+  // used when there is a column that exists in more than one table
+  private final String disambiguationTable;
+
+  SQLColumnsUtils(String disambiguationTable) {
+    this.disambiguationTable = disambiguationTable;
   }
 
-  public static String getSQLColumn(Term term) {
+  public String getSQLColumn(Term term) {
     if (GbifTerm.verbatimScientificName == term) {
       return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();
     }
@@ -103,12 +106,16 @@ public class SQLColumnsUtils {
       return columnName + '_';
     } else if (isNucleotideTerm(term)) {
       return columnName.replace("nucleotide_", "");
+    } else if (term == GbifTerm.datasetKey) {
+      // ambiguous column that can exist in more than 1 table
+      return disambiguationTable + "." + columnName;
     }
+
     return columnName;
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getSQLQueryColumn(Term term) {
+  public String getSQLQueryColumn(Term term) {
     String columnName = getSQLColumn(term);
     if (isHumboldtTerm(term)) {
       columnName = "h." + columnName;
@@ -120,7 +127,7 @@ public class SQLColumnsUtils {
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getSQLValueColumn(Term term) {
+  public String getSQLValueColumn(Term term) {
     String columnName = getSQLColumn(term);
     return isVocabulary(term)
         ? isSQLArray(term) ? columnName + ".concepts" : columnName + ".concept"
