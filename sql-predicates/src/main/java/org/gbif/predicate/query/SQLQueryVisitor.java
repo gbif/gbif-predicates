@@ -605,7 +605,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       // adequate before the classifications column can be used.
       appendTaxonomicBackboneArrayFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
-      appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
+      appendTaxonKeyArrayFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
       appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
@@ -1145,6 +1145,26 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                             + value
                             + "'")
                 .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
+        .append(')');
+  }
+
+  /**
+   * Searches any of the NUB keys in Hive of any rank, for multiple keys.
+   *
+   * @param taxonomicPredicate to append as filter
+   */
+  private void appendTaxonKeyArrayFilter(InPredicate<S> taxonomicPredicate) {
+    Set<String> taxonKeys =
+        taxonomicPredicate.getValues().stream()
+            .map(v -> toSQLValue(taxonomicPredicate.getKey(), v, true))
+            .collect(Collectors.toSet());
+    builder
+        .append('(')
+        .append(
+            String.format(
+                "TAXON_LOOKUP('%s', ARRAY(%s))", // 'taxonkey' is a chosen to get
+                // past the validation
+                getChecklistKey(taxonomicPredicate.getChecklistKey()), String.join(",", taxonKeys)))
         .append(')');
   }
 

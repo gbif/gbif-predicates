@@ -106,7 +106,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((exists(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))) "
+        "(((TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -157,7 +157,7 @@ public class SQLQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(exists(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
+        "(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
   }
 
   @Test
@@ -324,7 +324,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(exists(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
+        "(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
   }
 
   @Test
@@ -1232,7 +1232,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
     String query = visitor.buildQuery(inPredicate);
     assertEquals(
-        "(exists(classifications['my-checklist-uuid'], taxonkey -> taxonkey IN ('7','6')))", query);
+        "(TAXON_LOOKUP('my-checklist-uuid', ARRAY('7','6')))", query);
   }
 
   @Test
