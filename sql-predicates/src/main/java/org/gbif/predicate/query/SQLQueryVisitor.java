@@ -1183,8 +1183,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append('(')
         .append(
             String.format(
-                "exists(%s['%s'], taxonkey -> taxonkey IN (%s))", // 'taxonkey' is a chosen to get
-                // past the validation
+                "arrays_overlap(%s['%s'], array(%s))",
                 SQLColumnsUtils.getSQLQueryColumn(term),
                 getChecklistKey(taxonomicPredicate.getChecklistKey()),
                 String.join(",", taxonKeys)))
