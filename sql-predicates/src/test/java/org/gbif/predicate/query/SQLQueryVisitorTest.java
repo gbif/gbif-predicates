@@ -156,8 +156,7 @@ public class SQLQueryVisitorTest {
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
+    assertEquals("(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
   }
 
   @Test
@@ -323,8 +322,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
+    assertEquals("(TAXON_LOOKUP('someChecklistKey', ARRAY('2','1')))", query);
   }
 
   @Test
@@ -1231,8 +1229,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
     String query = visitor.buildQuery(inPredicate);
-    assertEquals(
-        "(TAXON_LOOKUP('my-checklist-uuid', ARRAY('7','6')))", query);
+    assertEquals("(TAXON_LOOKUP('my-checklist-uuid', ARRAY('7','6')))", query);
   }
 
   @Test
