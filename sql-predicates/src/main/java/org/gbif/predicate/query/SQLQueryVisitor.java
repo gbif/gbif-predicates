@@ -1158,12 +1158,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         taxonomicPredicate.getValues().stream()
             .map(v -> toSQLValue(taxonomicPredicate.getKey(), v, true))
             .collect(Collectors.toSet());
+
     builder
         .append('(')
         .append(
             String.format(
-                "TAXON_LOOKUP('%s', ARRAY(%s))", // 'taxonkey' is a chosen to get
-                // past the validation
+                // using 'taxonkey' as it needs to be a recognised column
+                // to get past calcite validation
+                "EXISTS(classifications['%s'], taxonkey -> taxonkey IN (%s))",
                 getChecklistKey(taxonomicPredicate.getChecklistKey()), String.join(",", taxonKeys)))
         .append(')');
   }
