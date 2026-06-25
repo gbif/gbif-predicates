@@ -59,7 +59,7 @@ public class SQLQueryVisitorTest {
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
   private final SQLQueryVisitor visitor =
-      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey");
+      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey", "occurrence");
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
@@ -1083,6 +1083,8 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testVocabularies() {
+    SQLColumnsUtils sqlColumnsUtils = new SQLColumnsUtils("occurrence");
+
     Arrays.stream(OccurrenceSearchParameter.values())
         .filter(
             p ->
@@ -1092,7 +1094,7 @@ public class SQLQueryVisitorTest {
         .forEach(
             param -> {
               try {
-                String hiveQueryField = SQLColumnsUtils.getSQLQueryColumn(visitor.term(param));
+                String hiveQueryField = sqlColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
