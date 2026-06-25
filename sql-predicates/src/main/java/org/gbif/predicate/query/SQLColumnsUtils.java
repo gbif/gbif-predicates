@@ -219,7 +219,8 @@ public class SQLColumnsUtils {
         || DwcTerm.fundingAttribution == term
         || DwcTerm.fundingAttributionID == term
         || DwcTerm.measurementType == term
-        || ObisTerm.measurementTypeID == term;
+        || ObisTerm.measurementTypeID == term
+        || GbifTerm.dnaSequenceID == term;
   }
 
   public static boolean isHumboldtTerm(Term term) {
