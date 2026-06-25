@@ -80,12 +80,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
 
-  private static final Function<Term, String> ARRAY_FN =
-      t -> "stringArrayContains(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
-
-  private static final Function<Term, String> ARRAY_LIKE_FN =
-      t -> "stringArrayLike(" + SQLColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
-
   private static final List<GbifTerm> NUB_KEYS =
       List.of(
           GbifTerm.taxonKey,
@@ -122,6 +116,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final String defaultChecklistKey;
 
+  // used when there is a column that exists in more than one table
+  private final SQLColumnsUtils sqlColumnsUtils;
+
+  public SQLQueryVisitor(
+      SQLTermsMapper<S> sqlTermsMapper, String defaultChecklistKey, String disambiguationTable) {
+    this.sqlTermsMapper = sqlTermsMapper;
+    this.defaultChecklistKey = defaultChecklistKey;
+    sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
+  }
+
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
     return "lower(" + val + ")";
@@ -131,7 +135,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return Optional.ofNullable(term(param))
         .map(
             term -> {
-              String sqlCol = SQLColumnsUtils.getSQLQueryColumn(term);
+              String sqlCol = sqlColumnsUtils.getSQLQueryColumn(term);
               if (String.class.isAssignableFrom(param.type())
                   && (param != OccurrenceSearchParameter.GEOMETRY)
                   && !matchCase) {
@@ -287,7 +291,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public Function<Term, String> getArrayFn() {
-    return ARRAY_FN;
+    return t -> "stringArrayContains(" + sqlColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+  }
+
+  public Function<Term, String> getArrayLikeFn() {
+    return t -> "stringArrayLike(" + sqlColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
   }
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
@@ -671,7 +679,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
           String.format(
-              ARRAY_LIKE_FN.apply(sqlTermsMapper.getTermArray(predicate.getKey())),
+              getArrayLikeFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
               predicate.getValue().replaceAll("'", "\\\\'"),
               predicate.isMatchCase()));
     } else {
@@ -824,9 +832,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append("contains('")
           .append(withinGeometry)
           .append("', ")
-          .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+          .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
           .append(", ")
-          .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
+          .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
       // Without the "= TRUE", the expression may evaluate to TRUE or FALSE for all records,
       // depending
       // on the data format (ORC, Avro, Parquet, text) of the table (!).
@@ -846,9 +854,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(", '")
         .append(geoDistance.getGeoDistance().getDistance().toString())
         .append("', ")
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(", ")
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
         .append(") = TRUE)");
   }
 
@@ -860,18 +868,18 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder
         .append('(')
         // Latitude is easy:
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(GREATER_THAN_EQUALS_OPERATOR)
         .append(bounds.getMinY())
         .append(CONJUNCTION_OPERATOR)
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(LESS_THAN_EQUALS_OPERATOR)
         .append(bounds.getMaxY())
         .append(CONJUNCTION_OPERATOR)
 
         // Longitude must take account of crossing the antimeridian:
         .append('(')
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
         .append(GREATER_THAN_EQUALS_OPERATOR)
         .append(bounds.getMinX());
     if (bounds.getMinX() < bounds.getMaxX()) {
@@ -880,7 +888,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder.append(DISJUNCTION_OPERATOR);
     }
     builder
-        .append(SQLColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
+        .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
         .append(LESS_THAN_EQUALS_OPERATOR)
         .append(bounds.getMaxX())
         .append(')')
@@ -930,7 +938,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     if (sqlTermsMapper.includeNullInPredicate(predicate)) {
-      String column = SQLColumnsUtils.getSQLColumn(term(predicate.getKey()));
+      String column = sqlColumnsUtils.getSQLColumn(term(predicate.getKey()));
       builder
           .append('(')
           .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
@@ -953,7 +961,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value)
       throws QueryBuildingException {
     if (sqlTermsMapper.includeNullInPredicate(predicate)) {
-      String column = SQLColumnsUtils.getSQLColumn(term(predicate.getKey()));
+      String column = sqlColumnsUtils.getSQLColumn(term(predicate.getKey()));
       builder
           .append('(')
           .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
@@ -975,7 +983,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Determines if the parameter type is a Hive array. */
   protected boolean isSQLArray(S parameter) {
-    return SQLColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
+    return sqlColumnsUtils.getSQLType(term(parameter)).startsWith(SQL_ARRAY_PRE);
   }
 
   /** Term associated to a search parameter */
@@ -997,7 +1005,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "stringArrayContains(%s['%s']['%s'], '%s', true)",
-                SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
+                sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
                 getChecklistKey(checklistKey),
                 field,
                 value))
@@ -1028,7 +1036,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "arrays_overlap(%s['%s']['%s'], array(%s))",
-                SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
+                sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
                 getChecklistKey(taxonPredicate.getChecklistKey()),
                 field,
                 String.join(",", taxonKeys)))
@@ -1041,7 +1049,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append(
         String.format(
             "%s['%s']['%s'] " + unaryOperator,
-            SQLColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
+            sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
             getChecklistKey(checklistKey),
             "usageName"));
     builder.append(')');
@@ -1062,7 +1070,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         builder.append(DISJUNCTION_OPERATOR);
       }
       builder
-          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(sqlColumnsUtils.getSQLQueryColumn(term))
           .append(IN_OPERATOR)
           .append("('")
           .append(String.join("','", taxonKeys))
@@ -1085,7 +1093,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         builder.append(DISJUNCTION_OPERATOR);
       }
       builder
-          .append(SQLColumnsUtils.getSQLQueryColumn(term))
+          .append(sqlColumnsUtils.getSQLQueryColumn(term))
           .append(EQUALS_OPERATOR)
           .append('\'')
           .append(taxonKeyPredicate.getValue())
@@ -1107,7 +1115,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "stringArrayContains(%s['%s'], '%s', true)",
-                SQLColumnsUtils.getSQLQueryColumn(term),
+                sqlColumnsUtils.getSQLQueryColumn(term),
                 getChecklistKey(taxonKeyPredicate.getChecklistKey()),
                 taxonKeyPredicate.getValue()))
         .append(')');
@@ -1125,7 +1133,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "%s['%s'] = '%s'",
-                SQLColumnsUtils.getSQLQueryColumn(term),
+                sqlColumnsUtils.getSQLQueryColumn(term),
                 getChecklistKey(taxonKeyPredicate.getChecklistKey()),
                 taxonKeyPredicate.getValue()))
         .append(')');
@@ -1139,7 +1147,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             terms.stream()
                 .map(
                     term ->
-                        SQLColumnsUtils.getSQLQueryColumn(term)
+                        sqlColumnsUtils.getSQLQueryColumn(term)
                             + EQUALS_OPERATOR
                             + "'"
                             + value
@@ -1186,7 +1194,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "arrays_overlap(%s['%s'], array(%s))",
-                SQLColumnsUtils.getSQLQueryColumn(term),
+                sqlColumnsUtils.getSQLQueryColumn(term),
                 getChecklistKey(taxonomicPredicate.getChecklistKey()),
                 String.join(",", taxonKeys)))
         .append(')');
@@ -1212,7 +1220,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "%s['%s'] = '%s'",
-                  SQLColumnsUtils.getSQLQueryColumn(term),
+                  sqlColumnsUtils.getSQLQueryColumn(term),
                   getChecklistKey(taxonomicPredicate.getChecklistKey()),
                   taxonKey))
           .append(')');
@@ -1233,7 +1241,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
-      builder.append(SQLColumnsUtils.getSQLQueryColumn(term)).append(IN_OPERATOR).append('(');
+      builder.append(sqlColumnsUtils.getSQLQueryColumn(term)).append(IN_OPERATOR).append('(');
       Iterator<String> iterator = gadmGids.iterator();
       while (iterator.hasNext()) {
         // Hardcoded GADM_LEVEL_0_GID since the type of all these parameters is the same.
@@ -1259,7 +1267,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append('(');
     builder.append(
         terms.stream()
-            .map(term -> SQLColumnsUtils.getSQLQueryColumn(term) + unaryOperator)
+            .map(term -> sqlColumnsUtils.getSQLQueryColumn(term) + unaryOperator)
             .collect(Collectors.joining(CONJUNCTION_OPERATOR)));
     builder.append(')');
   }

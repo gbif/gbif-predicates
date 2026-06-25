@@ -91,32 +91,44 @@ public class SQLColumnsUtils {
           DwcTerm.coordinateUncertaintyInMeters,
           DwcTerm.coordinatePrecision);
 
-  private SQLColumnsUtils() {
-    // empty constructor
+  // used when there is a column that exists in more than one table
+  private final String disambiguationTable;
+
+  SQLColumnsUtils(String disambiguationTable) {
+    this.disambiguationTable = disambiguationTable;
   }
 
-  public static String getSQLColumn(Term term) {
+  public String getSQLColumn(Term term) {
     if (GbifTerm.verbatimScientificName == term) {
       return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();
     }
     String columnName = term.simpleName().toLowerCase();
     if (SQL_RESERVED_WORDS.contains(columnName)) {
       return columnName + '_';
+    } else if (isNucleotideTerm(term)) {
+      return columnName.replace("nucleotide_", "");
+    } else if (term == GbifTerm.datasetKey) {
+      // ambiguous column that can exist in more than 1 table
+      return disambiguationTable != null ? disambiguationTable + "." + columnName : columnName;
     }
+
     return columnName;
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getSQLQueryColumn(Term term) {
+  public String getSQLQueryColumn(Term term) {
     String columnName = getSQLColumn(term);
     if (isHumboldtTerm(term)) {
       columnName = "h." + columnName;
+    } else if (isNucleotideTerm(term)) {
+      columnName = "dna." + columnName;
     }
+
     return isVocabulary(term) ? columnName + ".lineage" : columnName;
   }
 
   /** Gets the Hive column name of the term parameter. */
-  public static String getSQLValueColumn(Term term) {
+  public String getSQLValueColumn(Term term) {
     String columnName = getSQLColumn(term);
     return isVocabulary(term)
         ? isSQLArray(term) ? columnName + ".concepts" : columnName + ".concept"
@@ -214,6 +226,10 @@ public class SQLColumnsUtils {
 
   public static boolean isHumboldtTerm(Term term) {
     return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;
+  }
+
+  public static boolean isNucleotideTerm(Term term) {
+    return term.simpleName().startsWith("nucleotide_") || term == MixsTerm.target_gene;
   }
 
   public static boolean isVocabulary(Term term) {
