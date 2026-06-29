@@ -17,6 +17,7 @@ import org.gbif.dwc.terms.GadmTerm;
 import org.gbif.dwc.terms.GbifInternalTerm;
 import org.gbif.dwc.terms.GbifTerm;
 import org.gbif.dwc.terms.IucnTerm;
+import org.gbif.dwc.terms.MixsTerm;
 import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.dwc.terms.Term;
 import org.gbif.dwc.terms.UnknownTerm;
@@ -180,6 +181,8 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
         EcoTerm.isSamplingEffortReported);
     eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_VALUE, EcoTerm.samplingEffortValue);
     eventsMap.put(EventSearchParameter.HUMBOLDT_SAMPLING_EFFORT_UNIT, EcoTerm.samplingEffortUnit);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
+    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     EVENTS_PARAM_TO_TERM = Collections.unmodifiableMap(eventsMap);
 
     // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order
@@ -416,8 +419,45 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
-    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
-    eventsMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
+
+    // nucleotide
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NUCLEOTIDE_SEQUENCE_ID,
+        GbifInternalTerm.nucleotide_nucleotideSequenceID);
+    paramMap.put(OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, MixsTerm.target_gene);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE,
+        GbifInternalTerm.nucleotide_sequence);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+        GbifInternalTerm.nucleotide_sequenceLength);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GC_CONTENT,
+        GbifInternalTerm.nucleotide_gcContent);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_IUPAC_FRACTION,
+        GbifInternalTerm.nucleotide_nonIupacFraction);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_ACGTN_FRACTION,
+        GbifInternalTerm.nucleotide_nonACGTNFraction);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_FRACTION,
+        GbifInternalTerm.nucleotide_nFraction);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_RUNS_CAPPED,
+        GbifInternalTerm.nucleotide_nRunsCapped);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NATURAL_LANGUAGE_DETECTED,
+        GbifInternalTerm.nucleotide_naturalLanguageDetected);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_ENDS_TRIMMED,
+        GbifInternalTerm.nucleotide_endsTrimmed);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GAPS_OR_WHITESPACE_REMOVED,
+        GbifInternalTerm.nucleotide_gapsOrWhitespaceRemoved);
+    paramMap.put(
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_INVALID, GbifInternalTerm.nucleotide_invalid);
+
     // Add all from EVENTS_PARAM_TO_TERM
     paramMap.putAll(EVENTS_PARAM_TO_TERM);
     paramMap.putAll(ARRAY_STRING_TERMS);

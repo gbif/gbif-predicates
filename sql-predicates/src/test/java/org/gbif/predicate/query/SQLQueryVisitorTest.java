@@ -59,7 +59,7 @@ public class SQLQueryVisitorTest {
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
   private final SQLQueryVisitor visitor =
-      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey");
+      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey", "occurrence");
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
@@ -106,7 +106,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((arrays_overlap(classifications['someChecklistKey'], array('2','1')))) "
+        "(((EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -156,7 +156,8 @@ public class SQLQueryVisitorTest {
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
+    assertEquals(
+        "(EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
   }
 
   @Test
@@ -322,7 +323,8 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(classifications['someChecklistKey'], array('2','1')))", query);
+    assertEquals(
+        "(EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
   }
 
   @Test
@@ -1081,6 +1083,8 @@ public class SQLQueryVisitorTest {
 
   @Test
   public void testVocabularies() {
+    SQLColumnsUtils sqlColumnsUtils = new SQLColumnsUtils("occurrence");
+
     Arrays.stream(OccurrenceSearchParameter.values())
         .filter(
             p ->
@@ -1090,7 +1094,7 @@ public class SQLQueryVisitorTest {
         .forEach(
             param -> {
               try {
-                String hiveQueryField = SQLColumnsUtils.getSQLQueryColumn(visitor.term(param));
+                String hiveQueryField = sqlColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
                 String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
@@ -1229,7 +1233,8 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
     String query = visitor.buildQuery(inPredicate);
-    assertEquals("(arrays_overlap(classifications['my-checklist-uuid'], array('7','6')))", query);
+    assertEquals(
+        "(EXISTS(classifications['my-checklist-uuid'], taxonkey -> taxonkey IN ('7','6')))", query);
   }
 
   @Test
