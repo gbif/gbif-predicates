@@ -76,6 +76,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     eventsMap.put(EventSearchParameter.LICENSE, DcTerm.license);
     eventsMap.put(EventSearchParameter.PUBLISHING_ORG, GbifInternalTerm.publishingOrgKey);
     eventsMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    eventsMap.put(EventSearchParameter.DATASET_CATEGORY, GbifInternalTerm.datasetCategory);
     eventsMap.put(EventSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);
     eventsMap.put(
         EventSearchParameter.HOSTING_ORGANIZATION_KEY, GbifInternalTerm.hostingOrganizationKey);
@@ -186,6 +187,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     // Build ARRAY_STRING_TERMS with LinkedHashMap to preserve insertion order
     Map<SearchParameter, Term> arrayMap = new LinkedHashMap<>();
     arrayMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    arrayMap.put(OccurrenceSearchParameter.DATASET_CATEGORY, GbifInternalTerm.datasetCategory);
     arrayMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
     arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY_ID, DwcTerm.identifiedByID);
     arrayMap.put(OccurrenceSearchParameter.RECORDED_BY_ID, DwcTerm.recordedByID);
@@ -217,6 +219,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(EventSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
     arrayMap.put(EventSearchParameter.MEDIA_TYPE, GbifTerm.mediaType);
     arrayMap.put(EventSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
+    arrayMap.put(EventSearchParameter.DATASET_CATEGORY, GbifInternalTerm.datasetCategory);
     arrayMap.put(EventSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
     arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
     arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
