@@ -20,7 +20,6 @@ import org.gbif.dwc.terms.IucnTerm;
 import org.gbif.dwc.terms.MixsTerm;
 import org.gbif.dwc.terms.ObisTerm;
 import org.gbif.dwc.terms.Term;
-import org.gbif.dwc.terms.UnknownTerm;
 import org.gbif.predicate.query.SQLTermsMapper;
 
 public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
@@ -300,43 +299,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.CRAWL_ID, GbifInternalTerm.crawlId);
     paramMap.put(OccurrenceSearchParameter.INSTALLATION_KEY, GbifInternalTerm.installationKey);
     paramMap.put(OccurrenceSearchParameter.NETWORK_KEY, GbifInternalTerm.networkKey);
-    // THIS PART NEEDS TO BE CHECKED AGAIN WITH MARCOS
-    paramMap.put(OccurrenceSearchParameter.DATASET_CATEGORY, GbifInternalTerm.datasetCategory);
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GC_CONTENT, UnknownTerm.build("gcContent"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NATURAL_LANGUAGE_DETECTED,
-        UnknownTerm.build("naturalLanguageDetected"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NUCLEOTIDE_SEQUENCE_ID,
-        UnknownTerm.build("sequenceId"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_ENDS_TRIMMED,
-        UnknownTerm.build("endsTrimmed"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GAPS_OR_WHITESPACE_REMOVED,
-        UnknownTerm.build("gapsOrWhitespaceRemoved"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_INVALID, UnknownTerm.build("invalid"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_FRACTION, UnknownTerm.build("nFraction"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_RUNS_CAPPED,
-        UnknownTerm.build("nRunsCapped"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_ACGTN_FRACTION,
-        UnknownTerm.build("nonACGTNFraction"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_IUPAC_FRACTION,
-        UnknownTerm.build("nonIupacFraction"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE, UnknownTerm.build("sequence"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-        UnknownTerm.build("sequenceLength"));
-    paramMap.put(
-        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, UnknownTerm.build("targetGene"));
-    // END OF UNCERTAIN PART
     paramMap.put(OccurrenceSearchParameter.EVENT_ID, DwcTerm.eventID);
     paramMap.put(OccurrenceSearchParameter.PARENT_EVENT_ID, DwcTerm.parentEventID);
     paramMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
