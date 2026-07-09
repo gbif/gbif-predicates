@@ -65,7 +65,7 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   public String getExactMatchFieldName(OccurrenceSearchParameter searchParameter) {
     if (searchParameter == OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH) {
       // special case for testing
-      return  "nucleotideSequence.sequenceLength";
+      return "nucleotideSequence.sequenceLength";
     } else if (searchParameter.type() == String.class) {
       return searchParameter.name().toLowerCase() + ".keyword";
     } else {
