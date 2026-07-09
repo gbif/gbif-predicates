@@ -182,16 +182,80 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     Map<String, List<QueryBuilder>> queriesByNestedPath = new HashMap<>();
     boolean nonNestedQueriesFound = false;
 
+    // we parse predicates with ranges first to group them
+    Map<S, List<SimplePredicate<S>>> rangeBoundsByKey =
+        predicate.getPredicates().stream()
+            .filter(
+                p ->
+                    p instanceof GreaterThanPredicate
+                        || p instanceof GreaterThanOrEqualsPredicate
+                        || p instanceof LessThanPredicate
+                        || p instanceof LessThanOrEqualsPredicate)
+            .map(p -> (SimplePredicate<S>) p)
+            .collect(Collectors.groupingBy(SimplePredicate::getKey));
+
+    Set<Predicate> handledAsMergedRange = new HashSet<>();
+
+    // we build the range from all the ranges predicates
+    for (Map.Entry<S, List<SimplePredicate<S>>> entry : rangeBoundsByKey.entrySet()) {
+      List<SimplePredicate<S>> bounds = entry.getValue();
+      if (bounds.size() < 2) {
+        continue;
+      }
+
+      S key = entry.getKey();
+      RangeQueryBuilder rqb = QueryBuilders.rangeQuery(esFieldMapper.getExactMatchFieldName(key));
+      for (SimplePredicate<S> bound : bounds) {
+        Object value = parseParamValue(bound.getValue(), key);
+        if (bound instanceof GreaterThanPredicate) {
+          rqb.gt(value);
+        } else if (bound instanceof GreaterThanOrEqualsPredicate) {
+          rqb.gte(value);
+        } else if (bound instanceof LessThanPredicate) {
+          rqb.lt(value);
+        } else if (bound instanceof LessThanOrEqualsPredicate) {
+          rqb.lte(value);
+        }
+        handledAsMergedRange.add(bound);
+      }
+
+      QueryBuilder q = addNullableFieldPredicate(bounds.get(0), rqb);
+      if (esFieldMapper.isNestedField(key)) {
+        queryData.rawQueries = List.of(q);
+        queryData.nestedPath = esFieldMapper.getNestedPath(key);
+      } else {
+        queryData.queryBuilder.filter(q);
+        nonNestedQueriesFound = true;
+      }
+    }
+
+    // then we parse the rest of predicates
     for (Predicate subPredicate : predicate.getPredicates()) {
+      if (handledAsMergedRange.contains(subPredicate)) {
+        continue;
+      }
       try {
         BoolQueryBuilder mustQueryBuilder = QueryBuilders.boolQuery();
         QueryData mustQueryData = new QueryData(mustQueryBuilder);
         visit(subPredicate, mustQueryData);
 
         if (mustQueryData.isNested()) {
+          List<QueryBuilder> queriesToAdd;
+
+          if (subPredicate instanceof DisjunctionPredicate && mustQueryData.rawQueries.size() > 1) {
+            BoolQueryBuilder shouldWrapper = QueryBuilders.boolQuery();
+            mustQueryData.rawQueries.forEach(shouldWrapper::should);
+            queriesToAdd = List.of(addNullableFieldPredicate(subPredicate, shouldWrapper));
+          } else {
+            queriesToAdd =
+                mustQueryData.rawQueries.stream()
+                    .map(rq -> addNullableFieldPredicate(subPredicate, rq))
+                    .collect(Collectors.toList());
+          }
+
           queriesByNestedPath
               .computeIfAbsent(mustQueryData.nestedPath, k -> new ArrayList<>())
-              .add(addNullableFieldPredicate(subPredicate, mustQueryData.rawQueries.get(0)));
+              .addAll(queriesToAdd);
         } else {
           queryData.queryBuilder.filter(addNullableFieldPredicate(subPredicate, mustQueryBuilder));
           nonNestedQueriesFound = true;

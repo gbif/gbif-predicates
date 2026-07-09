@@ -1397,4 +1397,48 @@ public class SQLQueryVisitorTest {
     String query = visitor.buildQuery(eq);
     assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] != '')", query);
   }
+
+  @Test
+  public void testSequenceLengthRange() throws QueryBuildingException {
+    Predicate greaterThan =
+        new GreaterThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "10");
+    Predicate lessThan =
+        new LessThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "20");
+    ConjunctionPredicate andPredicate = new ConjunctionPredicate(List.of(greaterThan, lessThan));
+    String query = visitor.buildQuery(andPredicate);
+    assertEquals("((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))", query);
+  }
+
+  @Test
+  public void testSequenceLengthComplexRange() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new InPredicate<>(
+                    OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of("PRESENT"), false),
+                new DisjunctionPredicate(
+                    List.of(
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "10"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"))),
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "30")))))));
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(((occurrencestatus IN('PRESENT'))) AND (((((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))) OR (((dna.sequencelength >= 20) AND (dna.sequencelength <= 30))))))",
+        query);
+  }
 }

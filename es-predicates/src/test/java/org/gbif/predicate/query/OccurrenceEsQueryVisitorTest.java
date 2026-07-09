@@ -2420,4 +2420,106 @@ public class OccurrenceEsQueryVisitorTest {
       fail();
     }
   }
+
+  @Test
+  public void testRangeQueries() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new InPredicate<>(
+                    OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of("PRESENT"), false),
+                new DisjunctionPredicate(
+                    List.of(
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "10"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"))),
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "30")))))));
+    String query = visitor.buildQuery(p);
+    System.out.println(query);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"terms\" : {\n"
+            + "                \"occurrence_status\" : [\n"
+            + "                  \"PRESENT\"\n"
+            + "                ],\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\" : {\n"
+            + "          \"query\" : {\n"
+            + "            \"bool\" : {\n"
+            + "              \"filter\" : [\n"
+            + "                {\n"
+            + "                  \"bool\" : {\n"
+            + "                    \"should\" : [\n"
+            + "                      {\n"
+            + "                        \"range\" : {\n"
+            + "                          \"nucleotideSequence.sequenceLength\" : {\n"
+            + "                            \"from\" : \"10\",\n"
+            + "                            \"to\" : \"20\",\n"
+            + "                            \"include_lower\" : true,\n"
+            + "                            \"include_upper\" : true,\n"
+            + "                            \"boost\" : 1.0\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"range\" : {\n"
+            + "                          \"nucleotideSequence.sequenceLength\" : {\n"
+            + "                            \"from\" : \"20\",\n"
+            + "                            \"to\" : \"30\",\n"
+            + "                            \"include_lower\" : true,\n"
+            + "                            \"include_upper\" : true,\n"
+            + "                            \"boost\" : 1.0\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ],\n"
+            + "                    \"adjust_pure_negative\" : true,\n"
+            + "                    \"boost\" : 1.0\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ],\n"
+            + "              \"adjust_pure_negative\" : true,\n"
+            + "              \"boost\" : 1.0\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"path\" : \"nucleotideSequence\",\n"
+            + "          \"ignore_unmapped\" : false,\n"
+            + "          \"score_mode\" : \"none\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+
+    assertEquals(expectedQuery, query);
+  }
 }
