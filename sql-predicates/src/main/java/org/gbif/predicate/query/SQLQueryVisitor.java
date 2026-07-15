@@ -701,8 +701,49 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(NotPredicate predicate) throws QueryBuildingException {
+    LinkedHashSet<S> keys = new LinkedHashSet<>();
+    extractKeys(predicate.getPredicate(), keys);
+
+    if (!keys.isEmpty()) {
+      if (keys.size() == 1) {
+        builder
+            .append(sqlColumnsUtils.getSQLQueryColumn(term(keys.iterator().next())))
+            .append(IS_NULL_OPERATOR)
+            .append(DISJUNCTION_OPERATOR);
+      } else {
+        builder.append('(');
+        Iterator<S> it = keys.iterator();
+        while (it.hasNext()) {
+          builder
+              .append(sqlColumnsUtils.getSQLQueryColumn(term((it.next()))))
+              .append(IS_NULL_OPERATOR);
+          if (it.hasNext()) {
+            builder.append(CONJUNCTION_OPERATOR);
+          }
+        }
+        builder.append(')').append(DISJUNCTION_OPERATOR);
+      }
+    }
+
     builder.append(NOT_OPERATOR);
     visit(predicate.getPredicate());
+  }
+
+  /**
+   * Recursively collects every search parameter key within a predicate to build IS NULL checks
+   * before a NOT predicate.
+   */
+  @SuppressWarnings("unchecked")
+  private void extractKeys(Predicate predicate, LinkedHashSet<S> keys) {
+    if (predicate instanceof SimplePredicate) {
+      keys.add(((SimplePredicate<S>) predicate).getKey());
+    } else if (predicate instanceof InPredicate) {
+      keys.add(((InPredicate<S>) predicate).getKey());
+    } else if (predicate instanceof CompoundPredicate) {
+      for (Predicate sub : ((CompoundPredicate) predicate).getPredicates()) {
+        extractKeys(sub, keys);
+      }
+    }
   }
 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
