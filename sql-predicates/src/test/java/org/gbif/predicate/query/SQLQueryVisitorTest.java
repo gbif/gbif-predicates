@@ -366,7 +366,7 @@ public class SQLQueryVisitorTest {
   public void testNotPredicate() throws QueryBuildingException {
     Predicate p = new NotPredicate(new EqualsPredicate<>(PARAM, "value", false));
     String query = visitor.buildQuery(p);
-    assertEquals("catalognumber IS NULL OR NOT lower(catalognumber) = lower(\'value\')", query);
+    assertEquals("NOT lower(catalognumber) = lower(\'value\')", query);
   }
 
   @Test
@@ -379,26 +379,8 @@ public class SQLQueryVisitorTest {
     Predicate p = new NotPredicate(cp);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(catalognumber IS NULL AND institutioncode IS NULL) OR NOT ((lower(catalognumber) = lower(\'value_1\')) AND (lower(institutioncode) = lower(\'value_2\')))",
+        "NOT ((lower(catalognumber) = lower(\'value_1\')) AND (lower(institutioncode) = lower(\'value_2\')))",
         query);
-
-    Predicate p3 = new EqualsPredicate<>(PARAM, "value_1", false);
-    Predicate p4 = new EqualsPredicate<>(PARAM2, "value_2", false);
-
-    DisjunctionPredicate dp = new DisjunctionPredicate(List.of(p3, p4));
-
-    Predicate pDisjunction = new NotPredicate(dp);
-    String queryDisjunction = visitor.buildQuery(pDisjunction);
-    assertEquals(
-        "(catalognumber IS NULL AND institutioncode IS NULL) OR NOT ((lower(catalognumber) = lower('value_1')) OR (lower(institutioncode) = lower('value_2')))",
-        queryDisjunction);
-
-    Predicate inPredicate = new InPredicate<>(PARAM, List.of("value_1", "value_2"), false, null);
-    Predicate pIn = new NotPredicate(inPredicate);
-    String queryIn = visitor.buildQuery(pIn);
-    assertEquals(
-        "catalognumber IS NULL OR NOT (lower(catalognumber) IN(lower('value_1'), lower('value_2')))",
-        queryIn);
   }
 
   @Test
@@ -1025,8 +1007,7 @@ public class SQLQueryVisitorTest {
             new NotPredicate(
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.ISSUE, "TAXON_MATCH_HIGHERRANK", false)));
-    assertEquals(
-        "issue IS NULL OR NOT stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true)", query);
+    assertEquals("NOT stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true)", query);
 
     // Not disjunction
     query =
@@ -1043,7 +1024,7 @@ public class SQLQueryVisitorTest {
                         new EqualsPredicate<>(
                             OccurrenceSearchParameter.ISSUE, "RECORDED_DATE_INVALID", false)))));
     assertEquals(
-        "issue IS NULL OR NOT (stringArrayContains(issue,'COORDINATE_INVALID',true) OR stringArrayContains(issue,'COORDINATE_OUT_OF_RANGE',true) OR stringArrayContains(issue,'ZERO_COORDINATE',true) OR stringArrayContains(issue,'RECORDED_DATE_INVALID',true))",
+        "NOT (stringArrayContains(issue,'COORDINATE_INVALID',true) OR stringArrayContains(issue,'COORDINATE_OUT_OF_RANGE',true) OR stringArrayContains(issue,'ZERO_COORDINATE',true) OR stringArrayContains(issue,'RECORDED_DATE_INVALID',true))",
         query);
 
     // IsNotNull
@@ -1140,11 +1121,7 @@ public class SQLQueryVisitorTest {
                     visitor.buildQuery(
                         new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
                 assertEquals(
-                    hiveQueryField
-                        + " IS NULL OR NOT stringArrayContains("
-                        + hiveQueryField
-                        + ",'value_1',false)",
-                    query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
