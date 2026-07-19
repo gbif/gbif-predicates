@@ -599,14 +599,14 @@ public class SQLQueryVisitorTest {
   public void testIsNotNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] != '')", query);
+    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] IS NOT NULL)", query);
   }
 
   @Test
   public void testIsNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] = '')", query);
+    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] IS NULL)", query);
   }
 
   @Test
@@ -614,7 +614,7 @@ public class SQLQueryVisitorTest {
     IsNullPredicate p =
         new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "my-checklist-key");
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['my-checklist-key']['taxonkey'] = '')", query);
+    assertEquals("(classificationdetails['my-checklist-key']['taxonkey'] IS NULL)", query);
   }
 
   @Test
@@ -1380,7 +1380,7 @@ public class SQLQueryVisitorTest {
     IsNullPredicate eq =
         new IsNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] = '')", query);
+    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] IS NULL)", query);
   }
 
   @Test
@@ -1388,14 +1388,14 @@ public class SQLQueryVisitorTest {
     IsNotNullPredicate eq =
         new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] != '')", query);
+    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] IS NOT NULL)", query);
   }
 
   @Test
   public void testTaxonKeyIsNotNullPredicateWithoutChecklistKey() throws QueryBuildingException {
     IsNotNullPredicate eq = new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] != '')", query);
+    assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] IS NOT NULL)", query);
   }
 
   @Test

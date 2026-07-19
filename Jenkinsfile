@@ -49,7 +49,7 @@ pipeline {
       when {
           allOf {
               expression { params.RELEASE };
-              branch 'master';
+              branch 'fix/24-nulls-for-keys';
           }
       }
       environment {
@@ -62,6 +62,7 @@ pipeline {
             traceability: true) {
               git 'https://github.com/gbif/gbif-predicates.git'
               sh '''
+                git checkout fix/24-nulls-for-keys
                 mvn -B -Dresume=false release:prepare release:perform site site:stage scm-publish:publish-scm $RELEASE_ARGS
                 '''
             }
