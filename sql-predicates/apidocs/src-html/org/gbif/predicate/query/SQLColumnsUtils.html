@@ -76,243 +76,225 @@
 <span class="source-line-no">063</span><span id="line-63">          GbifTerm.mediaType,</span>
 <span class="source-line-no">064</span><span id="line-64">          GbifTerm.issue,</span>
 <span class="source-line-no">065</span><span id="line-65">          GbifInternalTerm.networkKey,</span>
-<span class="source-line-no">066</span><span id="line-66">          GbifInternalTerm.datasetCategory,</span>
-<span class="source-line-no">067</span><span id="line-67">          DwcTerm.identifiedByID,</span>
-<span class="source-line-no">068</span><span id="line-68">          DwcTerm.recordedByID,</span>
-<span class="source-line-no">069</span><span id="line-69">          GbifInternalTerm.dwcaExtension,</span>
-<span class="source-line-no">070</span><span id="line-70">          DwcTerm.datasetName,</span>
-<span class="source-line-no">071</span><span id="line-71">          DwcTerm.datasetID,</span>
-<span class="source-line-no">072</span><span id="line-72">          DwcTerm.typeStatus,</span>
-<span class="source-line-no">073</span><span id="line-73">          DwcTerm.otherCatalogNumbers,</span>
-<span class="source-line-no">074</span><span id="line-74">          DwcTerm.recordedBy,</span>
-<span class="source-line-no">075</span><span id="line-75">          DwcTerm.identifiedBy,</span>
-<span class="source-line-no">076</span><span id="line-76">          DwcTerm.georeferencedBy,</span>
-<span class="source-line-no">077</span><span id="line-77">          DwcTerm.higherGeography,</span>
-<span class="source-line-no">078</span><span id="line-78">          DwcTerm.preparations,</span>
-<span class="source-line-no">079</span><span id="line-79">          DwcTerm.samplingProtocol);</span>
-<span class="source-line-no">080</span><span id="line-80"></span>
-<span class="source-line-no">081</span><span id="line-81">  private static final Set&lt;? extends Term&gt; INTERPRETED_DOUBLE =</span>
-<span class="source-line-no">082</span><span id="line-82">      Set.of(</span>
-<span class="source-line-no">083</span><span id="line-83">          DwcTerm.decimalLatitude,</span>
-<span class="source-line-no">084</span><span id="line-84">          DwcTerm.decimalLongitude,</span>
-<span class="source-line-no">085</span><span id="line-85">          GbifTerm.coordinateAccuracy,</span>
-<span class="source-line-no">086</span><span id="line-86">          GbifTerm.elevation,</span>
-<span class="source-line-no">087</span><span id="line-87">          GbifTerm.elevationAccuracy,</span>
-<span class="source-line-no">088</span><span id="line-88">          GbifTerm.depth,</span>
-<span class="source-line-no">089</span><span id="line-89">          GbifTerm.depthAccuracy,</span>
-<span class="source-line-no">090</span><span id="line-90">          GbifTerm.distanceFromCentroidInMeters,</span>
-<span class="source-line-no">091</span><span id="line-91">          DwcTerm.coordinateUncertaintyInMeters,</span>
-<span class="source-line-no">092</span><span id="line-92">          DwcTerm.coordinatePrecision);</span>
-<span class="source-line-no">093</span><span id="line-93"></span>
-<span class="source-line-no">094</span><span id="line-94">  // used when there is a column that exists in more than one table</span>
-<span class="source-line-no">095</span><span id="line-95">  private final String disambiguationTable;</span>
+<span class="source-line-no">066</span><span id="line-66">          DwcTerm.identifiedByID,</span>
+<span class="source-line-no">067</span><span id="line-67">          DwcTerm.recordedByID,</span>
+<span class="source-line-no">068</span><span id="line-68">          GbifInternalTerm.dwcaExtension,</span>
+<span class="source-line-no">069</span><span id="line-69">          DwcTerm.datasetName,</span>
+<span class="source-line-no">070</span><span id="line-70">          DwcTerm.datasetID,</span>
+<span class="source-line-no">071</span><span id="line-71">          DwcTerm.typeStatus,</span>
+<span class="source-line-no">072</span><span id="line-72">          DwcTerm.otherCatalogNumbers,</span>
+<span class="source-line-no">073</span><span id="line-73">          DwcTerm.recordedBy,</span>
+<span class="source-line-no">074</span><span id="line-74">          DwcTerm.identifiedBy,</span>
+<span class="source-line-no">075</span><span id="line-75">          DwcTerm.georeferencedBy,</span>
+<span class="source-line-no">076</span><span id="line-76">          DwcTerm.higherGeography,</span>
+<span class="source-line-no">077</span><span id="line-77">          DwcTerm.preparations,</span>
+<span class="source-line-no">078</span><span id="line-78">          DwcTerm.samplingProtocol);</span>
+<span class="source-line-no">079</span><span id="line-79"></span>
+<span class="source-line-no">080</span><span id="line-80">  private static final Set&lt;? extends Term&gt; INTERPRETED_DOUBLE =</span>
+<span class="source-line-no">081</span><span id="line-81">      Set.of(</span>
+<span class="source-line-no">082</span><span id="line-82">          DwcTerm.decimalLatitude,</span>
+<span class="source-line-no">083</span><span id="line-83">          DwcTerm.decimalLongitude,</span>
+<span class="source-line-no">084</span><span id="line-84">          GbifTerm.coordinateAccuracy,</span>
+<span class="source-line-no">085</span><span id="line-85">          GbifTerm.elevation,</span>
+<span class="source-line-no">086</span><span id="line-86">          GbifTerm.elevationAccuracy,</span>
+<span class="source-line-no">087</span><span id="line-87">          GbifTerm.depth,</span>
+<span class="source-line-no">088</span><span id="line-88">          GbifTerm.depthAccuracy,</span>
+<span class="source-line-no">089</span><span id="line-89">          GbifTerm.distanceFromCentroidInMeters,</span>
+<span class="source-line-no">090</span><span id="line-90">          DwcTerm.coordinateUncertaintyInMeters,</span>
+<span class="source-line-no">091</span><span id="line-91">          DwcTerm.coordinatePrecision);</span>
+<span class="source-line-no">092</span><span id="line-92"></span>
+<span class="source-line-no">093</span><span id="line-93">  private SQLColumnsUtils() {</span>
+<span class="source-line-no">094</span><span id="line-94">    // empty constructor</span>
+<span class="source-line-no">095</span><span id="line-95">  }</span>
 <span class="source-line-no">096</span><span id="line-96"></span>
-<span class="source-line-no">097</span><span id="line-97">  SQLColumnsUtils(String disambiguationTable) {</span>
-<span class="source-line-no">098</span><span id="line-98">    this.disambiguationTable = disambiguationTable;</span>
-<span class="source-line-no">099</span><span id="line-99">  }</span>
-<span class="source-line-no">100</span><span id="line-100"></span>
-<span class="source-line-no">101</span><span id="line-101">  public String getSQLColumn(Term term) {</span>
-<span class="source-line-no">102</span><span id="line-102">    if (GbifTerm.verbatimScientificName == term) {</span>
-<span class="source-line-no">103</span><span id="line-103">      return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();</span>
+<span class="source-line-no">097</span><span id="line-97">  public static String getSQLColumn(Term term) {</span>
+<span class="source-line-no">098</span><span id="line-98">    if (GbifTerm.verbatimScientificName == term) {</span>
+<span class="source-line-no">099</span><span id="line-99">      return "v_" + DwcTerm.scientificName.simpleName().toLowerCase();</span>
+<span class="source-line-no">100</span><span id="line-100">    }</span>
+<span class="source-line-no">101</span><span id="line-101">    String columnName = term.simpleName().toLowerCase();</span>
+<span class="source-line-no">102</span><span id="line-102">    if (SQL_RESERVED_WORDS.contains(columnName)) {</span>
+<span class="source-line-no">103</span><span id="line-103">      return columnName + '_';</span>
 <span class="source-line-no">104</span><span id="line-104">    }</span>
-<span class="source-line-no">105</span><span id="line-105">    String columnName = term.simpleName().toLowerCase();</span>
-<span class="source-line-no">106</span><span id="line-106">    if (SQL_RESERVED_WORDS.contains(columnName)) {</span>
-<span class="source-line-no">107</span><span id="line-107">      return columnName + '_';</span>
-<span class="source-line-no">108</span><span id="line-108">    } else if (isNucleotideTerm(term)) {</span>
-<span class="source-line-no">109</span><span id="line-109">      return columnName.replace("nucleotide_", "");</span>
-<span class="source-line-no">110</span><span id="line-110">    } else if (term == GbifTerm.datasetKey) {</span>
-<span class="source-line-no">111</span><span id="line-111">      // ambiguous column that can exist in more than 1 table</span>
-<span class="source-line-no">112</span><span id="line-112">      return disambiguationTable != null ? disambiguationTable + "." + columnName : columnName;</span>
+<span class="source-line-no">105</span><span id="line-105">    return columnName;</span>
+<span class="source-line-no">106</span><span id="line-106">  }</span>
+<span class="source-line-no">107</span><span id="line-107"></span>
+<span class="source-line-no">108</span><span id="line-108">  /** Gets the Hive column name of the term parameter. */</span>
+<span class="source-line-no">109</span><span id="line-109">  public static String getSQLQueryColumn(Term term) {</span>
+<span class="source-line-no">110</span><span id="line-110">    String columnName = getSQLColumn(term);</span>
+<span class="source-line-no">111</span><span id="line-111">    if (isHumboldtTerm(term)) {</span>
+<span class="source-line-no">112</span><span id="line-112">      columnName = "h." + columnName;</span>
 <span class="source-line-no">113</span><span id="line-113">    }</span>
-<span class="source-line-no">114</span><span id="line-114"></span>
-<span class="source-line-no">115</span><span id="line-115">    return columnName;</span>
-<span class="source-line-no">116</span><span id="line-116">  }</span>
-<span class="source-line-no">117</span><span id="line-117"></span>
-<span class="source-line-no">118</span><span id="line-118">  /** Gets the Hive column name of the term parameter. */</span>
-<span class="source-line-no">119</span><span id="line-119">  public String getSQLQueryColumn(Term term) {</span>
-<span class="source-line-no">120</span><span id="line-120">    String columnName = getSQLColumn(term);</span>
-<span class="source-line-no">121</span><span id="line-121">    if (isHumboldtTerm(term)) {</span>
-<span class="source-line-no">122</span><span id="line-122">      columnName = "h." + columnName;</span>
-<span class="source-line-no">123</span><span id="line-123">    } else if (isNucleotideTerm(term)) {</span>
-<span class="source-line-no">124</span><span id="line-124">      columnName = "dna." + columnName;</span>
-<span class="source-line-no">125</span><span id="line-125">    }</span>
-<span class="source-line-no">126</span><span id="line-126"></span>
-<span class="source-line-no">127</span><span id="line-127">    return isVocabulary(term) ? columnName + ".lineage" : columnName;</span>
+<span class="source-line-no">114</span><span id="line-114">    return isVocabulary(term) ? columnName + ".lineage" : columnName;</span>
+<span class="source-line-no">115</span><span id="line-115">  }</span>
+<span class="source-line-no">116</span><span id="line-116"></span>
+<span class="source-line-no">117</span><span id="line-117">  /** Gets the Hive column name of the term parameter. */</span>
+<span class="source-line-no">118</span><span id="line-118">  public static String getSQLValueColumn(Term term) {</span>
+<span class="source-line-no">119</span><span id="line-119">    String columnName = getSQLColumn(term);</span>
+<span class="source-line-no">120</span><span id="line-120">    return isVocabulary(term)</span>
+<span class="source-line-no">121</span><span id="line-121">        ? isSQLArray(term) ? columnName + ".concepts" : columnName + ".concept"</span>
+<span class="source-line-no">122</span><span id="line-122">        : columnName;</span>
+<span class="source-line-no">123</span><span id="line-123">  }</span>
+<span class="source-line-no">124</span><span id="line-124"></span>
+<span class="source-line-no">125</span><span id="line-125">  /** Gets the Hive column name of the extension parameter. */</span>
+<span class="source-line-no">126</span><span id="line-126">  public static String getSQLQueryColumn(Extension extension) {</span>
+<span class="source-line-no">127</span><span id="line-127">    return EXTENSION_PRE + extension.name().toLowerCase();</span>
 <span class="source-line-no">128</span><span id="line-128">  }</span>
 <span class="source-line-no">129</span><span id="line-129"></span>
-<span class="source-line-no">130</span><span id="line-130">  /** Gets the Hive column name of the term parameter. */</span>
-<span class="source-line-no">131</span><span id="line-131">  public String getSQLValueColumn(Term term) {</span>
-<span class="source-line-no">132</span><span id="line-132">    String columnName = getSQLColumn(term);</span>
-<span class="source-line-no">133</span><span id="line-133">    return isVocabulary(term)</span>
-<span class="source-line-no">134</span><span id="line-134">        ? isSQLArray(term) ? columnName + ".concepts" : columnName + ".concept"</span>
-<span class="source-line-no">135</span><span id="line-135">        : columnName;</span>
-<span class="source-line-no">136</span><span id="line-136">  }</span>
-<span class="source-line-no">137</span><span id="line-137"></span>
-<span class="source-line-no">138</span><span id="line-138">  /** Gets the Hive column name of the extension parameter. */</span>
-<span class="source-line-no">139</span><span id="line-139">  public static String getSQLQueryColumn(Extension extension) {</span>
-<span class="source-line-no">140</span><span id="line-140">    return EXTENSION_PRE + extension.name().toLowerCase();</span>
-<span class="source-line-no">141</span><span id="line-141">  }</span>
-<span class="source-line-no">142</span><span id="line-142"></span>
-<span class="source-line-no">143</span><span id="line-143">  /** Returns the Hive data type of term parameter. */</span>
-<span class="source-line-no">144</span><span id="line-144">  public static String getSQLType(Term term) {</span>
-<span class="source-line-no">145</span><span id="line-145">    if (isInterpretedNumerical(term)) {</span>
-<span class="source-line-no">146</span><span id="line-146">      return "INT";</span>
-<span class="source-line-no">147</span><span id="line-147">    } else if (isInterpretedLocalDateSeconds(term)) {</span>
-<span class="source-line-no">148</span><span id="line-148">      return "BIGINT";</span>
-<span class="source-line-no">149</span><span id="line-149">    } else if (isInterpretedUtcDateSeconds(term)) {</span>
-<span class="source-line-no">150</span><span id="line-150">      return "BIGINT";</span>
-<span class="source-line-no">151</span><span id="line-151">    } else if (isInterpretedUtcDateMilliseconds(term)) {</span>
-<span class="source-line-no">152</span><span id="line-152">      return "BIGINT";</span>
-<span class="source-line-no">153</span><span id="line-153">    } else if (isInterpretedDouble(term)) {</span>
-<span class="source-line-no">154</span><span id="line-154">      return "DOUBLE";</span>
-<span class="source-line-no">155</span><span id="line-155">    } else if (isInterpretedBoolean(term)) {</span>
-<span class="source-line-no">156</span><span id="line-156">      return "BOOLEAN";</span>
-<span class="source-line-no">157</span><span id="line-157">    } else if (isVocabulary(term)) {</span>
-<span class="source-line-no">158</span><span id="line-158">      if (isSQLArray(term)) {</span>
-<span class="source-line-no">159</span><span id="line-159">        return "STRUCT&lt;concepts: ARRAY&lt;STRING&gt;,lineage: ARRAY&lt;STRING&gt;&gt;";</span>
-<span class="source-line-no">160</span><span id="line-160">      } else {</span>
-<span class="source-line-no">161</span><span id="line-161">        return "STRUCT&lt;concept: STRING,lineage: ARRAY&lt;STRING&gt;&gt;";</span>
-<span class="source-line-no">162</span><span id="line-162">      }</span>
-<span class="source-line-no">163</span><span id="line-163">    } else if (isSQLArray(term)) {</span>
-<span class="source-line-no">164</span><span id="line-164">      return "ARRAY&lt;STRING&gt;";</span>
-<span class="source-line-no">165</span><span id="line-165">    } else {</span>
-<span class="source-line-no">166</span><span id="line-166">      return "STRING";</span>
-<span class="source-line-no">167</span><span id="line-167">    }</span>
-<span class="source-line-no">168</span><span id="line-168">  }</span>
-<span class="source-line-no">169</span><span id="line-169"></span>
-<span class="source-line-no">170</span><span id="line-170">  public static boolean isDate(Term term) {</span>
-<span class="source-line-no">171</span><span id="line-171">    return isInterpretedLocalDateSeconds(term)</span>
-<span class="source-line-no">172</span><span id="line-172">        || isInterpretedUtcDateSeconds(term)</span>
-<span class="source-line-no">173</span><span id="line-173">        || isInterpretedUtcDateMilliseconds(term);</span>
-<span class="source-line-no">174</span><span id="line-174">  }</span>
-<span class="source-line-no">175</span><span id="line-175"></span>
-<span class="source-line-no">176</span><span id="line-176">  /** Checks if the term is stored as a Hive array. */</span>
-<span class="source-line-no">177</span><span id="line-177">  public static boolean isSQLArray(Term term) {</span>
-<span class="source-line-no">178</span><span id="line-178">    return GbifTerm.mediaType == term</span>
-<span class="source-line-no">179</span><span id="line-179">        || GbifTerm.issue == term</span>
-<span class="source-line-no">180</span><span id="line-180">        || GbifInternalTerm.networkKey == term</span>
-<span class="source-line-no">181</span><span id="line-181">        || GbifInternalTerm.datasetCategory == term</span>
-<span class="source-line-no">182</span><span id="line-182">        || DwcTerm.identifiedByID == term</span>
-<span class="source-line-no">183</span><span id="line-183">        || DwcTerm.recordedByID == term</span>
-<span class="source-line-no">184</span><span id="line-184">        || GbifInternalTerm.dwcaExtension == term</span>
-<span class="source-line-no">185</span><span id="line-185">        || DwcTerm.datasetID == term</span>
-<span class="source-line-no">186</span><span id="line-186">        || DwcTerm.datasetName == term</span>
-<span class="source-line-no">187</span><span id="line-187">        || DwcTerm.typeStatus == term</span>
-<span class="source-line-no">188</span><span id="line-188">        || DwcTerm.otherCatalogNumbers == term</span>
-<span class="source-line-no">189</span><span id="line-189">        || DwcTerm.recordedBy == term</span>
-<span class="source-line-no">190</span><span id="line-190">        || DwcTerm.identifiedBy == term</span>
-<span class="source-line-no">191</span><span id="line-191">        || DwcTerm.preparations == term</span>
-<span class="source-line-no">192</span><span id="line-192">        || DwcTerm.samplingProtocol == term</span>
-<span class="source-line-no">193</span><span id="line-193">        || DwcTerm.georeferencedBy == term</span>
-<span class="source-line-no">194</span><span id="line-194">        || DwcTerm.higherGeography == term</span>
-<span class="source-line-no">195</span><span id="line-195">        || DwcTerm.associatedSequences == term</span>
-<span class="source-line-no">196</span><span id="line-196">        || GbifTerm.projectId == term</span>
-<span class="source-line-no">197</span><span id="line-197">        || GbifTerm.lithostratigraphy == term</span>
-<span class="source-line-no">198</span><span id="line-198">        || GbifTerm.biostratigraphy == term</span>
-<span class="source-line-no">199</span><span id="line-199">        || GbifTerm.nonTaxonomicIssue == term</span>
-<span class="source-line-no">200</span><span id="line-200">        || EcoTerm.voucherInstitutions == term</span>
-<span class="source-line-no">201</span><span id="line-201">        || EcoTerm.verbatimSiteNames == term</span>
-<span class="source-line-no">202</span><span id="line-202">        || EcoTerm.verbatimSiteDescriptions == term</span>
-<span class="source-line-no">203</span><span id="line-203">        || EcoTerm.compilationSourceTypes == term</span>
-<span class="source-line-no">204</span><span id="line-204">        || EcoTerm.targetHabitatScope == term</span>
-<span class="source-line-no">205</span><span id="line-205">        || EcoTerm.excludedHabitatScope == term</span>
-<span class="source-line-no">206</span><span id="line-206">        || EcoTerm.targetGrowthFormScope == term</span>
-<span class="source-line-no">207</span><span id="line-207">        || EcoTerm.excludedGrowthFormScope == term</span>
-<span class="source-line-no">208</span><span id="line-208">        || EcoTerm.taxonCompletenessProtocols == term</span>
-<span class="source-line-no">209</span><span id="line-209">        || EcoTerm.samplingPerformedBy == term</span>
-<span class="source-line-no">210</span><span id="line-210">        || EcoTerm.compilationTypes == term</span>
-<span class="source-line-no">211</span><span id="line-211">        || EcoTerm.materialSampleTypes == term</span>
-<span class="source-line-no">212</span><span id="line-212">        || EcoTerm.inventoryTypes == term</span>
-<span class="source-line-no">213</span><span id="line-213">        || EcoTerm.protocolNames == term</span>
-<span class="source-line-no">214</span><span id="line-214">        || EcoTerm.protocolDescriptions == term</span>
-<span class="source-line-no">215</span><span id="line-215">        || EcoTerm.protocolReferences == term</span>
-<span class="source-line-no">216</span><span id="line-216">        || EcoTerm.targetLifeStageScope == term</span>
-<span class="source-line-no">217</span><span id="line-217">        || EcoTerm.targetDegreeOfEstablishmentScope == term</span>
-<span class="source-line-no">218</span><span id="line-218">        || EcoTerm.excludedLifeStageScope == term</span>
-<span class="source-line-no">219</span><span id="line-219">        || EcoTerm.excludedDegreeOfEstablishmentScope == term</span>
-<span class="source-line-no">220</span><span id="line-220">        || DwcTerm.projectTitle == term</span>
-<span class="source-line-no">221</span><span id="line-221">        || DwcTerm.fundingAttribution == term</span>
-<span class="source-line-no">222</span><span id="line-222">        || DwcTerm.fundingAttributionID == term</span>
-<span class="source-line-no">223</span><span id="line-223">        || DwcTerm.measurementType == term</span>
-<span class="source-line-no">224</span><span id="line-224">        || ObisTerm.measurementTypeID == term;</span>
-<span class="source-line-no">225</span><span id="line-225">  }</span>
-<span class="source-line-no">226</span><span id="line-226"></span>
-<span class="source-line-no">227</span><span id="line-227">  public static boolean isHumboldtTerm(Term term) {</span>
-<span class="source-line-no">228</span><span id="line-228">    return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;</span>
-<span class="source-line-no">229</span><span id="line-229">  }</span>
-<span class="source-line-no">230</span><span id="line-230"></span>
-<span class="source-line-no">231</span><span id="line-231">  public static boolean isNucleotideTerm(Term term) {</span>
-<span class="source-line-no">232</span><span id="line-232">    return term.simpleName().startsWith("nucleotide_") || term == MixsTerm.target_gene;</span>
-<span class="source-line-no">233</span><span id="line-233">  }</span>
-<span class="source-line-no">234</span><span id="line-234"></span>
-<span class="source-line-no">235</span><span id="line-235">  public static boolean isVocabulary(Term term) {</span>
-<span class="source-line-no">236</span><span id="line-236">    return term instanceof Enum &amp;&amp; hasTermAnnotation(term, Vocabulary.class);</span>
+<span class="source-line-no">130</span><span id="line-130">  /** Returns the Hive data type of term parameter. */</span>
+<span class="source-line-no">131</span><span id="line-131">  public static String getSQLType(Term term) {</span>
+<span class="source-line-no">132</span><span id="line-132">    if (isInterpretedNumerical(term)) {</span>
+<span class="source-line-no">133</span><span id="line-133">      return "INT";</span>
+<span class="source-line-no">134</span><span id="line-134">    } else if (isInterpretedLocalDateSeconds(term)) {</span>
+<span class="source-line-no">135</span><span id="line-135">      return "BIGINT";</span>
+<span class="source-line-no">136</span><span id="line-136">    } else if (isInterpretedUtcDateSeconds(term)) {</span>
+<span class="source-line-no">137</span><span id="line-137">      return "BIGINT";</span>
+<span class="source-line-no">138</span><span id="line-138">    } else if (isInterpretedUtcDateMilliseconds(term)) {</span>
+<span class="source-line-no">139</span><span id="line-139">      return "BIGINT";</span>
+<span class="source-line-no">140</span><span id="line-140">    } else if (isInterpretedDouble(term)) {</span>
+<span class="source-line-no">141</span><span id="line-141">      return "DOUBLE";</span>
+<span class="source-line-no">142</span><span id="line-142">    } else if (isInterpretedBoolean(term)) {</span>
+<span class="source-line-no">143</span><span id="line-143">      return "BOOLEAN";</span>
+<span class="source-line-no">144</span><span id="line-144">    } else if (isVocabulary(term)) {</span>
+<span class="source-line-no">145</span><span id="line-145">      if (isSQLArray(term)) {</span>
+<span class="source-line-no">146</span><span id="line-146">        return "STRUCT&lt;concepts: ARRAY&lt;STRING&gt;,lineage: ARRAY&lt;STRING&gt;&gt;";</span>
+<span class="source-line-no">147</span><span id="line-147">      } else {</span>
+<span class="source-line-no">148</span><span id="line-148">        return "STRUCT&lt;concept: STRING,lineage: ARRAY&lt;STRING&gt;&gt;";</span>
+<span class="source-line-no">149</span><span id="line-149">      }</span>
+<span class="source-line-no">150</span><span id="line-150">    } else if (isSQLArray(term)) {</span>
+<span class="source-line-no">151</span><span id="line-151">      return "ARRAY&lt;STRING&gt;";</span>
+<span class="source-line-no">152</span><span id="line-152">    } else {</span>
+<span class="source-line-no">153</span><span id="line-153">      return "STRING";</span>
+<span class="source-line-no">154</span><span id="line-154">    }</span>
+<span class="source-line-no">155</span><span id="line-155">  }</span>
+<span class="source-line-no">156</span><span id="line-156"></span>
+<span class="source-line-no">157</span><span id="line-157">  public static boolean isDate(Term term) {</span>
+<span class="source-line-no">158</span><span id="line-158">    return isInterpretedLocalDateSeconds(term)</span>
+<span class="source-line-no">159</span><span id="line-159">        || isInterpretedUtcDateSeconds(term)</span>
+<span class="source-line-no">160</span><span id="line-160">        || isInterpretedUtcDateMilliseconds(term);</span>
+<span class="source-line-no">161</span><span id="line-161">  }</span>
+<span class="source-line-no">162</span><span id="line-162"></span>
+<span class="source-line-no">163</span><span id="line-163">  /** Checks if the term is stored as a Hive array. */</span>
+<span class="source-line-no">164</span><span id="line-164">  public static boolean isSQLArray(Term term) {</span>
+<span class="source-line-no">165</span><span id="line-165">    return GbifTerm.mediaType == term</span>
+<span class="source-line-no">166</span><span id="line-166">        || GbifTerm.issue == term</span>
+<span class="source-line-no">167</span><span id="line-167">        || GbifInternalTerm.networkKey == term</span>
+<span class="source-line-no">168</span><span id="line-168">        || DwcTerm.identifiedByID == term</span>
+<span class="source-line-no">169</span><span id="line-169">        || DwcTerm.recordedByID == term</span>
+<span class="source-line-no">170</span><span id="line-170">        || GbifInternalTerm.dwcaExtension == term</span>
+<span class="source-line-no">171</span><span id="line-171">        || DwcTerm.datasetID == term</span>
+<span class="source-line-no">172</span><span id="line-172">        || DwcTerm.datasetName == term</span>
+<span class="source-line-no">173</span><span id="line-173">        || DwcTerm.typeStatus == term</span>
+<span class="source-line-no">174</span><span id="line-174">        || DwcTerm.otherCatalogNumbers == term</span>
+<span class="source-line-no">175</span><span id="line-175">        || DwcTerm.recordedBy == term</span>
+<span class="source-line-no">176</span><span id="line-176">        || DwcTerm.identifiedBy == term</span>
+<span class="source-line-no">177</span><span id="line-177">        || DwcTerm.preparations == term</span>
+<span class="source-line-no">178</span><span id="line-178">        || DwcTerm.samplingProtocol == term</span>
+<span class="source-line-no">179</span><span id="line-179">        || DwcTerm.georeferencedBy == term</span>
+<span class="source-line-no">180</span><span id="line-180">        || DwcTerm.higherGeography == term</span>
+<span class="source-line-no">181</span><span id="line-181">        || DwcTerm.associatedSequences == term</span>
+<span class="source-line-no">182</span><span id="line-182">        || GbifTerm.projectId == term</span>
+<span class="source-line-no">183</span><span id="line-183">        || GbifTerm.lithostratigraphy == term</span>
+<span class="source-line-no">184</span><span id="line-184">        || GbifTerm.biostratigraphy == term</span>
+<span class="source-line-no">185</span><span id="line-185">        || GbifTerm.nonTaxonomicIssue == term</span>
+<span class="source-line-no">186</span><span id="line-186">        || EcoTerm.voucherInstitutions == term</span>
+<span class="source-line-no">187</span><span id="line-187">        || EcoTerm.verbatimSiteNames == term</span>
+<span class="source-line-no">188</span><span id="line-188">        || EcoTerm.verbatimSiteDescriptions == term</span>
+<span class="source-line-no">189</span><span id="line-189">        || EcoTerm.compilationSourceTypes == term</span>
+<span class="source-line-no">190</span><span id="line-190">        || EcoTerm.targetHabitatScope == term</span>
+<span class="source-line-no">191</span><span id="line-191">        || EcoTerm.excludedHabitatScope == term</span>
+<span class="source-line-no">192</span><span id="line-192">        || EcoTerm.targetGrowthFormScope == term</span>
+<span class="source-line-no">193</span><span id="line-193">        || EcoTerm.excludedGrowthFormScope == term</span>
+<span class="source-line-no">194</span><span id="line-194">        || EcoTerm.taxonCompletenessProtocols == term</span>
+<span class="source-line-no">195</span><span id="line-195">        || EcoTerm.samplingPerformedBy == term</span>
+<span class="source-line-no">196</span><span id="line-196">        || EcoTerm.compilationTypes == term</span>
+<span class="source-line-no">197</span><span id="line-197">        || EcoTerm.materialSampleTypes == term</span>
+<span class="source-line-no">198</span><span id="line-198">        || EcoTerm.inventoryTypes == term</span>
+<span class="source-line-no">199</span><span id="line-199">        || EcoTerm.protocolNames == term</span>
+<span class="source-line-no">200</span><span id="line-200">        || EcoTerm.protocolDescriptions == term</span>
+<span class="source-line-no">201</span><span id="line-201">        || EcoTerm.protocolReferences == term</span>
+<span class="source-line-no">202</span><span id="line-202">        || EcoTerm.targetLifeStageScope == term</span>
+<span class="source-line-no">203</span><span id="line-203">        || EcoTerm.targetDegreeOfEstablishmentScope == term</span>
+<span class="source-line-no">204</span><span id="line-204">        || EcoTerm.excludedLifeStageScope == term</span>
+<span class="source-line-no">205</span><span id="line-205">        || EcoTerm.excludedDegreeOfEstablishmentScope == term</span>
+<span class="source-line-no">206</span><span id="line-206">        || DwcTerm.projectTitle == term</span>
+<span class="source-line-no">207</span><span id="line-207">        || DwcTerm.fundingAttribution == term</span>
+<span class="source-line-no">208</span><span id="line-208">        || DwcTerm.fundingAttributionID == term</span>
+<span class="source-line-no">209</span><span id="line-209">        || DwcTerm.measurementType == term</span>
+<span class="source-line-no">210</span><span id="line-210">        || ObisTerm.measurementTypeID == term;</span>
+<span class="source-line-no">211</span><span id="line-211">  }</span>
+<span class="source-line-no">212</span><span id="line-212"></span>
+<span class="source-line-no">213</span><span id="line-213">  public static boolean isHumboldtTerm(Term term) {</span>
+<span class="source-line-no">214</span><span id="line-214">    return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;</span>
+<span class="source-line-no">215</span><span id="line-215">  }</span>
+<span class="source-line-no">216</span><span id="line-216"></span>
+<span class="source-line-no">217</span><span id="line-217">  public static boolean isVocabulary(Term term) {</span>
+<span class="source-line-no">218</span><span id="line-218">    return term instanceof Enum &amp;&amp; hasTermAnnotation(term, Vocabulary.class);</span>
+<span class="source-line-no">219</span><span id="line-219">  }</span>
+<span class="source-line-no">220</span><span id="line-220"></span>
+<span class="source-line-no">221</span><span id="line-221">  private static boolean hasTermAnnotation(Term term, Class&lt;? extends Annotation&gt; annotation) {</span>
+<span class="source-line-no">222</span><span id="line-222">    try {</span>
+<span class="source-line-no">223</span><span id="line-223">      return term.getClass().getField(((Enum) term).name()).isAnnotationPresent(annotation);</span>
+<span class="source-line-no">224</span><span id="line-224">    } catch (NoSuchFieldException var3) {</span>
+<span class="source-line-no">225</span><span id="line-225">      throw new IllegalArgumentException(var3);</span>
+<span class="source-line-no">226</span><span id="line-226">    }</span>
+<span class="source-line-no">227</span><span id="line-227">  }</span>
+<span class="source-line-no">228</span><span id="line-228"></span>
+<span class="source-line-no">229</span><span id="line-229">  /** @return true if the term is an interpreted local date (timezone not relevant) */</span>
+<span class="source-line-no">230</span><span id="line-230">  public static boolean isInterpretedLocalDateSeconds(Term term) {</span>
+<span class="source-line-no">231</span><span id="line-231">    return term != null &amp;&amp; INTERPRETED_LOCAL_DATES_SECONDS.contains(term);</span>
+<span class="source-line-no">232</span><span id="line-232">  }</span>
+<span class="source-line-no">233</span><span id="line-233"></span>
+<span class="source-line-no">234</span><span id="line-234">  /** @return true if the term is an interpreted UTC date stored in seconds */</span>
+<span class="source-line-no">235</span><span id="line-235">  public static boolean isInterpretedUtcDateSeconds(Term term) {</span>
+<span class="source-line-no">236</span><span id="line-236">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_SECONDS.contains(term);</span>
 <span class="source-line-no">237</span><span id="line-237">  }</span>
 <span class="source-line-no">238</span><span id="line-238"></span>
-<span class="source-line-no">239</span><span id="line-239">  private static boolean hasTermAnnotation(Term term, Class&lt;? extends Annotation&gt; annotation) {</span>
-<span class="source-line-no">240</span><span id="line-240">    try {</span>
-<span class="source-line-no">241</span><span id="line-241">      return term.getClass().getField(((Enum) term).name()).isAnnotationPresent(annotation);</span>
-<span class="source-line-no">242</span><span id="line-242">    } catch (NoSuchFieldException var3) {</span>
-<span class="source-line-no">243</span><span id="line-243">      throw new IllegalArgumentException(var3);</span>
-<span class="source-line-no">244</span><span id="line-244">    }</span>
-<span class="source-line-no">245</span><span id="line-245">  }</span>
-<span class="source-line-no">246</span><span id="line-246"></span>
-<span class="source-line-no">247</span><span id="line-247">  /** @return true if the term is an interpreted local date (timezone not relevant) */</span>
-<span class="source-line-no">248</span><span id="line-248">  public static boolean isInterpretedLocalDateSeconds(Term term) {</span>
-<span class="source-line-no">249</span><span id="line-249">    return term != null &amp;&amp; INTERPRETED_LOCAL_DATES_SECONDS.contains(term);</span>
-<span class="source-line-no">250</span><span id="line-250">  }</span>
-<span class="source-line-no">251</span><span id="line-251"></span>
-<span class="source-line-no">252</span><span id="line-252">  /** @return true if the term is an interpreted UTC date stored in seconds */</span>
-<span class="source-line-no">253</span><span id="line-253">  public static boolean isInterpretedUtcDateSeconds(Term term) {</span>
-<span class="source-line-no">254</span><span id="line-254">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_SECONDS.contains(term);</span>
-<span class="source-line-no">255</span><span id="line-255">  }</span>
-<span class="source-line-no">256</span><span id="line-256"></span>
-<span class="source-line-no">257</span><span id="line-257">  /** @return true if the term is an interpreted UTC date stored in milliseconds */</span>
-<span class="source-line-no">258</span><span id="line-258">  public static boolean isInterpretedUtcDateMilliseconds(Term term) {</span>
-<span class="source-line-no">259</span><span id="line-259">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);</span>
-<span class="source-line-no">260</span><span id="line-260">  }</span>
-<span class="source-line-no">261</span><span id="line-261"></span>
-<span class="source-line-no">262</span><span id="line-262">  /** @return true if the term is an interpreted numerical */</span>
-<span class="source-line-no">263</span><span id="line-263">  public static boolean isInterpretedNumerical(Term term) {</span>
-<span class="source-line-no">264</span><span id="line-264">    return term != null &amp;&amp; INTERPRETED_NUM.contains(term);</span>
-<span class="source-line-no">265</span><span id="line-265">  }</span>
-<span class="source-line-no">266</span><span id="line-266"></span>
-<span class="source-line-no">267</span><span id="line-267">  /** @return true if the term is an interpreted double */</span>
-<span class="source-line-no">268</span><span id="line-268">  public static boolean isInterpretedDouble(Term term) {</span>
-<span class="source-line-no">269</span><span id="line-269">    return term != null &amp;&amp; INTERPRETED_DOUBLE.contains(term);</span>
-<span class="source-line-no">270</span><span id="line-270">  }</span>
-<span class="source-line-no">271</span><span id="line-271"></span>
-<span class="source-line-no">272</span><span id="line-272">  /** @return true if the term is an interpreted boolean */</span>
-<span class="source-line-no">273</span><span id="line-273">  public static boolean isInterpretedBoolean(Term term) {</span>
-<span class="source-line-no">274</span><span id="line-274">    return term != null &amp;&amp; INTERPRETED_BOOLEAN.contains(term);</span>
-<span class="source-line-no">275</span><span id="line-275">  }</span>
-<span class="source-line-no">276</span><span id="line-276"></span>
-<span class="source-line-no">277</span><span id="line-277">  /** @return true if the term is a complex type in Hive: array, struct, json, etc. */</span>
-<span class="source-line-no">278</span><span id="line-278">  public static boolean isComplexType(Term term) {</span>
-<span class="source-line-no">279</span><span id="line-279">    return term != null &amp;&amp; COMPLEX_TYPE.contains(term);</span>
-<span class="source-line-no">280</span><span id="line-280">  }</span>
-<span class="source-line-no">281</span><span id="line-281"></span>
-<span class="source-line-no">282</span><span id="line-282">  public static boolean isExtensionTerm(Term term) {</span>
-<span class="source-line-no">283</span><span id="line-283">    return term != null &amp;&amp; EXTENSION_TERMS.contains(term);</span>
-<span class="source-line-no">284</span><span id="line-284">  }</span>
-<span class="source-line-no">285</span><span id="line-285"></span>
-<span class="source-line-no">286</span><span id="line-286">  public static Map&lt;SearchParameter, String&gt; HUMBOLDT_TAXON_COLUMNS =</span>
-<span class="source-line-no">287</span><span id="line-287">      Map.of(</span>
-<span class="source-line-no">288</span><span id="line-288">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,</span>
-<span class="source-line-no">289</span><span id="line-289">          "usagekey",</span>
-<span class="source-line-no">290</span><span id="line-290">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,</span>
-<span class="source-line-no">291</span><span id="line-291">          "usagename",</span>
-<span class="source-line-no">292</span><span id="line-292">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_KEY,</span>
-<span class="source-line-no">293</span><span id="line-293">          "acceptedusagekey",</span>
-<span class="source-line-no">294</span><span id="line-294">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_NAME,</span>
-<span class="source-line-no">295</span><span id="line-295">          "acceptedusagename",</span>
-<span class="source-line-no">296</span><span id="line-296">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,</span>
-<span class="source-line-no">297</span><span id="line-297">          "taxonkeys",</span>
-<span class="source-line-no">298</span><span id="line-298">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,</span>
-<span class="source-line-no">299</span><span id="line-299">          "iucnRedListCategoryCode",</span>
-<span class="source-line-no">300</span><span id="line-300">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,</span>
-<span class="source-line-no">301</span><span id="line-301">          "issues");</span>
-<span class="source-line-no">302</span><span id="line-302">}</span>
+<span class="source-line-no">239</span><span id="line-239">  /** @return true if the term is an interpreted UTC date stored in milliseconds */</span>
+<span class="source-line-no">240</span><span id="line-240">  public static boolean isInterpretedUtcDateMilliseconds(Term term) {</span>
+<span class="source-line-no">241</span><span id="line-241">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);</span>
+<span class="source-line-no">242</span><span id="line-242">  }</span>
+<span class="source-line-no">243</span><span id="line-243"></span>
+<span class="source-line-no">244</span><span id="line-244">  /** @return true if the term is an interpreted numerical */</span>
+<span class="source-line-no">245</span><span id="line-245">  public static boolean isInterpretedNumerical(Term term) {</span>
+<span class="source-line-no">246</span><span id="line-246">    return term != null &amp;&amp; INTERPRETED_NUM.contains(term);</span>
+<span class="source-line-no">247</span><span id="line-247">  }</span>
+<span class="source-line-no">248</span><span id="line-248"></span>
+<span class="source-line-no">249</span><span id="line-249">  /** @return true if the term is an interpreted double */</span>
+<span class="source-line-no">250</span><span id="line-250">  public static boolean isInterpretedDouble(Term term) {</span>
+<span class="source-line-no">251</span><span id="line-251">    return term != null &amp;&amp; INTERPRETED_DOUBLE.contains(term);</span>
+<span class="source-line-no">252</span><span id="line-252">  }</span>
+<span class="source-line-no">253</span><span id="line-253"></span>
+<span class="source-line-no">254</span><span id="line-254">  /** @return true if the term is an interpreted boolean */</span>
+<span class="source-line-no">255</span><span id="line-255">  public static boolean isInterpretedBoolean(Term term) {</span>
+<span class="source-line-no">256</span><span id="line-256">    return term != null &amp;&amp; INTERPRETED_BOOLEAN.contains(term);</span>
+<span class="source-line-no">257</span><span id="line-257">  }</span>
+<span class="source-line-no">258</span><span id="line-258"></span>
+<span class="source-line-no">259</span><span id="line-259">  /** @return true if the term is a complex type in Hive: array, struct, json, etc. */</span>
+<span class="source-line-no">260</span><span id="line-260">  public static boolean isComplexType(Term term) {</span>
+<span class="source-line-no">261</span><span id="line-261">    return term != null &amp;&amp; COMPLEX_TYPE.contains(term);</span>
+<span class="source-line-no">262</span><span id="line-262">  }</span>
+<span class="source-line-no">263</span><span id="line-263"></span>
+<span class="source-line-no">264</span><span id="line-264">  public static boolean isExtensionTerm(Term term) {</span>
+<span class="source-line-no">265</span><span id="line-265">    return term != null &amp;&amp; EXTENSION_TERMS.contains(term);</span>
+<span class="source-line-no">266</span><span id="line-266">  }</span>
+<span class="source-line-no">267</span><span id="line-267"></span>
+<span class="source-line-no">268</span><span id="line-268">  public static Map&lt;SearchParameter, String&gt; HUMBOLDT_TAXON_COLUMNS =</span>
+<span class="source-line-no">269</span><span id="line-269">      Map.of(</span>
+<span class="source-line-no">270</span><span id="line-270">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,</span>
+<span class="source-line-no">271</span><span id="line-271">          "usagekey",</span>
+<span class="source-line-no">272</span><span id="line-272">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,</span>
+<span class="source-line-no">273</span><span id="line-273">          "usagename",</span>
+<span class="source-line-no">274</span><span id="line-274">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_KEY,</span>
+<span class="source-line-no">275</span><span id="line-275">          "acceptedusagekey",</span>
+<span class="source-line-no">276</span><span id="line-276">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_NAME,</span>
+<span class="source-line-no">277</span><span id="line-277">          "acceptedusagename",</span>
+<span class="source-line-no">278</span><span id="line-278">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,</span>
+<span class="source-line-no">279</span><span id="line-279">          "taxonkeys",</span>
+<span class="source-line-no">280</span><span id="line-280">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,</span>
+<span class="source-line-no">281</span><span id="line-281">          "iucnRedListCategoryCode",</span>
+<span class="source-line-no">282</span><span id="line-282">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,</span>
+<span class="source-line-no">283</span><span id="line-283">          "issues");</span>
+<span class="source-line-no">284</span><span id="line-284">}</span>
 
 
 
