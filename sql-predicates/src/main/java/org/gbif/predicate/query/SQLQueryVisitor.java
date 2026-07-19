@@ -741,7 +741,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append('(');
     builder.append(
         String.format(
-            "classificationdetails['%s']['%s'] != ''",
+            "classificationdetails['%s']['%s'] IS NOT NULL",
             getChecklistKey(predicate.getChecklistKey()),
             predicate.getParameter().name().replace("_", "").toLowerCase()));
     builder.append(')');
@@ -752,7 +752,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append('(');
     builder.append(
         String.format(
-            "classificationdetails['%s']['%s'] = ''",
+            "classificationdetails['%s']['%s'] IS NULL",
             getChecklistKey(predicate.getChecklistKey()),
             predicate.getParameter().name().replace("_", "").toLowerCase()));
     builder.append(')');
