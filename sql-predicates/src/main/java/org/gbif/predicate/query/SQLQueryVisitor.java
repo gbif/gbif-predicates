@@ -304,7 +304,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
         && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
+            || Constants.COL_DATASET_KEY
                 .toString()
                 .equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns as the classification one currently lacks
@@ -605,7 +605,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
         && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
+            || Constants.COL_DATASET_KEY
                 .toString()
                 .equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make

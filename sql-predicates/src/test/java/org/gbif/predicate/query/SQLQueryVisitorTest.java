@@ -313,7 +313,7 @@ public class SQLQueryVisitorTest {
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",
+        "(EXISTS(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], taxonkey -> taxonkey IN ('2','1')))",
         query);
   }
 
@@ -1215,7 +1215,7 @@ public class SQLQueryVisitorTest {
 
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(taxonkey = '6' OR acceptedtaxonkey = '6' OR kingdomkey = '6' OR phylumkey = '6' OR classkey = '6' OR orderkey = '6' OR familykey = '6' OR genuskey = '6' OR specieskey = '6')",
+        "(stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))",
         query);
   }
 
