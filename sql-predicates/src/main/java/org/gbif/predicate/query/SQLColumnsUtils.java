@@ -16,6 +16,11 @@ public class SQLColumnsUtils {
   // reserved hive words
   public static final Set<String> SQL_RESERVED_WORDS = Set.of("date", "order", "format", "group");
 
+  // set as constants since they are used in multiple places
+  public static final String GEOLOGICAL_TIME_COLUMN = "geologicaltime";
+  public static final String GEOLOGICAL_TIME_GT_COLUMN = GEOLOGICAL_TIME_COLUMN + ".gt";
+  public static final String GEOLOGICAL_TIME_LTE_COLUMN = GEOLOGICAL_TIME_COLUMN + ".lte";
+
   // prefix for extension columns
   private static final String EXTENSION_PRE = "ext_";
 
@@ -122,6 +127,9 @@ public class SQLColumnsUtils {
       columnName = "h." + columnName;
     } else if (isNucleotideTerm(term)) {
       columnName = "dna." + columnName;
+    } else if (GbifTerm.geologicalTime == term) {
+      // default to gt
+      columnName = columnName + ".gt";
     }
 
     return isVocabulary(term) ? columnName + ".lineage" : columnName;
