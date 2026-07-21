@@ -959,6 +959,14 @@ public class OccurrenceEsQueryVisitorTest {
     String expectedQuery =
         "{\n"
             + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"exists\" : {\n"
+            + "          \"field\" : \"catalog_number.keyword\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
             + "    \"must_not\" : [\n"
             + "      {\n"
             + "        \"bool\" : {\n"
@@ -996,6 +1004,20 @@ public class OccurrenceEsQueryVisitorTest {
     String expectedQuery =
         "{\n"
             + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"exists\" : {\n"
+            + "          \"field\" : \"catalog_number.keyword\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"exists\" : {\n"
+            + "          \"field\" : \"institution_code.keyword\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
             + "    \"must_not\" : [\n"
             + "      {\n"
             + "        \"bool\" : {\n"
@@ -1264,6 +1286,20 @@ public class OccurrenceEsQueryVisitorTest {
     String expectedQuery =
         "{\n"
             + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"exists\" : {\n"
+            + "          \"field\" : \"catalog_number.keyword\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"exists\" : {\n"
+            + "          \"field\" : \"institution_code.keyword\",\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
             + "    \"must_not\" : [\n"
             + "      {\n"
             + "        \"bool\" : {\n"
@@ -1410,6 +1446,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "      },\n"
             + "      {\n"
             + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"exists\" : {\n"
+            + "                \"field\" : \"catalog_number.keyword\",\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
             + "          \"must_not\" : [\n"
             + "            {\n"
             + "              \"bool\" : {\n"
@@ -2520,6 +2564,252 @@ public class OccurrenceEsQueryVisitorTest {
             + "  }\n"
             + "}";
 
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void conjunctionWithNotPredicateTest() throws QueryBuildingException {
+    Predicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new InPredicate(
+                    OccurrenceSearchParameter.DATASET_KEY,
+                    Arrays.asList(
+                        "b364710b-3f07-4876-a554-1943b702363f",
+                        "6595e04b-13d2-4eac-933f-73786627b5a2"),
+                    false // matchCase
+                    ),
+                new NotPredicate(
+                    new ConjunctionPredicate(
+                        Arrays.asList(
+                            new InPredicate(
+                                OccurrenceSearchParameter.INSTITUTION_KEY,
+                                List.of("75f50140-830d-4630-a290-3d6e951a7c29"),
+                                false),
+                            new InPredicate(
+                                OccurrenceSearchParameter.COLLECTION_KEY,
+                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),
+                                false))))));
+    String query = visitor.buildQuery(predicate);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"terms\" : {\n"
+            + "                \"dataset_key\" : [\n"
+            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"
+            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"
+            + "                ],\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"exists\" : {\n"
+            + "                \"field\" : \"institution_key.keyword\",\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"exists\" : {\n"
+            + "                \"field\" : \"collection_key.keyword\",\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"must_not\" : [\n"
+            + "            {\n"
+            + "              \"bool\" : {\n"
+            + "                \"filter\" : [\n"
+            + "                  {\n"
+            + "                    \"bool\" : {\n"
+            + "                      \"filter\" : [\n"
+            + "                        {\n"
+            + "                          \"terms\" : {\n"
+            + "                            \"institution_key.keyword\" : [\n"
+            + "                              \"75f50140-830d-4630-a290-3d6e951a7c29\"\n"
+            + "                            ],\n"
+            + "                            \"boost\" : 1.0\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ],\n"
+            + "                      \"adjust_pure_negative\" : true,\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"bool\" : {\n"
+            + "                      \"filter\" : [\n"
+            + "                        {\n"
+            + "                          \"terms\" : {\n"
+            + "                            \"collection_key.keyword\" : [\n"
+            + "                              \"2294871f-f0f7-44b2-b707-e9511ff5a878\"\n"
+            + "                            ],\n"
+            + "                            \"boost\" : 1.0\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ],\n"
+            + "                      \"adjust_pure_negative\" : true,\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ],\n"
+            + "                \"adjust_pure_negative\" : true,\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
+    assertEquals(expectedQuery, query);
+  }
+
+  @Test
+  public void conjunctionWithNotPredicateAndNestedFieldTest() throws QueryBuildingException {
+    Predicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new InPredicate(
+                    OccurrenceSearchParameter.DATASET_KEY,
+                    Arrays.asList(
+                        "b364710b-3f07-4876-a554-1943b702363f",
+                        "6595e04b-13d2-4eac-933f-73786627b5a2"),
+                    false // matchCase
+                    ),
+                new NotPredicate(
+                    new ConjunctionPredicate(
+                        Arrays.asList(
+                            new InPredicate(
+                                OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                List.of("7"),
+                                false),
+                            new InPredicate(
+                                OccurrenceSearchParameter.COLLECTION_KEY,
+                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),
+                                false))))));
+    String query = visitor.buildQuery(predicate);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\" : {\n"
+            + "    \"filter\" : [\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"terms\" : {\n"
+            + "                \"dataset_key\" : [\n"
+            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"
+            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"
+            + "                ],\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\" : {\n"
+            + "          \"filter\" : [\n"
+            + "            {\n"
+            + "              \"nested\" : {\n"
+            + "                \"query\" : {\n"
+            + "                  \"exists\" : {\n"
+            + "                    \"field\" : \"nucleotideSequence.sequenceLength\",\n"
+            + "                    \"boost\" : 1.0\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                \"path\" : \"nucleotideSequence\",\n"
+            + "                \"ignore_unmapped\" : false,\n"
+            + "                \"score_mode\" : \"none\",\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"exists\" : {\n"
+            + "                \"field\" : \"collection_key.keyword\",\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"must_not\" : [\n"
+            + "            {\n"
+            + "              \"bool\" : {\n"
+            + "                \"filter\" : [\n"
+            + "                  {\n"
+            + "                    \"bool\" : {\n"
+            + "                      \"filter\" : [\n"
+            + "                        {\n"
+            + "                          \"terms\" : {\n"
+            + "                            \"collection_key.keyword\" : [\n"
+            + "                              \"2294871f-f0f7-44b2-b707-e9511ff5a878\"\n"
+            + "                            ],\n"
+            + "                            \"boost\" : 1.0\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ],\n"
+            + "                      \"adjust_pure_negative\" : true,\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"nested\" : {\n"
+            + "                      \"query\" : {\n"
+            + "                        \"bool\" : {\n"
+            + "                          \"filter\" : [\n"
+            + "                            {\n"
+            + "                              \"terms\" : {\n"
+            + "                                \"nucleotideSequence.sequenceLength\" : [\n"
+            + "                                  \"7\"\n"
+            + "                                ],\n"
+            + "                                \"boost\" : 1.0\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          ],\n"
+            + "                          \"adjust_pure_negative\" : true,\n"
+            + "                          \"boost\" : 1.0\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      \"path\" : \"nucleotideSequence\",\n"
+            + "                      \"ignore_unmapped\" : false,\n"
+            + "                      \"score_mode\" : \"none\",\n"
+            + "                      \"boost\" : 1.0\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ],\n"
+            + "                \"adjust_pure_negative\" : true,\n"
+            + "                \"boost\" : 1.0\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"adjust_pure_negative\" : true,\n"
+            + "          \"boost\" : 1.0\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"adjust_pure_negative\" : true,\n"
+            + "    \"boost\" : 1.0\n"
+            + "  }\n"
+            + "}";
     assertEquals(expectedQuery, query);
   }
 }
