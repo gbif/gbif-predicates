@@ -295,10 +295,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
-        && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
-                .toString()
-                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+        && (Constants.COL_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns as the classification one currently lacks
       // synonyms.
       // (It's also faster.)
@@ -596,10 +593,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
-        && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
-                .toString()
-                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+        && (Constants.COL_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make
       // downloads with 10,000s of taxon identifiers, and performance of this will need to be
       // adequate before the classifications column can be used.
