@@ -80,7 +80,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
 
-  private static final List<GbifTerm> NUB_KEYS =
+  private static final List<GbifTerm> TAXON_KEY_FIELDS =
       List.of(
           GbifTerm.taxonKey,
           GbifTerm.acceptedTaxonKey,
@@ -303,10 +303,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
-        && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
-                .toString()
-                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+        && (Constants.COL_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns as the classification one currently lacks
       // synonyms.
       // (It's also faster.)
@@ -604,10 +601,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
-        && (predicate.getChecklistKey() == null
-            || Constants.NUB_DATASET_KEY
-                .toString()
-                .equalsIgnoreCase(predicate.getChecklistKey()))) {
+        && (Constants.COL_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
       // Use the taxonkey, specieskey etc columns for performance. Users are encouraged to make
       // downloads with 10,000s of taxon identifiers, and performance of this will need to be
       // adequate before the classifications column can be used.
@@ -1065,7 +1059,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
     builder.append('(');
     boolean first = true;
-    for (Term term : NUB_KEYS) {
+    for (Term term : TAXON_KEY_FIELDS) {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
@@ -1088,7 +1082,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private void appendTaxonomicBackboneSingleValueFilter(EqualsPredicate<S> taxonKeyPredicate) {
     builder.append('(');
     boolean first = true;
-    for (Term term : NUB_KEYS) {
+    for (Term term : TAXON_KEY_FIELDS) {
       if (!first) {
         builder.append(DISJUNCTION_OPERATOR);
       }
