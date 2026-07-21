@@ -1235,7 +1235,8 @@ public class SQLQueryVisitorTest {
         "((12 > geologicaltime.gt AND 12 <= geologicaltime.lte) OR (15 > geologicaltime.gt AND 15 <= geologicaltime.lte))",
         query);
 
-    IsNotNullPredicate notNullPredicate = new IsNotNullPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME);
+    IsNotNullPredicate notNullPredicate =
+        new IsNotNullPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME);
     query = visitor.buildQuery(notNullPredicate);
     assertEquals("geologicaltime.gt IS NOT NULL", query);
   }
