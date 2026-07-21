@@ -1202,6 +1202,43 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "*,15", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.lte <= 15.0", query);
+
+    Predicate greaterThanOrEqualsPredicate =
+        new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
+    query = visitor.buildQuery(greaterThanOrEqualsPredicate);
+    assertEquals("geologicaltime.gt >= 12", query);
+
+    Predicate greaterThanPredicate =
+        new GreaterThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
+    query = visitor.buildQuery(greaterThanPredicate);
+    assertEquals("geologicaltime.gt > 12", query);
+
+    Predicate lessThanOrEqualsPredicate =
+        new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
+    query = visitor.buildQuery(lessThanOrEqualsPredicate);
+    assertEquals("geologicaltime.lte <= 15", query);
+
+    Predicate lessThanPredicate =
+        new LessThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
+    query = visitor.buildQuery(lessThanPredicate);
+    assertEquals("geologicaltime.lte < 15", query);
+
+    ConjunctionPredicate greaterAndLessPredicate =
+        new ConjunctionPredicate(List.of(greaterThanPredicate, lessThanPredicate));
+    query = visitor.buildQuery(greaterAndLessPredicate);
+    assertEquals("((geologicaltime.gt > 12) AND (geologicaltime.lte < 15))", query);
+
+    InPredicate inPredicate =
+        new InPredicate(OccurrenceSearchParameter.GEOLOGICAL_TIME, List.of("12", "15"), false);
+    query = visitor.buildQuery(inPredicate);
+    assertEquals(
+        "((12 > geologicaltime.gt AND 12 <= geologicaltime.lte) OR (15 > geologicaltime.gt AND 15 <= geologicaltime.lte))",
+        query);
+
+    IsNotNullPredicate notNullPredicate =
+        new IsNotNullPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME);
+    query = visitor.buildQuery(notNullPredicate);
+    assertEquals("geologicaltime.gt IS NOT NULL", query);
   }
 
   @Test
