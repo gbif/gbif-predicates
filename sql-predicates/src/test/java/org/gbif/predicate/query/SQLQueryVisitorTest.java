@@ -1441,4 +1441,33 @@ public class SQLQueryVisitorTest {
         "(((occurrencestatus IN('PRESENT'))) AND (((((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))) OR (((dna.sequencelength >= 20) AND (dna.sequencelength <= 30))))))",
         query);
   }
+
+  @Test
+  public void conjunctionWithNotPredicateTest() throws QueryBuildingException {
+    Predicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new InPredicate(
+                    OccurrenceSearchParameter.DATASET_KEY,
+                    Arrays.asList(
+                        "b364710b-3f07-4876-a554-1943b702363f",
+                        "6595e04b-13d2-4eac-933f-73786627b5a2"),
+                    false // matchCase
+                    ),
+                new NotPredicate(
+                    new ConjunctionPredicate(
+                        Arrays.asList(
+                            new InPredicate(
+                                OccurrenceSearchParameter.INSTITUTION_KEY,
+                                List.of("75f50140-830d-4630-a290-3d6e951a7c29"),
+                                false),
+                            new InPredicate(
+                                OccurrenceSearchParameter.COLLECTION_KEY,
+                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),
+                                false))))));
+    String query = visitor.buildQuery(predicate);
+    String expectedQuery =
+        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((lower(institutionkey) IN(lower('75f50140-830d-4630-a290-3d6e951a7c29')))) AND ((lower(collectionkey) IN(lower('2294871f-f0f7-44b2-b707-e9511ff5a878')))))))";
+    assertEquals(expectedQuery, query);
+  }
 }

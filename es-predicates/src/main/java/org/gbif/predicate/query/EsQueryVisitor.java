@@ -720,7 +720,51 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     BoolQueryBuilder mustNotQueryBuilder = QueryBuilders.boolQuery();
     QueryData mustNotQueryData = new QueryData(mustNotQueryBuilder);
     visit(predicate.getPredicate(), mustNotQueryData);
+
+    // we create a new queryData not to propagate these clauses to other predicates
+    BoolQueryBuilder existsQueryBuilder = QueryBuilders.boolQuery();
+    QueryData existsQueryData = new QueryData(existsQueryBuilder);
+    addNotPredicateNonNullFilters(predicate.getPredicate(), existsQueryData);
+    existsQueryBuilder.filter().forEach(q -> queryData.queryBuilder.filter(q));
+
     queryData.queryBuilder.mustNot(mustNotQueryBuilder);
+  }
+
+  private void addNotPredicateNonNullFilters(Predicate predicate, QueryData queryData) {
+    Map<S, Set<String>> fieldsByParameter = new LinkedHashMap<>();
+    collectNotPredicateFields(predicate, fieldsByParameter);
+
+    fieldsByParameter.forEach(
+        (parameter, fields) ->
+            fields.forEach(
+                field -> addFilterQuery(QueryBuilders.existsQuery(field), queryData, parameter)));
+  }
+
+  @SuppressWarnings("unchecked")
+  private void collectNotPredicateFields(
+      Predicate predicate, Map<S, Set<String>> fieldsByParameter) {
+    if (predicate instanceof ConjunctionPredicate) {
+      ((ConjunctionPredicate) predicate)
+          .getPredicates()
+          .forEach(p -> collectNotPredicateFields(p, fieldsByParameter));
+    } else if (predicate instanceof DisjunctionPredicate) {
+      ((DisjunctionPredicate) predicate)
+          .getPredicates()
+          .forEach(p -> collectNotPredicateFields(p, fieldsByParameter));
+    } else if (predicate instanceof InPredicate) {
+      InPredicate<S> p = (InPredicate<S>) predicate;
+      addNotPredicateFieldToNonNullChecks(
+          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));
+    } else if (predicate instanceof SimplePredicate) {
+      SimplePredicate<S> p = (SimplePredicate<S>) predicate;
+      addNotPredicateFieldToNonNullChecks(
+          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));
+    }
+  }
+
+  private void addNotPredicateFieldToNonNullChecks(
+      Map<S, Set<String>> fieldsByParameter, S parameter, String fieldName) {
+    fieldsByParameter.computeIfAbsent(parameter, ignored -> new LinkedHashSet<>()).add(fieldName);
   }
 
   /**
