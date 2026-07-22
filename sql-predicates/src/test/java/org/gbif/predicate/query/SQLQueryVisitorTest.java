@@ -1206,7 +1206,7 @@ public class SQLQueryVisitorTest {
     Predicate greaterThanOrEqualsPredicate =
         new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
     query = visitor.buildQuery(greaterThanOrEqualsPredicate);
-    assertEquals("geologicaltime.lte >= 12", query);
+    assertEquals("geologicaltime.gt >= 12", query);
 
     Predicate greaterThanPredicate =
         new GreaterThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
@@ -1216,7 +1216,7 @@ public class SQLQueryVisitorTest {
     Predicate lessThanOrEqualsPredicate =
         new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
     query = visitor.buildQuery(lessThanOrEqualsPredicate);
-    assertEquals("geologicaltime.gt <= 15", query);
+    assertEquals("geologicaltime.lte <= 15", query);
 
     Predicate lessThanPredicate =
         new LessThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");

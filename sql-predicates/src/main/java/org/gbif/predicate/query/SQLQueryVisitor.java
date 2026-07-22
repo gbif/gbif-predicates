@@ -475,7 +475,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
     } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
       builder
-          .append(GEOLOGICAL_TIME_LTE_COLUMN)
+          .append(GEOLOGICAL_TIME_GT_COLUMN)
           .append(GREATER_THAN_EQUALS_OPERATOR)
           .append(predicate.getValue());
     } else {
@@ -534,7 +534,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           predicateGte, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
     } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
       builder
-          .append(GEOLOGICAL_TIME_GT_COLUMN)
+          .append(GEOLOGICAL_TIME_LTE_COLUMN)
           .append(LESS_THAN_EQUALS_OPERATOR)
           .append(predicate.getValue());
     } else {
