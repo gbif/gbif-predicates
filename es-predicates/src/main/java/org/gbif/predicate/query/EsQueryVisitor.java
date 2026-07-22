@@ -652,6 +652,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
                   throw new RuntimeException(ex);
                 }
               });
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      List<Predicate> allPredicates =
+          predicate.getValues().stream()
+              .map(v -> new EqualsPredicate<>(predicate.getKey(), v, false))
+              .collect(Collectors.toList());
+      visit(new DisjunctionPredicate(allPredicates), queryData);
     } else {
 
       TermsQueryBuilder termsQueryBuilder =

@@ -1186,7 +1186,7 @@ public class SQLQueryVisitorTest {
     Predicate predicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12", false);
     String query = visitor.buildQuery(predicate);
-    assertEquals("12 > geologicaltime.gt AND 12 <= geologicaltime.lte", query);
+    assertEquals("geologicaltime.gt >= 12 AND geologicaltime.lte <= 12", query);
 
     Predicate rangePredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,15", false);
@@ -1206,33 +1206,33 @@ public class SQLQueryVisitorTest {
     Predicate greaterThanOrEqualsPredicate =
         new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
     query = visitor.buildQuery(greaterThanOrEqualsPredicate);
-    assertEquals("geologicaltime.gt >= 12", query);
+    assertEquals("geologicaltime.lte >= 12", query);
 
     Predicate greaterThanPredicate =
         new GreaterThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
     query = visitor.buildQuery(greaterThanPredicate);
-    assertEquals("geologicaltime.gt > 12", query);
+    assertEquals("geologicaltime.lte > 12", query);
 
     Predicate lessThanOrEqualsPredicate =
         new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
     query = visitor.buildQuery(lessThanOrEqualsPredicate);
-    assertEquals("geologicaltime.lte <= 15", query);
+    assertEquals("geologicaltime.gt <= 15", query);
 
     Predicate lessThanPredicate =
         new LessThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
     query = visitor.buildQuery(lessThanPredicate);
-    assertEquals("geologicaltime.lte < 15", query);
+    assertEquals("geologicaltime.gt < 15", query);
 
     ConjunctionPredicate greaterAndLessPredicate =
         new ConjunctionPredicate(List.of(greaterThanPredicate, lessThanPredicate));
     query = visitor.buildQuery(greaterAndLessPredicate);
-    assertEquals("((geologicaltime.gt > 12) AND (geologicaltime.lte < 15))", query);
+    assertEquals("((geologicaltime.lte > 12) AND (geologicaltime.gt < 15))", query);
 
     InPredicate inPredicate =
         new InPredicate(OccurrenceSearchParameter.GEOLOGICAL_TIME, List.of("12", "15"), false);
     query = visitor.buildQuery(inPredicate);
     assertEquals(
-        "((12 > geologicaltime.gt AND 12 <= geologicaltime.lte) OR (15 > geologicaltime.gt AND 15 <= geologicaltime.lte))",
+        "((geologicaltime.gt >= 12 AND geologicaltime.lte <= 12) OR (geologicaltime.gt >= 15 AND geologicaltime.lte <= 15))",
         query);
 
     IsNotNullPredicate notNullPredicate =
