@@ -1210,7 +1210,7 @@ public class SQLQueryVisitorTest {
     Predicate predicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12", false);
     String query = visitor.buildQuery(predicate);
-    assertEquals("12 > geologicaltime.gt AND 12 <= geologicaltime.lte", query);
+    assertEquals("geologicaltime.gt >= 12 AND geologicaltime.lte <= 12", query);
 
     Predicate rangePredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12,15", false);
@@ -1226,6 +1226,43 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "*,15", false);
     query = visitor.buildQuery(rangePredicate);
     assertEquals("geologicaltime.lte <= 15.0", query);
+
+    Predicate greaterThanOrEqualsPredicate =
+        new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
+    query = visitor.buildQuery(greaterThanOrEqualsPredicate);
+    assertEquals("geologicaltime.gt >= 12", query);
+
+    Predicate greaterThanPredicate =
+        new GreaterThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "12");
+    query = visitor.buildQuery(greaterThanPredicate);
+    assertEquals("geologicaltime.lte > 12", query);
+
+    Predicate lessThanOrEqualsPredicate =
+        new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
+    query = visitor.buildQuery(lessThanOrEqualsPredicate);
+    assertEquals("geologicaltime.lte <= 15", query);
+
+    Predicate lessThanPredicate =
+        new LessThanPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME, "15");
+    query = visitor.buildQuery(lessThanPredicate);
+    assertEquals("geologicaltime.gt < 15", query);
+
+    ConjunctionPredicate greaterAndLessPredicate =
+        new ConjunctionPredicate(List.of(greaterThanPredicate, lessThanPredicate));
+    query = visitor.buildQuery(greaterAndLessPredicate);
+    assertEquals("((geologicaltime.lte > 12) AND (geologicaltime.gt < 15))", query);
+
+    InPredicate inPredicate =
+        new InPredicate(OccurrenceSearchParameter.GEOLOGICAL_TIME, List.of("12", "15"), false);
+    query = visitor.buildQuery(inPredicate);
+    assertEquals(
+        "((geologicaltime.gt >= 12 AND geologicaltime.lte <= 12) OR (geologicaltime.gt >= 15 AND geologicaltime.lte <= 15))",
+        query);
+
+    IsNotNullPredicate notNullPredicate =
+        new IsNotNullPredicate<>(OccurrenceSearchParameter.GEOLOGICAL_TIME);
+    query = visitor.buildQuery(notNullPredicate);
+    assertEquals("geologicaltime.gt IS NOT NULL", query);
   }
 
   @Test
@@ -1420,5 +1457,78 @@ public class SQLQueryVisitorTest {
     IsNotNullPredicate eq = new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] IS NOT NULL)", query);
+  }
+
+  @Test
+  public void testSequenceLengthRange() throws QueryBuildingException {
+    Predicate greaterThan =
+        new GreaterThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "10");
+    Predicate lessThan =
+        new LessThanOrEqualsPredicate<>(
+            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "20");
+    ConjunctionPredicate andPredicate = new ConjunctionPredicate(List.of(greaterThan, lessThan));
+    String query = visitor.buildQuery(andPredicate);
+    assertEquals("((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))", query);
+  }
+
+  @Test
+  public void testSequenceLengthComplexRange() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new InPredicate<>(
+                    OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of("PRESENT"), false),
+                new DisjunctionPredicate(
+                    List.of(
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "10"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"))),
+                        new ConjunctionPredicate(
+                            List.of(
+                                new GreaterThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "20"),
+                                new LessThanOrEqualsPredicate<>(
+                                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+                                    "30")))))));
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(((occurrencestatus IN('PRESENT'))) AND (((((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))) OR (((dna.sequencelength >= 20) AND (dna.sequencelength <= 30))))))",
+        query);
+  }
+
+  @Test
+  public void conjunctionWithNotPredicateTest() throws QueryBuildingException {
+    Predicate predicate =
+        new ConjunctionPredicate(
+            Arrays.asList(
+                new InPredicate(
+                    OccurrenceSearchParameter.DATASET_KEY,
+                    Arrays.asList(
+                        "b364710b-3f07-4876-a554-1943b702363f",
+                        "6595e04b-13d2-4eac-933f-73786627b5a2"),
+                    false // matchCase
+                    ),
+                new NotPredicate(
+                    new ConjunctionPredicate(
+                        Arrays.asList(
+                            new InPredicate(
+                                OccurrenceSearchParameter.INSTITUTION_KEY,
+                                List.of("75f50140-830d-4630-a290-3d6e951a7c29"),
+                                false),
+                            new InPredicate(
+                                OccurrenceSearchParameter.COLLECTION_KEY,
+                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),
+                                false))))));
+    String query = visitor.buildQuery(predicate);
+    String expectedQuery =
+        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((lower(institutionkey) IN(lower('75f50140-830d-4630-a290-3d6e951a7c29')))) AND ((lower(collectionkey) IN(lower('2294871f-f0f7-44b2-b707-e9511ff5a878')))))))";
+    assertEquals(expectedQuery, query);
   }
 }

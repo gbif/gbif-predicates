@@ -1,6 +1,8 @@
 package org.gbif.predicate.query;
 
 import static org.gbif.api.util.IsoDateParsingUtils.ISO_DATE_FORMATTER;
+import static org.gbif.predicate.query.SQLColumnsUtils.GEOLOGICAL_TIME_GT_COLUMN;
+import static org.gbif.predicate.query.SQLColumnsUtils.GEOLOGICAL_TIME_LTE_COLUMN;
 import static org.gbif.predicate.query.SQLColumnsUtils.HUMBOLDT_TAXON_COLUMNS;
 import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
@@ -138,6 +140,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               String sqlCol = sqlColumnsUtils.getSQLQueryColumn(term);
               if (String.class.isAssignableFrom(param.type())
                   && (param != OccurrenceSearchParameter.GEOMETRY)
+                  && (param != OccurrenceSearchParameter.GEOLOGICAL_TIME)
                   && !matchCase) {
                 return toSQLLower(sqlCol);
               }
@@ -216,6 +219,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       String strVal = '\'' + value.replaceAll("'", "\\\\'") + '\'';
       if (String.class.isAssignableFrom(param.type())
           && !"GEOMETRY".equals(param.name())
+          && OccurrenceSearchParameter.GEOLOGICAL_TIME != param
           && !matchCase) {
         return toSQLLower(strVal);
       }
@@ -283,7 +287,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
     }
 
-    if (useIn) {
+    if (useIn && OccurrenceSearchParameter.GEOLOGICAL_TIME != parameter) {
       visit(new InPredicate<>(parameter, values, matchCase, checklistsKey));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
@@ -418,7 +422,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         Range<Double> range = SearchTypeValidator.parseDecimalRange(predicate.getValue());
         if (range.hasLowerBound()) {
           builder
-              .append("geologicaltime.gt")
+              .append(GEOLOGICAL_TIME_GT_COLUMN)
               .append(GREATER_THAN_EQUALS_OPERATOR)
               .append(range.lowerEndpoint());
         }
@@ -427,19 +431,19 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             builder.append(CONJUNCTION_OPERATOR);
           }
           builder
-              .append("geologicaltime.lte")
+              .append(GEOLOGICAL_TIME_LTE_COLUMN)
               .append(LESS_THAN_EQUALS_OPERATOR)
               .append(range.upperEndpoint());
         }
       } else {
         builder
+            .append(GEOLOGICAL_TIME_GT_COLUMN)
+            .append(GREATER_THAN_EQUALS_OPERATOR)
             .append(predicate.getValue())
-            .append(GREATER_THAN_OPERATOR)
-            .append("geologicaltime.gt")
             .append(CONJUNCTION_OPERATOR)
-            .append(predicate.getValue())
+            .append(GEOLOGICAL_TIME_LTE_COLUMN)
             .append(LESS_THAN_EQUALS_OPERATOR)
-            .append("geologicaltime.lte");
+            .append(predicate.getValue());
       }
     } else {
       visitSimplePredicate(predicate, EQUALS_OPERATOR);
@@ -466,6 +470,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           predicateLte,
           GREATER_THAN_EQUALS_OPERATOR,
           ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      builder
+          .append(GEOLOGICAL_TIME_GT_COLUMN)
+          .append(GREATER_THAN_EQUALS_OPERATOR)
+          .append(predicate.getValue());
     } else {
       visitSimplePredicate(predicate, GREATER_THAN_EQUALS_OPERATOR);
     }
@@ -494,6 +503,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           GREATER_THAN_EQUALS_OPERATOR,
           ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
 
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      builder
+          .append(GEOLOGICAL_TIME_LTE_COLUMN)
+          .append(GREATER_THAN_OPERATOR)
+          .append(predicate.getValue());
     } else {
       visitSimplePredicate(predicate, GREATER_THAN_OPERATOR);
     }
@@ -515,6 +529,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               InternalOccurrenceSearchParameter.EVENT_DATE_GTE, predicate.getValue());
       visitSimplePredicate(
           predicateGte, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.upperEndpoint()));
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      builder
+          .append(GEOLOGICAL_TIME_LTE_COLUMN)
+          .append(LESS_THAN_EQUALS_OPERATOR)
+          .append(predicate.getValue());
     } else {
       visitSimplePredicate(predicate, LESS_THAN_EQUALS_OPERATOR);
     }
@@ -538,6 +557,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               InternalOccurrenceSearchParameter.EVENT_DATE_GTE, predicate.getValue());
       visitSimplePredicate(
           predicateGte, LESS_THAN_OPERATOR, ISO_DATE_FORMATTER.format(dateRange.lowerEndpoint()));
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      builder
+          .append(GEOLOGICAL_TIME_GT_COLUMN)
+          .append(LESS_THAN_OPERATOR)
+          .append(predicate.getValue());
     } else {
       visitSimplePredicate(predicate, LESS_THAN_OPERATOR);
     }
@@ -628,6 +652,12 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
       builder.append(')');
 
+    } else if (OccurrenceSearchParameter.GEOLOGICAL_TIME == predicate.getKey()) {
+      List<Predicate> allPredicates =
+          predicate.getValues().stream()
+              .map(v -> new EqualsPredicate<>(predicate.getKey(), v, false))
+              .collect(Collectors.toList());
+      visit(new DisjunctionPredicate(allPredicates));
     } else {
       builder
           .append('(')

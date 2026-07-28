@@ -63,7 +63,10 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
 
   @Override
   public String getExactMatchFieldName(OccurrenceSearchParameter searchParameter) {
-    if (searchParameter.type() == String.class) {
+    if (searchParameter == OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH) {
+      // special case for testing
+      return "nucleotideSequence.sequenceLength";
+    } else if (searchParameter.type() == String.class) {
       return searchParameter.name().toLowerCase() + ".keyword";
     } else {
       return searchParameter.name().toLowerCase();
@@ -111,8 +114,8 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
 
   @Override
   public String getNestedPath(OccurrenceSearchParameter param) {
-    if (param.name().startsWith("HUMBOLDT_")) {
-      return "event.humboldt";
+    if (param.name().startsWith("NUCLEOTIDE")) {
+      return "nucleotideSequence";
     }
     return null;
   }
