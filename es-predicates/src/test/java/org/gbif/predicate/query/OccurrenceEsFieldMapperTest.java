@@ -1,10 +1,10 @@
 package org.gbif.predicate.query;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;
@@ -64,7 +64,6 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   @Override
   public String getExactMatchFieldName(OccurrenceSearchParameter searchParameter) {
     if (searchParameter == OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH) {
-      // special case for testing
       return "nucleotideSequence.sequenceLength";
     } else if (searchParameter.type() == String.class) {
       return searchParameter.name().toLowerCase() + ".keyword";
@@ -126,7 +125,7 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
-  public List<FieldSortBuilder> getDefaultSort() {
+  public List<SortOptions> getDefaultSort() {
     return List.of();
   }
 
