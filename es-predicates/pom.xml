@@ -16,7 +16,7 @@
   <description>Elasticsearch support for the predicate API</description>
 
   <properties>
-    <elasticsearch.version>9.5.0</elasticsearch.version>
+    <elasticsearch.version>9.5.2</elasticsearch.version>
   </properties>
 
   <dependencies>
