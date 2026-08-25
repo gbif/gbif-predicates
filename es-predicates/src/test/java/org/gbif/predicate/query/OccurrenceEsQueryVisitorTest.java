@@ -17,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.exception.QueryBuildingException;
@@ -47,119 +50,111 @@ public class OccurrenceEsQueryVisitorTest {
   private static final OccurrenceSearchParameter PARAM2 =
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
+  private static final ObjectMapper objectMapper = new ObjectMapper();
+
   private final EsFieldMapper<OccurrenceSearchParameter> fieldMapper =
       new OccurrenceEsFieldMapperTest();
   private final OccurrenceEsQueryVisitor visitor =
       new OccurrenceEsQueryVisitor(fieldMapper, "defaultChecklistKey");
 
+  private void assertQueryEquals(String expectedJson, String actualQuery)
+      throws JsonProcessingException {
+    JsonNode expected = objectMapper.readTree(expectedJson.trim());
+    JsonNode actual = objectMapper.readTree(actualQuery);
+    assertEquals(expected, actual);
+  }
+
   @Test
-  public void testEqualsPredicate() throws QueryBuildingException {
+  public void testEqualsPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new EqualsPredicate<>(PARAM, "value", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"term\" : {\n"
-            + "          \"catalog_number.keyword\" : {\n"
-            + "            \"value\" : \"value\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"term\": {\n"
+            + "                  \"catalog_number.keyword\": {\n"
+            + "                    \"value\": \"value\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testEqualsPredicateMatchVerbatim() throws QueryBuildingException {
+  public void testEqualsPredicateMatchVerbatim()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate p = new EqualsPredicate<>(PARAM, "value", true);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"term\" : {\n"
-            + "          \"catalog_number.verbatim\" : {\n"
-            + "            \"value\" : \"value\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"term\": {\n"
+            + "                  \"catalog_number.verbatim\": {\n"
+            + "                    \"value\": \"value\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testEqualsDatePredicate() throws QueryBuildingException {
+  public void testEqualsDatePredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "2021-09-16", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"event_date\" : {\n"
-            + "            \"from\" : \"2021-09-16\",\n"
-            + "            \"to\" : \"2021-09-17\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"relation\" : \"within\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"event_date\": {\n"
+            + "                    \"gte\": \"2021-09-16\",\n"
+            + "                    \"lt\": \"2021-09-17\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     // An InPredicate should be exactly the same
     p = new InPredicate<>(OccurrenceSearchParameter.EVENT_DATE, Arrays.asList("2021-09-16"), false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"should\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"range\" : {\n"
-            + "                \"event_date\" : {\n"
-            + "                  \"from\" : \"2021-09-16\",\n"
-            + "                  \"to\" : \"2021-09-17\",\n"
-            + "                  \"include_lower\" : true,\n"
-            + "                  \"include_upper\" : false,\n"
-            + "                  \"relation\" : \"within\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"should\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"range\": {\n"
+            + "                        \"event_date\": {\n"
+            + "                          \"gte\": \"2021-09-16\",\n"
+            + "                          \"lt\": \"2021-09-17\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p =
         new InPredicate<>(
@@ -167,133 +162,105 @@ public class OccurrenceEsQueryVisitorTest {
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"should\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"range\" : {\n"
-            + "                \"event_date\" : {\n"
-            + "                  \"from\" : \"2021-09-16\",\n"
-            + "                  \"to\" : \"2021-09-17\",\n"
-            + "                  \"include_lower\" : true,\n"
-            + "                  \"include_upper\" : false,\n"
-            + "                  \"relation\" : \"within\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"should\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"range\": {\n"
+            + "                        \"event_date\": {\n"
+            + "                          \"gte\": \"2021-09-16\",\n"
+            + "                          \"lt\": \"2021-09-17\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"range\": {\n"
+            + "                        \"event_date\": {\n"
+            + "                          \"gte\": \"2024-01-17\",\n"
+            + "                          \"lt\": \"2024-01-18\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"range\" : {\n"
-            + "                \"event_date\" : {\n"
-            + "                  \"from\" : \"2024-01-17\",\n"
-            + "                  \"to\" : \"2024-01-18\",\n"
-            + "                  \"include_lower\" : true,\n"
-            + "                  \"include_upper\" : false,\n"
-            + "                  \"relation\" : \"within\",\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testEqualsRangePredicate() throws QueryBuildingException {
+  public void testEqualsRangePredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "-20.0,600", false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : -20.0,\n"
-            + "            \"to\" : 600.0,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"gte\": -20.0,\n"
+            + "                    \"lte\": 600.0\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "*,600", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : 600.0,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"lte\": 600.0\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "-20.0,*", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : -20.0,\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"gte\": -20.0\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testEqualsDateRangePredicate() throws QueryBuildingException {
+  public void testEqualsDateRangePredicate()
+      throws QueryBuildingException, JsonProcessingException {
     // Occurrences will be returned if the occurrence date/date range is
     // *completely within* the query date or date range.
     Predicate p =
@@ -301,130 +268,103 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"event_date\" : {\n"
-            + "            \"from\" : \"1980-02-01\",\n"
-            + "            \"to\" : \"2021-09-17\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"relation\" : \"within\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"event_date\": {\n"
+            + "                    \"gte\": \"1980-02-01\",\n"
+            + "                    \"lt\": \"2021-09-17\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"event_date\" : {\n"
-            + "            \"from\" : \"1980-01-01\",\n"
-            + "            \"to\" : \"1981-01-01\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"relation\" : \"within\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"event_date\": {\n"
+            + "                    \"gte\": \"1980-01-01\",\n"
+            + "                    \"lt\": \"1981-01-01\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1980,1990-05-06", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"event_date\" : {\n"
-            + "            \"from\" : \"1980-01-01\",\n"
-            + "            \"to\" : \"1990-05-07\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"relation\" : \"within\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"event_date\": {\n"
+            + "                    \"gte\": \"1980-01-01\",\n"
+            + "                    \"lt\": \"1990-05-07\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new EqualsPredicate<>(OccurrenceSearchParameter.EVENT_DATE, "1990-05-06", false);
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"event_date\" : {\n"
-            + "            \"from\" : \"1990-05-06\",\n"
-            + "            \"to\" : \"1990-05-07\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"relation\" : \"within\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"event_date\": {\n"
+            + "                    \"gte\": \"1990-05-06\",\n"
+            + "                    \"lt\": \"1990-05-07\",\n"
+            + "                    \"relation\": \"within\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    System.out.println(expectedQuery);
-    System.out.println(expectedQuery.replace(" ", "").replace("\n", ""));
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testGreaterThanOrEqualPredicate() throws QueryBuildingException {
+  public void testGreaterThanOrEqualPredicate()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "222");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : \"222\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"gte\": \"222\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p =
         new GreaterThanOrEqualsPredicate<>(
@@ -432,278 +372,213 @@ public class OccurrenceEsQueryVisitorTest {
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : \"2021-09-16\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"gte\": \"2021-09-16\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : \"2021\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"gte\": \"2021\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testGreaterThanPredicate() throws QueryBuildingException {
+  public void testGreaterThanPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new GreaterThanPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : \"1000\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : false,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"gt\": \"1000\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new GreaterThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-09-16");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : \"2021-09-16\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : false,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"gt\": \"2021-09-16\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new GreaterThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : \"2021\",\n"
-            + "            \"to\" : null,\n"
-            + "            \"include_lower\" : false,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"gt\": \"2021\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testLessThanOrEqualPredicate() throws QueryBuildingException {
+  public void testLessThanOrEqualPredicate()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"1000\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"lte\": \"1000\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-10-25");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"2021-10-25\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"lte\": \"2021-10-25\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"2021\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"lte\": \"2021\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testLessThanPredicate() throws QueryBuildingException {
+  public void testLessThanPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new LessThanPredicate<>(OccurrenceSearchParameter.ELEVATION, "1000");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"elevation\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"1000\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"elevation\": {\n"
+            + "                    \"lt\": \"1000\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new LessThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021-10-25");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"2021-10-25\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"lt\": \"2021-10-25\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
 
     p = new LessThanPredicate<>(OccurrenceSearchParameter.LAST_INTERPRETED, "2021");
     query = visitor.buildQuery(p);
     expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"last_interpreted\" : {\n"
-            + "            \"from\" : null,\n"
-            + "            \"to\" : \"2021\",\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"last_interpreted\": {\n"
+            + "                    \"lt\": \"2021\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testConjunctionPredicate() throws QueryBuildingException {
+  public void testConjunctionPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
     Predicate p3 = new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.MONTH, "12");
@@ -711,69 +586,55 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"catalog_number.keyword\" : {\n"
-            + "                  \"value\" : \"value_1\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"institution_code.keyword\": {\n"
+            + "                          \"value\": \"value_2\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"range\": {\n"
+            + "                        \"month\": {\n"
+            + "                          \"gte\": \"12\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"institution_code.keyword\" : {\n"
-            + "                  \"value\" : \"value_2\",\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"range\" : {\n"
-            + "                \"month\" : {\n"
-            + "                  \"from\" : \"12\",\n"
-            + "                  \"to\" : null,\n"
-            + "                  \"include_lower\" : true,\n"
-            + "                  \"include_upper\" : true,\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testDisjunctionPredicate() throws QueryBuildingException {
+  public void testDisjunctionPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
     Predicate p3 = new EqualsPredicate<>(PARAM, "value_3", false);
@@ -782,43 +643,35 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"should\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"institution_code.keyword\" : {\n"
-            + "                  \"value\" : \"value_2\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"should\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"institution_code.keyword\": {\n"
+            + "                          \"value\": \"value_2\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"terms\": {\n"
+            + "                  \"catalog_number.keyword\": [\"value_3\", \"value_1\"]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"terms\" : {\n"
-            + "          \"catalog_number.keyword\" : [\n"
-            + "            \"value_3\",\n"
-            + "            \"value_1\"\n"
-            + "          ],\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testDisjunctionMatchCasePredicate() throws QueryBuildingException {
+  public void testDisjunctionMatchCasePredicate()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM, "value_2", false);
 
@@ -829,62 +682,45 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"should\" : [\n"
-            + "      {\n"
-            + "        \"terms\" : {\n"
-            + "          \"catalog_number.keyword\" : [\n"
-            + "            \"value_2\",\n"
-            + "            \"value_1\"\n"
-            + "          ],\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"terms\" : {\n"
-            + "          \"catalog_number.verbatim\" : [\n"
-            + "            \"value_4\",\n"
-            + "            \"value_3\"\n"
-            + "          ],\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "          \"bool\": {\n"
+            + "            \"should\": [\n"
+            + "              {\n"
+            + "                \"terms\": {\n"
+            + "                  \"catalog_number.keyword\": [\"value_2\", \"value_1\"]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"terms\": {\n"
+            + "                  \"catalog_number.verbatim\": [\"value_4\", \"value_3\"]\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testInPredicate() throws QueryBuildingException {
+  public void testInPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"terms\" : {\n"
-            + "          \"catalog_number.keyword\" : [\n"
-            + "            \"value_1\",\n"
-            + "            \"value_2\",\n"
-            + "            \"value_3\"\n"
-            + "          ],\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"terms\": {\n"
+            + "                  \"catalog_number.keyword\": [\"value_1\", \"value_2\", \"value_3\"]\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testComplexInPredicate() throws QueryBuildingException {
+  public void testComplexInPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new InPredicate<>(PARAM, Arrays.asList("value_1", "value_2", "value_3"), false);
     Predicate p3 = new EqualsPredicate<>(PARAM2, "value_2", false);
@@ -892,108 +728,87 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"catalog_number.keyword\" : {\n"
-            + "                  \"value\" : \"value_1\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"terms\": {\n"
+            + "                        \"catalog_number.keyword\": [\"value_1\", \"value_2\", \"value_3\"]\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"institution_code.keyword\": {\n"
+            + "                          \"value\": \"value_2\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"terms\" : {\n"
-            + "                \"catalog_number.keyword\" : [\n"
-            + "                  \"value_1\",\n"
-            + "                  \"value_2\",\n"
-            + "                  \"value_3\"\n"
-            + "                ],\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"institution_code.keyword\" : {\n"
-            + "                  \"value\" : \"value_2\",\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testNotPredicate() throws QueryBuildingException {
+  public void testNotPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new NotPredicate(new EqualsPredicate<>(PARAM, "value", false));
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"catalog_number.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"must_not\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"catalog_number.keyword\" : {\n"
-            + "                  \"value\" : \"value\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"catalog_number.keyword\"\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ],\n"
+            + "            \"must_not\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testNotPredicateComplex() throws QueryBuildingException {
+  public void testNotPredicateComplex() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new EqualsPredicate<>(PARAM2, "value_2", false);
 
@@ -1003,123 +818,105 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"catalog_number.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"institution_code.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"must_not\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"value\" : \"value_1\",\n"
-            + "                        \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"catalog_number.keyword\"\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"institution_code.keyword\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ],\n"
+            + "            \"must_not\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"institution_code.keyword\": {\n"
+            + "                                \"value\": \"value_2\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
             + "                      }\n"
             + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                  ]\n"
+            + "                }\n"
             + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"institution_code.keyword\" : {\n"
-            + "                        \"value\" : \"value_2\",\n"
-            + "                        \"boost\" : 1.0\n"
-            + "                      }\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testLikePredicate() throws QueryBuildingException {
+  public void testLikePredicate() throws QueryBuildingException, JsonProcessingException {
     // NB: ? and * are wildcards (as in ES).  SQL-like _ and % are literal.
     LikePredicate<OccurrenceSearchParameter> likePredicate =
         new LikePredicate<>(PARAM, "v?l*ue_%", false);
     String query = visitor.buildQuery(likePredicate);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"wildcard\" : {\n"
-            + "          \"catalog_number.keyword\" : {\n"
-            + "            \"wildcard\" : \"v?l*ue_%\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"wildcard\": {\n"
+            + "                  \"catalog_number.keyword\": {\n"
+            + "                    \"value\": \"v?l*ue_%\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testLikeVerbatimPredicate() throws QueryBuildingException {
+  public void testLikeVerbatimPredicate() throws QueryBuildingException, JsonProcessingException {
     LikePredicate<OccurrenceSearchParameter> likePredicate =
         new LikePredicate<>(PARAM, "v?l*ue_%", true);
     String query = visitor.buildQuery(likePredicate);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"wildcard\" : {\n"
-            + "          \"catalog_number.verbatim\" : {\n"
-            + "            \"wildcard\" : \"v?l*ue_%\",\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"wildcard\": {\n"
+            + "                  \"catalog_number.verbatim\": {\n"
+            + "                    \"value\": \"v?l*ue_%\"\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testComplexLikePredicate() throws QueryBuildingException {
+  public void testComplexLikePredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new LikePredicate<>(PARAM, "value_1*", false);
     Predicate p3 = new EqualsPredicate<>(PARAM2, "value_2", false);
@@ -1127,114 +924,95 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"catalog_number.keyword\" : {\n"
-            + "                  \"value\" : \"value_1\",\n"
-            + "                  \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"wildcard\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1*\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"term\": {\n"
+            + "                        \"institution_code.keyword\": {\n"
+            + "                          \"value\": \"value_2\"\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
             + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"wildcard\" : {\n"
-            + "                \"catalog_number.keyword\" : {\n"
-            + "                  \"wildcard\" : \"value_1*\",\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"term\" : {\n"
-            + "                \"institution_code.keyword\" : {\n"
-            + "                  \"value\" : \"value_2\",\n"
-            + "                  \"boost\" : 1.0\n"
-            + "                }\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testIsNotNullPredicate() throws QueryBuildingException {
+  public void testIsNotNullPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new IsNotNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"catalog_number.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"catalog_number.keyword\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testIsNullPredicate() throws QueryBuildingException {
+  public void testIsNullPredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new IsNullPredicate<>(PARAM);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"must_not\" : [\n"
-            + "            {\n"
-            + "              \"exists\" : {\n"
-            + "                \"field\" : \"catalog_number.keyword\",\n"
-            + "                \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"must_not\": [\n"
+            + "                    {\n"
+            + "                      \"exists\": {\n"
+            + "                        \"field\": \"catalog_number.keyword\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
@@ -1246,36 +1024,30 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   @Test
-  public void testGeoDistancePredicate() throws QueryBuildingException {
+  public void testGeoDistancePredicate() throws QueryBuildingException, JsonProcessingException {
     Predicate p = new GeoDistancePredicate("10", "20", "10km");
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"geo_distance\" : {\n"
-            + "          \"coordinates\" : [\n"
-            + "            20.0,\n"
-            + "            10.0\n"
-            + "          ],\n"
-            + "          \"distance\" : 10000.0,\n"
-            + "          \"distance_type\" : \"arc\",\n"
-            + "          \"validation_method\" : \"STRICT\",\n"
-            + "          \"ignore_unmapped\" : false,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"geo_distance\": {\n"
+            + "                  \"coordinates\": {\n"
+            + "                    \"lat\": 10.0,\n"
+            + "                    \"lon\": 20.0\n"
+            + "                  },\n"
+            + "                  \"distance\": \"10.0km\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testComplexPredicateOne() throws QueryBuildingException {
+  public void testComplexPredicateOne() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new LikePredicate<>(PARAM, "value_1*", false);
     Predicate p3 = new EqualsPredicate<>(PARAM2, "value_2", false);
@@ -1285,112 +1057,92 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"catalog_number.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"exists\" : {\n"
-            + "          \"field\" : \"institution_code.keyword\",\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"must_not\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"should\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"value\" : \"value_1\",\n"
-            + "                        \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"catalog_number.keyword\"\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"exists\": {\n"
+            + "                  \"field\": \"institution_code.keyword\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ],\n"
+            + "            \"must_not\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"should\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"bool\": {\n"
+            + "                              \"filter\": [\n"
+            + "                                {\n"
+            + "                                  \"term\": {\n"
+            + "                                    \"catalog_number.keyword\": {\n"
+            + "                                      \"value\": \"value_1\"\n"
+            + "                                    }\n"
+            + "                                  }\n"
+            + "                                }\n"
+            + "                              ]\n"
+            + "                            }\n"
+            + "                          },\n"
+            + "                          {\n"
+            + "                            \"bool\": {\n"
+            + "                              \"filter\": [\n"
+            + "                                {\n"
+            + "                                  \"wildcard\": {\n"
+            + "                                    \"catalog_number.keyword\": {\n"
+            + "                                      \"value\": \"value_1*\"\n"
+            + "                                    }\n"
+            + "                                  }\n"
+            + "                                }\n"
+            + "                              ]\n"
+            + "                            }\n"
+            + "                          },\n"
+            + "                          {\n"
+            + "                            \"bool\": {\n"
+            + "                              \"filter\": [\n"
+            + "                                {\n"
+            + "                                  \"term\": {\n"
+            + "                                    \"institution_code.keyword\": {\n"
+            + "                                      \"value\": \"value_2\"\n"
+            + "                                    }\n"
+            + "                                  }\n"
+            + "                                }\n"
+            + "                              ]\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
             + "                      }\n"
             + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                  ]\n"
+            + "                }\n"
             + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
-            + "                        {\n"
-            + "                          \"term\" : {\n"
-            + "                            \"catalog_number.keyword\" : {\n"
-            + "                              \"value\" : \"value_1\",\n"
-            + "                              \"boost\" : 1.0\n"
-            + "                            }\n"
-            + "                          }\n"
-            + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
-            + "                    }\n"
-            + "                  },\n"
-            + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
-            + "                        {\n"
-            + "                          \"wildcard\" : {\n"
-            + "                            \"catalog_number.keyword\" : {\n"
-            + "                              \"wildcard\" : \"value_1*\",\n"
-            + "                              \"boost\" : 1.0\n"
-            + "                            }\n"
-            + "                          }\n"
-            + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
-            + "                    }\n"
-            + "                  },\n"
-            + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
-            + "                        {\n"
-            + "                          \"term\" : {\n"
-            + "                            \"institution_code.keyword\" : {\n"
-            + "                              \"value\" : \"value_2\",\n"
-            + "                              \"boost\" : 1.0\n"
-            + "                            }\n"
-            + "                          }\n"
-            + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testComplexPredicateTwo() throws QueryBuildingException {
+  public void testComplexPredicateTwo() throws QueryBuildingException, JsonProcessingException {
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
     Predicate p2 = new LikePredicate<>(PARAM, "value_1*", false);
     Predicate p3 = new EqualsPredicate<>(PARAM2, "value_2", false);
@@ -1402,114 +1154,93 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"should\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"value\" : \"value_1\",\n"
-            + "                        \"boost\" : 1.0\n"
-            + "                      }\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"institution_code.keyword\" : {\n"
-            + "                        \"value\" : \"value_2\",\n"
-            + "                        \"boost\" : 1.0\n"
-            + "                      }\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"exists\" : {\n"
-            + "                \"field\" : \"catalog_number.keyword\",\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"must_not\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
-            + "                        {\n"
-            + "                          \"term\" : {\n"
-            + "                            \"catalog_number.keyword\" : {\n"
-            + "                              \"value\" : \"value_1\",\n"
-            + "                              \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"should\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1\"\n"
+            + "                              }\n"
             + "                            }\n"
             + "                          }\n"
-            + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
-            + "                    }\n"
-            + "                  },\n"
-            + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
-            + "                        {\n"
-            + "                          \"wildcard\" : {\n"
-            + "                            \"catalog_number.keyword\" : {\n"
-            + "                              \"wildcard\" : \"value_1*\",\n"
-            + "                              \"boost\" : 1.0\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"institution_code.keyword\": {\n"
+            + "                                \"value\": \"value_2\"\n"
+            + "                              }\n"
             + "                            }\n"
             + "                          }\n"
-            + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
+            + "                        ]\n"
+            + "                      }\n"
             + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"exists\": {\n"
+            + "                        \"field\": \"catalog_number.keyword\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ],\n"
+            + "                  \"must_not\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"bool\": {\n"
+            + "                              \"filter\": [\n"
+            + "                                {\n"
+            + "                                  \"term\": {\n"
+            + "                                    \"catalog_number.keyword\": {\n"
+            + "                                      \"value\": \"value_1\"\n"
+            + "                                    }\n"
+            + "                                  }\n"
+            + "                                }\n"
+            + "                              ]\n"
+            + "                            }\n"
+            + "                          },\n"
+            + "                          {\n"
+            + "                            \"bool\": {\n"
+            + "                              \"filter\": [\n"
+            + "                                {\n"
+            + "                                  \"wildcard\": {\n"
+            + "                                    \"catalog_number.keyword\": {\n"
+            + "                                      \"value\": \"value_1*\"\n"
+            + "                                    }\n"
+            + "                                  }\n"
+            + "                                }\n"
+            + "                              ]\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
             + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testComplexPredicateThree() throws QueryBuildingException {
+  public void testComplexPredicateThree() throws QueryBuildingException, JsonProcessingException {
     final String wkt = "POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))";
 
     Predicate p1 = new EqualsPredicate<>(PARAM, "value_1", false);
@@ -1524,138 +1255,93 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"should\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"value\" : \"value_1\",\n"
-            + "                        \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"should\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"institution_code.keyword\": {\n"
+            + "                                \"value\": \"value_2\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"geo_shape\": {\n"
+            + "                              \"scoordinates\": {\n"
+            + "                                \"shape\": {\n"
+            + "                                  \"coordinates\": [[[30.0, 10.0], [10.0, 20.0], [20.0, 40.0], [40.0, 40.0], [30.0, 10.0]]],\n"
+            + "                                  \"type\": \"Polygon\"\n"
+            + "                                },\n"
+            + "                                \"relation\": \"within\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
             + "                      }\n"
             + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"institution_code.keyword\" : {\n"
-            + "                        \"value\" : \"value_2\",\n"
-            + "                        \"boost\" : 1.0\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"term\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
+            + "                      }\n"
+            + "                    },\n"
+            + "                    {\n"
+            + "                      \"bool\": {\n"
+            + "                        \"filter\": [\n"
+            + "                          {\n"
+            + "                            \"wildcard\": {\n"
+            + "                              \"catalog_number.keyword\": {\n"
+            + "                                \"value\": \"value_1*\"\n"
+            + "                              }\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        ]\n"
             + "                      }\n"
             + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                  ]\n"
+            + "                }\n"
             + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"geo_shape\" : {\n"
-            + "                      \"scoordinates\" : {\n"
-            + "                        \"shape\" : {\n"
-            + "                          \"type\" : \"Polygon\",\n"
-            + "                          \"coordinates\" : [\n"
-            + "                            [\n"
-            + "                              [\n"
-            + "                                30.0,\n"
-            + "                                10.0\n"
-            + "                              ],\n"
-            + "                              [\n"
-            + "                                10.0,\n"
-            + "                                20.0\n"
-            + "                              ],\n"
-            + "                              [\n"
-            + "                                20.0,\n"
-            + "                                40.0\n"
-            + "                              ],\n"
-            + "                              [\n"
-            + "                                40.0,\n"
-            + "                                40.0\n"
-            + "                              ],\n"
-            + "                              [\n"
-            + "                                30.0,\n"
-            + "                                10.0\n"
-            + "                              ]\n"
-            + "                            ]\n"
-            + "                          ]\n"
-            + "                        },\n"
-            + "                        \"relation\" : \"within\"\n"
-            + "                      },\n"
-            + "                      \"ignore_unmapped\" : false,\n"
-            + "                      \"boost\" : 1.0\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"term\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"value\" : \"value_1\",\n"
-            + "                        \"boost\" : 1.0\n"
-            + "                      }\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            },\n"
-            + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
-            + "                  {\n"
-            + "                    \"wildcard\" : {\n"
-            + "                      \"catalog_number.keyword\" : {\n"
-            + "                        \"wildcard\" : \"value_1*\",\n"
-            + "                        \"boost\" : 1.0\n"
-            + "                      }\n"
-            + "                    }\n"
-            + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
-            + "              }\n"
-            + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "            ]\n"
+            + "          }\n"
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
@@ -1670,196 +1356,167 @@ public class OccurrenceEsQueryVisitorTest {
                 String searchFieldName = fieldMapper.getExactMatchFieldName(param);
                 String query = visitor.buildQuery(p);
                 String expectedQuery =
-                    "{\n"
-                        + "  \"bool\" : {\n"
-                        + "    \"filter\" : [\n"
-                        + "      {\n"
-                        + "        \"term\" : {\n"
-                        + "          \""
+                    ("{\n"
+                        + "                      \"bool\": {\n"
+                        + "                        \"filter\": [\n"
+                        + "                          {\n"
+                        + "                            \"term\": {\n"
+                        + "                              \""
                         + searchFieldName
-                        + "\" : {\n"
-                        + "            \"value\" : \"value\",\n"
-                        + "            \"boost\" : 1.0\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "      }\n"
-                        + "    ],\n"
-                        + "    \"adjust_pure_negative\" : true,\n"
-                        + "    \"boost\" : 1.0\n"
-                        + "  }\n"
-                        + "}";
-                assertEquals(expectedQuery, query);
-              } catch (QueryBuildingException ex) {
+                        + "\": {\n"
+                        + "                                \"value\": \"value\"\n"
+                        + "                              }\n"
+                        + "                            }\n"
+                        + "                          }\n"
+                        + "                        ]\n"
+                        + "                      }\n"
+                        + "                    }\n");
+                assertQueryEquals(expectedQuery, query);
+              } catch (QueryBuildingException | JsonProcessingException ex) {
                 throw new RuntimeException(ex);
               }
             });
   }
 
   @Test
-  public void testIntInclusiveRangeWithRangePredicate() throws QueryBuildingException {
+  public void testIntInclusiveRangeWithRangePredicate()
+      throws QueryBuildingException, JsonProcessingException {
 
     RangeValue rangeValue = new RangeValue("1990", null, "2011", null);
     Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"year\" : {\n"
-            + "            \"from\" : 1990,\n"
-            + "            \"to\" : 2011,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"year\": {\n"
+            + "                    \"gte\": 1990,\n"
+            + "                    \"lte\": 2011\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testIntExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+  public void testIntExclusiveRangeWithRangePredicate()
+      throws QueryBuildingException, JsonProcessingException {
 
     RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");
     Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"year\" : {\n"
-            + "            \"from\" : 1990,\n"
-            + "            \"to\" : 2011,\n"
-            + "            \"include_lower\" : false,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"year\": {\n"
+            + "                    \"gt\": 1990,\n"
+            + "                    \"lt\": 2011\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testInclusiveExclusiveRangeWithRangePredicate() throws QueryBuildingException {
+  public void testInclusiveExclusiveRangeWithRangePredicate()
+      throws QueryBuildingException, JsonProcessingException {
 
     RangeValue rangeValue = new RangeValue("1990", null, null, "2011");
     Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"year\" : {\n"
-            + "            \"from\" : 1990,\n"
-            + "            \"to\" : 2011,\n"
-            + "            \"include_lower\" : true,\n"
-            + "            \"include_upper\" : false,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"year\": {\n"
+            + "                    \"gte\": 1990,\n"
+            + "                    \"lt\": 2011\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testExclusiveInclusiveRangeWithRangePredicate() throws QueryBuildingException {
+  public void testExclusiveInclusiveRangeWithRangePredicate()
+      throws QueryBuildingException, JsonProcessingException {
 
     RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);
     Predicate p = new RangePredicate(OccurrenceSearchParameter.YEAR, rangeValue);
     String query = visitor.buildQuery(p);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
-            + "      {\n"
-            + "        \"range\" : {\n"
-            + "          \"year\" : {\n"
-            + "            \"from\" : 1990,\n"
-            + "            \"to\" : 2011,\n"
-            + "            \"include_lower\" : false,\n"
-            + "            \"include_upper\" : true,\n"
-            + "            \"boost\" : 1.0\n"
+            + "          \"bool\": {\n"
+            + "            \"filter\": [\n"
+            + "              {\n"
+            + "                \"range\": {\n"
+            + "                  \"year\": {\n"
+            + "                    \"gt\": 1990,\n"
+            + "                    \"lte\": 2011\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              }\n"
+            + "            ]\n"
             + "          }\n"
-            + "        }\n"
-            + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
-            + "  }\n"
-            + "}";
-    assertEquals(expectedQuery, query);
+            + "        }\n";
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void testGreaterThanEqualsIncludingNull() {
+  public void testGreaterThanEqualsIncludingNull()
+      throws QueryBuildingException, JsonProcessingException {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanOrEqualsPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
+      assertQueryEquals(
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"distance_from_centroid_in_meters\" : {\n"
-              + "                  \"from\" : \"10\",\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : true,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"should\": [\n"
+              + "                      {\n"
+              + "                        \"range\": {\n"
+              + "                          \"distance_from_centroid_in_meters\": {\n"
+              + "                            \"gte\": \"10\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      },\n"
+              + "                      {\n"
+              + "                        \"bool\": {\n"
+              + "                          \"must_not\": [\n"
+              + "                            {\n"
+              + "                              \"exists\": {\n"
+              + "                                \"field\": \"distance_from_centroid_in_meters\"\n"
+              + "                              }\n"
+              + "                            }\n"
+              + "                          ]\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
               + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
+              + "                }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
+              + "          }\n",
           query);
     } catch (QueryBuildingException ex) {
       fail();
@@ -1867,54 +1524,44 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   @Test
-  public void testGreaterThanIncludingNull() {
+  public void testGreaterThanIncludingNull()
+      throws QueryBuildingException, JsonProcessingException {
     GreaterThanPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
     try {
       String query = visitor.buildQuery(distanceFromCentroidPredicate);
-      assertEquals(
+      assertQueryEquals(
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"distance_from_centroid_in_meters\" : {\n"
-              + "                  \"from\" : \"10\",\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : false,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"should\": [\n"
+              + "                      {\n"
+              + "                        \"range\": {\n"
+              + "                          \"distance_from_centroid_in_meters\": {\n"
+              + "                            \"gt\": \"10\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      },\n"
+              + "                      {\n"
+              + "                        \"bool\": {\n"
+              + "                          \"must_not\": [\n"
+              + "                            {\n"
+              + "                              \"exists\": {\n"
+              + "                                \"field\": \"distance_from_centroid_in_meters\"\n"
+              + "                              }\n"
+              + "                            }\n"
+              + "                          ]\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
               + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
+              + "                }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
+              + "          }\n",
           query);
     } catch (QueryBuildingException ex) {
       fail();
@@ -1922,7 +1569,8 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   @Test
-  public void testDisjunctionGreaterThanEqualsIncludingNull() {
+  public void testDisjunctionGreaterThanEqualsIncludingNull()
+      throws QueryBuildingException, JsonProcessingException {
     GreaterThanOrEqualsPredicate<OccurrenceSearchParameter> distanceFromCentroidPredicate =
         new GreaterThanOrEqualsPredicate<>(
             OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS, "10");
@@ -1932,94 +1580,73 @@ public class OccurrenceEsQueryVisitorTest {
         new DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
     try {
       String query = visitor.buildQuery(disjunctionPredicate);
-      assertEquals(
+      assertQueryEquals(
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"should\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.defaultChecklistKey.taxonKeys\" : {\n"
-              + "                  \"value\" : \"6\",\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"should\" : [\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"filter\" : [\n"
-              + "                  {\n"
-              + "                    \"bool\" : {\n"
-              + "                      \"should\" : [\n"
-              + "                        {\n"
-              + "                          \"range\" : {\n"
-              + "                            \"distance_from_centroid_in_meters\" : {\n"
-              + "                              \"from\" : \"10\",\n"
-              + "                              \"to\" : null,\n"
-              + "                              \"include_lower\" : true,\n"
-              + "                              \"include_upper\" : true,\n"
-              + "                              \"boost\" : 1.0\n"
-              + "                            }\n"
-              + "                          }\n"
-              + "                        },\n"
-              + "                        {\n"
-              + "                          \"bool\" : {\n"
-              + "                            \"must_not\" : [\n"
-              + "                              {\n"
-              + "                                \"exists\" : {\n"
-              + "                                  \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                                  \"boost\" : 1.0\n"
-              + "                                }\n"
-              + "                              }\n"
-              + "                            ],\n"
-              + "                            \"adjust_pure_negative\" : true,\n"
-              + "                            \"boost\" : 1.0\n"
+              + "            \"bool\": {\n"
+              + "              \"should\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"term\": {\n"
+              + "                          \"classifications.defaultChecklistKey.taxonKeys\": {\n"
+              + "                            \"value\": \"6\"\n"
               + "                          }\n"
               + "                        }\n"
-              + "                      ],\n"
-              + "                      \"adjust_pure_negative\" : true,\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
+              + "                      }\n"
+              + "                    ]\n"
               + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            },\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"distance_from_centroid_in_meters\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
+              + "                },\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"should\": [\n"
+              + "                      {\n"
+              + "                        \"bool\": {\n"
+              + "                          \"filter\": [\n"
+              + "                            {\n"
+              + "                              \"bool\": {\n"
+              + "                                \"should\": [\n"
+              + "                                  {\n"
+              + "                                    \"range\": {\n"
+              + "                                      \"distance_from_centroid_in_meters\": {\n"
+              + "                                        \"gte\": \"10\"\n"
+              + "                                      }\n"
+              + "                                    }\n"
+              + "                                  },\n"
+              + "                                  {\n"
+              + "                                    \"bool\": {\n"
+              + "                                      \"must_not\": [\n"
+              + "                                        {\n"
+              + "                                          \"exists\": {\n"
+              + "                                            \"field\": \"distance_from_centroid_in_meters\"\n"
+              + "                                          }\n"
+              + "                                        }\n"
+              + "                                      ]\n"
+              + "                                    }\n"
+              + "                                  }\n"
+              + "                                ]\n"
+              + "                              }\n"
+              + "                            }\n"
+              + "                          ]\n"
+              + "                        }\n"
+              + "                      },\n"
+              + "                      {\n"
+              + "                        \"bool\": {\n"
+              + "                          \"must_not\": [\n"
+              + "                            {\n"
+              + "                              \"exists\": {\n"
+              + "                                \"field\": \"distance_from_centroid_in_meters\"\n"
+              + "                              }\n"
+              + "                            }\n"
+              + "                          ]\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
               + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
+              + "                }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}",
+              + "          }\n",
           query);
     } catch (QueryBuildingException ex) {
       fail();
@@ -2028,7 +1655,7 @@ public class OccurrenceEsQueryVisitorTest {
 
   /** Test a single taxon key query with a checklist key specified. */
   @Test
-  public void testMultiTaxonomyPredicate() {
+  public void testMultiTaxonomyPredicate() throws JsonProcessingException {
     EqualsPredicate equalsPredicate =
         new EqualsPredicate<OccurrenceSearchParameter>(
             OccurrenceSearchParameter.TAXON_KEY,
@@ -2039,22 +1666,19 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(equalsPredicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"term\" : {\n"
-              + "          \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\" : {\n"
-              + "            \"value\" : \"urn:lsid:marinespecies.org:taxname:368663\",\n"
-              + "            \"boost\" : 1.0\n"
-              + "          }\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      assertEquals(expectedQuery, query);
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"term\": {\n"
+              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": {\n"
+              + "                      \"value\": \"urn:lsid:marinespecies.org:taxname:368663\"\n"
+              + "                    }\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
+              + "            }\n"
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -2062,7 +1686,7 @@ public class OccurrenceEsQueryVisitorTest {
 
   /** Test a single taxon key query with a checklist key specified. */
   @Test
-  public void testMultiTaxonomyPredicates() {
+  public void testMultiTaxonomyPredicates() throws JsonProcessingException {
     InPredicate inPredicate =
         new InPredicate<OccurrenceSearchParameter>(
             OccurrenceSearchParameter.TAXON_KEY,
@@ -2075,23 +1699,20 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(inPredicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"terms\" : {\n"
-              + "          \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\" : [\n"
-              + "            \"urn:lsid:marinespecies.org:taxname:368663\",\n"
-              + "            \"urn:lsid:marinespecies.org:taxname:368664\"\n"
-              + "          ],\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      assertEquals(expectedQuery, query);
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"terms\": {\n"
+              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": [\n"
+              + "                      \"urn:lsid:marinespecies.org:taxname:368663\",\n"
+              + "                      \"urn:lsid:marinespecies.org:taxname:368664\"\n"
+              + "                    ]\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
+              + "            }\n"
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -2102,7 +1723,7 @@ public class OccurrenceEsQueryVisitorTest {
    * predicate (AND).
    */
   @Test
-  public void testMultipleTaxonomiesConjunctionPredicate() {
+  public void testMultipleTaxonomiesConjunctionPredicate() throws JsonProcessingException {
 
     ConjunctionPredicate predicate =
         new ConjunctionPredicate(
@@ -2121,47 +1742,38 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.checklistkey1.taxonKeys\" : {\n"
-              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:1\",\n"
-              + "                  \"boost\" : 1.0\n"
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"term\": {\n"
+              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
+              + "                },\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"term\": {\n"
+              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
               + "                }\n"
-              + "              }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.checklistkey2.taxonKeys\" : {\n"
-              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:2\",\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
@@ -2172,7 +1784,7 @@ public class OccurrenceEsQueryVisitorTest {
    * predicate (OR).
    */
   @Test
-  public void testMultipleTaxonomiesDisjunctionPredicate() {
+  public void testMultipleTaxonomiesDisjunctionPredicate() throws JsonProcessingException {
 
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
@@ -2191,54 +1803,45 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"should\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.checklistkey1.taxonKeys\" : {\n"
-              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:1\",\n"
-              + "                  \"boost\" : 1.0\n"
+              + "            \"bool\": {\n"
+              + "              \"should\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"term\": {\n"
+              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
+              + "                },\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"term\": {\n"
+              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
               + "                }\n"
-              + "              }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"term\" : {\n"
-              + "                \"classifications.checklistkey2.taxonKeys\" : {\n"
-              + "                  \"value\" : \"urn:lsid:marinespecies.org:taxname:2\",\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testIsNotNullTaxonKeyPredicate() {
+  public void testIsNotNullTaxonKeyPredicate() throws JsonProcessingException {
 
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
@@ -2251,58 +1854,47 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"should\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"exists\" : {\n"
-              + "                \"field\" : \"classifications.test-checklist-key.taxonKeys\",\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"bool\" : {\n"
-              + "                \"must_not\" : [\n"
-              + "                  {\n"
-              + "                    \"exists\" : {\n"
-              + "                      \"field\" : \"classifications.test-checklist-key.taxonKeys\",\n"
-              + "                      \"boost\" : 1.0\n"
-              + "                    }\n"
+              + "            \"bool\": {\n"
+              + "              \"should\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"exists\": {\n"
+              + "                          \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
               + "                  }\n"
-              + "                ],\n"
-              + "                \"adjust_pure_negative\" : true,\n"
-              + "                \"boost\" : 1.0\n"
-              + "              }\n"
+              + "                },\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"bool\": {\n"
+              + "                          \"must_not\": [\n"
+              + "                            {\n"
+              + "                              \"exists\": {\n"
+              + "                                \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"
+              + "                              }\n"
+              + "                            }\n"
+              + "                          ]\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testLikeScientificNamePredicateWithChecklist() {
+  public void testLikeScientificNamePredicateWithChecklist() throws JsonProcessingException {
 
     LikePredicate predicate =
         new LikePredicate<>(
@@ -2311,30 +1903,26 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"wildcard\" : {\n"
-              + "          \"classifications.test-checklist-key.usage.name\" : {\n"
-              + "            \"wildcard\" : \"Acacia\",\n"
-              + "            \"boost\" : 1.0\n"
-              + "          }\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"wildcard\": {\n"
+              + "                    \"classifications.test-checklist-key.usage.name\": {\n"
+              + "                      \"value\": \"Acacia\"\n"
+              + "                    }\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
+              + "            }\n"
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testYearRange() {
+  public void testYearRange() throws JsonProcessingException {
 
     EqualsPredicate predicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1900,*", false);
@@ -2342,33 +1930,26 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"range\" : {\n"
-              + "          \"year\" : {\n"
-              + "            \"from\" : 1900.0,\n"
-              + "            \"to\" : null,\n"
-              + "            \"include_lower\" : true,\n"
-              + "            \"include_upper\" : true,\n"
-              + "            \"boost\" : 1.0\n"
-              + "          }\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"range\": {\n"
+              + "                    \"year\": {\n"
+              + "                      \"gte\": 1900.0\n"
+              + "                    }\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
+              + "            }\n"
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testYearRangeReversed() {
+  public void testYearRangeReversed() throws JsonProcessingException {
 
     EqualsPredicate predicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.YEAR, "*,1900", false);
@@ -2376,33 +1957,26 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"filter\" : [\n"
-              + "      {\n"
-              + "        \"range\" : {\n"
-              + "          \"year\" : {\n"
-              + "            \"from\" : null,\n"
-              + "            \"to\" : 1900.0,\n"
-              + "            \"include_lower\" : true,\n"
-              + "            \"include_upper\" : true,\n"
-              + "            \"boost\" : 1.0\n"
-              + "          }\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "            \"bool\": {\n"
+              + "              \"filter\": [\n"
+              + "                {\n"
+              + "                  \"range\": {\n"
+              + "                    \"year\": {\n"
+              + "                      \"lte\": 1900.0\n"
+              + "                    }\n"
+              + "                  }\n"
+              + "                }\n"
+              + "              ]\n"
+              + "            }\n"
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testTwoYearRanges() {
+  public void testTwoYearRanges() throws JsonProcessingException {
 
     DisjunctionPredicate conjunctionPredicate =
         new DisjunctionPredicate(
@@ -2413,60 +1987,45 @@ public class OccurrenceEsQueryVisitorTest {
       String query = visitor.buildQuery(conjunctionPredicate);
       String expectedQuery =
           "{\n"
-              + "  \"bool\" : {\n"
-              + "    \"should\" : [\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"year\" : {\n"
-              + "                  \"from\" : 1900.0,\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : true,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
+              + "            \"bool\": {\n"
+              + "              \"should\": [\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"range\": {\n"
+              + "                          \"year\": {\n"
+              + "                            \"gte\": 1900.0\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
+              + "                },\n"
+              + "                {\n"
+              + "                  \"bool\": {\n"
+              + "                    \"filter\": [\n"
+              + "                      {\n"
+              + "                        \"range\": {\n"
+              + "                          \"year\": {\n"
+              + "                            \"gte\": 2000.0\n"
+              + "                          }\n"
+              + "                        }\n"
+              + "                      }\n"
+              + "                    ]\n"
+              + "                  }\n"
               + "                }\n"
-              + "              }\n"
+              + "              ]\n"
               + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      },\n"
-              + "      {\n"
-              + "        \"bool\" : {\n"
-              + "          \"filter\" : [\n"
-              + "            {\n"
-              + "              \"range\" : {\n"
-              + "                \"year\" : {\n"
-              + "                  \"from\" : 2000.0,\n"
-              + "                  \"to\" : null,\n"
-              + "                  \"include_lower\" : true,\n"
-              + "                  \"include_upper\" : true,\n"
-              + "                  \"boost\" : 1.0\n"
-              + "                }\n"
-              + "              }\n"
-              + "            }\n"
-              + "          ],\n"
-              + "          \"adjust_pure_negative\" : true,\n"
-              + "          \"boost\" : 1.0\n"
-              + "        }\n"
-              + "      }\n"
-              + "    ],\n"
-              + "    \"adjust_pure_negative\" : true,\n"
-              + "    \"boost\" : 1.0\n"
-              + "  }\n"
-              + "}";
-      System.out.println(query);
-      assertEquals(expectedQuery, query);
+              + "          }\n";
+      assertQueryEquals(expectedQuery, query);
     } catch (QueryBuildingException ex) {
       fail();
     }
   }
 
   @Test
-  public void testRangeQueries() throws QueryBuildingException {
+  public void testRangeQueries() throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
             List.of(
@@ -2491,84 +2050,64 @@ public class OccurrenceEsQueryVisitorTest {
                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
                                     "30")))))));
     String query = visitor.buildQuery(p);
-    System.out.println(query);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
             + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
             + "            {\n"
-            + "              \"terms\" : {\n"
-            + "                \"occurrence_status\" : [\n"
-            + "                  \"PRESENT\"\n"
-            + "                ],\n"
-            + "                \"boost\" : 1.0\n"
+            + "              \"terms\": {\n"
+            + "                \"occurrence_status\": [\"PRESENT\"]\n"
             + "              }\n"
             + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
+            + "          ]\n"
             + "        }\n"
             + "      },\n"
             + "      {\n"
-            + "        \"nested\" : {\n"
-            + "          \"query\" : {\n"
-            + "            \"bool\" : {\n"
-            + "              \"filter\" : [\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
             + "                {\n"
-            + "                  \"bool\" : {\n"
-            + "                    \"should\" : [\n"
+            + "                  \"bool\": {\n"
+            + "                    \"should\": [\n"
             + "                      {\n"
-            + "                        \"range\" : {\n"
-            + "                          \"nucleotideSequence.sequenceLength\" : {\n"
-            + "                            \"from\" : \"10\",\n"
-            + "                            \"to\" : \"20\",\n"
-            + "                            \"include_lower\" : true,\n"
-            + "                            \"include_upper\" : true,\n"
-            + "                            \"boost\" : 1.0\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"10\",\n"
+            + "                            \"lte\": \"20\"\n"
             + "                          }\n"
             + "                        }\n"
             + "                      },\n"
             + "                      {\n"
-            + "                        \"range\" : {\n"
-            + "                          \"nucleotideSequence.sequenceLength\" : {\n"
-            + "                            \"from\" : \"20\",\n"
-            + "                            \"to\" : \"30\",\n"
-            + "                            \"include_lower\" : true,\n"
-            + "                            \"include_upper\" : true,\n"
-            + "                            \"boost\" : 1.0\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"20\",\n"
+            + "                            \"lte\": \"30\"\n"
             + "                          }\n"
             + "                        }\n"
             + "                      }\n"
-            + "                    ],\n"
-            + "                    \"adjust_pure_negative\" : true,\n"
-            + "                    \"boost\" : 1.0\n"
+            + "                    ]\n"
             + "                  }\n"
             + "                }\n"
-            + "              ],\n"
-            + "              \"adjust_pure_negative\" : true,\n"
-            + "              \"boost\" : 1.0\n"
+            + "              ]\n"
             + "            }\n"
             + "          },\n"
-            + "          \"path\" : \"nucleotideSequence\",\n"
-            + "          \"ignore_unmapped\" : false,\n"
-            + "          \"score_mode\" : \"none\",\n"
-            + "          \"boost\" : 1.0\n"
+            + "          \"score_mode\": \"none\"\n"
             + "        }\n"
             + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
+            + "    ]\n"
             + "  }\n"
             + "}";
-
-    assertEquals(expectedQuery, query);
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void conjunctionWithNotPredicateTest() throws QueryBuildingException {
+  public void conjunctionWithNotPredicateTest()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate predicate =
         new ConjunctionPredicate(
             Arrays.asList(
@@ -2577,8 +2116,7 @@ public class OccurrenceEsQueryVisitorTest {
                     Arrays.asList(
                         "b364710b-3f07-4876-a554-1943b702363f",
                         "6595e04b-13d2-4eac-933f-73786627b5a2"),
-                    false // matchCase
-                    ),
+                    false),
                 new NotPredicate(
                     new ConjunctionPredicate(
                         Arrays.asList(
@@ -2593,97 +2131,77 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(predicate);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
             + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
             + "            {\n"
-            + "              \"terms\" : {\n"
-            + "                \"dataset_key\" : [\n"
+            + "              \"terms\": {\n"
+            + "                \"dataset_key\": [\n"
             + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"
             + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"
-            + "                ],\n"
-            + "                \"boost\" : 1.0\n"
+            + "                ]\n"
             + "              }\n"
             + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
+            + "          ]\n"
             + "        }\n"
             + "      },\n"
             + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
             + "            {\n"
-            + "              \"exists\" : {\n"
-            + "                \"field\" : \"institution_key.keyword\",\n"
-            + "                \"boost\" : 1.0\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"institution_key.keyword\"\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
-            + "              \"exists\" : {\n"
-            + "                \"field\" : \"collection_key.keyword\",\n"
-            + "                \"boost\" : 1.0\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"collection_key.keyword\"\n"
             + "              }\n"
             + "            }\n"
             + "          ],\n"
-            + "          \"must_not\" : [\n"
+            + "          \"must_not\": [\n"
             + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
             + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
+            + "                    \"bool\": {\n"
+            + "                      \"filter\": [\n"
             + "                        {\n"
-            + "                          \"terms\" : {\n"
-            + "                            \"institution_key.keyword\" : [\n"
-            + "                              \"75f50140-830d-4630-a290-3d6e951a7c29\"\n"
-            + "                            ],\n"
-            + "                            \"boost\" : 1.0\n"
+            + "                          \"terms\": {\n"
+            + "                            \"institution_key.keyword\": [\"75f50140-830d-4630-a290-3d6e951a7c29\"]\n"
             + "                          }\n"
             + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
+            + "                      ]\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
+            + "                    \"bool\": {\n"
+            + "                      \"filter\": [\n"
             + "                        {\n"
-            + "                          \"terms\" : {\n"
-            + "                            \"collection_key.keyword\" : [\n"
-            + "                              \"2294871f-f0f7-44b2-b707-e9511ff5a878\"\n"
-            + "                            ],\n"
-            + "                            \"boost\" : 1.0\n"
+            + "                          \"terms\": {\n"
+            + "                            \"collection_key.keyword\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"
             + "                          }\n"
             + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
+            + "                      ]\n"
             + "                    }\n"
             + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                ]\n"
             + "              }\n"
             + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
+            + "          ]\n"
             + "        }\n"
             + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
+            + "    ]\n"
             + "  }\n"
             + "}";
-    assertEquals(expectedQuery, query);
+    assertQueryEquals(expectedQuery, query);
   }
 
   @Test
-  public void conjunctionWithNotPredicateAndNestedFieldTest() throws QueryBuildingException {
+  public void conjunctionWithNotPredicateAndNestedFieldTest()
+      throws QueryBuildingException, JsonProcessingException {
     Predicate predicate =
         new ConjunctionPredicate(
             Arrays.asList(
@@ -2692,8 +2210,7 @@ public class OccurrenceEsQueryVisitorTest {
                     Arrays.asList(
                         "b364710b-3f07-4876-a554-1943b702363f",
                         "6595e04b-13d2-4eac-933f-73786627b5a2"),
-                    false // matchCase
-                    ),
+                    false),
                 new NotPredicate(
                     new ConjunctionPredicate(
                         Arrays.asList(
@@ -2708,108 +2225,83 @@ public class OccurrenceEsQueryVisitorTest {
     String query = visitor.buildQuery(predicate);
     String expectedQuery =
         "{\n"
-            + "  \"bool\" : {\n"
-            + "    \"filter\" : [\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
             + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
             + "            {\n"
-            + "              \"terms\" : {\n"
-            + "                \"dataset_key\" : [\n"
+            + "              \"terms\": {\n"
+            + "                \"dataset_key\": [\n"
             + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"
             + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"
-            + "                ],\n"
-            + "                \"boost\" : 1.0\n"
+            + "                ]\n"
             + "              }\n"
             + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
+            + "          ]\n"
             + "        }\n"
             + "      },\n"
             + "      {\n"
-            + "        \"bool\" : {\n"
-            + "          \"filter\" : [\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
             + "            {\n"
-            + "              \"nested\" : {\n"
-            + "                \"query\" : {\n"
-            + "                  \"exists\" : {\n"
-            + "                    \"field\" : \"nucleotideSequence.sequenceLength\",\n"
-            + "                    \"boost\" : 1.0\n"
+            + "              \"nested\": {\n"
+            + "                \"path\": \"nucleotideSequence\",\n"
+            + "                \"query\": {\n"
+            + "                  \"exists\": {\n"
+            + "                    \"field\": \"nucleotideSequence.sequenceLength\"\n"
             + "                  }\n"
             + "                },\n"
-            + "                \"path\" : \"nucleotideSequence\",\n"
-            + "                \"ignore_unmapped\" : false,\n"
-            + "                \"score_mode\" : \"none\",\n"
-            + "                \"boost\" : 1.0\n"
+            + "                \"score_mode\": \"none\"\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
-            + "              \"exists\" : {\n"
-            + "                \"field\" : \"collection_key.keyword\",\n"
-            + "                \"boost\" : 1.0\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"collection_key.keyword\"\n"
             + "              }\n"
             + "            }\n"
             + "          ],\n"
-            + "          \"must_not\" : [\n"
+            + "          \"must_not\": [\n"
             + "            {\n"
-            + "              \"bool\" : {\n"
-            + "                \"filter\" : [\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
             + "                  {\n"
-            + "                    \"bool\" : {\n"
-            + "                      \"filter\" : [\n"
+            + "                    \"bool\": {\n"
+            + "                      \"filter\": [\n"
             + "                        {\n"
-            + "                          \"terms\" : {\n"
-            + "                            \"collection_key.keyword\" : [\n"
-            + "                              \"2294871f-f0f7-44b2-b707-e9511ff5a878\"\n"
-            + "                            ],\n"
-            + "                            \"boost\" : 1.0\n"
+            + "                          \"terms\": {\n"
+            + "                            \"collection_key.keyword\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"
             + "                          }\n"
             + "                        }\n"
-            + "                      ],\n"
-            + "                      \"adjust_pure_negative\" : true,\n"
-            + "                      \"boost\" : 1.0\n"
+            + "                      ]\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
-            + "                    \"nested\" : {\n"
-            + "                      \"query\" : {\n"
-            + "                        \"bool\" : {\n"
-            + "                          \"filter\" : [\n"
+            + "                    \"nested\": {\n"
+            + "                      \"path\": \"nucleotideSequence\",\n"
+            + "                      \"query\": {\n"
+            + "                        \"bool\": {\n"
+            + "                          \"filter\": [\n"
             + "                            {\n"
-            + "                              \"terms\" : {\n"
-            + "                                \"nucleotideSequence.sequenceLength\" : [\n"
-            + "                                  \"7\"\n"
-            + "                                ],\n"
-            + "                                \"boost\" : 1.0\n"
+            + "                              \"terms\": {\n"
+            + "                                \"nucleotideSequence.sequenceLength\": [\"7\"]\n"
             + "                              }\n"
             + "                            }\n"
-            + "                          ],\n"
-            + "                          \"adjust_pure_negative\" : true,\n"
-            + "                          \"boost\" : 1.0\n"
+            + "                          ]\n"
             + "                        }\n"
             + "                      },\n"
-            + "                      \"path\" : \"nucleotideSequence\",\n"
-            + "                      \"ignore_unmapped\" : false,\n"
-            + "                      \"score_mode\" : \"none\",\n"
-            + "                      \"boost\" : 1.0\n"
+            + "                      \"score_mode\": \"none\"\n"
             + "                    }\n"
             + "                  }\n"
-            + "                ],\n"
-            + "                \"adjust_pure_negative\" : true,\n"
-            + "                \"boost\" : 1.0\n"
+            + "                ]\n"
             + "              }\n"
             + "            }\n"
-            + "          ],\n"
-            + "          \"adjust_pure_negative\" : true,\n"
-            + "          \"boost\" : 1.0\n"
+            + "          ]\n"
             + "        }\n"
             + "      }\n"
-            + "    ],\n"
-            + "    \"adjust_pure_negative\" : true,\n"
-            + "    \"boost\" : 1.0\n"
+            + "    ]\n"
             + "  }\n"
             + "}";
-    assertEquals(expectedQuery, query);
+    assertQueryEquals(expectedQuery, query);
   }
 }
