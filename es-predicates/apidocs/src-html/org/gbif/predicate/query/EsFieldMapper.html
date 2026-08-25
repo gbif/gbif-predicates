@@ -13,43 +13,43 @@
 <div class="source-container">
 <pre><span class="source-line-no">001</span><span id="line-1">package org.gbif.predicate.query;</span>
 <span class="source-line-no">002</span><span id="line-2"></span>
-<span class="source-line-no">003</span><span id="line-3">import java.util.List;</span>
-<span class="source-line-no">004</span><span id="line-4">import java.util.Optional;</span>
-<span class="source-line-no">005</span><span id="line-5">import org.elasticsearch.common.Strings;</span>
-<span class="source-line-no">006</span><span id="line-6">import org.elasticsearch.index.query.QueryBuilder;</span>
-<span class="source-line-no">007</span><span id="line-7">import org.elasticsearch.index.query.RangeQueryBuilder;</span>
-<span class="source-line-no">008</span><span id="line-8">import org.elasticsearch.search.sort.FieldSortBuilder;</span>
-<span class="source-line-no">009</span><span id="line-9">import org.gbif.api.model.common.search.SearchParameter;</span>
-<span class="source-line-no">010</span><span id="line-10">import org.gbif.api.model.predicate.SimplePredicate;</span>
-<span class="source-line-no">011</span><span id="line-11"></span>
-<span class="source-line-no">012</span><span id="line-12">public interface EsFieldMapper&lt;P extends SearchParameter&gt; {</span>
-<span class="source-line-no">013</span><span id="line-13"></span>
-<span class="source-line-no">014</span><span id="line-14">  String getVerbatimFieldName(P searchParameter);</span>
-<span class="source-line-no">015</span><span id="line-15"></span>
-<span class="source-line-no">016</span><span id="line-16">  String getExactMatchFieldName(P searchParameter);</span>
-<span class="source-line-no">017</span><span id="line-17"></span>
-<span class="source-line-no">018</span><span id="line-18">  String getGeoDistanceField();</span>
-<span class="source-line-no">019</span><span id="line-19"></span>
-<span class="source-line-no">020</span><span id="line-20">  String getGeoShapeField();</span>
-<span class="source-line-no">021</span><span id="line-21"></span>
-<span class="source-line-no">022</span><span id="line-22">  String getSearchFieldName(P searchParameter);</span>
-<span class="source-line-no">023</span><span id="line-23"></span>
-<span class="source-line-no">024</span><span id="line-24">  boolean isVocabulary(P searchParameter);</span>
-<span class="source-line-no">025</span><span id="line-25"></span>
-<span class="source-line-no">026</span><span id="line-26">  String getChecklistField(String checklistKey, P searchParameter);</span>
-<span class="source-line-no">027</span><span id="line-27"></span>
-<span class="source-line-no">028</span><span id="line-28">  String getNestedPath(P searchParameter);</span>
-<span class="source-line-no">029</span><span id="line-29"></span>
-<span class="source-line-no">030</span><span id="line-30">  String getFullTextField();</span>
-<span class="source-line-no">031</span><span id="line-31"></span>
-<span class="source-line-no">032</span><span id="line-32">  List&lt;FieldSortBuilder&gt; getDefaultSort();</span>
-<span class="source-line-no">033</span><span id="line-33"></span>
-<span class="source-line-no">034</span><span id="line-34">  default Optional&lt;QueryBuilder&gt; getDefaultFilter() {</span>
-<span class="source-line-no">035</span><span id="line-35">    return Optional.empty();</span>
-<span class="source-line-no">036</span><span id="line-36">  }</span>
-<span class="source-line-no">037</span><span id="line-37"></span>
-<span class="source-line-no">038</span><span id="line-38">  default boolean isNestedField(P searchParameter) {</span>
-<span class="source-line-no">039</span><span id="line-39">    return !Strings.isNullOrEmpty(getNestedPath(searchParameter));</span>
+<span class="source-line-no">003</span><span id="line-3">import co.elastic.clients.elasticsearch._types.SortOptions;</span>
+<span class="source-line-no">004</span><span id="line-4">import co.elastic.clients.elasticsearch._types.query_dsl.Query;</span>
+<span class="source-line-no">005</span><span id="line-5">import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;</span>
+<span class="source-line-no">006</span><span id="line-6">import java.util.List;</span>
+<span class="source-line-no">007</span><span id="line-7">import java.util.Optional;</span>
+<span class="source-line-no">008</span><span id="line-8">import org.gbif.api.model.common.search.SearchParameter;</span>
+<span class="source-line-no">009</span><span id="line-9">import org.gbif.api.model.predicate.SimplePredicate;</span>
+<span class="source-line-no">010</span><span id="line-10"></span>
+<span class="source-line-no">011</span><span id="line-11">public interface EsFieldMapper&lt;P extends SearchParameter&gt; {</span>
+<span class="source-line-no">012</span><span id="line-12"></span>
+<span class="source-line-no">013</span><span id="line-13">  String getVerbatimFieldName(P searchParameter);</span>
+<span class="source-line-no">014</span><span id="line-14"></span>
+<span class="source-line-no">015</span><span id="line-15">  String getExactMatchFieldName(P searchParameter);</span>
+<span class="source-line-no">016</span><span id="line-16"></span>
+<span class="source-line-no">017</span><span id="line-17">  String getGeoDistanceField();</span>
+<span class="source-line-no">018</span><span id="line-18"></span>
+<span class="source-line-no">019</span><span id="line-19">  String getGeoShapeField();</span>
+<span class="source-line-no">020</span><span id="line-20"></span>
+<span class="source-line-no">021</span><span id="line-21">  String getSearchFieldName(P searchParameter);</span>
+<span class="source-line-no">022</span><span id="line-22"></span>
+<span class="source-line-no">023</span><span id="line-23">  boolean isVocabulary(P searchParameter);</span>
+<span class="source-line-no">024</span><span id="line-24"></span>
+<span class="source-line-no">025</span><span id="line-25">  String getChecklistField(String checklistKey, P searchParameter);</span>
+<span class="source-line-no">026</span><span id="line-26"></span>
+<span class="source-line-no">027</span><span id="line-27">  String getNestedPath(P searchParameter);</span>
+<span class="source-line-no">028</span><span id="line-28"></span>
+<span class="source-line-no">029</span><span id="line-29">  String getFullTextField();</span>
+<span class="source-line-no">030</span><span id="line-30"></span>
+<span class="source-line-no">031</span><span id="line-31">  List&lt;SortOptions&gt; getDefaultSort();</span>
+<span class="source-line-no">032</span><span id="line-32"></span>
+<span class="source-line-no">033</span><span id="line-33">  default Optional&lt;Query&gt; getDefaultFilter() {</span>
+<span class="source-line-no">034</span><span id="line-34">    return Optional.empty();</span>
+<span class="source-line-no">035</span><span id="line-35">  }</span>
+<span class="source-line-no">036</span><span id="line-36"></span>
+<span class="source-line-no">037</span><span id="line-37">  default boolean isNestedField(P searchParameter) {</span>
+<span class="source-line-no">038</span><span id="line-38">    String path = getNestedPath(searchParameter);</span>
+<span class="source-line-no">039</span><span id="line-39">    return path != null &amp;&amp; !path.isBlank();</span>
 <span class="source-line-no">040</span><span id="line-40">  }</span>
 <span class="source-line-no">041</span><span id="line-41"></span>
 <span class="source-line-no">042</span><span id="line-42">  /**</span>
@@ -73,7 +73,7 @@
 <span class="source-line-no">060</span><span id="line-60">   * Adds an "is null" filter if the mapper instructs to do it for the range query. Used mostly in</span>
 <span class="source-line-no">061</span><span id="line-61">   * range queries to give specific semantics to null values.</span>
 <span class="source-line-no">062</span><span id="line-62">   */</span>
-<span class="source-line-no">063</span><span id="line-63">  default boolean includeNullInRange(P param, RangeQueryBuilder rangeQueryBuilder) {</span>
+<span class="source-line-no">063</span><span id="line-63">  default boolean includeNullInRange(P param, RangeQuery rangeQuery) {</span>
 <span class="source-line-no">064</span><span id="line-64">    return false;</span>
 <span class="source-line-no">065</span><span id="line-65">  }</span>
 <span class="source-line-no">066</span><span id="line-66"></span>
