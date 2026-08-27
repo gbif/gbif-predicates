@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.exception.QueryBuildingException;
-import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.occurrence.search.InternalOccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -119,8 +118,30 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   // used when there is a column that exists in more than one table
   private final SQLColumnsUtils sqlColumnsUtils;
 
+  private final String denormalisedTaxonomy;
+
+  private final Map<String, String> checklistNestedStructMap;
+
+  /**
+   * Constructor for SQLQueryVisitor.
+   *
+   * @param sqlTermsMapper mapper for search parameters to SQL terms
+   * @param denormalisedTaxonomy the checklist key (UUID) of the taxonomy that populates the non
+   *     nested struct columns in the table
+   * @param checklistNestedStructMap the map of checklist keys to nested struct names for taxonomic
+   *     queries
+   * @param defaultChecklistKey the checklist key to use when none is provided in the predicate.
+   * @param disambiguationTable the table to use for disambiguating columns that exist in more than
+   *     one table
+   */
   public SQLQueryVisitor(
-      SQLTermsMapper<S> sqlTermsMapper, String defaultChecklistKey, String disambiguationTable) {
+      SQLTermsMapper<S> sqlTermsMapper,
+      String denormalisedTaxonomy,
+      Map<String, String> checklistNestedStructMap,
+      String defaultChecklistKey,
+      String disambiguationTable) {
+    this.denormalisedTaxonomy = denormalisedTaxonomy;
+    this.checklistNestedStructMap = checklistNestedStructMap;
     this.sqlTermsMapper = sqlTermsMapper;
     this.defaultChecklistKey = defaultChecklistKey;
     sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
@@ -486,7 +507,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  getTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
+                  resolveTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
                   predicate.getValue()))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
@@ -495,12 +516,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  getTaxonColumnName("issues", predicate.getChecklistKey()), predicate.getValue()))
+                  resolveTaxonColumnName("issues", predicate.getChecklistKey()),
+                  predicate.getValue()))
           .append(')');
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       builder
-          .append(getTaxonColumnName(columnName, predicate.getChecklistKey()))
+          .append(resolveTaxonColumnName(columnName, predicate.getChecklistKey()))
           .append(EQUALS_OPERATOR)
           .append('\'')
           .append(predicate.getValue())
@@ -508,12 +530,29 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
-  public String getTaxonColumnName(String sqlField, String suppliedChecklistKey) {
+  /**
+   * Resolves the column name for a taxon field based on the checklist key. If the checklist key is
+   * not the denormalised taxonomy, it will prepend the appropriate nested struct prefix to the
+   * column name.
+   *
+   * @param sqlField the SQL field name to resolve
+   * @param suppliedChecklistKey the checklist key provided in the predicate, may be null
+   * @return the resolved column name with the appropriate prefix if necessary
+   * @throws IllegalArgumentException if the checklist key is not mapped to a nested struct in the
+   *     table
+   */
+  public String resolveTaxonColumnName(String sqlField, String suppliedChecklistKey) {
     String queryFieldPrefix = "";
     String checklistKey = getChecklistKey(suppliedChecklistKey);
-    if (!Constants.COL_DATASET_KEY.toString().equals(checklistKey)) {
-      // FIXME: support for other checklists needed
-      queryFieldPrefix = "gbif_classification.";
+    if (!denormalisedTaxonomy.equals(checklistKey)) {
+      if (checklistNestedStructMap.containsKey(checklistKey)) {
+        queryFieldPrefix = checklistNestedStructMap.get(checklistKey) + ".";
+      } else {
+        throw new IllegalArgumentException(
+            "Checklist key "
+                + checklistKey
+                + " is not mapped to a nested struct in the table. Please add it to the checklistNestedStructMap.");
+      }
     }
     return queryFieldPrefix + sqlField;
   }
@@ -831,24 +870,18 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyIsNotNull(IsNotNullPredicate<S> predicate) {
-    builder.append('(');
+
+    String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
     builder.append(
         String.format(
-            "classificationdetails['%s']['%s'] IS NOT NULL",
-            getChecklistKey(predicate.getChecklistKey()),
-            predicate.getParameter().name().replace("_", "").toLowerCase()));
-    builder.append(')');
+            "%s IS NOT NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
   }
 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyNull(IsNullPredicate<S> predicate) {
-    builder.append('(');
+    String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
     builder.append(
-        String.format(
-            "classificationdetails['%s']['%s'] IS NULL",
-            getChecklistKey(predicate.getChecklistKey()),
-            predicate.getParameter().name().replace("_", "").toLowerCase()));
-    builder.append(')');
+        String.format("%s IS NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
   }
 
   public void visit(WithinPredicate within) throws QueryBuildingException {
@@ -1151,7 +1184,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "arrays_overlap(%s, array(%s))",
-                getTaxonColumnName(sqlField, getChecklistKey(taxonKeyPredicate.getChecklistKey())),
+                resolveTaxonColumnName(
+                    sqlField, getChecklistKey(taxonKeyPredicate.getChecklistKey())),
                 formatArray(taxonKeyPredicate.getValues())))
         .append(')');
   }
@@ -1175,7 +1209,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "%s = '%s'",
-                getTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
+                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
                 taxonPredicate.getValue()))
         .append(')');
   }
@@ -1192,7 +1226,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "%s IN array(%s)",
-                getTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
+                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
                 formatArray(taxonPredicate.getValues())))
         .append(')');
   }
@@ -1239,7 +1273,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   // using 'taxonkey' as it needs to be a recognised column
                   // to get past calcite validation
                   "EXISTS(%s, taxonkey -> taxonkey IN (%s))",
-                  getTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
+                  resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
                   formatArray(taxonKeys)))
           .append(')');
     } else {
@@ -1248,7 +1282,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "arrays_overlap(%s, array(%s))",
-                  getTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
+                  resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
                   formatArray(taxonKeys)))
           .append(')');
     }

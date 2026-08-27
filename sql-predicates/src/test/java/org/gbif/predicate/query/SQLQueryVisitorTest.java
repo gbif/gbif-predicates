@@ -17,12 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.gbif.api.exception.QueryBuildingException;
@@ -60,14 +55,25 @@ public class SQLQueryVisitorTest {
   private static final OccurrenceSearchParameter PARAM2 =
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
+  private final Map<String, String> checklistKeyMap =
+      Map.of(Constants.NUB_DATASET_KEY.toString(), "gbif_classification");
+
   private final SQLQueryVisitor visitor =
-      new SQLQueryVisitor(new OccurrenceTermsMapper(), "defaultChecklistKey", "occurrence");
+      new SQLQueryVisitor(
+          new OccurrenceTermsMapper(),
+          Constants.COL_DATASET_KEY.toString(),
+          checklistKeyMap,
+          Constants.NUB_DATASET_KEY.toString(),
+          "occurrence");
 
   @Test
   public void testComplexQuery() throws QueryBuildingException {
     Predicate aves =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "212", false, "someChecklistKey");
+            OccurrenceSearchParameter.TAXON_KEY,
+            "212",
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     Predicate passer =
         new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
@@ -84,11 +90,36 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testComplexQueryCol() throws QueryBuildingException {
+    Predicate aves =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            "212",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    Predicate passer =
+        new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
+    Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
+    Predicate before1989 = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1989");
+    Predicate georeferencedPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.HAS_COORDINATE, "true", false);
+
+    ConjunctionPredicate p =
+        new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
+    String where = visitor.buildQuery(p);
+    assertEquals(
+        "(((stringArrayContains(taxonkeys, '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        where);
+  }
+
+  @Test
   public void testMoreComplexQuery() throws QueryBuildingException {
     Predicate taxon1 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY.toString());
     Predicate taxon2 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY.toString());
     DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
@@ -152,9 +183,11 @@ public class SQLQueryVisitorTest {
   @Test
   public void testDisjunctionToInTaxonPredicate() throws QueryBuildingException {
     Predicate p1 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, "someChecklistKey");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY.toString());
     Predicate p2 =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, "someChecklistKey");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY.toString());
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
@@ -355,7 +388,10 @@ public class SQLQueryVisitorTest {
   public void testInPredicateTaxonKey() throws QueryBuildingException {
     Predicate p =
         new InPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
+            OccurrenceSearchParameter.TAXON_KEY,
+            List.of("1", "2"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
     assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
@@ -632,22 +668,32 @@ public class SQLQueryVisitorTest {
   public void testIsNotNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] IS NOT NULL)", query);
+    assertEquals("gbif_classification.taxonkey IS NOT NULL", query);
   }
 
   @Test
   public void testIsNullTaxonKey() throws QueryBuildingException {
     Predicate p = new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY);
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['defaultChecklistKey']['taxonkey'] IS NULL)", query);
+    assertEquals("gbif_classification.taxonkey IS NULL", query);
   }
 
   @Test
   public void testIsNullTaxonKeyWithChecklistKey() throws QueryBuildingException {
     IsNullPredicate p =
-        new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "my-checklist-key");
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals("(classificationdetails['my-checklist-key']['taxonkey'] IS NULL)", query);
+    assertEquals("gbif_classification.taxonkey IS NULL", query);
+  }
+
+  @Test
+  public void testIsNullTaxonKeyWithColChecklistKey() throws QueryBuildingException {
+    IsNullPredicate p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("taxonkey IS NULL", query);
   }
 
   @Test
@@ -1290,7 +1336,8 @@ public class SQLQueryVisitorTest {
   @Test
   public void testMultiTaxonomyEqualsPredicate() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("(stringArrayContains(gbif_classification.taxonkeys, '6', true))", query);
   }
@@ -1299,7 +1346,10 @@ public class SQLQueryVisitorTest {
   public void testMultiTaxonomyInPredicate() throws QueryBuildingException {
     InPredicate<OccurrenceSearchParameter> inPredicate =
         new InPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
+            OccurrenceSearchParameter.TAXON_KEY,
+            List.of("6", "7"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(inPredicate);
     assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('6','7')))", query);
   }
@@ -1310,13 +1360,17 @@ public class SQLQueryVisitorTest {
         new DisjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "6",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString()),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "7",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString())));
     String query = visitor.buildQuery(predicate);
-    assertEquals(
-        "(((stringArrayContains(gbif_classification.taxonkeys, '6', true))) OR ((stringArrayContains(gbif_classification.taxonkeys, '7', true))))",
-        query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('6','7')))", query);
   }
 
   @Test
@@ -1325,9 +1379,15 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid-1"),
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "6",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString()),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
+                    OccurrenceSearchParameter.TAXON_KEY,
+                    "7",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString())));
     String query = visitor.buildQuery(predicate);
     assertEquals(
         "(((stringArrayContains(gbif_classification.taxonkeys, '6', true))) AND ((stringArrayContains(gbif_classification.taxonkeys, '7', true))))",
@@ -1338,7 +1398,10 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicIssuePredicate() throws QueryBuildingException {
     EqualsPredicate eq =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_ISSUE, "6", false, "my-checklist-uuid-1");
+            OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+            "6",
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
     assertEquals("(stringArrayContains(gbif_classification.issues, '6', true))", query);
   }
@@ -1347,7 +1410,10 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicStatusPredicate() throws QueryBuildingException {
     EqualsPredicate eq =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_STATUS, "SYNONYM", false, "my-checklist-uuid-1");
+            OccurrenceSearchParameter.TAXONOMIC_STATUS,
+            "SYNONYM",
+            false,
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
     assertEquals("gbif_classification.taxonomicstatus = 'SYNONYM'", query);
   }
@@ -1382,9 +1448,15 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(
             Arrays.asList(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXONOMIC_ISSUE, "6", false, "my-checklist-uuid-1"),
+                    OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+                    "6",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString()),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXONOMIC_ISSUE, "7", false, "my-checklist-uuid-2")));
+                    OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+                    "7",
+                    false,
+                    Constants.NUB_DATASET_KEY.toString())));
     String query = visitor.buildQuery(predicate);
     assertEquals(
         "(((stringArrayContains(gbif_classification.issues, '6', true))) AND ((stringArrayContains(gbif_classification.issues, '7', true))))",
@@ -1455,24 +1527,44 @@ public class SQLQueryVisitorTest {
   @Test
   public void testTaxonKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate eq =
-        new IsNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] IS NULL)", query);
+    assertEquals("gbif_classification.kingdomkey IS NULL", query);
+  }
+
+  @Test
+  public void testColTaxonKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate eq =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(eq);
+    assertEquals("kingdomkey IS NULL", query);
   }
 
   @Test
   public void testTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate eq =
-        new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "my-checklist-uuid-1");
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['my-checklist-uuid-1']['kingdomkey'] IS NOT NULL)", query);
+    assertEquals("gbif_classification.kingdomkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testColTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate eq =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(eq);
+    assertEquals("classkey IS NOT NULL", query);
   }
 
   @Test
   public void testTaxonKeyIsNotNullPredicateWithoutChecklistKey() throws QueryBuildingException {
     IsNotNullPredicate eq = new IsNotNullPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY);
     String query = visitor.buildQuery(eq);
-    assertEquals("(classificationdetails['defaultChecklistKey']['kingdomkey'] IS NOT NULL)", query);
+    assertEquals("gbif_classification.kingdomkey IS NOT NULL", query);
   }
 
   @Test
