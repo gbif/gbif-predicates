@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
@@ -77,7 +79,7 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((stringArrayContains(classifications['someChecklistKey'], '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((stringArrayContains(gbif_classification.taxonkeys, '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
@@ -106,7 +108,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))) "
+        "(((arrays_overlap(gbif_classification.taxonkeys, array('1','2')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -157,7 +159,7 @@ public class SQLQueryVisitorTest {
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
+        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -295,12 +297,11 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
-  public void testInPredicateDefaultTaxonKey() throws QueryBuildingException {
+  public void testInPredicateDefaultSmallTaxonKeyList() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(EXISTS(classifications['defaultChecklistKey'], taxonkey -> taxonkey IN ('2','1')))",
-        query);
+        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -313,7 +314,23 @@ public class SQLQueryVisitorTest {
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(EXISTS(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], taxonkey -> taxonkey IN ('2','1')))",
+        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+  }
+
+  @Test
+  public void testInPredicateBackboneTaxonKeyLargeKeySet() throws QueryBuildingException {
+
+    List<String> ids =
+        IntStream.rangeClosed(1, 51).mapToObj(String::valueOf).collect(Collectors.toList());
+
+    Predicate p =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, ids, false, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals(
+        "(EXISTS(gbif_classification.taxonkeys, taxonkey -> taxonkey IN ("
+            + String.join(",", ids.stream().map(s -> "'" + s + "'").toArray(String[]::new))
+            + ")))",
         query);
   }
 
@@ -327,7 +344,7 @@ public class SQLQueryVisitorTest {
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(taxonkey IN('1','2') OR acceptedtaxonkey IN('1','2') OR kingdomkey IN('1','2') OR phylumkey IN('1','2') OR classkey IN('1','2') OR orderkey IN('1','2') OR familykey IN('1','2') OR genuskey IN('1','2') OR specieskey IN('1','2'))",
+        "(arrays_overlap(taxonkeys, array('1','2')))",
         query);
   }
 
@@ -337,8 +354,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, null);
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(EXISTS(classifications['defaultChecklistKey'], taxonkey -> taxonkey IN ('2','1')))",
-        query);
+        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -348,7 +364,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(EXISTS(classifications['someChecklistKey'], taxonkey -> taxonkey IN ('2','1')))", query);
+        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -1015,7 +1031,7 @@ public class SQLQueryVisitorTest {
                 List.of("TAXON_MATCH_HIGHERRANK", "TAXON_MATCH_NONE"),
                 false));
     assertEquals(
-        "(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))",
+        "(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))(issue IN('TAXON_MATCH_HIGHERRANK', 'TAXON_MATCH_NONE'))",
         query);
 
     // LikePredicate
@@ -1201,7 +1217,7 @@ public class SQLQueryVisitorTest {
         new DisjunctionPredicate(Arrays.asList(equalsPredicate, distanceFromCentroidPredicate));
     String query = visitor.buildQuery(disjunctionPredicate);
     assertEquals(
-        "(((stringArrayContains(classifications['defaultChecklistKey'], '6', true))) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
+        "(((stringArrayContains(gbif_classification.taxonkeys, '6', true))) OR ((distancefromcentroidinmeters >= 10 OR distancefromcentroidinmeters IS NULL)))",
         query);
   }
 
@@ -1275,9 +1291,7 @@ public class SQLQueryVisitorTest {
             "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
 
     String query = visitor.buildQuery(equalsPredicate);
-    assertEquals(
-        "(stringArrayContains(classifications['d7dddbf4-2cf0-4f39-9b2a-bb099caae36c'], '6', true))",
-        query);
+    assertEquals("(stringArrayContains(gbif_classification.taxonkeys, '6', true))", query);
   }
 
   @Test
@@ -1285,7 +1299,7 @@ public class SQLQueryVisitorTest {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "6", false, "my-checklist-uuid");
     String query = visitor.buildQuery(equalsPredicate);
-    assertEquals("(stringArrayContains(classifications['my-checklist-uuid'], '6', true))", query);
+    assertEquals("(stringArrayContains(gbif_classification.taxonkeys, '6', true))", query);
   }
 
   @Test
@@ -1294,8 +1308,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("6", "7"), false, "my-checklist-uuid");
     String query = visitor.buildQuery(inPredicate);
-    assertEquals(
-        "(EXISTS(classifications['my-checklist-uuid'], taxonkey -> taxonkey IN ('7','6')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('6','7')))", query);
   }
 
   @Test
@@ -1309,7 +1322,7 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
     String query = visitor.buildQuery(predicate);
     assertEquals(
-        "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) OR ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+        "(((stringArrayContains(gbif_classification.taxonkeys, '6', true))) OR ((stringArrayContains(gbif_classification.taxonkeys, '7', true))))",
         query);
   }
 
@@ -1324,7 +1337,7 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY, "7", false, "my-checklist-uuid-2")));
     String query = visitor.buildQuery(predicate);
     assertEquals(
-        "(((stringArrayContains(classifications['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(classifications['my-checklist-uuid-2'], '7', true))))",
+        "(((stringArrayContains(gbif_classification.taxonkeys, '6', true))) AND ((stringArrayContains(gbif_classification.taxonkeys, '7', true))))",
         query);
   }
 
@@ -1334,7 +1347,7 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(
             OccurrenceSearchParameter.TAXONOMIC_ISSUE, "6", false, "my-checklist-uuid-1");
     String query = visitor.buildQuery(eq);
-    assertEquals("(stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))", query);
+    assertEquals("(stringArrayContains(gbif_classification.issues, '6', true))", query);
   }
 
   @Test
@@ -1343,7 +1356,7 @@ public class SQLQueryVisitorTest {
         new EqualsPredicate<>(
             OccurrenceSearchParameter.TAXONOMIC_STATUS, "SYNONYM", false, "my-checklist-uuid-1");
     String query = visitor.buildQuery(eq);
-    assertEquals("(taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM')", query);
+    assertEquals("gbif_classification.taxonomicstatus = 'SYNONYM'", query);
   }
 
   @Test
@@ -1353,11 +1366,23 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             List.of("SYNONYM", "ACCEPTED"),
             false,
-            "my-checklist-uuid-1");
+            Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
     assertEquals(
-        "((taxonomicstatuses['my-checklist-uuid-1'] = 'SYNONYM') OR (taxonomicstatuses['my-checklist-uuid-1'] = 'ACCEPTED'))",
+        "(gbif_classification.taxonomicstatus IN array('SYNONYM','ACCEPTED'))",
         query);
+  }
+
+  @Test
+  public void testColTaxonomicStatusMultiplePredicate() throws QueryBuildingException {
+    InPredicate eq =
+        new InPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS,
+            List.of("SYNONYM", "ACCEPTED"),
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(eq);
+    assertEquals("(taxonomicstatus IN array('SYNONYM','ACCEPTED'))", query);
   }
 
   @Test
@@ -1371,7 +1396,7 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXONOMIC_ISSUE, "7", false, "my-checklist-uuid-2")));
     String query = visitor.buildQuery(predicate);
     assertEquals(
-        "(((stringArrayContains(taxonomicissue['my-checklist-uuid-1'], '6', true))) AND ((stringArrayContains(taxonomicissue['my-checklist-uuid-2'], '7', true))))",
+        "(((stringArrayContains(gbif_classification.issues, '6', true))) AND ((stringArrayContains(gbif_classification.issues, '7', true))))",
         query);
   }
 
