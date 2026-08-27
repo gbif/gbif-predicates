@@ -158,8 +158,7 @@ public class SQLQueryVisitorTest {
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -300,8 +299,7 @@ public class SQLQueryVisitorTest {
   public void testInPredicateDefaultSmallTaxonKeyList() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -313,8 +311,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -343,9 +340,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(taxonkeys, array('1','2')))",
-        query);
+    assertEquals("(arrays_overlap(taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -353,8 +348,7 @@ public class SQLQueryVisitorTest {
     Predicate p =
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, null);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -363,8 +357,7 @@ public class SQLQueryVisitorTest {
         new InPredicate<>(
             OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, "someChecklistKey");
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(gbif_classification.taxonkeys, array('1','2')))", query);
   }
 
   @Test
@@ -1031,7 +1024,7 @@ public class SQLQueryVisitorTest {
                 List.of("TAXON_MATCH_HIGHERRANK", "TAXON_MATCH_NONE"),
                 false));
     assertEquals(
-        "(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))(issue IN('TAXON_MATCH_HIGHERRANK', 'TAXON_MATCH_NONE'))",
+        "(stringArrayContains(issue,'TAXON_MATCH_HIGHERRANK',true) OR stringArrayContains(issue,'TAXON_MATCH_NONE',true))",
         query);
 
     // LikePredicate
@@ -1368,9 +1361,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
-    assertEquals(
-        "(gbif_classification.taxonomicstatus IN array('SYNONYM','ACCEPTED'))",
-        query);
+    assertEquals("(gbif_classification.taxonomicstatus IN array('SYNONYM','ACCEPTED'))", query);
   }
 
   @Test

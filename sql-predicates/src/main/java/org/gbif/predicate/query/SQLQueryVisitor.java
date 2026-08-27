@@ -82,24 +82,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String ALL_QUERY = "true";
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
-  //
-  //  private static final List<GbifTerm> TAXON_KEY_FIELDS =
-  //      List.of(
-  //          GbifTerm.taxonKey,
-  //          GbifTerm.acceptedTaxonKey,
-  //          GbifTerm.kingdomKey,
-  //          GbifTerm.phylumKey,
-  //          GbifTerm.classKey,
-  //          GbifTerm.orderKey,
-  //          GbifTerm.superfamilyKey,
-  //          GbifTerm.familyKey,
-  //          GbifTerm.subfamilyKey,
-  //          GbifTerm.tribeKey,
-  //          GbifTerm.subtribeKey,
-  //          GbifTerm.genusKey,
-  //          GbifTerm.subgenusKey,
-  //          GbifTerm.speciesKey
-  //      );
 
   private static final Set<SearchParameter> TAXON_KEY_SEARCH_PARAMETERS =
       Set.of(
@@ -457,23 +439,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private void appendTaxonomicFilter(EqualsPredicate<S> predicate) {
-
-    //    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY
-    //        &&
-    // (Constants.COL_DATASET_KEY.toString().equalsIgnoreCase(predicate.getChecklistKey()))) {
-    //      // Use the taxonkey, specieskey etc columns as the classification one currently lacks
-    //      // synonyms.
-    //      // (It's also faster.)
-    //      appendTaxonomicBackboneSingleValueFilter(predicate);
-    //
-    //    } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
-    //      appendTaxonomicArrayFilter(predicate, GbifInternalTerm.classifications);
-    //    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-    //      appendTaxonomicArrayFilter(predicate, GbifTerm.taxonomicIssue);
-    //    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
-    //      appendTaxonomicSingleValueFilter(predicate, GbifInternalTerm.taxonomicStatuses);
-    //
-
     //    STRUCT<
     //            taxonkey: STRING,
     //            scientificname: STRING,
@@ -517,22 +482,21 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     // For the other specific ranks use the corresponding column (e.g. genusKey, speciesKey, etc).
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       builder
-              .append('(')
-              .append(
-                      String.format(
-                              "stringArrayContains(%s, '%s', true)",
-                              getTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
-                              predicate.getValue()))
-              .append(')');
+          .append('(')
+          .append(
+              String.format(
+                  "stringArrayContains(%s, '%s', true)",
+                  getTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
+                  predicate.getValue()))
+          .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-        builder
-                .append('(')
-                .append(
-                        String.format(
-                                "stringArrayContains(%s, '%s', true)",
-                                getTaxonColumnName("issues", predicate.getChecklistKey()),
-                                predicate.getValue()))
-                .append(')');
+      builder
+          .append('(')
+          .append(
+              String.format(
+                  "stringArrayContains(%s, '%s', true)",
+                  getTaxonColumnName("issues", predicate.getChecklistKey()), predicate.getValue()))
+          .append(')');
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       builder
@@ -1289,57 +1253,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(')');
     }
   }
-
-  //  /**
-  //   * Searches any of the NUB keys in Hive of any rank, for multiple keys.
-  //   *
-  //   * @param taxonomicPredicate to append as filter
-  //   */
-  //  private void appendTaxonomicArrayFilter(InPredicate<S> taxonomicPredicate, Term term) {
-  //    Set<String> taxonKeys =
-  //        taxonomicPredicate.getValues().stream()
-  //            .map(v -> toSQLValue(taxonomicPredicate.getKey(), v, true))
-  //            .collect(Collectors.toSet());
-  //
-  //    builder
-  //        .append('(')
-  //        .append(
-  //            String.format(
-  //                "arrays_overlap(%s['%s'], array(%s))",
-  //                sqlColumnsUtils.getSQLQueryColumn(term),
-  //                getChecklistKey(taxonomicPredicate.getChecklistKey()),
-  //                String.join(",", taxonKeys)))
-  //        .append(')');
-  //  }
-  //
-  //  /**
-  //   * Searches any of the NUB keys in Hive of any rank, for multiple keys.
-  //   *
-  //   * @param taxonomicPredicate to append as filter
-  //   */
-  //  private void appendTaxonomicSingleValueFilter(InPredicate<S> taxonomicPredicate, Term term) {
-  //
-  //    Collection<String> taxonKeys = taxonomicPredicate.getValues();
-  //
-  //    builder.append('(');
-  //    boolean first = true;
-  //    for (String taxonKey : taxonKeys) {
-  //      if (!first) {
-  //        builder.append(DISJUNCTION_OPERATOR);
-  //      }
-  //      builder
-  //          .append('(')
-  //          .append(
-  //              String.format(
-  //                  "%s['%s'] = '%s'",
-  //                  sqlColumnsUtils.getSQLQueryColumn(term),
-  //                  getChecklistKey(taxonomicPredicate.getChecklistKey()),
-  //                  taxonKey))
-  //          .append(')');
-  //      first = false;
-  //    }
-  //    builder.append(')');
-  //  }
 
   /**
    * Searches every level of GADM GID in Hive for multiple keys.
