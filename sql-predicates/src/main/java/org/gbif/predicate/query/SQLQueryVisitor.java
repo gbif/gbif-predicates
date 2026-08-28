@@ -122,6 +122,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final Map<String, String> checklistNestedStructMap;
 
+  private final String disambiguationTable;
+
   /**
    * Constructor for SQLQueryVisitor.
    *
@@ -144,6 +146,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     this.checklistNestedStructMap = checklistNestedStructMap;
     this.sqlTermsMapper = sqlTermsMapper;
     this.defaultChecklistKey = defaultChecklistKey;
+    this.disambiguationTable = disambiguationTable;
     sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
   }
 
@@ -546,7 +549,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     String checklistKey = getChecklistKey(suppliedChecklistKey);
     if (!denormalisedTaxonomy.equals(checklistKey)) {
       if (checklistNestedStructMap.containsKey(checklistKey)) {
-        queryFieldPrefix = checklistNestedStructMap.get(checklistKey) + ".";
+        queryFieldPrefix =
+            disambiguationTable + "." + checklistNestedStructMap.get(checklistKey) + ".";
       } else {
         throw new IllegalArgumentException(
             "Checklist key "
