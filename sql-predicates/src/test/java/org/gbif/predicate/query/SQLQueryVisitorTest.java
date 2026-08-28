@@ -1649,4 +1649,44 @@ public class SQLQueryVisitorTest {
         "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((lower(institutionkey) IN(lower('75f50140-830d-4630-a290-3d6e951a7c29')))) AND ((lower(collectionkey) IN(lower('2294871f-f0f7-44b2-b707-e9511ff5a878')))))))";
     assertEquals(expectedQuery, query);
   }
+
+
+  //    STRUCT<
+  //            taxonkey: STRING,
+  //            scientificname: STRING,
+  //            acceptedtaxonkey: STRING,
+  //            acceptednameusageid: STRING,
+  //            acceptedscientificname: STRING,
+  //            genericname: STRING,
+  //            specificepithet: STRING,
+  //            infraspecificepithet: STRING,
+  //            taxonrank: STRING,
+  //            kingdomkey: STRING,
+  //            phylumkey: STRING,
+  //            classkey: STRING,
+  //            orderkey: STRING,
+  //            superfamilykey: STRING,
+  //            familykey: STRING,
+  //            subfamilykey: STRING,
+  //            tribekey: STRING,
+  //            subtribekey: STRING,
+  //            genuskey: STRING,
+  //            subgenuskey: STRING,
+  //            specieskey: STRING,
+  //            kingdom: STRING,
+  //            phylum: STRING,
+  //            class: STRING,
+  //            order: STRING,
+  //            superfamily: STRING,
+  //            family: STRING,
+  //            subfamily: STRING,
+  //            tribe: STRING,
+  //            subtribe: STRING,
+  //            genus: STRING,
+  //            subgenus: STRING,
+  //            species: STRING,
+  //            iucnredlistcategory: STRING,
+  //            taxonkeys: ARRAY<STRING>,
+  //            issues: ARRAY<STRING>,
+  //            taxonomicstatus: STRING>
 }

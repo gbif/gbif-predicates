@@ -463,44 +463,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private void appendTaxonomicFilter(EqualsPredicate<S> predicate) {
-    //    STRUCT<
-    //            taxonkey: STRING,
-    //            scientificname: STRING,
-    //            acceptedtaxonkey: STRING,
-    //            acceptednameusageid: STRING,
-    //            acceptedscientificname: STRING,
-    //            genericname: STRING,
-    //            specificepithet: STRING,
-    //            infraspecificepithet: STRING,
-    //            taxonrank: STRING,
-    //            kingdomkey: STRING,
-    //            phylumkey: STRING,
-    //            classkey: STRING,
-    //            orderkey: STRING,
-    //            superfamilykey: STRING,
-    //            familykey: STRING,
-    //            subfamilykey: STRING,
-    //            tribekey: STRING,
-    //            subtribekey: STRING,
-    //            genuskey: STRING,
-    //            subgenuskey: STRING,
-    //            specieskey: STRING,
-    //            kingdom: STRING,
-    //            phylum: STRING,
-    //            class: STRING,
-    //            order: STRING,
-    //            superfamily: STRING,
-    //            family: STRING,
-    //            subfamily: STRING,
-    //            tribe: STRING,
-    //            subtribe: STRING,
-    //            genus: STRING,
-    //            subgenus: STRING,
-    //            species: STRING,
-    //            iucnredlistcategory: STRING,
-    //            taxonkeys: ARRAY<STRING>,
-    //            issues: ARRAY<STRING>,
-    //            taxonomicstatus: STRING>
+
 
     // For TAXON_KEY use the taxonKeys column.
     // For the other specific ranks use the corresponding column (e.g. genusKey, speciesKey, etc).
@@ -514,12 +477,19 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   predicate.getValue()))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
+
+      // FIXME - need to rename STRUCT field for consistency
+      String columnName = "issues";
+      if (getChecklistKey(predicate.getChecklistKey()).equals(denormalisedTaxonomy)) {
+        columnName = "taxonomicissue";
+      }
+
       builder
           .append('(')
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  resolveTaxonColumnName("issues", predicate.getChecklistKey()),
+                  resolveTaxonColumnName(columnName, predicate.getChecklistKey()),
                   predicate.getValue()))
           .append(')');
     } else {
@@ -738,7 +708,12 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (TAXON_KEY_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonKeyArrayFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-      appendTaxonomicArrayFilter(predicate, "issues");
+      // FIXME - need to rename STRUCT field for consistency
+      String columnName = "issues";
+      if (getChecklistKey(predicate.getChecklistKey()).equals(denormalisedTaxonomy)) {
+        columnName = "taxonomicissue";
+      }
+      appendTaxonomicArrayFilter(predicate, columnName);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus");
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
@@ -1198,24 +1173,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return values.stream()
         .map(v -> "'" + v.replace("'", "") + "'")
         .collect(Collectors.joining(","));
-  }
-
-  /**
-   * Searches any of the NUB keys in Hive of any rank.
-   *
-   * @param taxonPredicate to append as filter
-   */
-  private void appendTaxonomicSingleValueFilter(
-      EqualsPredicate<S> taxonPredicate, String sqlField) {
-
-    builder
-        .append('(')
-        .append(
-            String.format(
-                "%s = '%s'",
-                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
-                taxonPredicate.getValue()))
-        .append(')');
   }
 
   /**
