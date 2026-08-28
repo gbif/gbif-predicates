@@ -1650,7 +1650,6 @@ public class SQLQueryVisitorTest {
     assertEquals(expectedQuery, query);
   }
 
-
   //    STRUCT<
   //            taxonkey: STRING,
   //            scientificname: STRING,

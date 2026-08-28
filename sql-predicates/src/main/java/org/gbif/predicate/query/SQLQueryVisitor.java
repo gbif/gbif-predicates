@@ -464,7 +464,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private void appendTaxonomicFilter(EqualsPredicate<S> predicate) {
 
-
     // For TAXON_KEY use the taxonKeys column.
     // For the other specific ranks use the corresponding column (e.g. genusKey, speciesKey, etc).
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
