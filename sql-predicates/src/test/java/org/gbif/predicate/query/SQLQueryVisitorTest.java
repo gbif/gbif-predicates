@@ -1652,48 +1652,6 @@ public class SQLQueryVisitorTest {
     assertEquals(expectedQuery, query);
   }
 
-  //    STRUCT<
-  //            taxonkey: STRING,
-  //            scientificname: STRING,
-  //            acceptedtaxonkey: STRING,
-  //            acceptednameusageid: STRING,
-  //            acceptedscientificname: STRING,
-  //            genericname: STRING,
-  //            specificepithet: STRING,
-  //            infraspecificepithet: STRING,
-  //            taxonrank: STRING,
-  //            kingdomkey: STRING,
-  //            phylumkey: STRING,
-  //            classkey: STRING,
-  //            orderkey: STRING,
-  //            superfamilykey: STRING,
-  //            familykey: STRING,
-  //            subfamilykey: STRING,
-  //            tribekey: STRING,
-  //            subtribekey: STRING,
-  //            genuskey: STRING,
-  //            subgenuskey: STRING,
-  //            specieskey: STRING,
-  //            kingdom: STRING,
-  //            phylum: STRING,
-  //            class: STRING,
-  //            order: STRING,
-  //            superfamily: STRING,
-  //            family: STRING,
-  //            subfamily: STRING,
-  //            tribe: STRING,
-  //            subtribe: STRING,
-  //            genus: STRING,
-  //            subgenus: STRING,
-  //            species: STRING,
-  //            iucnredlistcategory: STRING,
-  //            taxonkeys: ARRAY<STRING>,
-  //            issues: ARRAY<STRING>,
-  //            taxonomicstatus: STRING>
-
-  // add a test for each field in the STRUCT above, to ensure that the SQLQueryVisitor correctly
-  // handles each field.
-
   @Test
   public void testTaxonKeyField() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
