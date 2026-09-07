@@ -1667,7 +1667,8 @@ public class SQLQueryVisitorTest {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo sapiens", false);
     String query = visitor.buildQuery(equalsPredicate);
-    assertEquals("lower(occurrence.gbif_classification.scientificname) = lower('Homo sapiens')", query);
+    assertEquals(
+        "lower(occurrence.gbif_classification.scientificname) = lower('Homo sapiens')", query);
   }
 
   @Test
