@@ -707,18 +707,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (TAXON_KEY_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonKeyArrayFilter(predicate);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-      // FIXME - need to rename STRUCT field for consistency
-      String columnName = "issues";
-      if (getChecklistKey(predicate.getChecklistKey()).equals(denormalisedTaxonomy)) {
-        columnName = "taxonomicissue";
-      }
-      appendTaxonomicArrayFilter(predicate, columnName);
+      appendTaxonomicArrayFilter(predicate, "taxonomicissue");
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus");
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
-    } else if (predicate.getKey().name().equals("EVENT_DATE")) {
+    } else if (predicate.getKey() == OccurrenceSearchParameter.EVENT_DATE) {
       // Event dates must be expanded into a disjunction of conjunction predicates (of comparisons)
       builder.append('(');
       Iterator<String> iterator = predicate.getValues().iterator();
@@ -1157,6 +1152,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @param taxonKeyPredicate to append as filter
    */
   private void appendTaxonomicArrayFilter(InPredicate<S> taxonKeyPredicate, String sqlField) {
+    // Using arrays_overlap() instead of EXISTS because it is a standard SQL function
+    // and may be supported by more SQL engines.
+    // Also, the expected number of values in the array is small, so performance should be
+    // acceptable.
     builder
         .append('(')
         .append(
