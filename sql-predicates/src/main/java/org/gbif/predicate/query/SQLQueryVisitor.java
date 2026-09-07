@@ -125,6 +125,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final String disambiguationTable;
 
+  private final int lambdaQueryThreshold;
+
   /**
    * Constructor for SQLQueryVisitor.
    *
@@ -136,19 +138,38 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @param defaultChecklistKey the checklist key to use when none is provided in the predicate.
    * @param disambiguationTable the table to use for disambiguating columns that exist in more than
    *     one table
+   * @param lambdaQueryThreshold the threshold for lambda queries to use EXISTS instead of IN for
+   *     large lists of values
    */
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
       String denormalisedTaxonomy,
       Map<String, String> checklistNestedStructMap,
       String defaultChecklistKey,
-      String disambiguationTable) {
+      String disambiguationTable,
+      int lambdaQueryThreshold) {
     this.denormalisedTaxonomy = denormalisedTaxonomy;
     this.checklistNestedStructMap = checklistNestedStructMap;
     this.sqlTermsMapper = sqlTermsMapper;
     this.defaultChecklistKey = defaultChecklistKey;
     this.disambiguationTable = disambiguationTable;
+    this.lambdaQueryThreshold = lambdaQueryThreshold;
     sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
+  }
+
+  public SQLQueryVisitor(
+      SQLTermsMapper<S> sqlTermsMapper,
+      String denormalisedTaxonomy,
+      Map<String, String> checklistNestedStructMap,
+      String defaultChecklistKey,
+      String disambiguationTable) {
+    this(
+        sqlTermsMapper,
+        denormalisedTaxonomy,
+        checklistNestedStructMap,
+        defaultChecklistKey,
+        disambiguationTable,
+        50);
   }
 
   /** Transforms the value to the SQL statement lower(val). */
@@ -1250,7 +1271,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     // if not, use the arrays_overlap function
     // this is to avoid exposing the EXISTS function to some users (cube),
     // which is not a standard SQL function and may not be supported by all SQL engines
-    if (taxonKeys.size() > 50) {
+    if (taxonKeys.size() > lambdaQueryThreshold) {
       builder
           .append('(')
           .append(
