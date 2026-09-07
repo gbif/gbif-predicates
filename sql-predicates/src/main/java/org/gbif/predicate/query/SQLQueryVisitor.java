@@ -738,7 +738,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
-    } else if (predicate.getKey() == OccurrenceSearchParameter.EVENT_DATE) {
+    } else if ("EVENT_DATE".equals(predicate.getKey().name())) {
       // Event dates must be expanded into a disjunction of conjunction predicates (of comparisons)
       builder.append('(');
       Iterator<String> iterator = predicate.getValues().iterator();
