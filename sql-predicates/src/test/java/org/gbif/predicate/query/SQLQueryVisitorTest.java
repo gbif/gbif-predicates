@@ -1439,7 +1439,7 @@ public class SQLQueryVisitorTest {
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
     assertEquals(
-        "(occurrence.gbif_classification.taxonomicstatus IN array('SYNONYM','ACCEPTED'))", query);
+        "(occurrence.gbif_classification.taxonomicstatus IN ('SYNONYM','ACCEPTED'))", query);
   }
 
   @Test
@@ -1451,7 +1451,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
-    assertEquals("(taxonomicstatus IN array('SYNONYM','ACCEPTED'))", query);
+    assertEquals("(taxonomicstatus IN ('SYNONYM','ACCEPTED'))", query);
   }
 
   @Test
@@ -1667,7 +1667,7 @@ public class SQLQueryVisitorTest {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo sapiens", false);
     String query = visitor.buildQuery(equalsPredicate);
-    assertEquals("occurrence.gbif_classification.scientificname = 'Homo sapiens'", query);
+    assertEquals("lower(occurrence.gbif_classification.scientificname) = lower('Homo sapiens')", query);
   }
 
   @Test
@@ -1679,7 +1679,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(equalsPredicate);
-    assertEquals("scientificname = 'Homo sapiens'", query);
+    assertEquals("lower(scientificname) = lower('Homo sapiens')", query);
   }
 
   @Test
