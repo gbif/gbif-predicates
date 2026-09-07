@@ -516,12 +516,22 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append("')");
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
-      builder
-          .append(resolveTaxonColumnName(columnName, predicate.getChecklistKey()))
-          .append(EQUALS_OPERATOR)
-          .append('\'')
-          .append(predicate.getValue())
-          .append('\'');
+      String resolvedColumn = resolveTaxonColumnName(columnName, predicate.getChecklistKey());
+      String escapedValue = predicate.getValue().replaceAll("'", "\\\\'");
+      if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
+          && !predicate.isMatchCase()) {
+        builder
+            .append(toSQLLower(resolvedColumn))
+            .append(EQUALS_OPERATOR)
+            .append(toSQLLower("'" + escapedValue + "'"));
+      } else {
+        builder
+            .append(resolvedColumn)
+            .append(EQUALS_OPERATOR)
+            .append('\'')
+            .append(escapedValue)
+            .append('\'');
+      }
     }
   }
 
