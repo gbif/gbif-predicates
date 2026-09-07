@@ -1224,7 +1224,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append('(')
         .append(
             String.format(
-                "%s IN array(%s)",
+                "%s IN (%s)",
                 resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
                 formatArray(taxonPredicate.getValues())))
         .append(')');
