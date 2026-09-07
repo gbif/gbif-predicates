@@ -46,6 +46,7 @@ import org.gbif.api.util.RangeValue;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.predicate.query.occurrence.OccurrenceTermsMapper;
 import org.junit.jupiter.api.Test;
 
@@ -1412,7 +1413,8 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(eq);
-    assertEquals("(stringArrayContains(occurrence.gbif_classification.issues, '6', true))", query);
+    assertEquals(
+        "(stringArrayContains(occurrence.gbif_classification.taxonomicissue, '6', true))", query);
   }
 
   @Test
@@ -1469,7 +1471,7 @@ public class SQLQueryVisitorTest {
                     Constants.NUB_DATASET_KEY.toString())));
     String query = visitor.buildQuery(predicate);
     assertEquals(
-        "(((stringArrayContains(occurrence.gbif_classification.issues, '6', true))) AND ((stringArrayContains(occurrence.gbif_classification.issues, '7', true))))",
+        "(((stringArrayContains(occurrence.gbif_classification.taxonomicissue, '6', true))) AND ((stringArrayContains(occurrence.gbif_classification.taxonomicissue, '7', true))))",
         query);
   }
 
@@ -1688,4 +1690,313 @@ public class SQLQueryVisitorTest {
   //            taxonkeys: ARRAY<STRING>,
   //            issues: ARRAY<STRING>,
   //            taxonomicstatus: STRING>
+
+  // add a test for each field in the STRUCT above, to ensure that the SQLQueryVisitor correctly
+  // handles each field.
+
+  @Test
+  public void testTaxonKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals(
+        "(stringArrayContains(occurrence.gbif_classification.taxonkeys, '6', true))", query);
+  }
+
+  @Test
+  public void testScientificNameField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo sapiens", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.scientificname = 'Homo sapiens'", query);
+  }
+
+  @Test
+  public void testScientificNameFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME,
+            "Homo sapiens",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("scientificname = 'Homo sapiens'", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, "42", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.acceptedtaxonkey = '42'", query);
+  }
+
+  @Test
+  public void testKingdomKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.kingdomkey = '1'", query);
+  }
+
+  @Test
+  public void testPhylumKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.PHYLUM_KEY, "2", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.phylumkey = '2'", query);
+  }
+
+  @Test
+  public void testClassKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.CLASS_KEY, "3", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.classkey = '3'", query);
+  }
+
+  @Test
+  public void testOrderKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.ORDER_KEY, "4", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.orderkey = '4'", query);
+  }
+
+  @Test
+  public void testFamilyKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.FAMILY_KEY, "6", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.familykey = '6'", query);
+  }
+
+  @Test
+  public void testGenusKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.GENUS_KEY, "10", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.genuskey = '10'", query);
+  }
+
+  @Test
+  public void testSubgenusKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.SUBGENUS_KEY, "11", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.subgenuskey = '11'", query);
+  }
+
+  @Test
+  public void testSpeciesKeyField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.SPECIES_KEY, "12", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.specieskey = '12'", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, "LC", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("lower(occurrence.gbif_classification.iucnredlistcategory) = lower('LC')", query);
+  }
+
+  @Test
+  public void testIssuesField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.ISSUE, "ZERO_COORDINATE", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("stringArrayContains(issue,'ZERO_COORDINATE',true)", query);
+  }
+
+  @Test
+  public void testTaxonomicIssuesField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+            OccurrenceIssue.TAXON_MATCH_NONE.toString(),
+            false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals(
+        "(stringArrayContains(occurrence.gbif_classification.taxonomicissue, 'TAXON_MATCH_NONE', true))",
+        query);
+  }
+
+  @Test
+  public void testTaxonomicIssuesFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+            OccurrenceIssue.TAXON_MATCH_NONE.toString(),
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("(stringArrayContains(taxonomicissue, 'TAXON_MATCH_NONE', true))", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusField() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXONOMIC_STATUS, "ACCEPTED", false);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.taxonomicstatus = 'ACCEPTED'", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY,
+            "42",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("acceptedtaxonkey = '42'", query);
+  }
+
+  @Test
+  public void testKingdomKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY,
+            "1",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("kingdomkey = '1'", query);
+  }
+
+  @Test
+  public void testPhylumKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.PHYLUM_KEY, "2", false, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("phylumkey = '2'", query);
+  }
+
+  @Test
+  public void testClassKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, "3", false, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("classkey = '3'", query);
+  }
+
+  @Test
+  public void testOrderKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.ORDER_KEY, "4", false, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("orderkey = '4'", query);
+  }
+
+  @Test
+  public void testFamilyKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.FAMILY_KEY, "6", false, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("familykey = '6'", query);
+  }
+
+  @Test
+  public void testGenusKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.GENUS_KEY, "10", false, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("genuskey = '10'", query);
+  }
+
+  @Test
+  public void testSubgenusKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.SUBGENUS_KEY,
+            "11",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("subgenuskey = '11'", query);
+  }
+
+  @Test
+  public void testSpeciesKeyFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.SPECIES_KEY,
+            "12",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("specieskey = '12'", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+            "LC",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("lower(iucnredlistcategory) = lower('LC')", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryFieldColIn() throws QueryBuildingException {
+    InPredicate<OccurrenceSearchParameter> inPredicate =
+        new InPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+            List.of("LC", "EX"),
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(inPredicate);
+    assertEquals("(lower(iucnredlistcategory) IN array(lower('LC'),lower('EX')))", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryFieldIn() throws QueryBuildingException {
+    InPredicate<OccurrenceSearchParameter> inPredicate =
+        new InPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+            List.of("LC", "EX"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(inPredicate);
+    assertEquals(
+        "(lower(occurrence.gbif_classification.iucnredlistcategory) IN array(lower('LC'),lower('EX')))",
+        query);
+  }
+
+  @Test
+  public void testIssuesFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.ISSUE,
+            OccurrenceIssue.ZERO_COORDINATE.toString(),
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("stringArrayContains(issue,'ZERO_COORDINATE',true)", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusFieldCol() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS,
+            "ACCEPTED",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("taxonomicstatus = 'ACCEPTED'", query);
+  }
 }

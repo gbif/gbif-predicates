@@ -102,7 +102,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               Set.of(
                   OccurrenceSearchParameter.SCIENTIFIC_NAME,
                   OccurrenceSearchParameter.TAXONOMIC_STATUS,
-                  OccurrenceSearchParameter.TAXONOMIC_ISSUE)
+                  OccurrenceSearchParameter.TAXONOMIC_ISSUE,
+                  OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY)
                   .stream())
           .collect(Collectors.toSet());
 
@@ -177,8 +178,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /**
    * Allow support for querying the denormalized extension.
-   *
-   * <p>FIXME - this can probably be factored out once all required fields are denormalized.
    *
    * @param param
    * @param matchCase
@@ -464,8 +463,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private void appendTaxonomicFilter(EqualsPredicate<S> predicate) {
 
-    // For TAXON_KEY use the taxonKeys column.
-    // For the other specific ranks use the corresponding column (e.g. genusKey, speciesKey, etc).
+    // For TAXON_KEY use the taxonKeys column - this will support taxon keys at any rank
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
       builder
           .append('(')
@@ -476,21 +474,25 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   predicate.getValue()))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-
-      // FIXME - need to rename STRUCT field for consistency
-      String columnName = "issues";
-      if (getChecklistKey(predicate.getChecklistKey()).equals(denormalisedTaxonomy)) {
-        columnName = "taxonomicissue";
-      }
-
+      // special case for taxonomic issues, which are stored in an ARRAY, the other taxon fields are
+      // STRING
       builder
           .append('(')
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  resolveTaxonColumnName(columnName, predicate.getChecklistKey()),
+                  resolveTaxonColumnName("taxonomicissue", predicate.getChecklistKey()),
                   predicate.getValue()))
           .append(')');
+    } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
+      // special case for IUCN to make case insensitive for backwards compatibility
+      String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
+      builder
+          .append("lower(" + resolveTaxonColumnName(columnName, predicate.getChecklistKey()) + ")")
+          .append(EQUALS_OPERATOR)
+          .append("lower('")
+          .append(predicate.getValue())
+          .append("')");
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       builder
@@ -710,6 +712,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendTaxonomicArrayFilter(predicate, "taxonomicissue");
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus");
+    } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
+      appendTaxonomicSingleValueFilterCaseInsensitive(predicate, "iucnredlistcategory");
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
@@ -1173,13 +1177,18 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .collect(Collectors.joining(","));
   }
 
+  private String formatArrayLowerCase(Collection<String> values) {
+    return values.stream()
+        .map(v -> "lower('" + v.replace("'", "") + "')")
+        .collect(Collectors.joining(","));
+  }
+
   /**
    * Searches any of the NUB keys in Hive of any rank.
    *
    * @param taxonPredicate to append as filter
    */
   private void appendTaxonomicSingleValueFilter(InPredicate<S> taxonPredicate, String sqlField) {
-
     builder
         .append('(')
         .append(
@@ -1187,6 +1196,23 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                 "%s IN array(%s)",
                 resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
                 formatArray(taxonPredicate.getValues())))
+        .append(')');
+  }
+
+  /**
+   * Searches any of the NUB keys in Hive of any rank.
+   *
+   * @param taxonPredicate to append as filter
+   */
+  private void appendTaxonomicSingleValueFilterCaseInsensitive(
+      InPredicate<S> taxonPredicate, String sqlField) {
+    builder
+        .append('(')
+        .append(
+            String.format(
+                "lower(%s) IN array(%s)",
+                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
+                formatArrayLowerCase(taxonPredicate.getValues())))
         .append(')');
   }
 
