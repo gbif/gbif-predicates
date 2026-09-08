@@ -826,9 +826,36 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   .replace("_", "\\_")
                   .replace('*', '%')
                   .replace('?', '_'),
+              predicate.getChecklistKey(),
               predicate.isMatchCase());
 
-      visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+      if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
+
+        String columnName = sqlColumnsUtils.getSQLQueryColumn(term(likePredicate.getKey()));
+        String resolvedColumn = resolveTaxonColumnName(columnName, likePredicate.getChecklistKey());
+        if (likePredicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
+            && !predicate.isMatchCase()) {
+          builder
+              .append(toSQLLower(resolvedColumn))
+              .append(LIKE_OPERATOR)
+              .append(
+                  toSQLValue(
+                      likePredicate.getKey(),
+                      likePredicate.getValue(),
+                      likePredicate.isMatchCase()));
+        } else {
+          builder
+              .append(resolvedColumn)
+              .append(LIKE_OPERATOR)
+              .append(
+                  toSQLValue(
+                      likePredicate.getKey(),
+                      likePredicate.getValue(),
+                      likePredicate.isMatchCase()));
+        }
+      } else {
+        visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+      }
     }
   }
 

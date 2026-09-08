@@ -86,7 +86,7 @@ public class SQLQueryVisitorTest {
         new ConjunctionPredicate(List.of(aves, UK, passer, before1989, georeferencedPredicate));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) AND (countrycode = 'GB') AND (lower(scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
+        "(((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) AND (countrycode = 'GB') AND (lower(occurrence.gbif_classification.scientificname) LIKE lower('Passer%')) AND (year <= 1989) AND (hascoordinate = true))",
         where);
   }
 
@@ -99,7 +99,11 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     Predicate passer =
-        new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
+        new LikePredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME,
+            "Passer*",
+            Constants.COL_DATASET_KEY.toString(),
+            false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
     Predicate before1989 = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1989");
     Predicate georeferencedPredicate =
@@ -1684,6 +1688,27 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testScientificNameFieldLike() throws QueryBuildingException {
+    LikePredicate<OccurrenceSearchParameter> likePredicate =
+        new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo s*", false);
+    String query = visitor.buildQuery(likePredicate);
+    assertEquals(
+        "lower(occurrence.gbif_classification.scientificname) LIKE lower('Homo s%')", query);
+  }
+
+  @Test
+  public void testScientificNameFieldColLike() throws QueryBuildingException {
+    LikePredicate<OccurrenceSearchParameter> likePredicate =
+        new LikePredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME,
+            "Homo s*",
+            Constants.COL_DATASET_KEY.toString(),
+            false);
+    String query = visitor.buildQuery(likePredicate);
+    assertEquals("lower(scientificname) LIKE lower('Homo s%')", query);
+  }
+
+  @Test
   public void testScientificNameFieldCaseSensitive() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo sapiens", true);
@@ -1978,8 +2003,6 @@ public class SQLQueryVisitorTest {
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("taxonomicstatus = 'ACCEPTED'", query);
   }
-
-  // add NULL / NOT NULL tests for taxonomy fields
 
   @Test
   public void testScientificNameIsNullPredicate() throws QueryBuildingException {
