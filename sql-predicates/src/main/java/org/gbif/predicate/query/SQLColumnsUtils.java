@@ -201,7 +201,7 @@ public class SQLColumnsUtils {
         || DwcTerm.georeferencedBy == term
         || DwcTerm.higherGeography == term
         || DwcTerm.associatedSequences == term
-        || GbifTerm.projectId == term
+        || DwcTerm.projectID == term
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
         || GbifTerm.nonTaxonomicIssue == term
