@@ -905,18 +905,32 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyIsNotNull(IsNotNullPredicate<S> predicate) {
-
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
-    builder.append(
-        String.format(
-            "%s IS NOT NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+    if (predicate.getParameter() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
+      String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
+      builder.append(
+          String.format(
+              "%s IS NOT NULL OR size(%s) > 0", taxonomicIssueColumn, taxonomicIssueColumn));
+    } else {
+      builder.append(
+          String.format(
+              "%s IS NOT NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+    }
   }
 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyNull(IsNullPredicate<S> predicate) {
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
-    builder.append(
-        String.format("%s IS NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+    if (predicate.getParameter() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
+      String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
+      builder.append(
+          String.format(
+              "%s IS NOT NULL OR size(%s) = 0", taxonomicIssueColumn, taxonomicIssueColumn));
+    } else {
+      builder.append(
+          String.format(
+              "%s IS NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+    }
   }
 
   public void visit(WithinPredicate within) throws QueryBuildingException {
