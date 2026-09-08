@@ -1684,6 +1684,26 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testScientificNameFieldCaseSensitive() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Homo sapiens", true);
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("occurrence.gbif_classification.scientificname = 'Homo sapiens'", query);
+  }
+
+  @Test
+  public void testScientificNameFieldColCaseSensitive() throws QueryBuildingException {
+    EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME,
+            "Homo sapiens",
+            true,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("scientificname = 'Homo sapiens'", query);
+  }
+
+  @Test
   public void testAcceptedTaxonKeyField() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, "42", false);
