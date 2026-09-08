@@ -1958,4 +1958,474 @@ public class SQLQueryVisitorTest {
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("taxonomicstatus = 'ACCEPTED'", query);
   }
+
+  // add NULL / NOT NULL tests for taxonomy fields
+
+  @Test
+  public void testScientificNameIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.scientificname IS NULL", query);
+  }
+
+  @Test
+  public void testScientificNameIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.scientificname IS NOT NULL", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.acceptedtaxonkey IS NULL", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.acceptedtaxonkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testKingdomKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.kingdomkey IS NULL", query);
+  }
+
+  @Test
+  public void testKingdomKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.kingdomkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testPhylumKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.phylumkey IS NULL", query);
+  }
+
+  @Test
+  public void testPhylumKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.phylumkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testClassKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.classkey IS NULL", query);
+  }
+
+  @Test
+  public void testClassKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.classkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testOrderKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.orderkey IS NULL", query);
+  }
+
+  @Test
+  public void testOrderKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.orderkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testFamilyKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.familykey IS NULL", query);
+  }
+
+  @Test
+  public void testFamilyKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.familykey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testGenusKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.genuskey IS NULL", query);
+  }
+
+  @Test
+  public void testGenusKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.genuskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testSubgenusKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.subgenuskey IS NULL", query);
+  }
+
+  @Test
+  public void testSubgenusKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.subgenuskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testSpeciesKeyIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.specieskey IS NULL", query);
+  }
+
+  @Test
+  public void testSpeciesKeyIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.specieskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.iucnredlistcategory IS NULL", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.iucnredlistcategory IS NOT NULL", query);
+  }
+
+  @Test
+  public void testIssuesIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("(issue IS NULL OR size(issue) = 0)", query);
+  }
+
+  @Test
+  public void testIssuesIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("(issue IS NOT NULL AND size(issue) > 0)", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusIsNullPredicate() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.taxonomicstatus IS NULL", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusIsNotNullPredicate() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("occurrence.gbif_classification.taxonomicstatus IS NOT NULL", query);
+  }
+
+  @Test
+  public void testScientificNameIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("scientificname IS NULL", query);
+  }
+
+  @Test
+  public void testScientificNameIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("scientificname IS NOT NULL", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("acceptedtaxonkey IS NULL", query);
+  }
+
+  @Test
+  public void testAcceptedTaxonKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("acceptedtaxonkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testKingdomKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("kingdomkey IS NULL", query);
+  }
+
+  @Test
+  public void testKingdomKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("kingdomkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testPhylumKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("phylumkey IS NULL", query);
+  }
+
+  @Test
+  public void testPhylumKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("phylumkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testClassKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("classkey IS NULL", query);
+  }
+
+  @Test
+  public void testClassKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("classkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testOrderKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("orderkey IS NULL", query);
+  }
+
+  @Test
+  public void testOrderKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("orderkey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testFamilyKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("familykey IS NULL", query);
+  }
+
+  @Test
+  public void testFamilyKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("familykey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testGenusKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("genuskey IS NULL", query);
+  }
+
+  @Test
+  public void testGenusKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("genuskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testSubgenusKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("subgenuskey IS NULL", query);
+  }
+
+  @Test
+  public void testSubgenusKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("subgenuskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testSpeciesKeyIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("specieskey IS NULL", query);
+  }
+
+  @Test
+  public void testSpeciesKeyIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("specieskey IS NOT NULL", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("iucnredlistcategory IS NULL", query);
+  }
+
+  @Test
+  public void testIucnRedListCategoryIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("iucnredlistcategory IS NOT NULL", query);
+  }
+
+  @Test
+  public void testIssuesIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("(issue IS NULL OR size(issue) = 0)", query);
+  }
+
+  @Test
+  public void testIssuesIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("(issue IS NOT NULL AND size(issue) > 0)", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusIsNullPredicateCol() throws QueryBuildingException {
+    IsNullPredicate<OccurrenceSearchParameter> p =
+        new IsNullPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("taxonomicstatus IS NULL", query);
+  }
+
+  @Test
+  public void testTaxonomicStatusIsNotNullPredicateCol() throws QueryBuildingException {
+    IsNotNullPredicate<OccurrenceSearchParameter> p =
+        new IsNotNullPredicate<>(
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(p);
+    assertEquals("taxonomicstatus IS NOT NULL", query);
+  }
 }
