@@ -1338,7 +1338,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append('(')
           .append(
               String.format(
-                  "arrays_overlap(%s, (%s))",
+                  "arrays_overlap(%s, array(%s))",
                   resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
                   formatArray(taxonKeys)))
           .append(')');
