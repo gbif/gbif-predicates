@@ -144,7 +144,7 @@ public class SQLQueryVisitorTest {
     ConjunctionPredicate p = new ConjunctionPredicate(List.of(taxa, basis, countries, years));
     String where = visitor.buildQuery(p);
     assertEquals(
-        "(((arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))) "
+        "(((arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))) "
             + "AND ((basisofrecord IN('HUMAN_OBSERVATION', 'MACHINE_OBSERVATION'))) "
             + "AND ((countrycode IN(\'GB\', \'IE\'))) "
             + "AND (((year <= 1989) OR (year = 2000))))",
@@ -196,8 +196,7 @@ public class SQLQueryVisitorTest {
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -338,8 +337,7 @@ public class SQLQueryVisitorTest {
   public void testInPredicateDefaultSmallTaxonKeyList() throws QueryBuildingException {
     Predicate p = new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -351,8 +349,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -381,7 +378,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals("(arrays_overlap(taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -389,8 +386,7 @@ public class SQLQueryVisitorTest {
     Predicate p =
         new InPredicate<>(OccurrenceSearchParameter.TAXON_KEY, List.of("1", "2"), false, null);
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -402,8 +398,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('1','2')))", query);
   }
 
   @Test
@@ -1363,8 +1358,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(inPredicate);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('6','7')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('6','7')))", query);
   }
 
   @Test
@@ -1383,8 +1377,7 @@ public class SQLQueryVisitorTest {
                     false,
                     Constants.NUB_DATASET_KEY.toString())));
     String query = visitor.buildQuery(predicate);
-    assertEquals(
-        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('6','7')))", query);
+    assertEquals("(arrays_overlap(occurrence.gbif_classification.taxonkeys, ('6','7')))", query);
   }
 
   @Test
@@ -1963,7 +1956,7 @@ public class SQLQueryVisitorTest {
             false,
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(inPredicate);
-    assertEquals("(lower(iucnredlistcategory) IN array(lower('LC'),lower('EX')))", query);
+    assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
   }
 
   @Test
@@ -1976,7 +1969,7 @@ public class SQLQueryVisitorTest {
             Constants.NUB_DATASET_KEY.toString());
     String query = visitor.buildQuery(inPredicate);
     assertEquals(
-        "(lower(occurrence.gbif_classification.iucnredlistcategory) IN array(lower('LC'),lower('EX')))",
+        "(lower(occurrence.gbif_classification.iucnredlistcategory) IN (lower('LC'),lower('EX')))",
         query);
   }
 
@@ -2470,5 +2463,17 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(p);
     assertEquals("taxonomicstatus IS NOT NULL", query);
+  }
+
+  @Test
+  public void iucnTest() throws QueryBuildingException {
+    InPredicate<OccurrenceSearchParameter> equalsPredicate =
+        new InPredicate<>(
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+            List.of("LC", "EX"),
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    String query = visitor.buildQuery(equalsPredicate);
+    assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
   }
 }

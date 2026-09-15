@@ -1282,7 +1282,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append('(')
         .append(
             String.format(
-                "lower(%s) IN array(%s)",
+                "lower(%s) IN (%s)",
                 resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
                 formatArrayLowerCase(taxonPredicate.getValues())))
         .append(')');
@@ -1338,7 +1338,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append('(')
           .append(
               String.format(
-                  "arrays_overlap(%s, array(%s))",
+                  "arrays_overlap(%s, (%s))",
                   resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
                   formatArray(taxonKeys)))
           .append(')');
