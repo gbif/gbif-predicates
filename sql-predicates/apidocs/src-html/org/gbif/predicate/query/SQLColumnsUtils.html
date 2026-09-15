@@ -243,85 +243,86 @@
 <span class="source-line-no">230</span><span id="line-230">        || DwcTerm.fundingAttributionID == term</span>
 <span class="source-line-no">231</span><span id="line-231">        || DwcTerm.measurementType == term</span>
 <span class="source-line-no">232</span><span id="line-232">        || ObisTerm.measurementTypeID == term</span>
-<span class="source-line-no">233</span><span id="line-233">        || GbifTerm.dnaSequenceID == term;</span>
-<span class="source-line-no">234</span><span id="line-234">  }</span>
-<span class="source-line-no">235</span><span id="line-235"></span>
-<span class="source-line-no">236</span><span id="line-236">  public static boolean isHumboldtTerm(Term term) {</span>
-<span class="source-line-no">237</span><span id="line-237">    return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;</span>
-<span class="source-line-no">238</span><span id="line-238">  }</span>
-<span class="source-line-no">239</span><span id="line-239"></span>
-<span class="source-line-no">240</span><span id="line-240">  public static boolean isNucleotideTerm(Term term) {</span>
-<span class="source-line-no">241</span><span id="line-241">    return term.simpleName().startsWith("nucleotide_") || term == MixsTerm.target_gene;</span>
-<span class="source-line-no">242</span><span id="line-242">  }</span>
-<span class="source-line-no">243</span><span id="line-243"></span>
-<span class="source-line-no">244</span><span id="line-244">  public static boolean isVocabulary(Term term) {</span>
-<span class="source-line-no">245</span><span id="line-245">    return term instanceof Enum &amp;&amp; hasTermAnnotation(term, Vocabulary.class);</span>
-<span class="source-line-no">246</span><span id="line-246">  }</span>
-<span class="source-line-no">247</span><span id="line-247"></span>
-<span class="source-line-no">248</span><span id="line-248">  private static boolean hasTermAnnotation(Term term, Class&lt;? extends Annotation&gt; annotation) {</span>
-<span class="source-line-no">249</span><span id="line-249">    try {</span>
-<span class="source-line-no">250</span><span id="line-250">      return term.getClass().getField(((Enum) term).name()).isAnnotationPresent(annotation);</span>
-<span class="source-line-no">251</span><span id="line-251">    } catch (NoSuchFieldException var3) {</span>
-<span class="source-line-no">252</span><span id="line-252">      throw new IllegalArgumentException(var3);</span>
-<span class="source-line-no">253</span><span id="line-253">    }</span>
-<span class="source-line-no">254</span><span id="line-254">  }</span>
-<span class="source-line-no">255</span><span id="line-255"></span>
-<span class="source-line-no">256</span><span id="line-256">  /** @return true if the term is an interpreted local date (timezone not relevant) */</span>
-<span class="source-line-no">257</span><span id="line-257">  public static boolean isInterpretedLocalDateSeconds(Term term) {</span>
-<span class="source-line-no">258</span><span id="line-258">    return term != null &amp;&amp; INTERPRETED_LOCAL_DATES_SECONDS.contains(term);</span>
-<span class="source-line-no">259</span><span id="line-259">  }</span>
-<span class="source-line-no">260</span><span id="line-260"></span>
-<span class="source-line-no">261</span><span id="line-261">  /** @return true if the term is an interpreted UTC date stored in seconds */</span>
-<span class="source-line-no">262</span><span id="line-262">  public static boolean isInterpretedUtcDateSeconds(Term term) {</span>
-<span class="source-line-no">263</span><span id="line-263">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_SECONDS.contains(term);</span>
-<span class="source-line-no">264</span><span id="line-264">  }</span>
-<span class="source-line-no">265</span><span id="line-265"></span>
-<span class="source-line-no">266</span><span id="line-266">  /** @return true if the term is an interpreted UTC date stored in milliseconds */</span>
-<span class="source-line-no">267</span><span id="line-267">  public static boolean isInterpretedUtcDateMilliseconds(Term term) {</span>
-<span class="source-line-no">268</span><span id="line-268">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);</span>
-<span class="source-line-no">269</span><span id="line-269">  }</span>
-<span class="source-line-no">270</span><span id="line-270"></span>
-<span class="source-line-no">271</span><span id="line-271">  /** @return true if the term is an interpreted numerical */</span>
-<span class="source-line-no">272</span><span id="line-272">  public static boolean isInterpretedNumerical(Term term) {</span>
-<span class="source-line-no">273</span><span id="line-273">    return term != null &amp;&amp; INTERPRETED_NUM.contains(term);</span>
-<span class="source-line-no">274</span><span id="line-274">  }</span>
-<span class="source-line-no">275</span><span id="line-275"></span>
-<span class="source-line-no">276</span><span id="line-276">  /** @return true if the term is an interpreted double */</span>
-<span class="source-line-no">277</span><span id="line-277">  public static boolean isInterpretedDouble(Term term) {</span>
-<span class="source-line-no">278</span><span id="line-278">    return term != null &amp;&amp; INTERPRETED_DOUBLE.contains(term);</span>
-<span class="source-line-no">279</span><span id="line-279">  }</span>
-<span class="source-line-no">280</span><span id="line-280"></span>
-<span class="source-line-no">281</span><span id="line-281">  /** @return true if the term is an interpreted boolean */</span>
-<span class="source-line-no">282</span><span id="line-282">  public static boolean isInterpretedBoolean(Term term) {</span>
-<span class="source-line-no">283</span><span id="line-283">    return term != null &amp;&amp; INTERPRETED_BOOLEAN.contains(term);</span>
-<span class="source-line-no">284</span><span id="line-284">  }</span>
-<span class="source-line-no">285</span><span id="line-285"></span>
-<span class="source-line-no">286</span><span id="line-286">  /** @return true if the term is a complex type in Hive: array, struct, json, etc. */</span>
-<span class="source-line-no">287</span><span id="line-287">  public static boolean isComplexType(Term term) {</span>
-<span class="source-line-no">288</span><span id="line-288">    return term != null &amp;&amp; COMPLEX_TYPE.contains(term);</span>
-<span class="source-line-no">289</span><span id="line-289">  }</span>
-<span class="source-line-no">290</span><span id="line-290"></span>
-<span class="source-line-no">291</span><span id="line-291">  public static boolean isExtensionTerm(Term term) {</span>
-<span class="source-line-no">292</span><span id="line-292">    return term != null &amp;&amp; EXTENSION_TERMS.contains(term);</span>
-<span class="source-line-no">293</span><span id="line-293">  }</span>
-<span class="source-line-no">294</span><span id="line-294"></span>
-<span class="source-line-no">295</span><span id="line-295">  public static Map&lt;SearchParameter, String&gt; HUMBOLDT_TAXON_COLUMNS =</span>
-<span class="source-line-no">296</span><span id="line-296">      Map.of(</span>
-<span class="source-line-no">297</span><span id="line-297">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,</span>
-<span class="source-line-no">298</span><span id="line-298">          "usagekey",</span>
-<span class="source-line-no">299</span><span id="line-299">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,</span>
-<span class="source-line-no">300</span><span id="line-300">          "usagename",</span>
-<span class="source-line-no">301</span><span id="line-301">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_KEY,</span>
-<span class="source-line-no">302</span><span id="line-302">          "acceptedusagekey",</span>
-<span class="source-line-no">303</span><span id="line-303">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_NAME,</span>
-<span class="source-line-no">304</span><span id="line-304">          "acceptedusagename",</span>
-<span class="source-line-no">305</span><span id="line-305">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,</span>
-<span class="source-line-no">306</span><span id="line-306">          "taxonkeys",</span>
-<span class="source-line-no">307</span><span id="line-307">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,</span>
-<span class="source-line-no">308</span><span id="line-308">          "iucnRedListCategoryCode",</span>
-<span class="source-line-no">309</span><span id="line-309">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,</span>
-<span class="source-line-no">310</span><span id="line-310">          "issues");</span>
-<span class="source-line-no">311</span><span id="line-311">}</span>
+<span class="source-line-no">233</span><span id="line-233">        || GbifTerm.dnaSequenceID == term</span>
+<span class="source-line-no">234</span><span id="line-234">        || GbifTerm.taxonomicIssue == term;</span>
+<span class="source-line-no">235</span><span id="line-235">  }</span>
+<span class="source-line-no">236</span><span id="line-236"></span>
+<span class="source-line-no">237</span><span id="line-237">  public static boolean isHumboldtTerm(Term term) {</span>
+<span class="source-line-no">238</span><span id="line-238">    return term instanceof EcoTerm || term == GbifInternalTerm.humboldtEventDurationValueInMinutes;</span>
+<span class="source-line-no">239</span><span id="line-239">  }</span>
+<span class="source-line-no">240</span><span id="line-240"></span>
+<span class="source-line-no">241</span><span id="line-241">  public static boolean isNucleotideTerm(Term term) {</span>
+<span class="source-line-no">242</span><span id="line-242">    return term.simpleName().startsWith("nucleotide_") || term == MixsTerm.target_gene;</span>
+<span class="source-line-no">243</span><span id="line-243">  }</span>
+<span class="source-line-no">244</span><span id="line-244"></span>
+<span class="source-line-no">245</span><span id="line-245">  public static boolean isVocabulary(Term term) {</span>
+<span class="source-line-no">246</span><span id="line-246">    return term instanceof Enum &amp;&amp; hasTermAnnotation(term, Vocabulary.class);</span>
+<span class="source-line-no">247</span><span id="line-247">  }</span>
+<span class="source-line-no">248</span><span id="line-248"></span>
+<span class="source-line-no">249</span><span id="line-249">  private static boolean hasTermAnnotation(Term term, Class&lt;? extends Annotation&gt; annotation) {</span>
+<span class="source-line-no">250</span><span id="line-250">    try {</span>
+<span class="source-line-no">251</span><span id="line-251">      return term.getClass().getField(((Enum) term).name()).isAnnotationPresent(annotation);</span>
+<span class="source-line-no">252</span><span id="line-252">    } catch (NoSuchFieldException var3) {</span>
+<span class="source-line-no">253</span><span id="line-253">      throw new IllegalArgumentException(var3);</span>
+<span class="source-line-no">254</span><span id="line-254">    }</span>
+<span class="source-line-no">255</span><span id="line-255">  }</span>
+<span class="source-line-no">256</span><span id="line-256"></span>
+<span class="source-line-no">257</span><span id="line-257">  /** @return true if the term is an interpreted local date (timezone not relevant) */</span>
+<span class="source-line-no">258</span><span id="line-258">  public static boolean isInterpretedLocalDateSeconds(Term term) {</span>
+<span class="source-line-no">259</span><span id="line-259">    return term != null &amp;&amp; INTERPRETED_LOCAL_DATES_SECONDS.contains(term);</span>
+<span class="source-line-no">260</span><span id="line-260">  }</span>
+<span class="source-line-no">261</span><span id="line-261"></span>
+<span class="source-line-no">262</span><span id="line-262">  /** @return true if the term is an interpreted UTC date stored in seconds */</span>
+<span class="source-line-no">263</span><span id="line-263">  public static boolean isInterpretedUtcDateSeconds(Term term) {</span>
+<span class="source-line-no">264</span><span id="line-264">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_SECONDS.contains(term);</span>
+<span class="source-line-no">265</span><span id="line-265">  }</span>
+<span class="source-line-no">266</span><span id="line-266"></span>
+<span class="source-line-no">267</span><span id="line-267">  /** @return true if the term is an interpreted UTC date stored in milliseconds */</span>
+<span class="source-line-no">268</span><span id="line-268">  public static boolean isInterpretedUtcDateMilliseconds(Term term) {</span>
+<span class="source-line-no">269</span><span id="line-269">    return term != null &amp;&amp; INTERPRETED_UTC_DATES_MILLISECONDS.contains(term);</span>
+<span class="source-line-no">270</span><span id="line-270">  }</span>
+<span class="source-line-no">271</span><span id="line-271"></span>
+<span class="source-line-no">272</span><span id="line-272">  /** @return true if the term is an interpreted numerical */</span>
+<span class="source-line-no">273</span><span id="line-273">  public static boolean isInterpretedNumerical(Term term) {</span>
+<span class="source-line-no">274</span><span id="line-274">    return term != null &amp;&amp; INTERPRETED_NUM.contains(term);</span>
+<span class="source-line-no">275</span><span id="line-275">  }</span>
+<span class="source-line-no">276</span><span id="line-276"></span>
+<span class="source-line-no">277</span><span id="line-277">  /** @return true if the term is an interpreted double */</span>
+<span class="source-line-no">278</span><span id="line-278">  public static boolean isInterpretedDouble(Term term) {</span>
+<span class="source-line-no">279</span><span id="line-279">    return term != null &amp;&amp; INTERPRETED_DOUBLE.contains(term);</span>
+<span class="source-line-no">280</span><span id="line-280">  }</span>
+<span class="source-line-no">281</span><span id="line-281"></span>
+<span class="source-line-no">282</span><span id="line-282">  /** @return true if the term is an interpreted boolean */</span>
+<span class="source-line-no">283</span><span id="line-283">  public static boolean isInterpretedBoolean(Term term) {</span>
+<span class="source-line-no">284</span><span id="line-284">    return term != null &amp;&amp; INTERPRETED_BOOLEAN.contains(term);</span>
+<span class="source-line-no">285</span><span id="line-285">  }</span>
+<span class="source-line-no">286</span><span id="line-286"></span>
+<span class="source-line-no">287</span><span id="line-287">  /** @return true if the term is a complex type in Hive: array, struct, json, etc. */</span>
+<span class="source-line-no">288</span><span id="line-288">  public static boolean isComplexType(Term term) {</span>
+<span class="source-line-no">289</span><span id="line-289">    return term != null &amp;&amp; COMPLEX_TYPE.contains(term);</span>
+<span class="source-line-no">290</span><span id="line-290">  }</span>
+<span class="source-line-no">291</span><span id="line-291"></span>
+<span class="source-line-no">292</span><span id="line-292">  public static boolean isExtensionTerm(Term term) {</span>
+<span class="source-line-no">293</span><span id="line-293">    return term != null &amp;&amp; EXTENSION_TERMS.contains(term);</span>
+<span class="source-line-no">294</span><span id="line-294">  }</span>
+<span class="source-line-no">295</span><span id="line-295"></span>
+<span class="source-line-no">296</span><span id="line-296">  public static Map&lt;SearchParameter, String&gt; HUMBOLDT_TAXON_COLUMNS =</span>
+<span class="source-line-no">297</span><span id="line-297">      Map.of(</span>
+<span class="source-line-no">298</span><span id="line-298">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,</span>
+<span class="source-line-no">299</span><span id="line-299">          "usagekey",</span>
+<span class="source-line-no">300</span><span id="line-300">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,</span>
+<span class="source-line-no">301</span><span id="line-301">          "usagename",</span>
+<span class="source-line-no">302</span><span id="line-302">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_KEY,</span>
+<span class="source-line-no">303</span><span id="line-303">          "acceptedusagekey",</span>
+<span class="source-line-no">304</span><span id="line-304">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ACCEPTED_USAGE_NAME,</span>
+<span class="source-line-no">305</span><span id="line-305">          "acceptedusagename",</span>
+<span class="source-line-no">306</span><span id="line-306">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,</span>
+<span class="source-line-no">307</span><span id="line-307">          "taxonkeys",</span>
+<span class="source-line-no">308</span><span id="line-308">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,</span>
+<span class="source-line-no">309</span><span id="line-309">          "iucnRedListCategoryCode",</span>
+<span class="source-line-no">310</span><span id="line-310">          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,</span>
+<span class="source-line-no">311</span><span id="line-311">          "issues");</span>
+<span class="source-line-no">312</span><span id="line-312">}</span>
 
 
 
