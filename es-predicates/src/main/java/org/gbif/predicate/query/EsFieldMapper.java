@@ -1,11 +1,10 @@
 package org.gbif.predicate.query;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import java.util.List;
 import java.util.Optional;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
@@ -29,14 +28,15 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   String getFullTextField();
 
-  List<FieldSortBuilder> getDefaultSort();
+  List<SortOptions> getDefaultSort();
 
-  default Optional<QueryBuilder> getDefaultFilter() {
+  default Optional<Query> getDefaultFilter() {
     return Optional.empty();
   }
 
   default boolean isNestedField(P searchParameter) {
-    return !Strings.isNullOrEmpty(getNestedPath(searchParameter));
+    String path = getNestedPath(searchParameter);
+    return path != null && !path.isBlank();
   }
 
   /**
@@ -60,7 +60,7 @@ public interface EsFieldMapper<P extends SearchParameter> {
    * Adds an "is null" filter if the mapper instructs to do it for the range query. Used mostly in
    * range queries to give specific semantics to null values.
    */
-  default boolean includeNullInRange(P param, RangeQueryBuilder rangeQueryBuilder) {
+  default boolean includeNullInRange(P param, RangeQuery rangeQuery) {
     return false;
   }
 

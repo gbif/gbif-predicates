@@ -1,10 +1,10 @@
 package org.gbif.predicate.query;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
@@ -98,7 +98,7 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
   }
 
   @Override
-  public List<FieldSortBuilder> getDefaultSort() {
+  public List<SortOptions> getDefaultSort() {
     return List.of();
   }
 

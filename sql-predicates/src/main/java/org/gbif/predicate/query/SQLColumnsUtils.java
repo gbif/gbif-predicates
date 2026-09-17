@@ -201,7 +201,7 @@ public class SQLColumnsUtils {
         || DwcTerm.georeferencedBy == term
         || DwcTerm.higherGeography == term
         || DwcTerm.associatedSequences == term
-        || GbifTerm.projectId == term
+        || DwcTerm.projectID == term
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
         || GbifTerm.nonTaxonomicIssue == term
@@ -230,7 +230,8 @@ public class SQLColumnsUtils {
         || DwcTerm.fundingAttributionID == term
         || DwcTerm.measurementType == term
         || ObisTerm.measurementTypeID == term
-        || GbifTerm.dnaSequenceID == term;
+        || GbifTerm.dnaSequenceID == term
+        || GbifTerm.taxonomicIssue == term;
   }
 
   public static boolean isHumboldtTerm(Term term) {

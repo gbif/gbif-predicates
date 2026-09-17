@@ -198,7 +198,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(OccurrenceSearchParameter.IDENTIFIED_BY, DwcTerm.identifiedBy);
     arrayMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);
     arrayMap.put(OccurrenceSearchParameter.SAMPLING_PROTOCOL, DwcTerm.samplingProtocol);
-    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);
+    arrayMap.put(OccurrenceSearchParameter.PROJECT_ID, DwcTerm.projectID);
     arrayMap.put(OccurrenceSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
     arrayMap.put(OccurrenceSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
     arrayMap.put(OccurrenceSearchParameter.ASSOCIATED_SEQUENCES, DwcTerm.associatedSequences);
@@ -377,7 +377,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation);
     paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);
     paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);
-    paramMap.put(OccurrenceSearchParameter.PROJECT_ID, GbifTerm.projectId);
+    paramMap.put(OccurrenceSearchParameter.PROJECT_ID, DwcTerm.projectID);
     paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
