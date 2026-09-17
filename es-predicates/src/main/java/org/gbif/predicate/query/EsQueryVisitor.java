@@ -239,7 +239,9 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
         QueryData mustQueryData = new QueryData(mustQueryBuilder);
         visit(subPredicate, mustQueryData);
 
-        if (mustQueryData.isNested()) {
+        if (mustQueryData.isNested()
+            && !(subPredicate instanceof IsNullPredicate)
+            && !(subPredicate instanceof IsNotNullPredicate)) {
           List<QueryBuilder> queriesToAdd;
 
           if (subPredicate instanceof DisjunctionPredicate && mustQueryData.rawQueries.size() > 1) {
