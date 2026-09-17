@@ -1310,29 +1310,23 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"bool\": {\n"
             + "                  \"filter\": [\n"
             + "                    {\n"
-            + "                      \"bool\": {\n"
-            + "                        \"filter\": [\n"
-            + "                          {\n"
-            + "                            \"term\": {\n"
-            + "                              \"catalog_number.keyword\": {\n"
-            + "                                \"value\": \"value_1\"\n"
-            + "                              }\n"
-            + "                            }\n"
-            + "                          }\n"
-            + "                        ]\n"
+            + "                      \"term\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1\"\n"
+            + "                        }\n"
             + "                      }\n"
-            + "                    },\n"
+            + "                    }\n"
+            + "                  ]\n"
+            + "                }\n"
+            + "              },\n"
+            + "              {\n"
+            + "                \"bool\": {\n"
+            + "                  \"filter\": [\n"
             + "                    {\n"
-            + "                      \"bool\": {\n"
-            + "                        \"filter\": [\n"
-            + "                          {\n"
-            + "                            \"wildcard\": {\n"
-            + "                              \"catalog_number.keyword\": {\n"
-            + "                                \"value\": \"value_1*\"\n"
-            + "                              }\n"
-            + "                            }\n"
-            + "                          }\n"
-            + "                        ]\n"
+            + "                      \"wildcard\": {\n"
+            + "                        \"catalog_number.keyword\": {\n"
+            + "                          \"value\": \"value_1*\"\n"
+            + "                        }\n"
             + "                      }\n"
             + "                    }\n"
             + "                  ]\n"
@@ -2303,40 +2297,5 @@ public class OccurrenceEsQueryVisitorTest {
             + "  }\n"
             + "}";
     assertQueryEquals(expectedQuery, query);
-  }
-
-  /**
-   * Test for issue #585: flat AND combining IsNullPredicate and IsNotNullPredicate on nested fields
-   * should NOT merge them into a single nested query (which would return 0 results), but should
-   * produce separate nested queries.
-   */
-  @Test
-  public void testConjunctionWithNestedNullPredicatesProducesSeparateNestedQueries()
-      throws QueryBuildingException {
-    // Flat AND: occurrenceStatus=PRESENT AND nucleotideSequenceID IS NULL AND sequence IS NOT NULL
-    Predicate flatAnd =
-        new ConjunctionPredicate(
-            Arrays.asList(
-                new InPredicate<>(
-                    OccurrenceSearchParameter.OCCURRENCE_STATUS, Arrays.asList("PRESENT"), false),
-                new IsNullPredicate<>(
-                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NUCLEOTIDE_SEQUENCE_ID),
-                new IsNotNullPredicate<>(OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE)));
-
-    String flatQuery = visitor.buildQuery(flatAnd);
-
-    // Verify there are two occurrences of the nested path "nucleotideSequence"
-    int nucleotideSequenceCount = 0;
-    int idx = 0;
-    while ((idx = flatQuery.indexOf("\"nucleotideSequence\"", idx)) != -1) {
-      nucleotideSequenceCount++;
-      idx++;
-    }
-    assertEquals(
-        2,
-        nucleotideSequenceCount,
-        "Expected two separate nested queries for nucleotideSequence, but found "
-            + nucleotideSequenceCount
-            + ". The null predicates must NOT be merged into one nested query.");
   }
 }

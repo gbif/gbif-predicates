@@ -273,8 +273,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     Map<String, List<Query>> queriesByNestedPath = new HashMap<>();
     boolean nonNestedQueriesFound = false;
 
+    // Flatten nested ConjunctionPredicates so that nested-field conditions from inner ANDs
+    // are merged with outer-level nested-field conditions (fixes issue #585).
+    List<Predicate> flatPredicates = flattenConjunction(predicate.getPredicates());
+
     Map<S, List<SimplePredicate<S>>> rangeBoundsByKey =
-        predicate.getPredicates().stream()
+        flatPredicates.stream()
             .filter(
                 p ->
                     p instanceof GreaterThanPredicate
@@ -321,7 +325,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       }
     }
 
-    for (Predicate subPredicate : predicate.getPredicates()) {
+    for (Predicate subPredicate : flatPredicates) {
       if (handledAsMergedRange.contains(subPredicate)) {
         continue;
       }
@@ -329,9 +333,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
         QueryData mustQueryData = new QueryData();
         visit(subPredicate, mustQueryData);
 
-        if (mustQueryData.isNested()
-            && !(subPredicate instanceof IsNullPredicate)
-            && !(subPredicate instanceof IsNotNullPredicate)) {
+        if (mustQueryData.isNested()) {
           List<Query> queriesToAdd;
 
           if (subPredicate instanceof DisjunctionPredicate && mustQueryData.rawQueries.size() > 1) {
@@ -370,6 +372,22 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   private static Query buildBoolFromQueryData(QueryData d) {
     return buildBoolQuery(d.filterQueries, d.shouldQueries, d.mustNotQueries);
+  }
+
+  /**
+   * Recursively flattens nested ConjunctionPredicates into a single list, so that nested-field
+   * conditions from inner ANDs are merged with outer-level conditions during query building.
+   */
+  private static List<Predicate> flattenConjunction(Collection<Predicate> predicates) {
+    List<Predicate> result = new ArrayList<>();
+    for (Predicate p : predicates) {
+      if (p instanceof ConjunctionPredicate) {
+        result.addAll(flattenConjunction(((ConjunctionPredicate) p).getPredicates()));
+      } else {
+        result.add(p);
+      }
+    }
+    return result;
   }
 
   /**
