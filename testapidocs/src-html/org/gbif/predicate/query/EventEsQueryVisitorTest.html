@@ -1319,807 +1319,801 @@
 <span class="source-line-no">1306</span><span id="line-1306">            + "                \"bool\": {\n"</span>
 <span class="source-line-no">1307</span><span id="line-1307">            + "                  \"filter\": [\n"</span>
 <span class="source-line-no">1308</span><span id="line-1308">            + "                    {\n"</span>
-<span class="source-line-no">1309</span><span id="line-1309">            + "                      \"bool\": {\n"</span>
-<span class="source-line-no">1310</span><span id="line-1310">            + "                        \"filter\": [\n"</span>
-<span class="source-line-no">1311</span><span id="line-1311">            + "                          {\n"</span>
-<span class="source-line-no">1312</span><span id="line-1312">            + "                            \"term\": {\n"</span>
-<span class="source-line-no">1313</span><span id="line-1313">            + "                              \"island.keyword\": {\n"</span>
-<span class="source-line-no">1314</span><span id="line-1314">            + "                                \"value\": \"value_1\"\n"</span>
-<span class="source-line-no">1315</span><span id="line-1315">            + "                              }\n"</span>
-<span class="source-line-no">1316</span><span id="line-1316">            + "                            }\n"</span>
-<span class="source-line-no">1317</span><span id="line-1317">            + "                          }\n"</span>
-<span class="source-line-no">1318</span><span id="line-1318">            + "                        ]\n"</span>
-<span class="source-line-no">1319</span><span id="line-1319">            + "                      }\n"</span>
-<span class="source-line-no">1320</span><span id="line-1320">            + "                    },\n"</span>
+<span class="source-line-no">1309</span><span id="line-1309">            + "                      \"term\": {\n"</span>
+<span class="source-line-no">1310</span><span id="line-1310">            + "                        \"island.keyword\": {\n"</span>
+<span class="source-line-no">1311</span><span id="line-1311">            + "                          \"value\": \"value_1\"\n"</span>
+<span class="source-line-no">1312</span><span id="line-1312">            + "                        }\n"</span>
+<span class="source-line-no">1313</span><span id="line-1313">            + "                      }\n"</span>
+<span class="source-line-no">1314</span><span id="line-1314">            + "                    }\n"</span>
+<span class="source-line-no">1315</span><span id="line-1315">            + "                  ]\n"</span>
+<span class="source-line-no">1316</span><span id="line-1316">            + "                }\n"</span>
+<span class="source-line-no">1317</span><span id="line-1317">            + "              },\n"</span>
+<span class="source-line-no">1318</span><span id="line-1318">            + "              {\n"</span>
+<span class="source-line-no">1319</span><span id="line-1319">            + "                \"bool\": {\n"</span>
+<span class="source-line-no">1320</span><span id="line-1320">            + "                  \"filter\": [\n"</span>
 <span class="source-line-no">1321</span><span id="line-1321">            + "                    {\n"</span>
-<span class="source-line-no">1322</span><span id="line-1322">            + "                      \"bool\": {\n"</span>
-<span class="source-line-no">1323</span><span id="line-1323">            + "                        \"filter\": [\n"</span>
-<span class="source-line-no">1324</span><span id="line-1324">            + "                          {\n"</span>
-<span class="source-line-no">1325</span><span id="line-1325">            + "                            \"wildcard\": {\n"</span>
-<span class="source-line-no">1326</span><span id="line-1326">            + "                              \"island.keyword\": {\n"</span>
-<span class="source-line-no">1327</span><span id="line-1327">            + "                                \"value\": \"value_1*\"\n"</span>
-<span class="source-line-no">1328</span><span id="line-1328">            + "                              }\n"</span>
-<span class="source-line-no">1329</span><span id="line-1329">            + "                            }\n"</span>
-<span class="source-line-no">1330</span><span id="line-1330">            + "                          }\n"</span>
-<span class="source-line-no">1331</span><span id="line-1331">            + "                        ]\n"</span>
-<span class="source-line-no">1332</span><span id="line-1332">            + "                      }\n"</span>
-<span class="source-line-no">1333</span><span id="line-1333">            + "                    }\n"</span>
-<span class="source-line-no">1334</span><span id="line-1334">            + "                  ]\n"</span>
-<span class="source-line-no">1335</span><span id="line-1335">            + "                }\n"</span>
-<span class="source-line-no">1336</span><span id="line-1336">            + "              }\n"</span>
-<span class="source-line-no">1337</span><span id="line-1337">            + "            ]\n"</span>
-<span class="source-line-no">1338</span><span id="line-1338">            + "          }\n"</span>
-<span class="source-line-no">1339</span><span id="line-1339">            + "        }\n";</span>
-<span class="source-line-no">1340</span><span id="line-1340">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1341</span><span id="line-1341">  }</span>
-<span class="source-line-no">1342</span><span id="line-1342"></span>
-<span class="source-line-no">1343</span><span id="line-1343">  @Test</span>
-<span class="source-line-no">1344</span><span id="line-1344">  public void testVocabularyEqualsPredicate() {</span>
-<span class="source-line-no">1345</span><span id="line-1345"></span>
-<span class="source-line-no">1346</span><span id="line-1346">    Arrays.stream(EventSearchParameter.values())</span>
-<span class="source-line-no">1347</span><span id="line-1347">        .filter(fieldMapper::isVocabulary)</span>
-<span class="source-line-no">1348</span><span id="line-1348">        .forEach(</span>
-<span class="source-line-no">1349</span><span id="line-1349">            param -&gt; {</span>
-<span class="source-line-no">1350</span><span id="line-1350">              try {</span>
-<span class="source-line-no">1351</span><span id="line-1351">                Predicate p = new EqualsPredicate&lt;&gt;(param, "value", false);</span>
-<span class="source-line-no">1352</span><span id="line-1352">                String searchFieldName = fieldMapper.getExactMatchFieldName(param);</span>
-<span class="source-line-no">1353</span><span id="line-1353">                String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1354</span><span id="line-1354">                String expectedQuery =</span>
-<span class="source-line-no">1355</span><span id="line-1355">                    ("{\n"</span>
-<span class="source-line-no">1356</span><span id="line-1356">                        + "                      \"bool\": {\n"</span>
-<span class="source-line-no">1357</span><span id="line-1357">                        + "                        \"filter\": [\n"</span>
-<span class="source-line-no">1358</span><span id="line-1358">                        + "                          {\n"</span>
-<span class="source-line-no">1359</span><span id="line-1359">                        + "                            \"nested\": {\n"</span>
-<span class="source-line-no">1360</span><span id="line-1360">                        + "                              \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">1361</span><span id="line-1361">                        + "                              \"query\": {\n"</span>
-<span class="source-line-no">1362</span><span id="line-1362">                        + "                                \"term\": {\n"</span>
-<span class="source-line-no">1363</span><span id="line-1363">                        + "                                  \""</span>
-<span class="source-line-no">1364</span><span id="line-1364">                        + searchFieldName</span>
-<span class="source-line-no">1365</span><span id="line-1365">                        + "\": {\n"</span>
-<span class="source-line-no">1366</span><span id="line-1366">                        + "                                    \"value\": \"value\"\n"</span>
-<span class="source-line-no">1367</span><span id="line-1367">                        + "                                  }\n"</span>
-<span class="source-line-no">1368</span><span id="line-1368">                        + "                                }\n"</span>
-<span class="source-line-no">1369</span><span id="line-1369">                        + "                              },\n"</span>
-<span class="source-line-no">1370</span><span id="line-1370">                        + "                              \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">1371</span><span id="line-1371">                        + "                            }\n"</span>
-<span class="source-line-no">1372</span><span id="line-1372">                        + "                          }\n"</span>
-<span class="source-line-no">1373</span><span id="line-1373">                        + "                        ]\n"</span>
-<span class="source-line-no">1374</span><span id="line-1374">                        + "                      }\n"</span>
-<span class="source-line-no">1375</span><span id="line-1375">                        + "                    }\n");</span>
-<span class="source-line-no">1376</span><span id="line-1376">                assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1377</span><span id="line-1377">              } catch (QueryBuildingException | JsonProcessingException ex) {</span>
-<span class="source-line-no">1378</span><span id="line-1378">                throw new RuntimeException(ex);</span>
-<span class="source-line-no">1379</span><span id="line-1379">              }</span>
-<span class="source-line-no">1380</span><span id="line-1380">            });</span>
-<span class="source-line-no">1381</span><span id="line-1381">  }</span>
-<span class="source-line-no">1382</span><span id="line-1382"></span>
-<span class="source-line-no">1383</span><span id="line-1383">  @Test</span>
-<span class="source-line-no">1384</span><span id="line-1384">  public void testIntInclusiveRangeWithRangePredicate()</span>
-<span class="source-line-no">1385</span><span id="line-1385">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1386</span><span id="line-1386"></span>
-<span class="source-line-no">1387</span><span id="line-1387">    RangeValue rangeValue = new RangeValue("1990", null, "2011", null);</span>
-<span class="source-line-no">1388</span><span id="line-1388">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
-<span class="source-line-no">1389</span><span id="line-1389">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1390</span><span id="line-1390">    String expectedQuery =</span>
-<span class="source-line-no">1391</span><span id="line-1391">        "{\n"</span>
-<span class="source-line-no">1392</span><span id="line-1392">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1393</span><span id="line-1393">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1394</span><span id="line-1394">            + "              {\n"</span>
-<span class="source-line-no">1395</span><span id="line-1395">            + "                \"range\": {\n"</span>
-<span class="source-line-no">1396</span><span id="line-1396">            + "                  \"year\": {\n"</span>
-<span class="source-line-no">1397</span><span id="line-1397">            + "                    \"gte\": 1990,\n"</span>
-<span class="source-line-no">1398</span><span id="line-1398">            + "                    \"lte\": 2011\n"</span>
-<span class="source-line-no">1399</span><span id="line-1399">            + "                  }\n"</span>
-<span class="source-line-no">1400</span><span id="line-1400">            + "                }\n"</span>
-<span class="source-line-no">1401</span><span id="line-1401">            + "              }\n"</span>
-<span class="source-line-no">1402</span><span id="line-1402">            + "            ]\n"</span>
-<span class="source-line-no">1403</span><span id="line-1403">            + "          }\n"</span>
-<span class="source-line-no">1404</span><span id="line-1404">            + "        }\n";</span>
-<span class="source-line-no">1405</span><span id="line-1405">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1406</span><span id="line-1406">  }</span>
-<span class="source-line-no">1407</span><span id="line-1407"></span>
-<span class="source-line-no">1408</span><span id="line-1408">  @Test</span>
-<span class="source-line-no">1409</span><span id="line-1409">  public void testIntExclusiveRangeWithRangePredicate()</span>
-<span class="source-line-no">1410</span><span id="line-1410">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1411</span><span id="line-1411"></span>
-<span class="source-line-no">1412</span><span id="line-1412">    RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");</span>
-<span class="source-line-no">1413</span><span id="line-1413">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
-<span class="source-line-no">1414</span><span id="line-1414">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1415</span><span id="line-1415">    String expectedQuery =</span>
-<span class="source-line-no">1416</span><span id="line-1416">        "{\n"</span>
-<span class="source-line-no">1417</span><span id="line-1417">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1418</span><span id="line-1418">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1419</span><span id="line-1419">            + "              {\n"</span>
-<span class="source-line-no">1420</span><span id="line-1420">            + "                \"range\": {\n"</span>
-<span class="source-line-no">1421</span><span id="line-1421">            + "                  \"year\": {\n"</span>
-<span class="source-line-no">1422</span><span id="line-1422">            + "                    \"gt\": 1990,\n"</span>
-<span class="source-line-no">1423</span><span id="line-1423">            + "                    \"lt\": 2011\n"</span>
-<span class="source-line-no">1424</span><span id="line-1424">            + "                  }\n"</span>
-<span class="source-line-no">1425</span><span id="line-1425">            + "                }\n"</span>
-<span class="source-line-no">1426</span><span id="line-1426">            + "              }\n"</span>
-<span class="source-line-no">1427</span><span id="line-1427">            + "            ]\n"</span>
-<span class="source-line-no">1428</span><span id="line-1428">            + "          }\n"</span>
-<span class="source-line-no">1429</span><span id="line-1429">            + "        }\n";</span>
-<span class="source-line-no">1430</span><span id="line-1430">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1431</span><span id="line-1431">  }</span>
-<span class="source-line-no">1432</span><span id="line-1432"></span>
-<span class="source-line-no">1433</span><span id="line-1433">  @Test</span>
-<span class="source-line-no">1434</span><span id="line-1434">  public void testInclusiveExclusiveRangeWithRangePredicate()</span>
-<span class="source-line-no">1435</span><span id="line-1435">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1436</span><span id="line-1436"></span>
-<span class="source-line-no">1437</span><span id="line-1437">    RangeValue rangeValue = new RangeValue("1990", null, null, "2011");</span>
-<span class="source-line-no">1438</span><span id="line-1438">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
-<span class="source-line-no">1439</span><span id="line-1439">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1440</span><span id="line-1440">    String expectedQuery =</span>
-<span class="source-line-no">1441</span><span id="line-1441">        "{\n"</span>
-<span class="source-line-no">1442</span><span id="line-1442">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1443</span><span id="line-1443">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1444</span><span id="line-1444">            + "              {\n"</span>
-<span class="source-line-no">1445</span><span id="line-1445">            + "                \"range\": {\n"</span>
-<span class="source-line-no">1446</span><span id="line-1446">            + "                  \"year\": {\n"</span>
-<span class="source-line-no">1447</span><span id="line-1447">            + "                    \"gte\": 1990,\n"</span>
-<span class="source-line-no">1448</span><span id="line-1448">            + "                    \"lt\": 2011\n"</span>
-<span class="source-line-no">1449</span><span id="line-1449">            + "                  }\n"</span>
-<span class="source-line-no">1450</span><span id="line-1450">            + "                }\n"</span>
-<span class="source-line-no">1451</span><span id="line-1451">            + "              }\n"</span>
-<span class="source-line-no">1452</span><span id="line-1452">            + "            ]\n"</span>
-<span class="source-line-no">1453</span><span id="line-1453">            + "          }\n"</span>
-<span class="source-line-no">1454</span><span id="line-1454">            + "        }\n";</span>
-<span class="source-line-no">1455</span><span id="line-1455">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1456</span><span id="line-1456">  }</span>
-<span class="source-line-no">1457</span><span id="line-1457"></span>
-<span class="source-line-no">1458</span><span id="line-1458">  @Test</span>
-<span class="source-line-no">1459</span><span id="line-1459">  public void testExclusiveInclusiveRangeWithRangePredicate()</span>
-<span class="source-line-no">1460</span><span id="line-1460">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1461</span><span id="line-1461"></span>
-<span class="source-line-no">1462</span><span id="line-1462">    RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);</span>
-<span class="source-line-no">1463</span><span id="line-1463">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
-<span class="source-line-no">1464</span><span id="line-1464">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1465</span><span id="line-1465">    String expectedQuery =</span>
-<span class="source-line-no">1466</span><span id="line-1466">        "{\n"</span>
-<span class="source-line-no">1467</span><span id="line-1467">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1468</span><span id="line-1468">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1469</span><span id="line-1469">            + "              {\n"</span>
-<span class="source-line-no">1470</span><span id="line-1470">            + "                \"range\": {\n"</span>
-<span class="source-line-no">1471</span><span id="line-1471">            + "                  \"year\": {\n"</span>
-<span class="source-line-no">1472</span><span id="line-1472">            + "                    \"gt\": 1990,\n"</span>
-<span class="source-line-no">1473</span><span id="line-1473">            + "                    \"lte\": 2011\n"</span>
-<span class="source-line-no">1474</span><span id="line-1474">            + "                  }\n"</span>
-<span class="source-line-no">1475</span><span id="line-1475">            + "                }\n"</span>
-<span class="source-line-no">1476</span><span id="line-1476">            + "              }\n"</span>
-<span class="source-line-no">1477</span><span id="line-1477">            + "            ]\n"</span>
-<span class="source-line-no">1478</span><span id="line-1478">            + "          }\n"</span>
-<span class="source-line-no">1479</span><span id="line-1479">            + "        }\n";</span>
-<span class="source-line-no">1480</span><span id="line-1480">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1481</span><span id="line-1481">  }</span>
-<span class="source-line-no">1482</span><span id="line-1482"></span>
-<span class="source-line-no">1483</span><span id="line-1483">  /** Test a single taxon key query with a checklist key specified. */</span>
-<span class="source-line-no">1484</span><span id="line-1484">  @Test</span>
-<span class="source-line-no">1485</span><span id="line-1485">  public void testMultiTaxonomyPredicate() throws JsonProcessingException {</span>
-<span class="source-line-no">1486</span><span id="line-1486">    EqualsPredicate equalsPredicate =</span>
-<span class="source-line-no">1487</span><span id="line-1487">        new EqualsPredicate&lt;EventSearchParameter&gt;(</span>
-<span class="source-line-no">1488</span><span id="line-1488">            EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1489</span><span id="line-1489">            "urn:lsid:marinespecies.org:taxname:368663",</span>
-<span class="source-line-no">1490</span><span id="line-1490">            false,</span>
-<span class="source-line-no">1491</span><span id="line-1491">            "2d59e5db-57ad-41ff-97d6-11f5fb264527");</span>
-<span class="source-line-no">1492</span><span id="line-1492">    try {</span>
-<span class="source-line-no">1493</span><span id="line-1493">      String query = visitor.buildQuery(equalsPredicate);</span>
-<span class="source-line-no">1494</span><span id="line-1494">      String expectedQuery =</span>
-<span class="source-line-no">1495</span><span id="line-1495">          "{\n"</span>
-<span class="source-line-no">1496</span><span id="line-1496">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1497</span><span id="line-1497">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1498</span><span id="line-1498">              + "                {\n"</span>
-<span class="source-line-no">1499</span><span id="line-1499">              + "                  \"term\": {\n"</span>
-<span class="source-line-no">1500</span><span id="line-1500">              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": {\n"</span>
-<span class="source-line-no">1501</span><span id="line-1501">              + "                      \"value\": \"urn:lsid:marinespecies.org:taxname:368663\"\n"</span>
-<span class="source-line-no">1502</span><span id="line-1502">              + "                    }\n"</span>
-<span class="source-line-no">1503</span><span id="line-1503">              + "                  }\n"</span>
-<span class="source-line-no">1504</span><span id="line-1504">              + "                }\n"</span>
-<span class="source-line-no">1505</span><span id="line-1505">              + "              ]\n"</span>
-<span class="source-line-no">1506</span><span id="line-1506">              + "            }\n"</span>
-<span class="source-line-no">1507</span><span id="line-1507">              + "          }\n";</span>
-<span class="source-line-no">1508</span><span id="line-1508">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1509</span><span id="line-1509">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1510</span><span id="line-1510">      fail();</span>
-<span class="source-line-no">1511</span><span id="line-1511">    }</span>
-<span class="source-line-no">1512</span><span id="line-1512">  }</span>
-<span class="source-line-no">1513</span><span id="line-1513"></span>
-<span class="source-line-no">1514</span><span id="line-1514">  /** Test a single taxon key query with a checklist key specified. */</span>
-<span class="source-line-no">1515</span><span id="line-1515">  @Test</span>
-<span class="source-line-no">1516</span><span id="line-1516">  public void testMultiTaxonomyPredicates() throws JsonProcessingException {</span>
-<span class="source-line-no">1517</span><span id="line-1517">    InPredicate inPredicate =</span>
-<span class="source-line-no">1518</span><span id="line-1518">        new InPredicate&lt;EventSearchParameter&gt;(</span>
-<span class="source-line-no">1519</span><span id="line-1519">            EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1520</span><span id="line-1520">            List.of(</span>
-<span class="source-line-no">1521</span><span id="line-1521">                "urn:lsid:marinespecies.org:taxname:368663",</span>
-<span class="source-line-no">1522</span><span id="line-1522">                "urn:lsid:marinespecies.org:taxname:368664"),</span>
-<span class="source-line-no">1523</span><span id="line-1523">            false,</span>
-<span class="source-line-no">1524</span><span id="line-1524">            "2d59e5db-57ad-41ff-97d6-11f5fb264527");</span>
-<span class="source-line-no">1525</span><span id="line-1525">    try {</span>
-<span class="source-line-no">1526</span><span id="line-1526">      String query = visitor.buildQuery(inPredicate);</span>
-<span class="source-line-no">1527</span><span id="line-1527">      String expectedQuery =</span>
-<span class="source-line-no">1528</span><span id="line-1528">          "{\n"</span>
-<span class="source-line-no">1529</span><span id="line-1529">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1530</span><span id="line-1530">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1531</span><span id="line-1531">              + "                {\n"</span>
-<span class="source-line-no">1532</span><span id="line-1532">              + "                  \"terms\": {\n"</span>
-<span class="source-line-no">1533</span><span id="line-1533">              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": [\n"</span>
-<span class="source-line-no">1534</span><span id="line-1534">              + "                      \"urn:lsid:marinespecies.org:taxname:368663\",\n"</span>
-<span class="source-line-no">1535</span><span id="line-1535">              + "                      \"urn:lsid:marinespecies.org:taxname:368664\"\n"</span>
-<span class="source-line-no">1536</span><span id="line-1536">              + "                    ]\n"</span>
-<span class="source-line-no">1537</span><span id="line-1537">              + "                  }\n"</span>
-<span class="source-line-no">1538</span><span id="line-1538">              + "                }\n"</span>
-<span class="source-line-no">1539</span><span id="line-1539">              + "              ]\n"</span>
-<span class="source-line-no">1540</span><span id="line-1540">              + "            }\n"</span>
-<span class="source-line-no">1541</span><span id="line-1541">              + "          }\n";</span>
-<span class="source-line-no">1542</span><span id="line-1542">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1543</span><span id="line-1543">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1544</span><span id="line-1544">      fail();</span>
-<span class="source-line-no">1545</span><span id="line-1545">    }</span>
-<span class="source-line-no">1546</span><span id="line-1546">  }</span>
-<span class="source-line-no">1547</span><span id="line-1547"></span>
-<span class="source-line-no">1548</span><span id="line-1548">  /**</span>
-<span class="source-line-no">1549</span><span id="line-1549">   * Tests queries with 2 taxon keys coming from 2 separate classification with conjunction</span>
-<span class="source-line-no">1550</span><span id="line-1550">   * predicate (AND).</span>
-<span class="source-line-no">1551</span><span id="line-1551">   */</span>
-<span class="source-line-no">1552</span><span id="line-1552">  @Test</span>
-<span class="source-line-no">1553</span><span id="line-1553">  public void testMultipleTaxonomiesConjunctionPredicate() throws JsonProcessingException {</span>
-<span class="source-line-no">1554</span><span id="line-1554"></span>
-<span class="source-line-no">1555</span><span id="line-1555">    ConjunctionPredicate predicate =</span>
-<span class="source-line-no">1556</span><span id="line-1556">        new ConjunctionPredicate(</span>
-<span class="source-line-no">1557</span><span id="line-1557">            Arrays.asList(</span>
-<span class="source-line-no">1558</span><span id="line-1558">                new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">1559</span><span id="line-1559">                    EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1560</span><span id="line-1560">                    "urn:lsid:marinespecies.org:taxname:1",</span>
-<span class="source-line-no">1561</span><span id="line-1561">                    false,</span>
-<span class="source-line-no">1562</span><span id="line-1562">                    "checklistkey1"),</span>
-<span class="source-line-no">1563</span><span id="line-1563">                new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">1564</span><span id="line-1564">                    EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1565</span><span id="line-1565">                    "urn:lsid:marinespecies.org:taxname:2",</span>
-<span class="source-line-no">1566</span><span id="line-1566">                    false,</span>
-<span class="source-line-no">1567</span><span id="line-1567">                    "checklistkey2")));</span>
-<span class="source-line-no">1568</span><span id="line-1568">    try {</span>
-<span class="source-line-no">1569</span><span id="line-1569">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1570</span><span id="line-1570">      String expectedQuery =</span>
-<span class="source-line-no">1571</span><span id="line-1571">          "{\n"</span>
-<span class="source-line-no">1572</span><span id="line-1572">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1573</span><span id="line-1573">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1574</span><span id="line-1574">              + "                {\n"</span>
-<span class="source-line-no">1575</span><span id="line-1575">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1576</span><span id="line-1576">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1577</span><span id="line-1577">              + "                      {\n"</span>
-<span class="source-line-no">1578</span><span id="line-1578">              + "                        \"term\": {\n"</span>
-<span class="source-line-no">1579</span><span id="line-1579">              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"</span>
-<span class="source-line-no">1580</span><span id="line-1580">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"</span>
-<span class="source-line-no">1581</span><span id="line-1581">              + "                          }\n"</span>
-<span class="source-line-no">1582</span><span id="line-1582">              + "                        }\n"</span>
-<span class="source-line-no">1583</span><span id="line-1583">              + "                      }\n"</span>
-<span class="source-line-no">1584</span><span id="line-1584">              + "                    ]\n"</span>
-<span class="source-line-no">1585</span><span id="line-1585">              + "                  }\n"</span>
-<span class="source-line-no">1586</span><span id="line-1586">              + "                },\n"</span>
-<span class="source-line-no">1587</span><span id="line-1587">              + "                {\n"</span>
-<span class="source-line-no">1588</span><span id="line-1588">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1589</span><span id="line-1589">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1590</span><span id="line-1590">              + "                      {\n"</span>
-<span class="source-line-no">1591</span><span id="line-1591">              + "                        \"term\": {\n"</span>
-<span class="source-line-no">1592</span><span id="line-1592">              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"</span>
-<span class="source-line-no">1593</span><span id="line-1593">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"</span>
-<span class="source-line-no">1594</span><span id="line-1594">              + "                          }\n"</span>
-<span class="source-line-no">1595</span><span id="line-1595">              + "                        }\n"</span>
-<span class="source-line-no">1596</span><span id="line-1596">              + "                      }\n"</span>
-<span class="source-line-no">1597</span><span id="line-1597">              + "                    ]\n"</span>
-<span class="source-line-no">1598</span><span id="line-1598">              + "                  }\n"</span>
-<span class="source-line-no">1599</span><span id="line-1599">              + "                }\n"</span>
-<span class="source-line-no">1600</span><span id="line-1600">              + "              ]\n"</span>
-<span class="source-line-no">1601</span><span id="line-1601">              + "            }\n"</span>
-<span class="source-line-no">1602</span><span id="line-1602">              + "          }\n";</span>
-<span class="source-line-no">1603</span><span id="line-1603">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1604</span><span id="line-1604">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1605</span><span id="line-1605">      fail();</span>
-<span class="source-line-no">1606</span><span id="line-1606">    }</span>
-<span class="source-line-no">1607</span><span id="line-1607">  }</span>
-<span class="source-line-no">1608</span><span id="line-1608"></span>
-<span class="source-line-no">1609</span><span id="line-1609">  /**</span>
-<span class="source-line-no">1610</span><span id="line-1610">   * Tests queries with 2 taxon keys coming from 2 separate classification with disjunction</span>
-<span class="source-line-no">1611</span><span id="line-1611">   * predicate (OR).</span>
-<span class="source-line-no">1612</span><span id="line-1612">   */</span>
-<span class="source-line-no">1613</span><span id="line-1613">  @Test</span>
-<span class="source-line-no">1614</span><span id="line-1614">  public void testMultipleTaxonomiesDisjunctionPredicate() throws JsonProcessingException {</span>
-<span class="source-line-no">1615</span><span id="line-1615"></span>
-<span class="source-line-no">1616</span><span id="line-1616">    DisjunctionPredicate predicate =</span>
-<span class="source-line-no">1617</span><span id="line-1617">        new DisjunctionPredicate(</span>
-<span class="source-line-no">1618</span><span id="line-1618">            Arrays.asList(</span>
-<span class="source-line-no">1619</span><span id="line-1619">                new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">1620</span><span id="line-1620">                    EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1621</span><span id="line-1621">                    "urn:lsid:marinespecies.org:taxname:1",</span>
-<span class="source-line-no">1622</span><span id="line-1622">                    false,</span>
-<span class="source-line-no">1623</span><span id="line-1623">                    "checklistkey1"),</span>
-<span class="source-line-no">1624</span><span id="line-1624">                new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">1625</span><span id="line-1625">                    EventSearchParameter.TAXON_KEY,</span>
-<span class="source-line-no">1626</span><span id="line-1626">                    "urn:lsid:marinespecies.org:taxname:2",</span>
-<span class="source-line-no">1627</span><span id="line-1627">                    false,</span>
-<span class="source-line-no">1628</span><span id="line-1628">                    "checklistkey2")));</span>
-<span class="source-line-no">1629</span><span id="line-1629">    try {</span>
-<span class="source-line-no">1630</span><span id="line-1630">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1631</span><span id="line-1631">      String expectedQuery =</span>
-<span class="source-line-no">1632</span><span id="line-1632">          "{\n"</span>
-<span class="source-line-no">1633</span><span id="line-1633">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1634</span><span id="line-1634">              + "              \"should\": [\n"</span>
-<span class="source-line-no">1635</span><span id="line-1635">              + "                {\n"</span>
-<span class="source-line-no">1636</span><span id="line-1636">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1637</span><span id="line-1637">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1638</span><span id="line-1638">              + "                      {\n"</span>
-<span class="source-line-no">1639</span><span id="line-1639">              + "                        \"term\": {\n"</span>
-<span class="source-line-no">1640</span><span id="line-1640">              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"</span>
-<span class="source-line-no">1641</span><span id="line-1641">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"</span>
-<span class="source-line-no">1642</span><span id="line-1642">              + "                          }\n"</span>
-<span class="source-line-no">1643</span><span id="line-1643">              + "                        }\n"</span>
-<span class="source-line-no">1644</span><span id="line-1644">              + "                      }\n"</span>
-<span class="source-line-no">1645</span><span id="line-1645">              + "                    ]\n"</span>
-<span class="source-line-no">1646</span><span id="line-1646">              + "                  }\n"</span>
-<span class="source-line-no">1647</span><span id="line-1647">              + "                },\n"</span>
-<span class="source-line-no">1648</span><span id="line-1648">              + "                {\n"</span>
-<span class="source-line-no">1649</span><span id="line-1649">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1650</span><span id="line-1650">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1651</span><span id="line-1651">              + "                      {\n"</span>
-<span class="source-line-no">1652</span><span id="line-1652">              + "                        \"term\": {\n"</span>
-<span class="source-line-no">1653</span><span id="line-1653">              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"</span>
-<span class="source-line-no">1654</span><span id="line-1654">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"</span>
-<span class="source-line-no">1655</span><span id="line-1655">              + "                          }\n"</span>
-<span class="source-line-no">1656</span><span id="line-1656">              + "                        }\n"</span>
-<span class="source-line-no">1657</span><span id="line-1657">              + "                      }\n"</span>
-<span class="source-line-no">1658</span><span id="line-1658">              + "                    ]\n"</span>
-<span class="source-line-no">1659</span><span id="line-1659">              + "                  }\n"</span>
-<span class="source-line-no">1660</span><span id="line-1660">              + "                }\n"</span>
-<span class="source-line-no">1661</span><span id="line-1661">              + "              ]\n"</span>
-<span class="source-line-no">1662</span><span id="line-1662">              + "            }\n"</span>
-<span class="source-line-no">1663</span><span id="line-1663">              + "          }\n";</span>
-<span class="source-line-no">1664</span><span id="line-1664">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1665</span><span id="line-1665">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1666</span><span id="line-1666">      fail();</span>
-<span class="source-line-no">1667</span><span id="line-1667">    }</span>
-<span class="source-line-no">1668</span><span id="line-1668">  }</span>
-<span class="source-line-no">1669</span><span id="line-1669"></span>
-<span class="source-line-no">1670</span><span id="line-1670">  @Test</span>
-<span class="source-line-no">1671</span><span id="line-1671">  public void testIsNotNullTaxonKeyPredicate() throws JsonProcessingException {</span>
-<span class="source-line-no">1672</span><span id="line-1672"></span>
-<span class="source-line-no">1673</span><span id="line-1673">    DisjunctionPredicate predicate =</span>
-<span class="source-line-no">1674</span><span id="line-1674">        new DisjunctionPredicate(</span>
-<span class="source-line-no">1675</span><span id="line-1675">            Arrays.asList(</span>
-<span class="source-line-no">1676</span><span id="line-1676">                new IsNotNullPredicate&lt;&gt;(EventSearchParameter.TAXON_KEY, "test-checklist-key"),</span>
-<span class="source-line-no">1677</span><span id="line-1677">                new IsNullPredicate&lt;&gt;(EventSearchParameter.SCIENTIFIC_NAME, "test-checklist-key")));</span>
-<span class="source-line-no">1678</span><span id="line-1678">    try {</span>
-<span class="source-line-no">1679</span><span id="line-1679">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1680</span><span id="line-1680">      String expectedQuery =</span>
-<span class="source-line-no">1681</span><span id="line-1681">          "{\n"</span>
-<span class="source-line-no">1682</span><span id="line-1682">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1683</span><span id="line-1683">              + "              \"should\": [\n"</span>
-<span class="source-line-no">1684</span><span id="line-1684">              + "                {\n"</span>
-<span class="source-line-no">1685</span><span id="line-1685">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1686</span><span id="line-1686">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1687</span><span id="line-1687">              + "                      {\n"</span>
-<span class="source-line-no">1688</span><span id="line-1688">              + "                        \"exists\": {\n"</span>
-<span class="source-line-no">1689</span><span id="line-1689">              + "                          \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"</span>
-<span class="source-line-no">1690</span><span id="line-1690">              + "                        }\n"</span>
-<span class="source-line-no">1691</span><span id="line-1691">              + "                      }\n"</span>
-<span class="source-line-no">1692</span><span id="line-1692">              + "                    ]\n"</span>
-<span class="source-line-no">1693</span><span id="line-1693">              + "                  }\n"</span>
-<span class="source-line-no">1694</span><span id="line-1694">              + "                },\n"</span>
-<span class="source-line-no">1695</span><span id="line-1695">              + "                {\n"</span>
-<span class="source-line-no">1696</span><span id="line-1696">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1697</span><span id="line-1697">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1698</span><span id="line-1698">              + "                      {\n"</span>
-<span class="source-line-no">1699</span><span id="line-1699">              + "                        \"bool\": {\n"</span>
-<span class="source-line-no">1700</span><span id="line-1700">              + "                          \"must_not\": [\n"</span>
-<span class="source-line-no">1701</span><span id="line-1701">              + "                            {\n"</span>
-<span class="source-line-no">1702</span><span id="line-1702">              + "                              \"exists\": {\n"</span>
-<span class="source-line-no">1703</span><span id="line-1703">              + "                                \"field\": \"classifications.test-checklist-key.usage.name\"\n"</span>
-<span class="source-line-no">1704</span><span id="line-1704">              + "                              }\n"</span>
-<span class="source-line-no">1705</span><span id="line-1705">              + "                            }\n"</span>
-<span class="source-line-no">1706</span><span id="line-1706">              + "                          ]\n"</span>
-<span class="source-line-no">1707</span><span id="line-1707">              + "                        }\n"</span>
-<span class="source-line-no">1708</span><span id="line-1708">              + "                      }\n"</span>
-<span class="source-line-no">1709</span><span id="line-1709">              + "                    ]\n"</span>
-<span class="source-line-no">1710</span><span id="line-1710">              + "                  }\n"</span>
-<span class="source-line-no">1711</span><span id="line-1711">              + "                }\n"</span>
-<span class="source-line-no">1712</span><span id="line-1712">              + "              ]\n"</span>
-<span class="source-line-no">1713</span><span id="line-1713">              + "            }\n"</span>
-<span class="source-line-no">1714</span><span id="line-1714">              + "          }\n";</span>
-<span class="source-line-no">1715</span><span id="line-1715">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1716</span><span id="line-1716">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1717</span><span id="line-1717">      fail();</span>
-<span class="source-line-no">1718</span><span id="line-1718">    }</span>
-<span class="source-line-no">1719</span><span id="line-1719">  }</span>
-<span class="source-line-no">1720</span><span id="line-1720"></span>
-<span class="source-line-no">1721</span><span id="line-1721">  @Test</span>
-<span class="source-line-no">1722</span><span id="line-1722">  public void testLikeScientificNamePredicateWithChecklist() throws JsonProcessingException {</span>
-<span class="source-line-no">1723</span><span id="line-1723"></span>
-<span class="source-line-no">1724</span><span id="line-1724">    LikePredicate predicate =</span>
-<span class="source-line-no">1725</span><span id="line-1725">        new LikePredicate&lt;&gt;(</span>
-<span class="source-line-no">1726</span><span id="line-1726">            EventSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);</span>
-<span class="source-line-no">1727</span><span id="line-1727">    try {</span>
-<span class="source-line-no">1728</span><span id="line-1728">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1729</span><span id="line-1729">      String expectedQuery =</span>
-<span class="source-line-no">1730</span><span id="line-1730">          "{\n"</span>
-<span class="source-line-no">1731</span><span id="line-1731">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1732</span><span id="line-1732">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1733</span><span id="line-1733">              + "                {\n"</span>
-<span class="source-line-no">1734</span><span id="line-1734">              + "                  \"wildcard\": {\n"</span>
-<span class="source-line-no">1735</span><span id="line-1735">              + "                    \"classifications.test-checklist-key.usage.name\": {\n"</span>
-<span class="source-line-no">1736</span><span id="line-1736">              + "                      \"value\": \"Acacia\"\n"</span>
-<span class="source-line-no">1737</span><span id="line-1737">              + "                    }\n"</span>
-<span class="source-line-no">1738</span><span id="line-1738">              + "                  }\n"</span>
-<span class="source-line-no">1739</span><span id="line-1739">              + "                }\n"</span>
-<span class="source-line-no">1740</span><span id="line-1740">              + "              ]\n"</span>
-<span class="source-line-no">1741</span><span id="line-1741">              + "            }\n"</span>
-<span class="source-line-no">1742</span><span id="line-1742">              + "          }\n";</span>
-<span class="source-line-no">1743</span><span id="line-1743">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1744</span><span id="line-1744">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1745</span><span id="line-1745">      fail();</span>
-<span class="source-line-no">1746</span><span id="line-1746">    }</span>
-<span class="source-line-no">1747</span><span id="line-1747">  }</span>
-<span class="source-line-no">1748</span><span id="line-1748"></span>
-<span class="source-line-no">1749</span><span id="line-1749">  @Test</span>
-<span class="source-line-no">1750</span><span id="line-1750">  public void testYearRange() throws JsonProcessingException {</span>
-<span class="source-line-no">1751</span><span id="line-1751"></span>
-<span class="source-line-no">1752</span><span id="line-1752">    EqualsPredicate predicate = new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "1900,*", false);</span>
-<span class="source-line-no">1753</span><span id="line-1753">    try {</span>
-<span class="source-line-no">1754</span><span id="line-1754">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1755</span><span id="line-1755">      String expectedQuery =</span>
-<span class="source-line-no">1756</span><span id="line-1756">          "{\n"</span>
-<span class="source-line-no">1757</span><span id="line-1757">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1758</span><span id="line-1758">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1759</span><span id="line-1759">              + "                {\n"</span>
-<span class="source-line-no">1760</span><span id="line-1760">              + "                  \"range\": {\n"</span>
-<span class="source-line-no">1761</span><span id="line-1761">              + "                    \"year\": {\n"</span>
-<span class="source-line-no">1762</span><span id="line-1762">              + "                      \"gte\": 1900.0\n"</span>
-<span class="source-line-no">1763</span><span id="line-1763">              + "                    }\n"</span>
-<span class="source-line-no">1764</span><span id="line-1764">              + "                  }\n"</span>
-<span class="source-line-no">1765</span><span id="line-1765">              + "                }\n"</span>
-<span class="source-line-no">1766</span><span id="line-1766">              + "              ]\n"</span>
-<span class="source-line-no">1767</span><span id="line-1767">              + "            }\n"</span>
-<span class="source-line-no">1768</span><span id="line-1768">              + "          }\n";</span>
-<span class="source-line-no">1769</span><span id="line-1769">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1770</span><span id="line-1770">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1771</span><span id="line-1771">      fail();</span>
-<span class="source-line-no">1772</span><span id="line-1772">    }</span>
-<span class="source-line-no">1773</span><span id="line-1773">  }</span>
-<span class="source-line-no">1774</span><span id="line-1774"></span>
-<span class="source-line-no">1775</span><span id="line-1775">  @Test</span>
-<span class="source-line-no">1776</span><span id="line-1776">  public void testYearRangeReversed() throws JsonProcessingException {</span>
-<span class="source-line-no">1777</span><span id="line-1777"></span>
-<span class="source-line-no">1778</span><span id="line-1778">    EqualsPredicate predicate = new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "*,1900", false);</span>
-<span class="source-line-no">1779</span><span id="line-1779">    try {</span>
-<span class="source-line-no">1780</span><span id="line-1780">      String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">1781</span><span id="line-1781">      String expectedQuery =</span>
-<span class="source-line-no">1782</span><span id="line-1782">          "{\n"</span>
-<span class="source-line-no">1783</span><span id="line-1783">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1784</span><span id="line-1784">              + "              \"filter\": [\n"</span>
-<span class="source-line-no">1785</span><span id="line-1785">              + "                {\n"</span>
-<span class="source-line-no">1786</span><span id="line-1786">              + "                  \"range\": {\n"</span>
-<span class="source-line-no">1787</span><span id="line-1787">              + "                    \"year\": {\n"</span>
-<span class="source-line-no">1788</span><span id="line-1788">              + "                      \"lte\": 1900.0\n"</span>
-<span class="source-line-no">1789</span><span id="line-1789">              + "                    }\n"</span>
-<span class="source-line-no">1790</span><span id="line-1790">              + "                  }\n"</span>
-<span class="source-line-no">1791</span><span id="line-1791">              + "                }\n"</span>
-<span class="source-line-no">1792</span><span id="line-1792">              + "              ]\n"</span>
-<span class="source-line-no">1793</span><span id="line-1793">              + "            }\n"</span>
-<span class="source-line-no">1794</span><span id="line-1794">              + "          }\n";</span>
-<span class="source-line-no">1795</span><span id="line-1795">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1796</span><span id="line-1796">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1797</span><span id="line-1797">      fail();</span>
-<span class="source-line-no">1798</span><span id="line-1798">    }</span>
-<span class="source-line-no">1799</span><span id="line-1799">  }</span>
-<span class="source-line-no">1800</span><span id="line-1800"></span>
-<span class="source-line-no">1801</span><span id="line-1801">  @Test</span>
-<span class="source-line-no">1802</span><span id="line-1802">  public void testTwoYearRanges() throws JsonProcessingException {</span>
-<span class="source-line-no">1803</span><span id="line-1803"></span>
-<span class="source-line-no">1804</span><span id="line-1804">    DisjunctionPredicate conjunctionPredicate =</span>
-<span class="source-line-no">1805</span><span id="line-1805">        new DisjunctionPredicate(</span>
-<span class="source-line-no">1806</span><span id="line-1806">            Arrays.asList(</span>
-<span class="source-line-no">1807</span><span id="line-1807">                new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "1900,*", false),</span>
-<span class="source-line-no">1808</span><span id="line-1808">                new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "2000,*", false)));</span>
-<span class="source-line-no">1809</span><span id="line-1809">    try {</span>
-<span class="source-line-no">1810</span><span id="line-1810">      String query = visitor.buildQuery(conjunctionPredicate);</span>
-<span class="source-line-no">1811</span><span id="line-1811">      String expectedQuery =</span>
-<span class="source-line-no">1812</span><span id="line-1812">          "{\n"</span>
-<span class="source-line-no">1813</span><span id="line-1813">              + "            \"bool\": {\n"</span>
-<span class="source-line-no">1814</span><span id="line-1814">              + "              \"should\": [\n"</span>
-<span class="source-line-no">1815</span><span id="line-1815">              + "                {\n"</span>
-<span class="source-line-no">1816</span><span id="line-1816">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1817</span><span id="line-1817">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1818</span><span id="line-1818">              + "                      {\n"</span>
-<span class="source-line-no">1819</span><span id="line-1819">              + "                        \"range\": {\n"</span>
-<span class="source-line-no">1820</span><span id="line-1820">              + "                          \"year\": {\n"</span>
-<span class="source-line-no">1821</span><span id="line-1821">              + "                            \"gte\": 1900.0\n"</span>
-<span class="source-line-no">1822</span><span id="line-1822">              + "                          }\n"</span>
-<span class="source-line-no">1823</span><span id="line-1823">              + "                        }\n"</span>
-<span class="source-line-no">1824</span><span id="line-1824">              + "                      }\n"</span>
-<span class="source-line-no">1825</span><span id="line-1825">              + "                    ]\n"</span>
-<span class="source-line-no">1826</span><span id="line-1826">              + "                  }\n"</span>
-<span class="source-line-no">1827</span><span id="line-1827">              + "                },\n"</span>
-<span class="source-line-no">1828</span><span id="line-1828">              + "                {\n"</span>
-<span class="source-line-no">1829</span><span id="line-1829">              + "                  \"bool\": {\n"</span>
-<span class="source-line-no">1830</span><span id="line-1830">              + "                    \"filter\": [\n"</span>
-<span class="source-line-no">1831</span><span id="line-1831">              + "                      {\n"</span>
-<span class="source-line-no">1832</span><span id="line-1832">              + "                        \"range\": {\n"</span>
-<span class="source-line-no">1833</span><span id="line-1833">              + "                          \"year\": {\n"</span>
-<span class="source-line-no">1834</span><span id="line-1834">              + "                            \"gte\": 2000.0\n"</span>
-<span class="source-line-no">1835</span><span id="line-1835">              + "                          }\n"</span>
-<span class="source-line-no">1836</span><span id="line-1836">              + "                        }\n"</span>
-<span class="source-line-no">1837</span><span id="line-1837">              + "                      }\n"</span>
-<span class="source-line-no">1838</span><span id="line-1838">              + "                    ]\n"</span>
-<span class="source-line-no">1839</span><span id="line-1839">              + "                  }\n"</span>
-<span class="source-line-no">1840</span><span id="line-1840">              + "                }\n"</span>
-<span class="source-line-no">1841</span><span id="line-1841">              + "              ]\n"</span>
-<span class="source-line-no">1842</span><span id="line-1842">              + "            }\n"</span>
-<span class="source-line-no">1843</span><span id="line-1843">              + "          }\n";</span>
-<span class="source-line-no">1844</span><span id="line-1844">      assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1845</span><span id="line-1845">    } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">1846</span><span id="line-1846">      fail();</span>
-<span class="source-line-no">1847</span><span id="line-1847">    }</span>
-<span class="source-line-no">1848</span><span id="line-1848">  }</span>
-<span class="source-line-no">1849</span><span id="line-1849"></span>
-<span class="source-line-no">1850</span><span id="line-1850">  @Test</span>
-<span class="source-line-no">1851</span><span id="line-1851">  public void testEqualsNestedPredicate() throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1852</span><span id="line-1852">    Predicate p =</span>
-<span class="source-line-no">1853</span><span id="line-1853">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value", false);</span>
-<span class="source-line-no">1854</span><span id="line-1854">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1855</span><span id="line-1855">    String expectedQuery =</span>
-<span class="source-line-no">1856</span><span id="line-1856">        "{\n"</span>
-<span class="source-line-no">1857</span><span id="line-1857">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1858</span><span id="line-1858">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1859</span><span id="line-1859">            + "              {\n"</span>
-<span class="source-line-no">1860</span><span id="line-1860">            + "                \"nested\": {\n"</span>
-<span class="source-line-no">1861</span><span id="line-1861">            + "                  \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">1862</span><span id="line-1862">            + "                  \"query\": {\n"</span>
-<span class="source-line-no">1863</span><span id="line-1863">            + "                    \"term\": {\n"</span>
-<span class="source-line-no">1864</span><span id="line-1864">            + "                      \"humboldt_compilation_types.keyword\": {\n"</span>
-<span class="source-line-no">1865</span><span id="line-1865">            + "                        \"value\": \"value\"\n"</span>
-<span class="source-line-no">1866</span><span id="line-1866">            + "                      }\n"</span>
-<span class="source-line-no">1867</span><span id="line-1867">            + "                    }\n"</span>
-<span class="source-line-no">1868</span><span id="line-1868">            + "                  },\n"</span>
-<span class="source-line-no">1869</span><span id="line-1869">            + "                  \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">1870</span><span id="line-1870">            + "                }\n"</span>
-<span class="source-line-no">1871</span><span id="line-1871">            + "              }\n"</span>
-<span class="source-line-no">1872</span><span id="line-1872">            + "            ]\n"</span>
-<span class="source-line-no">1873</span><span id="line-1873">            + "          }\n"</span>
-<span class="source-line-no">1874</span><span id="line-1874">            + "        }\n";</span>
-<span class="source-line-no">1875</span><span id="line-1875">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1876</span><span id="line-1876">  }</span>
-<span class="source-line-no">1877</span><span id="line-1877"></span>
-<span class="source-line-no">1878</span><span id="line-1878">  @Test</span>
-<span class="source-line-no">1879</span><span id="line-1879">  public void testConjunctionNestedMixedPredicate()</span>
-<span class="source-line-no">1880</span><span id="line-1880">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1881</span><span id="line-1881">    Predicate p1 = new EqualsPredicate&lt;&gt;(PARAM, "value_1", false);</span>
-<span class="source-line-no">1882</span><span id="line-1882">    Predicate p2 =</span>
-<span class="source-line-no">1883</span><span id="line-1883">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_2", false);</span>
-<span class="source-line-no">1884</span><span id="line-1884">    Predicate p3 = new GreaterThanOrEqualsPredicate&lt;&gt;(EventSearchParameter.MONTH, "12");</span>
-<span class="source-line-no">1885</span><span id="line-1885">    Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));</span>
-<span class="source-line-no">1886</span><span id="line-1886">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1887</span><span id="line-1887">    String expectedQuery =</span>
-<span class="source-line-no">1888</span><span id="line-1888">        "{\n"</span>
-<span class="source-line-no">1889</span><span id="line-1889">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1890</span><span id="line-1890">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1891</span><span id="line-1891">            + "              {\n"</span>
-<span class="source-line-no">1892</span><span id="line-1892">            + "                \"bool\": {\n"</span>
-<span class="source-line-no">1893</span><span id="line-1893">            + "                  \"filter\": [\n"</span>
-<span class="source-line-no">1894</span><span id="line-1894">            + "                    {\n"</span>
-<span class="source-line-no">1895</span><span id="line-1895">            + "                      \"term\": {\n"</span>
-<span class="source-line-no">1896</span><span id="line-1896">            + "                        \"island.keyword\": {\n"</span>
-<span class="source-line-no">1897</span><span id="line-1897">            + "                          \"value\": \"value_1\"\n"</span>
-<span class="source-line-no">1898</span><span id="line-1898">            + "                        }\n"</span>
-<span class="source-line-no">1899</span><span id="line-1899">            + "                      }\n"</span>
-<span class="source-line-no">1900</span><span id="line-1900">            + "                    }\n"</span>
-<span class="source-line-no">1901</span><span id="line-1901">            + "                  ]\n"</span>
-<span class="source-line-no">1902</span><span id="line-1902">            + "                }\n"</span>
-<span class="source-line-no">1903</span><span id="line-1903">            + "              },\n"</span>
-<span class="source-line-no">1904</span><span id="line-1904">            + "              {\n"</span>
-<span class="source-line-no">1905</span><span id="line-1905">            + "                \"bool\": {\n"</span>
-<span class="source-line-no">1906</span><span id="line-1906">            + "                  \"filter\": [\n"</span>
-<span class="source-line-no">1907</span><span id="line-1907">            + "                    {\n"</span>
-<span class="source-line-no">1908</span><span id="line-1908">            + "                      \"range\": {\n"</span>
-<span class="source-line-no">1909</span><span id="line-1909">            + "                        \"month\": {\n"</span>
-<span class="source-line-no">1910</span><span id="line-1910">            + "                          \"gte\": \"12\"\n"</span>
-<span class="source-line-no">1911</span><span id="line-1911">            + "                        }\n"</span>
-<span class="source-line-no">1912</span><span id="line-1912">            + "                      }\n"</span>
-<span class="source-line-no">1913</span><span id="line-1913">            + "                    }\n"</span>
-<span class="source-line-no">1914</span><span id="line-1914">            + "                  ]\n"</span>
-<span class="source-line-no">1915</span><span id="line-1915">            + "                }\n"</span>
-<span class="source-line-no">1916</span><span id="line-1916">            + "              },\n"</span>
-<span class="source-line-no">1917</span><span id="line-1917">            + "              {\n"</span>
-<span class="source-line-no">1918</span><span id="line-1918">            + "                \"nested\": {\n"</span>
-<span class="source-line-no">1919</span><span id="line-1919">            + "                  \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">1920</span><span id="line-1920">            + "                  \"query\": {\n"</span>
-<span class="source-line-no">1921</span><span id="line-1921">            + "                    \"bool\": {\n"</span>
-<span class="source-line-no">1922</span><span id="line-1922">            + "                      \"filter\": [\n"</span>
-<span class="source-line-no">1923</span><span id="line-1923">            + "                        {\n"</span>
-<span class="source-line-no">1924</span><span id="line-1924">            + "                          \"term\": {\n"</span>
-<span class="source-line-no">1925</span><span id="line-1925">            + "                            \"humboldt_compilation_types.keyword\": {\n"</span>
-<span class="source-line-no">1926</span><span id="line-1926">            + "                              \"value\": \"value_2\"\n"</span>
-<span class="source-line-no">1927</span><span id="line-1927">            + "                            }\n"</span>
-<span class="source-line-no">1928</span><span id="line-1928">            + "                          }\n"</span>
-<span class="source-line-no">1929</span><span id="line-1929">            + "                        }\n"</span>
-<span class="source-line-no">1930</span><span id="line-1930">            + "                      ]\n"</span>
-<span class="source-line-no">1931</span><span id="line-1931">            + "                    }\n"</span>
-<span class="source-line-no">1932</span><span id="line-1932">            + "                  },\n"</span>
-<span class="source-line-no">1933</span><span id="line-1933">            + "                  \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">1934</span><span id="line-1934">            + "                }\n"</span>
-<span class="source-line-no">1935</span><span id="line-1935">            + "              }\n"</span>
-<span class="source-line-no">1936</span><span id="line-1936">            + "            ]\n"</span>
-<span class="source-line-no">1937</span><span id="line-1937">            + "          }\n"</span>
-<span class="source-line-no">1938</span><span id="line-1938">            + "        }\n";</span>
-<span class="source-line-no">1939</span><span id="line-1939">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">1940</span><span id="line-1940">  }</span>
-<span class="source-line-no">1941</span><span id="line-1941"></span>
-<span class="source-line-no">1942</span><span id="line-1942">  @Test</span>
-<span class="source-line-no">1943</span><span id="line-1943">  public void testComplexNestedPredicate() throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">1944</span><span id="line-1944">    Predicate p1 = new EqualsPredicate&lt;&gt;(PARAM, "value_1", false);</span>
-<span class="source-line-no">1945</span><span id="line-1945">    Predicate p2 =</span>
-<span class="source-line-no">1946</span><span id="line-1946">        new LikePredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_1*", false);</span>
-<span class="source-line-no">1947</span><span id="line-1947">    Predicate p3 =</span>
-<span class="source-line-no">1948</span><span id="line-1948">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);</span>
-<span class="source-line-no">1949</span><span id="line-1949"></span>
-<span class="source-line-no">1950</span><span id="line-1950">    Predicate p4 = new DisjunctionPredicate(Arrays.asList(p1, p3));</span>
-<span class="source-line-no">1951</span><span id="line-1951">    Predicate p5 = new ConjunctionPredicate(Arrays.asList(p1, p2));</span>
-<span class="source-line-no">1952</span><span id="line-1952"></span>
-<span class="source-line-no">1953</span><span id="line-1953">    Predicate p = new ConjunctionPredicate(Arrays.asList(p4, new NotPredicate(p5)));</span>
-<span class="source-line-no">1954</span><span id="line-1954">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">1955</span><span id="line-1955">    String expectedQuery =</span>
-<span class="source-line-no">1956</span><span id="line-1956">        "{\n"</span>
-<span class="source-line-no">1957</span><span id="line-1957">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">1958</span><span id="line-1958">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">1959</span><span id="line-1959">            + "              {\n"</span>
-<span class="source-line-no">1960</span><span id="line-1960">            + "                \"bool\": {\n"</span>
-<span class="source-line-no">1961</span><span id="line-1961">            + "                  \"should\": [\n"</span>
-<span class="source-line-no">1962</span><span id="line-1962">            + "                    {\n"</span>
-<span class="source-line-no">1963</span><span id="line-1963">            + "                      \"bool\": {\n"</span>
-<span class="source-line-no">1964</span><span id="line-1964">            + "                        \"filter\": [\n"</span>
-<span class="source-line-no">1965</span><span id="line-1965">            + "                          {\n"</span>
-<span class="source-line-no">1966</span><span id="line-1966">            + "                            \"term\": {\n"</span>
-<span class="source-line-no">1967</span><span id="line-1967">            + "                              \"island.keyword\": {\n"</span>
-<span class="source-line-no">1968</span><span id="line-1968">            + "                                \"value\": \"value_1\"\n"</span>
-<span class="source-line-no">1969</span><span id="line-1969">            + "                              }\n"</span>
-<span class="source-line-no">1970</span><span id="line-1970">            + "                            }\n"</span>
-<span class="source-line-no">1971</span><span id="line-1971">            + "                          }\n"</span>
-<span class="source-line-no">1972</span><span id="line-1972">            + "                        ]\n"</span>
-<span class="source-line-no">1973</span><span id="line-1973">            + "                      }\n"</span>
-<span class="source-line-no">1974</span><span id="line-1974">            + "                    },\n"</span>
-<span class="source-line-no">1975</span><span id="line-1975">            + "                    {\n"</span>
-<span class="source-line-no">1976</span><span id="line-1976">            + "                      \"nested\": {\n"</span>
-<span class="source-line-no">1977</span><span id="line-1977">            + "                        \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">1978</span><span id="line-1978">            + "                        \"query\": {\n"</span>
-<span class="source-line-no">1979</span><span id="line-1979">            + "                          \"bool\": {\n"</span>
-<span class="source-line-no">1980</span><span id="line-1980">            + "                            \"should\": [\n"</span>
-<span class="source-line-no">1981</span><span id="line-1981">            + "                              {\n"</span>
-<span class="source-line-no">1982</span><span id="line-1982">            + "                                \"term\": {\n"</span>
-<span class="source-line-no">1983</span><span id="line-1983">            + "                                  \"humboldt_protocol_names.keyword\": {\n"</span>
-<span class="source-line-no">1984</span><span id="line-1984">            + "                                    \"value\": \"value_2\"\n"</span>
-<span class="source-line-no">1985</span><span id="line-1985">            + "                                  }\n"</span>
-<span class="source-line-no">1986</span><span id="line-1986">            + "                                }\n"</span>
-<span class="source-line-no">1987</span><span id="line-1987">            + "                              }\n"</span>
-<span class="source-line-no">1988</span><span id="line-1988">            + "                            ]\n"</span>
-<span class="source-line-no">1989</span><span id="line-1989">            + "                          }\n"</span>
-<span class="source-line-no">1990</span><span id="line-1990">            + "                        },\n"</span>
-<span class="source-line-no">1991</span><span id="line-1991">            + "                        \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">1992</span><span id="line-1992">            + "                      }\n"</span>
-<span class="source-line-no">1993</span><span id="line-1993">            + "                    }\n"</span>
-<span class="source-line-no">1994</span><span id="line-1994">            + "                  ]\n"</span>
-<span class="source-line-no">1995</span><span id="line-1995">            + "                }\n"</span>
-<span class="source-line-no">1996</span><span id="line-1996">            + "              },\n"</span>
-<span class="source-line-no">1997</span><span id="line-1997">            + "              {\n"</span>
-<span class="source-line-no">1998</span><span id="line-1998">            + "                \"bool\": {\n"</span>
-<span class="source-line-no">1999</span><span id="line-1999">            + "                  \"filter\": [\n"</span>
-<span class="source-line-no">2000</span><span id="line-2000">            + "                    {\n"</span>
-<span class="source-line-no">2001</span><span id="line-2001">            + "                      \"exists\": {\n"</span>
-<span class="source-line-no">2002</span><span id="line-2002">            + "                        \"field\": \"island.keyword\"\n"</span>
-<span class="source-line-no">2003</span><span id="line-2003">            + "                      }\n"</span>
-<span class="source-line-no">2004</span><span id="line-2004">            + "                    },\n"</span>
-<span class="source-line-no">2005</span><span id="line-2005">            + "                    {\n"</span>
-<span class="source-line-no">2006</span><span id="line-2006">            + "                      \"nested\": {\n"</span>
-<span class="source-line-no">2007</span><span id="line-2007">            + "                        \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">2008</span><span id="line-2008">            + "                        \"query\": {\n"</span>
-<span class="source-line-no">2009</span><span id="line-2009">            + "                          \"exists\": {\n"</span>
-<span class="source-line-no">2010</span><span id="line-2010">            + "                            \"field\": \"humboldt_compilation_types.keyword\"\n"</span>
-<span class="source-line-no">2011</span><span id="line-2011">            + "                          }\n"</span>
-<span class="source-line-no">2012</span><span id="line-2012">            + "                        },\n"</span>
-<span class="source-line-no">2013</span><span id="line-2013">            + "                        \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2014</span><span id="line-2014">            + "                      }\n"</span>
-<span class="source-line-no">2015</span><span id="line-2015">            + "                    }\n"</span>
-<span class="source-line-no">2016</span><span id="line-2016">            + "                  ],\n"</span>
-<span class="source-line-no">2017</span><span id="line-2017">            + "                  \"must_not\": [\n"</span>
-<span class="source-line-no">2018</span><span id="line-2018">            + "                    {\n"</span>
-<span class="source-line-no">2019</span><span id="line-2019">            + "                      \"bool\": {\n"</span>
-<span class="source-line-no">2020</span><span id="line-2020">            + "                        \"filter\": [\n"</span>
-<span class="source-line-no">2021</span><span id="line-2021">            + "                          {\n"</span>
-<span class="source-line-no">2022</span><span id="line-2022">            + "                            \"bool\": {\n"</span>
-<span class="source-line-no">2023</span><span id="line-2023">            + "                              \"filter\": [\n"</span>
-<span class="source-line-no">2024</span><span id="line-2024">            + "                                {\n"</span>
-<span class="source-line-no">2025</span><span id="line-2025">            + "                                  \"term\": {\n"</span>
-<span class="source-line-no">2026</span><span id="line-2026">            + "                                    \"island.keyword\": {\n"</span>
-<span class="source-line-no">2027</span><span id="line-2027">            + "                                      \"value\": \"value_1\"\n"</span>
-<span class="source-line-no">2028</span><span id="line-2028">            + "                                    }\n"</span>
-<span class="source-line-no">2029</span><span id="line-2029">            + "                                  }\n"</span>
-<span class="source-line-no">2030</span><span id="line-2030">            + "                                }\n"</span>
-<span class="source-line-no">2031</span><span id="line-2031">            + "                              ]\n"</span>
-<span class="source-line-no">2032</span><span id="line-2032">            + "                            }\n"</span>
-<span class="source-line-no">2033</span><span id="line-2033">            + "                          },\n"</span>
-<span class="source-line-no">2034</span><span id="line-2034">            + "                          {\n"</span>
-<span class="source-line-no">2035</span><span id="line-2035">            + "                            \"nested\": {\n"</span>
-<span class="source-line-no">2036</span><span id="line-2036">            + "                              \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">2037</span><span id="line-2037">            + "                              \"query\": {\n"</span>
-<span class="source-line-no">2038</span><span id="line-2038">            + "                                \"bool\": {\n"</span>
-<span class="source-line-no">2039</span><span id="line-2039">            + "                                  \"filter\": [\n"</span>
-<span class="source-line-no">2040</span><span id="line-2040">            + "                                    {\n"</span>
-<span class="source-line-no">2041</span><span id="line-2041">            + "                                      \"wildcard\": {\n"</span>
-<span class="source-line-no">2042</span><span id="line-2042">            + "                                        \"humboldt_compilation_types.keyword\": {\n"</span>
-<span class="source-line-no">2043</span><span id="line-2043">            + "                                          \"value\": \"value_1*\"\n"</span>
-<span class="source-line-no">2044</span><span id="line-2044">            + "                                        }\n"</span>
-<span class="source-line-no">2045</span><span id="line-2045">            + "                                      }\n"</span>
-<span class="source-line-no">2046</span><span id="line-2046">            + "                                    }\n"</span>
-<span class="source-line-no">2047</span><span id="line-2047">            + "                                  ]\n"</span>
-<span class="source-line-no">2048</span><span id="line-2048">            + "                                }\n"</span>
-<span class="source-line-no">2049</span><span id="line-2049">            + "                              },\n"</span>
-<span class="source-line-no">2050</span><span id="line-2050">            + "                              \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2051</span><span id="line-2051">            + "                            }\n"</span>
-<span class="source-line-no">2052</span><span id="line-2052">            + "                          }\n"</span>
-<span class="source-line-no">2053</span><span id="line-2053">            + "                        ]\n"</span>
-<span class="source-line-no">2054</span><span id="line-2054">            + "                      }\n"</span>
-<span class="source-line-no">2055</span><span id="line-2055">            + "                    }\n"</span>
-<span class="source-line-no">2056</span><span id="line-2056">            + "                  ]\n"</span>
-<span class="source-line-no">2057</span><span id="line-2057">            + "                }\n"</span>
-<span class="source-line-no">2058</span><span id="line-2058">            + "              }\n"</span>
-<span class="source-line-no">2059</span><span id="line-2059">            + "            ]\n"</span>
-<span class="source-line-no">2060</span><span id="line-2060">            + "          }\n"</span>
-<span class="source-line-no">2061</span><span id="line-2061">            + "        }\n";</span>
-<span class="source-line-no">2062</span><span id="line-2062">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2063</span><span id="line-2063">  }</span>
-<span class="source-line-no">2064</span><span id="line-2064"></span>
-<span class="source-line-no">2065</span><span id="line-2065">  @Test</span>
-<span class="source-line-no">2066</span><span id="line-2066">  public void testConjunctionNestedPredicate()</span>
-<span class="source-line-no">2067</span><span id="line-2067">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2068</span><span id="line-2068">    Predicate p1 =</span>
-<span class="source-line-no">2069</span><span id="line-2069">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "value_1", false);</span>
-<span class="source-line-no">2070</span><span id="line-2070">    Predicate p2 =</span>
-<span class="source-line-no">2071</span><span id="line-2071">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);</span>
-<span class="source-line-no">2072</span><span id="line-2072">    Predicate p3 = new ConjunctionPredicate(Arrays.asList(p1, p2));</span>
-<span class="source-line-no">2073</span><span id="line-2073">    String query = visitor.buildQuery(p3);</span>
-<span class="source-line-no">2074</span><span id="line-2074">    String expectedQuery =</span>
-<span class="source-line-no">2075</span><span id="line-2075">        "{\n"</span>
-<span class="source-line-no">2076</span><span id="line-2076">            + "          \"bool\": {\n"</span>
-<span class="source-line-no">2077</span><span id="line-2077">            + "            \"filter\": [\n"</span>
-<span class="source-line-no">2078</span><span id="line-2078">            + "              {\n"</span>
-<span class="source-line-no">2079</span><span id="line-2079">            + "                \"nested\": {\n"</span>
-<span class="source-line-no">2080</span><span id="line-2080">            + "                  \"path\": \"event.humboldt\",\n"</span>
-<span class="source-line-no">2081</span><span id="line-2081">            + "                  \"query\": {\n"</span>
-<span class="source-line-no">2082</span><span id="line-2082">            + "                    \"bool\": {\n"</span>
-<span class="source-line-no">2083</span><span id="line-2083">            + "                      \"filter\": [\n"</span>
-<span class="source-line-no">2084</span><span id="line-2084">            + "                        {\n"</span>
-<span class="source-line-no">2085</span><span id="line-2085">            + "                          \"term\": {\n"</span>
-<span class="source-line-no">2086</span><span id="line-2086">            + "                            \"humboldt_verbatim_site_names.keyword\": {\n"</span>
-<span class="source-line-no">2087</span><span id="line-2087">            + "                              \"value\": \"value_1\"\n"</span>
-<span class="source-line-no">2088</span><span id="line-2088">            + "                            }\n"</span>
-<span class="source-line-no">2089</span><span id="line-2089">            + "                          }\n"</span>
-<span class="source-line-no">2090</span><span id="line-2090">            + "                        },\n"</span>
-<span class="source-line-no">2091</span><span id="line-2091">            + "                        {\n"</span>
-<span class="source-line-no">2092</span><span id="line-2092">            + "                          \"term\": {\n"</span>
-<span class="source-line-no">2093</span><span id="line-2093">            + "                            \"humboldt_protocol_names.keyword\": {\n"</span>
-<span class="source-line-no">2094</span><span id="line-2094">            + "                              \"value\": \"value_2\"\n"</span>
-<span class="source-line-no">2095</span><span id="line-2095">            + "                            }\n"</span>
-<span class="source-line-no">2096</span><span id="line-2096">            + "                          }\n"</span>
-<span class="source-line-no">2097</span><span id="line-2097">            + "                        }\n"</span>
-<span class="source-line-no">2098</span><span id="line-2098">            + "                      ]\n"</span>
-<span class="source-line-no">2099</span><span id="line-2099">            + "                    }\n"</span>
-<span class="source-line-no">2100</span><span id="line-2100">            + "                  },\n"</span>
-<span class="source-line-no">2101</span><span id="line-2101">            + "                  \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2102</span><span id="line-2102">            + "                }\n"</span>
-<span class="source-line-no">2103</span><span id="line-2103">            + "              }\n"</span>
-<span class="source-line-no">2104</span><span id="line-2104">            + "            ]\n"</span>
-<span class="source-line-no">2105</span><span id="line-2105">            + "          }\n"</span>
-<span class="source-line-no">2106</span><span id="line-2106">            + "        }\n";</span>
-<span class="source-line-no">2107</span><span id="line-2107">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2108</span><span id="line-2108">  }</span>
-<span class="source-line-no">2109</span><span id="line-2109">}</span>
+<span class="source-line-no">1322</span><span id="line-1322">            + "                      \"wildcard\": {\n"</span>
+<span class="source-line-no">1323</span><span id="line-1323">            + "                        \"island.keyword\": {\n"</span>
+<span class="source-line-no">1324</span><span id="line-1324">            + "                          \"value\": \"value_1*\"\n"</span>
+<span class="source-line-no">1325</span><span id="line-1325">            + "                        }\n"</span>
+<span class="source-line-no">1326</span><span id="line-1326">            + "                      }\n"</span>
+<span class="source-line-no">1327</span><span id="line-1327">            + "                    }\n"</span>
+<span class="source-line-no">1328</span><span id="line-1328">            + "                  ]\n"</span>
+<span class="source-line-no">1329</span><span id="line-1329">            + "                }\n"</span>
+<span class="source-line-no">1330</span><span id="line-1330">            + "              }\n"</span>
+<span class="source-line-no">1331</span><span id="line-1331">            + "            ]\n"</span>
+<span class="source-line-no">1332</span><span id="line-1332">            + "          }\n"</span>
+<span class="source-line-no">1333</span><span id="line-1333">            + "        }\n";</span>
+<span class="source-line-no">1334</span><span id="line-1334">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1335</span><span id="line-1335">  }</span>
+<span class="source-line-no">1336</span><span id="line-1336"></span>
+<span class="source-line-no">1337</span><span id="line-1337">  @Test</span>
+<span class="source-line-no">1338</span><span id="line-1338">  public void testVocabularyEqualsPredicate() {</span>
+<span class="source-line-no">1339</span><span id="line-1339"></span>
+<span class="source-line-no">1340</span><span id="line-1340">    Arrays.stream(EventSearchParameter.values())</span>
+<span class="source-line-no">1341</span><span id="line-1341">        .filter(fieldMapper::isVocabulary)</span>
+<span class="source-line-no">1342</span><span id="line-1342">        .forEach(</span>
+<span class="source-line-no">1343</span><span id="line-1343">            param -&gt; {</span>
+<span class="source-line-no">1344</span><span id="line-1344">              try {</span>
+<span class="source-line-no">1345</span><span id="line-1345">                Predicate p = new EqualsPredicate&lt;&gt;(param, "value", false);</span>
+<span class="source-line-no">1346</span><span id="line-1346">                String searchFieldName = fieldMapper.getExactMatchFieldName(param);</span>
+<span class="source-line-no">1347</span><span id="line-1347">                String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1348</span><span id="line-1348">                String expectedQuery =</span>
+<span class="source-line-no">1349</span><span id="line-1349">                    ("{\n"</span>
+<span class="source-line-no">1350</span><span id="line-1350">                        + "                      \"bool\": {\n"</span>
+<span class="source-line-no">1351</span><span id="line-1351">                        + "                        \"filter\": [\n"</span>
+<span class="source-line-no">1352</span><span id="line-1352">                        + "                          {\n"</span>
+<span class="source-line-no">1353</span><span id="line-1353">                        + "                            \"nested\": {\n"</span>
+<span class="source-line-no">1354</span><span id="line-1354">                        + "                              \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">1355</span><span id="line-1355">                        + "                              \"query\": {\n"</span>
+<span class="source-line-no">1356</span><span id="line-1356">                        + "                                \"term\": {\n"</span>
+<span class="source-line-no">1357</span><span id="line-1357">                        + "                                  \""</span>
+<span class="source-line-no">1358</span><span id="line-1358">                        + searchFieldName</span>
+<span class="source-line-no">1359</span><span id="line-1359">                        + "\": {\n"</span>
+<span class="source-line-no">1360</span><span id="line-1360">                        + "                                    \"value\": \"value\"\n"</span>
+<span class="source-line-no">1361</span><span id="line-1361">                        + "                                  }\n"</span>
+<span class="source-line-no">1362</span><span id="line-1362">                        + "                                }\n"</span>
+<span class="source-line-no">1363</span><span id="line-1363">                        + "                              },\n"</span>
+<span class="source-line-no">1364</span><span id="line-1364">                        + "                              \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">1365</span><span id="line-1365">                        + "                            }\n"</span>
+<span class="source-line-no">1366</span><span id="line-1366">                        + "                          }\n"</span>
+<span class="source-line-no">1367</span><span id="line-1367">                        + "                        ]\n"</span>
+<span class="source-line-no">1368</span><span id="line-1368">                        + "                      }\n"</span>
+<span class="source-line-no">1369</span><span id="line-1369">                        + "                    }\n");</span>
+<span class="source-line-no">1370</span><span id="line-1370">                assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1371</span><span id="line-1371">              } catch (QueryBuildingException | JsonProcessingException ex) {</span>
+<span class="source-line-no">1372</span><span id="line-1372">                throw new RuntimeException(ex);</span>
+<span class="source-line-no">1373</span><span id="line-1373">              }</span>
+<span class="source-line-no">1374</span><span id="line-1374">            });</span>
+<span class="source-line-no">1375</span><span id="line-1375">  }</span>
+<span class="source-line-no">1376</span><span id="line-1376"></span>
+<span class="source-line-no">1377</span><span id="line-1377">  @Test</span>
+<span class="source-line-no">1378</span><span id="line-1378">  public void testIntInclusiveRangeWithRangePredicate()</span>
+<span class="source-line-no">1379</span><span id="line-1379">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1380</span><span id="line-1380"></span>
+<span class="source-line-no">1381</span><span id="line-1381">    RangeValue rangeValue = new RangeValue("1990", null, "2011", null);</span>
+<span class="source-line-no">1382</span><span id="line-1382">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
+<span class="source-line-no">1383</span><span id="line-1383">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1384</span><span id="line-1384">    String expectedQuery =</span>
+<span class="source-line-no">1385</span><span id="line-1385">        "{\n"</span>
+<span class="source-line-no">1386</span><span id="line-1386">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1387</span><span id="line-1387">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1388</span><span id="line-1388">            + "              {\n"</span>
+<span class="source-line-no">1389</span><span id="line-1389">            + "                \"range\": {\n"</span>
+<span class="source-line-no">1390</span><span id="line-1390">            + "                  \"year\": {\n"</span>
+<span class="source-line-no">1391</span><span id="line-1391">            + "                    \"gte\": 1990,\n"</span>
+<span class="source-line-no">1392</span><span id="line-1392">            + "                    \"lte\": 2011\n"</span>
+<span class="source-line-no">1393</span><span id="line-1393">            + "                  }\n"</span>
+<span class="source-line-no">1394</span><span id="line-1394">            + "                }\n"</span>
+<span class="source-line-no">1395</span><span id="line-1395">            + "              }\n"</span>
+<span class="source-line-no">1396</span><span id="line-1396">            + "            ]\n"</span>
+<span class="source-line-no">1397</span><span id="line-1397">            + "          }\n"</span>
+<span class="source-line-no">1398</span><span id="line-1398">            + "        }\n";</span>
+<span class="source-line-no">1399</span><span id="line-1399">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1400</span><span id="line-1400">  }</span>
+<span class="source-line-no">1401</span><span id="line-1401"></span>
+<span class="source-line-no">1402</span><span id="line-1402">  @Test</span>
+<span class="source-line-no">1403</span><span id="line-1403">  public void testIntExclusiveRangeWithRangePredicate()</span>
+<span class="source-line-no">1404</span><span id="line-1404">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1405</span><span id="line-1405"></span>
+<span class="source-line-no">1406</span><span id="line-1406">    RangeValue rangeValue = new RangeValue(null, "1990", null, "2011");</span>
+<span class="source-line-no">1407</span><span id="line-1407">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
+<span class="source-line-no">1408</span><span id="line-1408">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1409</span><span id="line-1409">    String expectedQuery =</span>
+<span class="source-line-no">1410</span><span id="line-1410">        "{\n"</span>
+<span class="source-line-no">1411</span><span id="line-1411">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1412</span><span id="line-1412">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1413</span><span id="line-1413">            + "              {\n"</span>
+<span class="source-line-no">1414</span><span id="line-1414">            + "                \"range\": {\n"</span>
+<span class="source-line-no">1415</span><span id="line-1415">            + "                  \"year\": {\n"</span>
+<span class="source-line-no">1416</span><span id="line-1416">            + "                    \"gt\": 1990,\n"</span>
+<span class="source-line-no">1417</span><span id="line-1417">            + "                    \"lt\": 2011\n"</span>
+<span class="source-line-no">1418</span><span id="line-1418">            + "                  }\n"</span>
+<span class="source-line-no">1419</span><span id="line-1419">            + "                }\n"</span>
+<span class="source-line-no">1420</span><span id="line-1420">            + "              }\n"</span>
+<span class="source-line-no">1421</span><span id="line-1421">            + "            ]\n"</span>
+<span class="source-line-no">1422</span><span id="line-1422">            + "          }\n"</span>
+<span class="source-line-no">1423</span><span id="line-1423">            + "        }\n";</span>
+<span class="source-line-no">1424</span><span id="line-1424">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1425</span><span id="line-1425">  }</span>
+<span class="source-line-no">1426</span><span id="line-1426"></span>
+<span class="source-line-no">1427</span><span id="line-1427">  @Test</span>
+<span class="source-line-no">1428</span><span id="line-1428">  public void testInclusiveExclusiveRangeWithRangePredicate()</span>
+<span class="source-line-no">1429</span><span id="line-1429">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1430</span><span id="line-1430"></span>
+<span class="source-line-no">1431</span><span id="line-1431">    RangeValue rangeValue = new RangeValue("1990", null, null, "2011");</span>
+<span class="source-line-no">1432</span><span id="line-1432">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
+<span class="source-line-no">1433</span><span id="line-1433">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1434</span><span id="line-1434">    String expectedQuery =</span>
+<span class="source-line-no">1435</span><span id="line-1435">        "{\n"</span>
+<span class="source-line-no">1436</span><span id="line-1436">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1437</span><span id="line-1437">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1438</span><span id="line-1438">            + "              {\n"</span>
+<span class="source-line-no">1439</span><span id="line-1439">            + "                \"range\": {\n"</span>
+<span class="source-line-no">1440</span><span id="line-1440">            + "                  \"year\": {\n"</span>
+<span class="source-line-no">1441</span><span id="line-1441">            + "                    \"gte\": 1990,\n"</span>
+<span class="source-line-no">1442</span><span id="line-1442">            + "                    \"lt\": 2011\n"</span>
+<span class="source-line-no">1443</span><span id="line-1443">            + "                  }\n"</span>
+<span class="source-line-no">1444</span><span id="line-1444">            + "                }\n"</span>
+<span class="source-line-no">1445</span><span id="line-1445">            + "              }\n"</span>
+<span class="source-line-no">1446</span><span id="line-1446">            + "            ]\n"</span>
+<span class="source-line-no">1447</span><span id="line-1447">            + "          }\n"</span>
+<span class="source-line-no">1448</span><span id="line-1448">            + "        }\n";</span>
+<span class="source-line-no">1449</span><span id="line-1449">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1450</span><span id="line-1450">  }</span>
+<span class="source-line-no">1451</span><span id="line-1451"></span>
+<span class="source-line-no">1452</span><span id="line-1452">  @Test</span>
+<span class="source-line-no">1453</span><span id="line-1453">  public void testExclusiveInclusiveRangeWithRangePredicate()</span>
+<span class="source-line-no">1454</span><span id="line-1454">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1455</span><span id="line-1455"></span>
+<span class="source-line-no">1456</span><span id="line-1456">    RangeValue rangeValue = new RangeValue(null, "1990", "2011", null);</span>
+<span class="source-line-no">1457</span><span id="line-1457">    Predicate p = new RangePredicate(EventSearchParameter.YEAR, rangeValue);</span>
+<span class="source-line-no">1458</span><span id="line-1458">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1459</span><span id="line-1459">    String expectedQuery =</span>
+<span class="source-line-no">1460</span><span id="line-1460">        "{\n"</span>
+<span class="source-line-no">1461</span><span id="line-1461">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1462</span><span id="line-1462">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1463</span><span id="line-1463">            + "              {\n"</span>
+<span class="source-line-no">1464</span><span id="line-1464">            + "                \"range\": {\n"</span>
+<span class="source-line-no">1465</span><span id="line-1465">            + "                  \"year\": {\n"</span>
+<span class="source-line-no">1466</span><span id="line-1466">            + "                    \"gt\": 1990,\n"</span>
+<span class="source-line-no">1467</span><span id="line-1467">            + "                    \"lte\": 2011\n"</span>
+<span class="source-line-no">1468</span><span id="line-1468">            + "                  }\n"</span>
+<span class="source-line-no">1469</span><span id="line-1469">            + "                }\n"</span>
+<span class="source-line-no">1470</span><span id="line-1470">            + "              }\n"</span>
+<span class="source-line-no">1471</span><span id="line-1471">            + "            ]\n"</span>
+<span class="source-line-no">1472</span><span id="line-1472">            + "          }\n"</span>
+<span class="source-line-no">1473</span><span id="line-1473">            + "        }\n";</span>
+<span class="source-line-no">1474</span><span id="line-1474">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1475</span><span id="line-1475">  }</span>
+<span class="source-line-no">1476</span><span id="line-1476"></span>
+<span class="source-line-no">1477</span><span id="line-1477">  /** Test a single taxon key query with a checklist key specified. */</span>
+<span class="source-line-no">1478</span><span id="line-1478">  @Test</span>
+<span class="source-line-no">1479</span><span id="line-1479">  public void testMultiTaxonomyPredicate() throws JsonProcessingException {</span>
+<span class="source-line-no">1480</span><span id="line-1480">    EqualsPredicate equalsPredicate =</span>
+<span class="source-line-no">1481</span><span id="line-1481">        new EqualsPredicate&lt;EventSearchParameter&gt;(</span>
+<span class="source-line-no">1482</span><span id="line-1482">            EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1483</span><span id="line-1483">            "urn:lsid:marinespecies.org:taxname:368663",</span>
+<span class="source-line-no">1484</span><span id="line-1484">            false,</span>
+<span class="source-line-no">1485</span><span id="line-1485">            "2d59e5db-57ad-41ff-97d6-11f5fb264527");</span>
+<span class="source-line-no">1486</span><span id="line-1486">    try {</span>
+<span class="source-line-no">1487</span><span id="line-1487">      String query = visitor.buildQuery(equalsPredicate);</span>
+<span class="source-line-no">1488</span><span id="line-1488">      String expectedQuery =</span>
+<span class="source-line-no">1489</span><span id="line-1489">          "{\n"</span>
+<span class="source-line-no">1490</span><span id="line-1490">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1491</span><span id="line-1491">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1492</span><span id="line-1492">              + "                {\n"</span>
+<span class="source-line-no">1493</span><span id="line-1493">              + "                  \"term\": {\n"</span>
+<span class="source-line-no">1494</span><span id="line-1494">              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": {\n"</span>
+<span class="source-line-no">1495</span><span id="line-1495">              + "                      \"value\": \"urn:lsid:marinespecies.org:taxname:368663\"\n"</span>
+<span class="source-line-no">1496</span><span id="line-1496">              + "                    }\n"</span>
+<span class="source-line-no">1497</span><span id="line-1497">              + "                  }\n"</span>
+<span class="source-line-no">1498</span><span id="line-1498">              + "                }\n"</span>
+<span class="source-line-no">1499</span><span id="line-1499">              + "              ]\n"</span>
+<span class="source-line-no">1500</span><span id="line-1500">              + "            }\n"</span>
+<span class="source-line-no">1501</span><span id="line-1501">              + "          }\n";</span>
+<span class="source-line-no">1502</span><span id="line-1502">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1503</span><span id="line-1503">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1504</span><span id="line-1504">      fail();</span>
+<span class="source-line-no">1505</span><span id="line-1505">    }</span>
+<span class="source-line-no">1506</span><span id="line-1506">  }</span>
+<span class="source-line-no">1507</span><span id="line-1507"></span>
+<span class="source-line-no">1508</span><span id="line-1508">  /** Test a single taxon key query with a checklist key specified. */</span>
+<span class="source-line-no">1509</span><span id="line-1509">  @Test</span>
+<span class="source-line-no">1510</span><span id="line-1510">  public void testMultiTaxonomyPredicates() throws JsonProcessingException {</span>
+<span class="source-line-no">1511</span><span id="line-1511">    InPredicate inPredicate =</span>
+<span class="source-line-no">1512</span><span id="line-1512">        new InPredicate&lt;EventSearchParameter&gt;(</span>
+<span class="source-line-no">1513</span><span id="line-1513">            EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1514</span><span id="line-1514">            List.of(</span>
+<span class="source-line-no">1515</span><span id="line-1515">                "urn:lsid:marinespecies.org:taxname:368663",</span>
+<span class="source-line-no">1516</span><span id="line-1516">                "urn:lsid:marinespecies.org:taxname:368664"),</span>
+<span class="source-line-no">1517</span><span id="line-1517">            false,</span>
+<span class="source-line-no">1518</span><span id="line-1518">            "2d59e5db-57ad-41ff-97d6-11f5fb264527");</span>
+<span class="source-line-no">1519</span><span id="line-1519">    try {</span>
+<span class="source-line-no">1520</span><span id="line-1520">      String query = visitor.buildQuery(inPredicate);</span>
+<span class="source-line-no">1521</span><span id="line-1521">      String expectedQuery =</span>
+<span class="source-line-no">1522</span><span id="line-1522">          "{\n"</span>
+<span class="source-line-no">1523</span><span id="line-1523">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1524</span><span id="line-1524">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1525</span><span id="line-1525">              + "                {\n"</span>
+<span class="source-line-no">1526</span><span id="line-1526">              + "                  \"terms\": {\n"</span>
+<span class="source-line-no">1527</span><span id="line-1527">              + "                    \"classifications.2d59e5db-57ad-41ff-97d6-11f5fb264527.taxonKeys\": [\n"</span>
+<span class="source-line-no">1528</span><span id="line-1528">              + "                      \"urn:lsid:marinespecies.org:taxname:368663\",\n"</span>
+<span class="source-line-no">1529</span><span id="line-1529">              + "                      \"urn:lsid:marinespecies.org:taxname:368664\"\n"</span>
+<span class="source-line-no">1530</span><span id="line-1530">              + "                    ]\n"</span>
+<span class="source-line-no">1531</span><span id="line-1531">              + "                  }\n"</span>
+<span class="source-line-no">1532</span><span id="line-1532">              + "                }\n"</span>
+<span class="source-line-no">1533</span><span id="line-1533">              + "              ]\n"</span>
+<span class="source-line-no">1534</span><span id="line-1534">              + "            }\n"</span>
+<span class="source-line-no">1535</span><span id="line-1535">              + "          }\n";</span>
+<span class="source-line-no">1536</span><span id="line-1536">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1537</span><span id="line-1537">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1538</span><span id="line-1538">      fail();</span>
+<span class="source-line-no">1539</span><span id="line-1539">    }</span>
+<span class="source-line-no">1540</span><span id="line-1540">  }</span>
+<span class="source-line-no">1541</span><span id="line-1541"></span>
+<span class="source-line-no">1542</span><span id="line-1542">  /**</span>
+<span class="source-line-no">1543</span><span id="line-1543">   * Tests queries with 2 taxon keys coming from 2 separate classification with conjunction</span>
+<span class="source-line-no">1544</span><span id="line-1544">   * predicate (AND).</span>
+<span class="source-line-no">1545</span><span id="line-1545">   */</span>
+<span class="source-line-no">1546</span><span id="line-1546">  @Test</span>
+<span class="source-line-no">1547</span><span id="line-1547">  public void testMultipleTaxonomiesConjunctionPredicate() throws JsonProcessingException {</span>
+<span class="source-line-no">1548</span><span id="line-1548"></span>
+<span class="source-line-no">1549</span><span id="line-1549">    ConjunctionPredicate predicate =</span>
+<span class="source-line-no">1550</span><span id="line-1550">        new ConjunctionPredicate(</span>
+<span class="source-line-no">1551</span><span id="line-1551">            Arrays.asList(</span>
+<span class="source-line-no">1552</span><span id="line-1552">                new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">1553</span><span id="line-1553">                    EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1554</span><span id="line-1554">                    "urn:lsid:marinespecies.org:taxname:1",</span>
+<span class="source-line-no">1555</span><span id="line-1555">                    false,</span>
+<span class="source-line-no">1556</span><span id="line-1556">                    "checklistkey1"),</span>
+<span class="source-line-no">1557</span><span id="line-1557">                new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">1558</span><span id="line-1558">                    EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1559</span><span id="line-1559">                    "urn:lsid:marinespecies.org:taxname:2",</span>
+<span class="source-line-no">1560</span><span id="line-1560">                    false,</span>
+<span class="source-line-no">1561</span><span id="line-1561">                    "checklistkey2")));</span>
+<span class="source-line-no">1562</span><span id="line-1562">    try {</span>
+<span class="source-line-no">1563</span><span id="line-1563">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1564</span><span id="line-1564">      String expectedQuery =</span>
+<span class="source-line-no">1565</span><span id="line-1565">          "{\n"</span>
+<span class="source-line-no">1566</span><span id="line-1566">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1567</span><span id="line-1567">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1568</span><span id="line-1568">              + "                {\n"</span>
+<span class="source-line-no">1569</span><span id="line-1569">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1570</span><span id="line-1570">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1571</span><span id="line-1571">              + "                      {\n"</span>
+<span class="source-line-no">1572</span><span id="line-1572">              + "                        \"term\": {\n"</span>
+<span class="source-line-no">1573</span><span id="line-1573">              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"</span>
+<span class="source-line-no">1574</span><span id="line-1574">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"</span>
+<span class="source-line-no">1575</span><span id="line-1575">              + "                          }\n"</span>
+<span class="source-line-no">1576</span><span id="line-1576">              + "                        }\n"</span>
+<span class="source-line-no">1577</span><span id="line-1577">              + "                      }\n"</span>
+<span class="source-line-no">1578</span><span id="line-1578">              + "                    ]\n"</span>
+<span class="source-line-no">1579</span><span id="line-1579">              + "                  }\n"</span>
+<span class="source-line-no">1580</span><span id="line-1580">              + "                },\n"</span>
+<span class="source-line-no">1581</span><span id="line-1581">              + "                {\n"</span>
+<span class="source-line-no">1582</span><span id="line-1582">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1583</span><span id="line-1583">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1584</span><span id="line-1584">              + "                      {\n"</span>
+<span class="source-line-no">1585</span><span id="line-1585">              + "                        \"term\": {\n"</span>
+<span class="source-line-no">1586</span><span id="line-1586">              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"</span>
+<span class="source-line-no">1587</span><span id="line-1587">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"</span>
+<span class="source-line-no">1588</span><span id="line-1588">              + "                          }\n"</span>
+<span class="source-line-no">1589</span><span id="line-1589">              + "                        }\n"</span>
+<span class="source-line-no">1590</span><span id="line-1590">              + "                      }\n"</span>
+<span class="source-line-no">1591</span><span id="line-1591">              + "                    ]\n"</span>
+<span class="source-line-no">1592</span><span id="line-1592">              + "                  }\n"</span>
+<span class="source-line-no">1593</span><span id="line-1593">              + "                }\n"</span>
+<span class="source-line-no">1594</span><span id="line-1594">              + "              ]\n"</span>
+<span class="source-line-no">1595</span><span id="line-1595">              + "            }\n"</span>
+<span class="source-line-no">1596</span><span id="line-1596">              + "          }\n";</span>
+<span class="source-line-no">1597</span><span id="line-1597">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1598</span><span id="line-1598">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1599</span><span id="line-1599">      fail();</span>
+<span class="source-line-no">1600</span><span id="line-1600">    }</span>
+<span class="source-line-no">1601</span><span id="line-1601">  }</span>
+<span class="source-line-no">1602</span><span id="line-1602"></span>
+<span class="source-line-no">1603</span><span id="line-1603">  /**</span>
+<span class="source-line-no">1604</span><span id="line-1604">   * Tests queries with 2 taxon keys coming from 2 separate classification with disjunction</span>
+<span class="source-line-no">1605</span><span id="line-1605">   * predicate (OR).</span>
+<span class="source-line-no">1606</span><span id="line-1606">   */</span>
+<span class="source-line-no">1607</span><span id="line-1607">  @Test</span>
+<span class="source-line-no">1608</span><span id="line-1608">  public void testMultipleTaxonomiesDisjunctionPredicate() throws JsonProcessingException {</span>
+<span class="source-line-no">1609</span><span id="line-1609"></span>
+<span class="source-line-no">1610</span><span id="line-1610">    DisjunctionPredicate predicate =</span>
+<span class="source-line-no">1611</span><span id="line-1611">        new DisjunctionPredicate(</span>
+<span class="source-line-no">1612</span><span id="line-1612">            Arrays.asList(</span>
+<span class="source-line-no">1613</span><span id="line-1613">                new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">1614</span><span id="line-1614">                    EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1615</span><span id="line-1615">                    "urn:lsid:marinespecies.org:taxname:1",</span>
+<span class="source-line-no">1616</span><span id="line-1616">                    false,</span>
+<span class="source-line-no">1617</span><span id="line-1617">                    "checklistkey1"),</span>
+<span class="source-line-no">1618</span><span id="line-1618">                new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">1619</span><span id="line-1619">                    EventSearchParameter.TAXON_KEY,</span>
+<span class="source-line-no">1620</span><span id="line-1620">                    "urn:lsid:marinespecies.org:taxname:2",</span>
+<span class="source-line-no">1621</span><span id="line-1621">                    false,</span>
+<span class="source-line-no">1622</span><span id="line-1622">                    "checklistkey2")));</span>
+<span class="source-line-no">1623</span><span id="line-1623">    try {</span>
+<span class="source-line-no">1624</span><span id="line-1624">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1625</span><span id="line-1625">      String expectedQuery =</span>
+<span class="source-line-no">1626</span><span id="line-1626">          "{\n"</span>
+<span class="source-line-no">1627</span><span id="line-1627">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1628</span><span id="line-1628">              + "              \"should\": [\n"</span>
+<span class="source-line-no">1629</span><span id="line-1629">              + "                {\n"</span>
+<span class="source-line-no">1630</span><span id="line-1630">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1631</span><span id="line-1631">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1632</span><span id="line-1632">              + "                      {\n"</span>
+<span class="source-line-no">1633</span><span id="line-1633">              + "                        \"term\": {\n"</span>
+<span class="source-line-no">1634</span><span id="line-1634">              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"</span>
+<span class="source-line-no">1635</span><span id="line-1635">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"</span>
+<span class="source-line-no">1636</span><span id="line-1636">              + "                          }\n"</span>
+<span class="source-line-no">1637</span><span id="line-1637">              + "                        }\n"</span>
+<span class="source-line-no">1638</span><span id="line-1638">              + "                      }\n"</span>
+<span class="source-line-no">1639</span><span id="line-1639">              + "                    ]\n"</span>
+<span class="source-line-no">1640</span><span id="line-1640">              + "                  }\n"</span>
+<span class="source-line-no">1641</span><span id="line-1641">              + "                },\n"</span>
+<span class="source-line-no">1642</span><span id="line-1642">              + "                {\n"</span>
+<span class="source-line-no">1643</span><span id="line-1643">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1644</span><span id="line-1644">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1645</span><span id="line-1645">              + "                      {\n"</span>
+<span class="source-line-no">1646</span><span id="line-1646">              + "                        \"term\": {\n"</span>
+<span class="source-line-no">1647</span><span id="line-1647">              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"</span>
+<span class="source-line-no">1648</span><span id="line-1648">              + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"</span>
+<span class="source-line-no">1649</span><span id="line-1649">              + "                          }\n"</span>
+<span class="source-line-no">1650</span><span id="line-1650">              + "                        }\n"</span>
+<span class="source-line-no">1651</span><span id="line-1651">              + "                      }\n"</span>
+<span class="source-line-no">1652</span><span id="line-1652">              + "                    ]\n"</span>
+<span class="source-line-no">1653</span><span id="line-1653">              + "                  }\n"</span>
+<span class="source-line-no">1654</span><span id="line-1654">              + "                }\n"</span>
+<span class="source-line-no">1655</span><span id="line-1655">              + "              ]\n"</span>
+<span class="source-line-no">1656</span><span id="line-1656">              + "            }\n"</span>
+<span class="source-line-no">1657</span><span id="line-1657">              + "          }\n";</span>
+<span class="source-line-no">1658</span><span id="line-1658">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1659</span><span id="line-1659">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1660</span><span id="line-1660">      fail();</span>
+<span class="source-line-no">1661</span><span id="line-1661">    }</span>
+<span class="source-line-no">1662</span><span id="line-1662">  }</span>
+<span class="source-line-no">1663</span><span id="line-1663"></span>
+<span class="source-line-no">1664</span><span id="line-1664">  @Test</span>
+<span class="source-line-no">1665</span><span id="line-1665">  public void testIsNotNullTaxonKeyPredicate() throws JsonProcessingException {</span>
+<span class="source-line-no">1666</span><span id="line-1666"></span>
+<span class="source-line-no">1667</span><span id="line-1667">    DisjunctionPredicate predicate =</span>
+<span class="source-line-no">1668</span><span id="line-1668">        new DisjunctionPredicate(</span>
+<span class="source-line-no">1669</span><span id="line-1669">            Arrays.asList(</span>
+<span class="source-line-no">1670</span><span id="line-1670">                new IsNotNullPredicate&lt;&gt;(EventSearchParameter.TAXON_KEY, "test-checklist-key"),</span>
+<span class="source-line-no">1671</span><span id="line-1671">                new IsNullPredicate&lt;&gt;(EventSearchParameter.SCIENTIFIC_NAME, "test-checklist-key")));</span>
+<span class="source-line-no">1672</span><span id="line-1672">    try {</span>
+<span class="source-line-no">1673</span><span id="line-1673">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1674</span><span id="line-1674">      String expectedQuery =</span>
+<span class="source-line-no">1675</span><span id="line-1675">          "{\n"</span>
+<span class="source-line-no">1676</span><span id="line-1676">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1677</span><span id="line-1677">              + "              \"should\": [\n"</span>
+<span class="source-line-no">1678</span><span id="line-1678">              + "                {\n"</span>
+<span class="source-line-no">1679</span><span id="line-1679">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1680</span><span id="line-1680">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1681</span><span id="line-1681">              + "                      {\n"</span>
+<span class="source-line-no">1682</span><span id="line-1682">              + "                        \"exists\": {\n"</span>
+<span class="source-line-no">1683</span><span id="line-1683">              + "                          \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"</span>
+<span class="source-line-no">1684</span><span id="line-1684">              + "                        }\n"</span>
+<span class="source-line-no">1685</span><span id="line-1685">              + "                      }\n"</span>
+<span class="source-line-no">1686</span><span id="line-1686">              + "                    ]\n"</span>
+<span class="source-line-no">1687</span><span id="line-1687">              + "                  }\n"</span>
+<span class="source-line-no">1688</span><span id="line-1688">              + "                },\n"</span>
+<span class="source-line-no">1689</span><span id="line-1689">              + "                {\n"</span>
+<span class="source-line-no">1690</span><span id="line-1690">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1691</span><span id="line-1691">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1692</span><span id="line-1692">              + "                      {\n"</span>
+<span class="source-line-no">1693</span><span id="line-1693">              + "                        \"bool\": {\n"</span>
+<span class="source-line-no">1694</span><span id="line-1694">              + "                          \"must_not\": [\n"</span>
+<span class="source-line-no">1695</span><span id="line-1695">              + "                            {\n"</span>
+<span class="source-line-no">1696</span><span id="line-1696">              + "                              \"exists\": {\n"</span>
+<span class="source-line-no">1697</span><span id="line-1697">              + "                                \"field\": \"classifications.test-checklist-key.usage.name\"\n"</span>
+<span class="source-line-no">1698</span><span id="line-1698">              + "                              }\n"</span>
+<span class="source-line-no">1699</span><span id="line-1699">              + "                            }\n"</span>
+<span class="source-line-no">1700</span><span id="line-1700">              + "                          ]\n"</span>
+<span class="source-line-no">1701</span><span id="line-1701">              + "                        }\n"</span>
+<span class="source-line-no">1702</span><span id="line-1702">              + "                      }\n"</span>
+<span class="source-line-no">1703</span><span id="line-1703">              + "                    ]\n"</span>
+<span class="source-line-no">1704</span><span id="line-1704">              + "                  }\n"</span>
+<span class="source-line-no">1705</span><span id="line-1705">              + "                }\n"</span>
+<span class="source-line-no">1706</span><span id="line-1706">              + "              ]\n"</span>
+<span class="source-line-no">1707</span><span id="line-1707">              + "            }\n"</span>
+<span class="source-line-no">1708</span><span id="line-1708">              + "          }\n";</span>
+<span class="source-line-no">1709</span><span id="line-1709">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1710</span><span id="line-1710">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1711</span><span id="line-1711">      fail();</span>
+<span class="source-line-no">1712</span><span id="line-1712">    }</span>
+<span class="source-line-no">1713</span><span id="line-1713">  }</span>
+<span class="source-line-no">1714</span><span id="line-1714"></span>
+<span class="source-line-no">1715</span><span id="line-1715">  @Test</span>
+<span class="source-line-no">1716</span><span id="line-1716">  public void testLikeScientificNamePredicateWithChecklist() throws JsonProcessingException {</span>
+<span class="source-line-no">1717</span><span id="line-1717"></span>
+<span class="source-line-no">1718</span><span id="line-1718">    LikePredicate predicate =</span>
+<span class="source-line-no">1719</span><span id="line-1719">        new LikePredicate&lt;&gt;(</span>
+<span class="source-line-no">1720</span><span id="line-1720">            EventSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);</span>
+<span class="source-line-no">1721</span><span id="line-1721">    try {</span>
+<span class="source-line-no">1722</span><span id="line-1722">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1723</span><span id="line-1723">      String expectedQuery =</span>
+<span class="source-line-no">1724</span><span id="line-1724">          "{\n"</span>
+<span class="source-line-no">1725</span><span id="line-1725">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1726</span><span id="line-1726">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1727</span><span id="line-1727">              + "                {\n"</span>
+<span class="source-line-no">1728</span><span id="line-1728">              + "                  \"wildcard\": {\n"</span>
+<span class="source-line-no">1729</span><span id="line-1729">              + "                    \"classifications.test-checklist-key.usage.name\": {\n"</span>
+<span class="source-line-no">1730</span><span id="line-1730">              + "                      \"value\": \"Acacia\"\n"</span>
+<span class="source-line-no">1731</span><span id="line-1731">              + "                    }\n"</span>
+<span class="source-line-no">1732</span><span id="line-1732">              + "                  }\n"</span>
+<span class="source-line-no">1733</span><span id="line-1733">              + "                }\n"</span>
+<span class="source-line-no">1734</span><span id="line-1734">              + "              ]\n"</span>
+<span class="source-line-no">1735</span><span id="line-1735">              + "            }\n"</span>
+<span class="source-line-no">1736</span><span id="line-1736">              + "          }\n";</span>
+<span class="source-line-no">1737</span><span id="line-1737">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1738</span><span id="line-1738">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1739</span><span id="line-1739">      fail();</span>
+<span class="source-line-no">1740</span><span id="line-1740">    }</span>
+<span class="source-line-no">1741</span><span id="line-1741">  }</span>
+<span class="source-line-no">1742</span><span id="line-1742"></span>
+<span class="source-line-no">1743</span><span id="line-1743">  @Test</span>
+<span class="source-line-no">1744</span><span id="line-1744">  public void testYearRange() throws JsonProcessingException {</span>
+<span class="source-line-no">1745</span><span id="line-1745"></span>
+<span class="source-line-no">1746</span><span id="line-1746">    EqualsPredicate predicate = new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "1900,*", false);</span>
+<span class="source-line-no">1747</span><span id="line-1747">    try {</span>
+<span class="source-line-no">1748</span><span id="line-1748">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1749</span><span id="line-1749">      String expectedQuery =</span>
+<span class="source-line-no">1750</span><span id="line-1750">          "{\n"</span>
+<span class="source-line-no">1751</span><span id="line-1751">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1752</span><span id="line-1752">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1753</span><span id="line-1753">              + "                {\n"</span>
+<span class="source-line-no">1754</span><span id="line-1754">              + "                  \"range\": {\n"</span>
+<span class="source-line-no">1755</span><span id="line-1755">              + "                    \"year\": {\n"</span>
+<span class="source-line-no">1756</span><span id="line-1756">              + "                      \"gte\": 1900.0\n"</span>
+<span class="source-line-no">1757</span><span id="line-1757">              + "                    }\n"</span>
+<span class="source-line-no">1758</span><span id="line-1758">              + "                  }\n"</span>
+<span class="source-line-no">1759</span><span id="line-1759">              + "                }\n"</span>
+<span class="source-line-no">1760</span><span id="line-1760">              + "              ]\n"</span>
+<span class="source-line-no">1761</span><span id="line-1761">              + "            }\n"</span>
+<span class="source-line-no">1762</span><span id="line-1762">              + "          }\n";</span>
+<span class="source-line-no">1763</span><span id="line-1763">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1764</span><span id="line-1764">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1765</span><span id="line-1765">      fail();</span>
+<span class="source-line-no">1766</span><span id="line-1766">    }</span>
+<span class="source-line-no">1767</span><span id="line-1767">  }</span>
+<span class="source-line-no">1768</span><span id="line-1768"></span>
+<span class="source-line-no">1769</span><span id="line-1769">  @Test</span>
+<span class="source-line-no">1770</span><span id="line-1770">  public void testYearRangeReversed() throws JsonProcessingException {</span>
+<span class="source-line-no">1771</span><span id="line-1771"></span>
+<span class="source-line-no">1772</span><span id="line-1772">    EqualsPredicate predicate = new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "*,1900", false);</span>
+<span class="source-line-no">1773</span><span id="line-1773">    try {</span>
+<span class="source-line-no">1774</span><span id="line-1774">      String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">1775</span><span id="line-1775">      String expectedQuery =</span>
+<span class="source-line-no">1776</span><span id="line-1776">          "{\n"</span>
+<span class="source-line-no">1777</span><span id="line-1777">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1778</span><span id="line-1778">              + "              \"filter\": [\n"</span>
+<span class="source-line-no">1779</span><span id="line-1779">              + "                {\n"</span>
+<span class="source-line-no">1780</span><span id="line-1780">              + "                  \"range\": {\n"</span>
+<span class="source-line-no">1781</span><span id="line-1781">              + "                    \"year\": {\n"</span>
+<span class="source-line-no">1782</span><span id="line-1782">              + "                      \"lte\": 1900.0\n"</span>
+<span class="source-line-no">1783</span><span id="line-1783">              + "                    }\n"</span>
+<span class="source-line-no">1784</span><span id="line-1784">              + "                  }\n"</span>
+<span class="source-line-no">1785</span><span id="line-1785">              + "                }\n"</span>
+<span class="source-line-no">1786</span><span id="line-1786">              + "              ]\n"</span>
+<span class="source-line-no">1787</span><span id="line-1787">              + "            }\n"</span>
+<span class="source-line-no">1788</span><span id="line-1788">              + "          }\n";</span>
+<span class="source-line-no">1789</span><span id="line-1789">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1790</span><span id="line-1790">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1791</span><span id="line-1791">      fail();</span>
+<span class="source-line-no">1792</span><span id="line-1792">    }</span>
+<span class="source-line-no">1793</span><span id="line-1793">  }</span>
+<span class="source-line-no">1794</span><span id="line-1794"></span>
+<span class="source-line-no">1795</span><span id="line-1795">  @Test</span>
+<span class="source-line-no">1796</span><span id="line-1796">  public void testTwoYearRanges() throws JsonProcessingException {</span>
+<span class="source-line-no">1797</span><span id="line-1797"></span>
+<span class="source-line-no">1798</span><span id="line-1798">    DisjunctionPredicate conjunctionPredicate =</span>
+<span class="source-line-no">1799</span><span id="line-1799">        new DisjunctionPredicate(</span>
+<span class="source-line-no">1800</span><span id="line-1800">            Arrays.asList(</span>
+<span class="source-line-no">1801</span><span id="line-1801">                new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "1900,*", false),</span>
+<span class="source-line-no">1802</span><span id="line-1802">                new EqualsPredicate&lt;&gt;(EventSearchParameter.YEAR, "2000,*", false)));</span>
+<span class="source-line-no">1803</span><span id="line-1803">    try {</span>
+<span class="source-line-no">1804</span><span id="line-1804">      String query = visitor.buildQuery(conjunctionPredicate);</span>
+<span class="source-line-no">1805</span><span id="line-1805">      String expectedQuery =</span>
+<span class="source-line-no">1806</span><span id="line-1806">          "{\n"</span>
+<span class="source-line-no">1807</span><span id="line-1807">              + "            \"bool\": {\n"</span>
+<span class="source-line-no">1808</span><span id="line-1808">              + "              \"should\": [\n"</span>
+<span class="source-line-no">1809</span><span id="line-1809">              + "                {\n"</span>
+<span class="source-line-no">1810</span><span id="line-1810">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1811</span><span id="line-1811">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1812</span><span id="line-1812">              + "                      {\n"</span>
+<span class="source-line-no">1813</span><span id="line-1813">              + "                        \"range\": {\n"</span>
+<span class="source-line-no">1814</span><span id="line-1814">              + "                          \"year\": {\n"</span>
+<span class="source-line-no">1815</span><span id="line-1815">              + "                            \"gte\": 1900.0\n"</span>
+<span class="source-line-no">1816</span><span id="line-1816">              + "                          }\n"</span>
+<span class="source-line-no">1817</span><span id="line-1817">              + "                        }\n"</span>
+<span class="source-line-no">1818</span><span id="line-1818">              + "                      }\n"</span>
+<span class="source-line-no">1819</span><span id="line-1819">              + "                    ]\n"</span>
+<span class="source-line-no">1820</span><span id="line-1820">              + "                  }\n"</span>
+<span class="source-line-no">1821</span><span id="line-1821">              + "                },\n"</span>
+<span class="source-line-no">1822</span><span id="line-1822">              + "                {\n"</span>
+<span class="source-line-no">1823</span><span id="line-1823">              + "                  \"bool\": {\n"</span>
+<span class="source-line-no">1824</span><span id="line-1824">              + "                    \"filter\": [\n"</span>
+<span class="source-line-no">1825</span><span id="line-1825">              + "                      {\n"</span>
+<span class="source-line-no">1826</span><span id="line-1826">              + "                        \"range\": {\n"</span>
+<span class="source-line-no">1827</span><span id="line-1827">              + "                          \"year\": {\n"</span>
+<span class="source-line-no">1828</span><span id="line-1828">              + "                            \"gte\": 2000.0\n"</span>
+<span class="source-line-no">1829</span><span id="line-1829">              + "                          }\n"</span>
+<span class="source-line-no">1830</span><span id="line-1830">              + "                        }\n"</span>
+<span class="source-line-no">1831</span><span id="line-1831">              + "                      }\n"</span>
+<span class="source-line-no">1832</span><span id="line-1832">              + "                    ]\n"</span>
+<span class="source-line-no">1833</span><span id="line-1833">              + "                  }\n"</span>
+<span class="source-line-no">1834</span><span id="line-1834">              + "                }\n"</span>
+<span class="source-line-no">1835</span><span id="line-1835">              + "              ]\n"</span>
+<span class="source-line-no">1836</span><span id="line-1836">              + "            }\n"</span>
+<span class="source-line-no">1837</span><span id="line-1837">              + "          }\n";</span>
+<span class="source-line-no">1838</span><span id="line-1838">      assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1839</span><span id="line-1839">    } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">1840</span><span id="line-1840">      fail();</span>
+<span class="source-line-no">1841</span><span id="line-1841">    }</span>
+<span class="source-line-no">1842</span><span id="line-1842">  }</span>
+<span class="source-line-no">1843</span><span id="line-1843"></span>
+<span class="source-line-no">1844</span><span id="line-1844">  @Test</span>
+<span class="source-line-no">1845</span><span id="line-1845">  public void testEqualsNestedPredicate() throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1846</span><span id="line-1846">    Predicate p =</span>
+<span class="source-line-no">1847</span><span id="line-1847">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value", false);</span>
+<span class="source-line-no">1848</span><span id="line-1848">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1849</span><span id="line-1849">    String expectedQuery =</span>
+<span class="source-line-no">1850</span><span id="line-1850">        "{\n"</span>
+<span class="source-line-no">1851</span><span id="line-1851">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1852</span><span id="line-1852">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1853</span><span id="line-1853">            + "              {\n"</span>
+<span class="source-line-no">1854</span><span id="line-1854">            + "                \"nested\": {\n"</span>
+<span class="source-line-no">1855</span><span id="line-1855">            + "                  \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">1856</span><span id="line-1856">            + "                  \"query\": {\n"</span>
+<span class="source-line-no">1857</span><span id="line-1857">            + "                    \"term\": {\n"</span>
+<span class="source-line-no">1858</span><span id="line-1858">            + "                      \"humboldt_compilation_types.keyword\": {\n"</span>
+<span class="source-line-no">1859</span><span id="line-1859">            + "                        \"value\": \"value\"\n"</span>
+<span class="source-line-no">1860</span><span id="line-1860">            + "                      }\n"</span>
+<span class="source-line-no">1861</span><span id="line-1861">            + "                    }\n"</span>
+<span class="source-line-no">1862</span><span id="line-1862">            + "                  },\n"</span>
+<span class="source-line-no">1863</span><span id="line-1863">            + "                  \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">1864</span><span id="line-1864">            + "                }\n"</span>
+<span class="source-line-no">1865</span><span id="line-1865">            + "              }\n"</span>
+<span class="source-line-no">1866</span><span id="line-1866">            + "            ]\n"</span>
+<span class="source-line-no">1867</span><span id="line-1867">            + "          }\n"</span>
+<span class="source-line-no">1868</span><span id="line-1868">            + "        }\n";</span>
+<span class="source-line-no">1869</span><span id="line-1869">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1870</span><span id="line-1870">  }</span>
+<span class="source-line-no">1871</span><span id="line-1871"></span>
+<span class="source-line-no">1872</span><span id="line-1872">  @Test</span>
+<span class="source-line-no">1873</span><span id="line-1873">  public void testConjunctionNestedMixedPredicate()</span>
+<span class="source-line-no">1874</span><span id="line-1874">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1875</span><span id="line-1875">    Predicate p1 = new EqualsPredicate&lt;&gt;(PARAM, "value_1", false);</span>
+<span class="source-line-no">1876</span><span id="line-1876">    Predicate p2 =</span>
+<span class="source-line-no">1877</span><span id="line-1877">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_2", false);</span>
+<span class="source-line-no">1878</span><span id="line-1878">    Predicate p3 = new GreaterThanOrEqualsPredicate&lt;&gt;(EventSearchParameter.MONTH, "12");</span>
+<span class="source-line-no">1879</span><span id="line-1879">    Predicate p = new ConjunctionPredicate(Arrays.asList(p1, p2, p3));</span>
+<span class="source-line-no">1880</span><span id="line-1880">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1881</span><span id="line-1881">    String expectedQuery =</span>
+<span class="source-line-no">1882</span><span id="line-1882">        "{\n"</span>
+<span class="source-line-no">1883</span><span id="line-1883">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1884</span><span id="line-1884">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1885</span><span id="line-1885">            + "              {\n"</span>
+<span class="source-line-no">1886</span><span id="line-1886">            + "                \"bool\": {\n"</span>
+<span class="source-line-no">1887</span><span id="line-1887">            + "                  \"filter\": [\n"</span>
+<span class="source-line-no">1888</span><span id="line-1888">            + "                    {\n"</span>
+<span class="source-line-no">1889</span><span id="line-1889">            + "                      \"term\": {\n"</span>
+<span class="source-line-no">1890</span><span id="line-1890">            + "                        \"island.keyword\": {\n"</span>
+<span class="source-line-no">1891</span><span id="line-1891">            + "                          \"value\": \"value_1\"\n"</span>
+<span class="source-line-no">1892</span><span id="line-1892">            + "                        }\n"</span>
+<span class="source-line-no">1893</span><span id="line-1893">            + "                      }\n"</span>
+<span class="source-line-no">1894</span><span id="line-1894">            + "                    }\n"</span>
+<span class="source-line-no">1895</span><span id="line-1895">            + "                  ]\n"</span>
+<span class="source-line-no">1896</span><span id="line-1896">            + "                }\n"</span>
+<span class="source-line-no">1897</span><span id="line-1897">            + "              },\n"</span>
+<span class="source-line-no">1898</span><span id="line-1898">            + "              {\n"</span>
+<span class="source-line-no">1899</span><span id="line-1899">            + "                \"bool\": {\n"</span>
+<span class="source-line-no">1900</span><span id="line-1900">            + "                  \"filter\": [\n"</span>
+<span class="source-line-no">1901</span><span id="line-1901">            + "                    {\n"</span>
+<span class="source-line-no">1902</span><span id="line-1902">            + "                      \"range\": {\n"</span>
+<span class="source-line-no">1903</span><span id="line-1903">            + "                        \"month\": {\n"</span>
+<span class="source-line-no">1904</span><span id="line-1904">            + "                          \"gte\": \"12\"\n"</span>
+<span class="source-line-no">1905</span><span id="line-1905">            + "                        }\n"</span>
+<span class="source-line-no">1906</span><span id="line-1906">            + "                      }\n"</span>
+<span class="source-line-no">1907</span><span id="line-1907">            + "                    }\n"</span>
+<span class="source-line-no">1908</span><span id="line-1908">            + "                  ]\n"</span>
+<span class="source-line-no">1909</span><span id="line-1909">            + "                }\n"</span>
+<span class="source-line-no">1910</span><span id="line-1910">            + "              },\n"</span>
+<span class="source-line-no">1911</span><span id="line-1911">            + "              {\n"</span>
+<span class="source-line-no">1912</span><span id="line-1912">            + "                \"nested\": {\n"</span>
+<span class="source-line-no">1913</span><span id="line-1913">            + "                  \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">1914</span><span id="line-1914">            + "                  \"query\": {\n"</span>
+<span class="source-line-no">1915</span><span id="line-1915">            + "                    \"bool\": {\n"</span>
+<span class="source-line-no">1916</span><span id="line-1916">            + "                      \"filter\": [\n"</span>
+<span class="source-line-no">1917</span><span id="line-1917">            + "                        {\n"</span>
+<span class="source-line-no">1918</span><span id="line-1918">            + "                          \"term\": {\n"</span>
+<span class="source-line-no">1919</span><span id="line-1919">            + "                            \"humboldt_compilation_types.keyword\": {\n"</span>
+<span class="source-line-no">1920</span><span id="line-1920">            + "                              \"value\": \"value_2\"\n"</span>
+<span class="source-line-no">1921</span><span id="line-1921">            + "                            }\n"</span>
+<span class="source-line-no">1922</span><span id="line-1922">            + "                          }\n"</span>
+<span class="source-line-no">1923</span><span id="line-1923">            + "                        }\n"</span>
+<span class="source-line-no">1924</span><span id="line-1924">            + "                      ]\n"</span>
+<span class="source-line-no">1925</span><span id="line-1925">            + "                    }\n"</span>
+<span class="source-line-no">1926</span><span id="line-1926">            + "                  },\n"</span>
+<span class="source-line-no">1927</span><span id="line-1927">            + "                  \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">1928</span><span id="line-1928">            + "                }\n"</span>
+<span class="source-line-no">1929</span><span id="line-1929">            + "              }\n"</span>
+<span class="source-line-no">1930</span><span id="line-1930">            + "            ]\n"</span>
+<span class="source-line-no">1931</span><span id="line-1931">            + "          }\n"</span>
+<span class="source-line-no">1932</span><span id="line-1932">            + "        }\n";</span>
+<span class="source-line-no">1933</span><span id="line-1933">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">1934</span><span id="line-1934">  }</span>
+<span class="source-line-no">1935</span><span id="line-1935"></span>
+<span class="source-line-no">1936</span><span id="line-1936">  @Test</span>
+<span class="source-line-no">1937</span><span id="line-1937">  public void testComplexNestedPredicate() throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">1938</span><span id="line-1938">    Predicate p1 = new EqualsPredicate&lt;&gt;(PARAM, "value_1", false);</span>
+<span class="source-line-no">1939</span><span id="line-1939">    Predicate p2 =</span>
+<span class="source-line-no">1940</span><span id="line-1940">        new LikePredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_COMPILATION_TYPES, "value_1*", false);</span>
+<span class="source-line-no">1941</span><span id="line-1941">    Predicate p3 =</span>
+<span class="source-line-no">1942</span><span id="line-1942">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);</span>
+<span class="source-line-no">1943</span><span id="line-1943"></span>
+<span class="source-line-no">1944</span><span id="line-1944">    Predicate p4 = new DisjunctionPredicate(Arrays.asList(p1, p3));</span>
+<span class="source-line-no">1945</span><span id="line-1945">    Predicate p5 = new ConjunctionPredicate(Arrays.asList(p1, p2));</span>
+<span class="source-line-no">1946</span><span id="line-1946"></span>
+<span class="source-line-no">1947</span><span id="line-1947">    Predicate p = new ConjunctionPredicate(Arrays.asList(p4, new NotPredicate(p5)));</span>
+<span class="source-line-no">1948</span><span id="line-1948">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">1949</span><span id="line-1949">    String expectedQuery =</span>
+<span class="source-line-no">1950</span><span id="line-1950">        "{\n"</span>
+<span class="source-line-no">1951</span><span id="line-1951">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">1952</span><span id="line-1952">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">1953</span><span id="line-1953">            + "              {\n"</span>
+<span class="source-line-no">1954</span><span id="line-1954">            + "                \"bool\": {\n"</span>
+<span class="source-line-no">1955</span><span id="line-1955">            + "                  \"should\": [\n"</span>
+<span class="source-line-no">1956</span><span id="line-1956">            + "                    {\n"</span>
+<span class="source-line-no">1957</span><span id="line-1957">            + "                      \"bool\": {\n"</span>
+<span class="source-line-no">1958</span><span id="line-1958">            + "                        \"filter\": [\n"</span>
+<span class="source-line-no">1959</span><span id="line-1959">            + "                          {\n"</span>
+<span class="source-line-no">1960</span><span id="line-1960">            + "                            \"term\": {\n"</span>
+<span class="source-line-no">1961</span><span id="line-1961">            + "                              \"island.keyword\": {\n"</span>
+<span class="source-line-no">1962</span><span id="line-1962">            + "                                \"value\": \"value_1\"\n"</span>
+<span class="source-line-no">1963</span><span id="line-1963">            + "                              }\n"</span>
+<span class="source-line-no">1964</span><span id="line-1964">            + "                            }\n"</span>
+<span class="source-line-no">1965</span><span id="line-1965">            + "                          }\n"</span>
+<span class="source-line-no">1966</span><span id="line-1966">            + "                        ]\n"</span>
+<span class="source-line-no">1967</span><span id="line-1967">            + "                      }\n"</span>
+<span class="source-line-no">1968</span><span id="line-1968">            + "                    },\n"</span>
+<span class="source-line-no">1969</span><span id="line-1969">            + "                    {\n"</span>
+<span class="source-line-no">1970</span><span id="line-1970">            + "                      \"nested\": {\n"</span>
+<span class="source-line-no">1971</span><span id="line-1971">            + "                        \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">1972</span><span id="line-1972">            + "                        \"query\": {\n"</span>
+<span class="source-line-no">1973</span><span id="line-1973">            + "                          \"bool\": {\n"</span>
+<span class="source-line-no">1974</span><span id="line-1974">            + "                            \"should\": [\n"</span>
+<span class="source-line-no">1975</span><span id="line-1975">            + "                              {\n"</span>
+<span class="source-line-no">1976</span><span id="line-1976">            + "                                \"term\": {\n"</span>
+<span class="source-line-no">1977</span><span id="line-1977">            + "                                  \"humboldt_protocol_names.keyword\": {\n"</span>
+<span class="source-line-no">1978</span><span id="line-1978">            + "                                    \"value\": \"value_2\"\n"</span>
+<span class="source-line-no">1979</span><span id="line-1979">            + "                                  }\n"</span>
+<span class="source-line-no">1980</span><span id="line-1980">            + "                                }\n"</span>
+<span class="source-line-no">1981</span><span id="line-1981">            + "                              }\n"</span>
+<span class="source-line-no">1982</span><span id="line-1982">            + "                            ]\n"</span>
+<span class="source-line-no">1983</span><span id="line-1983">            + "                          }\n"</span>
+<span class="source-line-no">1984</span><span id="line-1984">            + "                        },\n"</span>
+<span class="source-line-no">1985</span><span id="line-1985">            + "                        \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">1986</span><span id="line-1986">            + "                      }\n"</span>
+<span class="source-line-no">1987</span><span id="line-1987">            + "                    }\n"</span>
+<span class="source-line-no">1988</span><span id="line-1988">            + "                  ]\n"</span>
+<span class="source-line-no">1989</span><span id="line-1989">            + "                }\n"</span>
+<span class="source-line-no">1990</span><span id="line-1990">            + "              },\n"</span>
+<span class="source-line-no">1991</span><span id="line-1991">            + "              {\n"</span>
+<span class="source-line-no">1992</span><span id="line-1992">            + "                \"bool\": {\n"</span>
+<span class="source-line-no">1993</span><span id="line-1993">            + "                  \"filter\": [\n"</span>
+<span class="source-line-no">1994</span><span id="line-1994">            + "                    {\n"</span>
+<span class="source-line-no">1995</span><span id="line-1995">            + "                      \"exists\": {\n"</span>
+<span class="source-line-no">1996</span><span id="line-1996">            + "                        \"field\": \"island.keyword\"\n"</span>
+<span class="source-line-no">1997</span><span id="line-1997">            + "                      }\n"</span>
+<span class="source-line-no">1998</span><span id="line-1998">            + "                    },\n"</span>
+<span class="source-line-no">1999</span><span id="line-1999">            + "                    {\n"</span>
+<span class="source-line-no">2000</span><span id="line-2000">            + "                      \"nested\": {\n"</span>
+<span class="source-line-no">2001</span><span id="line-2001">            + "                        \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">2002</span><span id="line-2002">            + "                        \"query\": {\n"</span>
+<span class="source-line-no">2003</span><span id="line-2003">            + "                          \"exists\": {\n"</span>
+<span class="source-line-no">2004</span><span id="line-2004">            + "                            \"field\": \"humboldt_compilation_types.keyword\"\n"</span>
+<span class="source-line-no">2005</span><span id="line-2005">            + "                          }\n"</span>
+<span class="source-line-no">2006</span><span id="line-2006">            + "                        },\n"</span>
+<span class="source-line-no">2007</span><span id="line-2007">            + "                        \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2008</span><span id="line-2008">            + "                      }\n"</span>
+<span class="source-line-no">2009</span><span id="line-2009">            + "                    }\n"</span>
+<span class="source-line-no">2010</span><span id="line-2010">            + "                  ],\n"</span>
+<span class="source-line-no">2011</span><span id="line-2011">            + "                  \"must_not\": [\n"</span>
+<span class="source-line-no">2012</span><span id="line-2012">            + "                    {\n"</span>
+<span class="source-line-no">2013</span><span id="line-2013">            + "                      \"bool\": {\n"</span>
+<span class="source-line-no">2014</span><span id="line-2014">            + "                        \"filter\": [\n"</span>
+<span class="source-line-no">2015</span><span id="line-2015">            + "                          {\n"</span>
+<span class="source-line-no">2016</span><span id="line-2016">            + "                            \"bool\": {\n"</span>
+<span class="source-line-no">2017</span><span id="line-2017">            + "                              \"filter\": [\n"</span>
+<span class="source-line-no">2018</span><span id="line-2018">            + "                                {\n"</span>
+<span class="source-line-no">2019</span><span id="line-2019">            + "                                  \"term\": {\n"</span>
+<span class="source-line-no">2020</span><span id="line-2020">            + "                                    \"island.keyword\": {\n"</span>
+<span class="source-line-no">2021</span><span id="line-2021">            + "                                      \"value\": \"value_1\"\n"</span>
+<span class="source-line-no">2022</span><span id="line-2022">            + "                                    }\n"</span>
+<span class="source-line-no">2023</span><span id="line-2023">            + "                                  }\n"</span>
+<span class="source-line-no">2024</span><span id="line-2024">            + "                                }\n"</span>
+<span class="source-line-no">2025</span><span id="line-2025">            + "                              ]\n"</span>
+<span class="source-line-no">2026</span><span id="line-2026">            + "                            }\n"</span>
+<span class="source-line-no">2027</span><span id="line-2027">            + "                          },\n"</span>
+<span class="source-line-no">2028</span><span id="line-2028">            + "                          {\n"</span>
+<span class="source-line-no">2029</span><span id="line-2029">            + "                            \"nested\": {\n"</span>
+<span class="source-line-no">2030</span><span id="line-2030">            + "                              \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">2031</span><span id="line-2031">            + "                              \"query\": {\n"</span>
+<span class="source-line-no">2032</span><span id="line-2032">            + "                                \"bool\": {\n"</span>
+<span class="source-line-no">2033</span><span id="line-2033">            + "                                  \"filter\": [\n"</span>
+<span class="source-line-no">2034</span><span id="line-2034">            + "                                    {\n"</span>
+<span class="source-line-no">2035</span><span id="line-2035">            + "                                      \"wildcard\": {\n"</span>
+<span class="source-line-no">2036</span><span id="line-2036">            + "                                        \"humboldt_compilation_types.keyword\": {\n"</span>
+<span class="source-line-no">2037</span><span id="line-2037">            + "                                          \"value\": \"value_1*\"\n"</span>
+<span class="source-line-no">2038</span><span id="line-2038">            + "                                        }\n"</span>
+<span class="source-line-no">2039</span><span id="line-2039">            + "                                      }\n"</span>
+<span class="source-line-no">2040</span><span id="line-2040">            + "                                    }\n"</span>
+<span class="source-line-no">2041</span><span id="line-2041">            + "                                  ]\n"</span>
+<span class="source-line-no">2042</span><span id="line-2042">            + "                                }\n"</span>
+<span class="source-line-no">2043</span><span id="line-2043">            + "                              },\n"</span>
+<span class="source-line-no">2044</span><span id="line-2044">            + "                              \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2045</span><span id="line-2045">            + "                            }\n"</span>
+<span class="source-line-no">2046</span><span id="line-2046">            + "                          }\n"</span>
+<span class="source-line-no">2047</span><span id="line-2047">            + "                        ]\n"</span>
+<span class="source-line-no">2048</span><span id="line-2048">            + "                      }\n"</span>
+<span class="source-line-no">2049</span><span id="line-2049">            + "                    }\n"</span>
+<span class="source-line-no">2050</span><span id="line-2050">            + "                  ]\n"</span>
+<span class="source-line-no">2051</span><span id="line-2051">            + "                }\n"</span>
+<span class="source-line-no">2052</span><span id="line-2052">            + "              }\n"</span>
+<span class="source-line-no">2053</span><span id="line-2053">            + "            ]\n"</span>
+<span class="source-line-no">2054</span><span id="line-2054">            + "          }\n"</span>
+<span class="source-line-no">2055</span><span id="line-2055">            + "        }\n";</span>
+<span class="source-line-no">2056</span><span id="line-2056">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2057</span><span id="line-2057">  }</span>
+<span class="source-line-no">2058</span><span id="line-2058"></span>
+<span class="source-line-no">2059</span><span id="line-2059">  @Test</span>
+<span class="source-line-no">2060</span><span id="line-2060">  public void testConjunctionNestedPredicate()</span>
+<span class="source-line-no">2061</span><span id="line-2061">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2062</span><span id="line-2062">    Predicate p1 =</span>
+<span class="source-line-no">2063</span><span id="line-2063">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_VERBATIM_SITE_NAMES, "value_1", false);</span>
+<span class="source-line-no">2064</span><span id="line-2064">    Predicate p2 =</span>
+<span class="source-line-no">2065</span><span id="line-2065">        new EqualsPredicate&lt;&gt;(EventSearchParameter.HUMBOLDT_PROTOCOL_NAMES, "value_2", false);</span>
+<span class="source-line-no">2066</span><span id="line-2066">    Predicate p3 = new ConjunctionPredicate(Arrays.asList(p1, p2));</span>
+<span class="source-line-no">2067</span><span id="line-2067">    String query = visitor.buildQuery(p3);</span>
+<span class="source-line-no">2068</span><span id="line-2068">    String expectedQuery =</span>
+<span class="source-line-no">2069</span><span id="line-2069">        "{\n"</span>
+<span class="source-line-no">2070</span><span id="line-2070">            + "          \"bool\": {\n"</span>
+<span class="source-line-no">2071</span><span id="line-2071">            + "            \"filter\": [\n"</span>
+<span class="source-line-no">2072</span><span id="line-2072">            + "              {\n"</span>
+<span class="source-line-no">2073</span><span id="line-2073">            + "                \"nested\": {\n"</span>
+<span class="source-line-no">2074</span><span id="line-2074">            + "                  \"path\": \"event.humboldt\",\n"</span>
+<span class="source-line-no">2075</span><span id="line-2075">            + "                  \"query\": {\n"</span>
+<span class="source-line-no">2076</span><span id="line-2076">            + "                    \"bool\": {\n"</span>
+<span class="source-line-no">2077</span><span id="line-2077">            + "                      \"filter\": [\n"</span>
+<span class="source-line-no">2078</span><span id="line-2078">            + "                        {\n"</span>
+<span class="source-line-no">2079</span><span id="line-2079">            + "                          \"term\": {\n"</span>
+<span class="source-line-no">2080</span><span id="line-2080">            + "                            \"humboldt_verbatim_site_names.keyword\": {\n"</span>
+<span class="source-line-no">2081</span><span id="line-2081">            + "                              \"value\": \"value_1\"\n"</span>
+<span class="source-line-no">2082</span><span id="line-2082">            + "                            }\n"</span>
+<span class="source-line-no">2083</span><span id="line-2083">            + "                          }\n"</span>
+<span class="source-line-no">2084</span><span id="line-2084">            + "                        },\n"</span>
+<span class="source-line-no">2085</span><span id="line-2085">            + "                        {\n"</span>
+<span class="source-line-no">2086</span><span id="line-2086">            + "                          \"term\": {\n"</span>
+<span class="source-line-no">2087</span><span id="line-2087">            + "                            \"humboldt_protocol_names.keyword\": {\n"</span>
+<span class="source-line-no">2088</span><span id="line-2088">            + "                              \"value\": \"value_2\"\n"</span>
+<span class="source-line-no">2089</span><span id="line-2089">            + "                            }\n"</span>
+<span class="source-line-no">2090</span><span id="line-2090">            + "                          }\n"</span>
+<span class="source-line-no">2091</span><span id="line-2091">            + "                        }\n"</span>
+<span class="source-line-no">2092</span><span id="line-2092">            + "                      ]\n"</span>
+<span class="source-line-no">2093</span><span id="line-2093">            + "                    }\n"</span>
+<span class="source-line-no">2094</span><span id="line-2094">            + "                  },\n"</span>
+<span class="source-line-no">2095</span><span id="line-2095">            + "                  \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2096</span><span id="line-2096">            + "                }\n"</span>
+<span class="source-line-no">2097</span><span id="line-2097">            + "              }\n"</span>
+<span class="source-line-no">2098</span><span id="line-2098">            + "            ]\n"</span>
+<span class="source-line-no">2099</span><span id="line-2099">            + "          }\n"</span>
+<span class="source-line-no">2100</span><span id="line-2100">            + "        }\n";</span>
+<span class="source-line-no">2101</span><span id="line-2101">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2102</span><span id="line-2102">  }</span>
+<span class="source-line-no">2103</span><span id="line-2103">}</span>
 
 
 
