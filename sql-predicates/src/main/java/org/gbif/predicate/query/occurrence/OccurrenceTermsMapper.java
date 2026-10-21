@@ -324,6 +324,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.IS_IN_CLUSTER, GbifInternalTerm.isInCluster);
     paramMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
     paramMap.put(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);
+    paramMap.put(OccurrenceSearchParameter.ENVIRONMENTS, GbifTerm.environments);
     paramMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);
     paramMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);
     paramMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);
