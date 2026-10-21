@@ -1422,6 +1422,39 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testEnvironmentsPredicate() throws QueryBuildingException {
+    // nested struct for a non-default checklist
+    EqualsPredicate eq =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.ENVIRONMENTS,
+            "MARINE",
+            false,
+            Constants.NUB_DATASET_KEY.toString());
+    assertEquals(
+        "(stringArrayContains(occurrence.gbif_classification.environments, 'MARINE', true))",
+        visitor.buildQuery(eq));
+
+    // top-level column for the default (denormalised) checklist
+    eq =
+        new EqualsPredicate<>(
+            OccurrenceSearchParameter.ENVIRONMENTS,
+            "MARINE",
+            false,
+            Constants.COL_DATASET_KEY.toString());
+    assertEquals("(stringArrayContains(environments, 'MARINE', true))", visitor.buildQuery(eq));
+
+    InPredicate in =
+        new InPredicate<>(
+            OccurrenceSearchParameter.ENVIRONMENTS,
+            Arrays.asList("MARINE", "BRACKISH"),
+            false,
+            Constants.NUB_DATASET_KEY.toString());
+    assertEquals(
+        "(arrays_overlap(occurrence.gbif_classification.environments, array('MARINE','BRACKISH')))",
+        visitor.buildQuery(in));
+  }
+
+  @Test
   public void testTaxonomicStatusPredicate() throws QueryBuildingException {
     EqualsPredicate eq =
         new EqualsPredicate<>(

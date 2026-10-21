@@ -103,7 +103,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   OccurrenceSearchParameter.SCIENTIFIC_NAME,
                   OccurrenceSearchParameter.TAXONOMIC_STATUS,
                   OccurrenceSearchParameter.TAXONOMIC_ISSUE,
-                  OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY)
+                  OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
+                  OccurrenceSearchParameter.ENVIRONMENTS)
                   .stream())
           .collect(Collectors.toSet());
 
@@ -494,15 +495,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   resolveTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
                   predicate.getValue()))
           .append(')');
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-      // special case for taxonomic issues, which are stored in an ARRAY, the other taxon fields are
-      // STRING
+    } else if (isTaxonomicArrayParameter(predicate.getKey())) {
+      // special case for taxonomic issues and environments, which are stored in an ARRAY, the
+      // other taxon fields are STRING
       builder
           .append('(')
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  resolveTaxonColumnName("taxonomicissue", predicate.getChecklistKey()),
+                  resolveTaxonColumnName(
+                      taxonomicArrayColumn(predicate.getKey()), predicate.getChecklistKey()),
                   predicate.getValue()))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
@@ -739,8 +741,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       appendHumboldtTaxonFilter(predicate);
     } else if (TAXON_KEY_SEARCH_PARAMETERS.contains(predicate.getKey())) {
       appendTaxonKeyArrayFilter(predicate);
-    } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
-      appendTaxonomicArrayFilter(predicate, "taxonomicissue");
+    } else if (isTaxonomicArrayParameter(predicate.getKey())) {
+      appendTaxonomicArrayFilter(predicate, taxonomicArrayColumn(predicate.getKey()));
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
       appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus");
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
@@ -906,7 +908,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyIsNotNull(IsNotNullPredicate<S> predicate) {
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
-    if (predicate.getParameter() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
+    if (isTaxonomicArrayParameter(predicate.getParameter())) {
       String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
       builder.append(
           String.format(
@@ -921,7 +923,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Searches any of the NUB keys in Hive of any rank. */
   private void appendTaxonKeyNull(IsNullPredicate<S> predicate) {
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
-    if (predicate.getParameter() == OccurrenceSearchParameter.TAXONOMIC_ISSUE) {
+    if (isTaxonomicArrayParameter(predicate.getParameter())) {
       String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
       builder.append(
           String.format(
@@ -1462,6 +1464,18 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private String getChecklistKey(String checklistKey) {
     return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
+  }
+
+  /** Taxon parameters stored as ARRAY columns, both top-level and in the classification struct. */
+  private static boolean isTaxonomicArrayParameter(SearchParameter parameter) {
+    return parameter == OccurrenceSearchParameter.TAXONOMIC_ISSUE
+        || parameter == OccurrenceSearchParameter.ENVIRONMENTS;
+  }
+
+  private static String taxonomicArrayColumn(SearchParameter parameter) {
+    return parameter == OccurrenceSearchParameter.TAXONOMIC_ISSUE
+        ? "taxonomicissue"
+        : "environments";
   }
 
   public static boolean isNullOrEmpty(@Nullable String string) {
