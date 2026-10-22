@@ -307,6 +307,8 @@ public class SQLColumnsUtils {
           "taxonkeys",
           EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_IUCN_RED_LIST_CATEGORY,
           "iucnRedListCategoryCode",
+          EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ENVIRONMENTS,
+          "environments",
           EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_ISSUE,
           "issues");
 }
