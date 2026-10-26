@@ -2019,6 +2019,52 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   @Test
+  public void testOccurrenceStatusNormalized()
+      throws QueryBuildingException, JsonProcessingException {
+    String expectedDetected =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"term\": {\n"
+            + "          \"occurrence_status\": {\n"
+            + "            \"value\": \"DETECTED\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(
+        expectedDetected,
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "PRESENT", false)));
+    assertQueryEquals(
+        expectedDetected,
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "DETECTED", false)));
+
+    String expectedNotDetected =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"term\": {\n"
+            + "          \"occurrence_status\": {\n"
+            + "            \"value\": \"NOT_DETECTED\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(
+        expectedNotDetected,
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "ABSENT", false)));
+  }
+
+  @Test
   public void testRangeQueries() throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
@@ -2053,7 +2099,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"terms\": {\n"
-            + "                \"occurrence_status\": [\"PRESENT\"]\n"
+            + "                \"occurrence_status\": [\"DETECTED\"]\n"
             + "              }\n"
             + "            }\n"
             + "          ]\n"

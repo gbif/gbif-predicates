@@ -1630,6 +1630,27 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testOccurrenceStatusNormalized() throws QueryBuildingException {
+    assertEquals(
+        "occurrencestatus = 'DETECTED'",
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "PRESENT", false)));
+    assertEquals(
+        "occurrencestatus = 'DETECTED'",
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "DETECTED", false)));
+    assertEquals(
+        "occurrencestatus = 'NOT_DETECTED'",
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.OCCURRENCE_STATUS, "ABSENT", false)));
+    assertEquals(
+        "(occurrencestatus IN('DETECTED', 'NOT_DETECTED'))",
+        visitor.buildQuery(
+            new InPredicate<>(
+                OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of("PRESENT", "ABSENT"), false)));
+  }
+
+  @Test
   public void testSequenceLengthComplexRange() throws QueryBuildingException {
     Predicate p =
         new ConjunctionPredicate(
@@ -1656,7 +1677,7 @@ public class SQLQueryVisitorTest {
                                     "30")))))));
     String query = visitor.buildQuery(p);
     assertEquals(
-        "(((occurrencestatus IN('PRESENT'))) AND (((((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))) OR (((dna.sequencelength >= 20) AND (dna.sequencelength <= 30))))))",
+        "(((occurrencestatus IN('DETECTED'))) AND (((((dna.sequencelength >= 10) AND (dna.sequencelength <= 20))) OR (((dna.sequencelength >= 20) AND (dna.sequencelength <= 30))))))",
         query);
   }
 

@@ -45,6 +45,7 @@ import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
@@ -126,6 +127,12 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   }
 
   private String parseParamValue(String value, S parameter) {
+    if (OccurrenceStatus.class.isAssignableFrom(parameter.type())) {
+      return VocabularyUtils.lookup(value, OccurrenceStatus.class)
+          .map(OccurrenceStatus::normalize)
+          .map(Enum::name)
+          .orElse(null);
+    }
     if (Enum.class.isAssignableFrom(parameter.type())
         && !Country.class.isAssignableFrom(parameter.type())) {
       return VocabularyUtils.lookup(value, (Class<Enum<?>>) parameter.type())
