@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -2297,5 +2298,1066 @@ public class OccurrenceEsQueryVisitorTest {
             + "  }\n"
             + "}";
     assertQueryEquals(expectedQuery, query);
+  }
+
+  /** Equals predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchEqualsPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna);
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"term\": {\n"
+            + "          \"classifications.ck.taxonKeys\": {\n"
+            + "            \"value\": \"212\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"212\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                  \"value\": \"212\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** In predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchInPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new InPredicate<>(
+                OccurrenceSearchParameter.KINGDOM_KEY, List.of("1", "6"), false, "ck", dna);
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"terms\": {\n"
+            + "          \"classifications.ck.taxonKeys\": [\n"
+            + "            \"1\",\n"
+            + "            \"6\"\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"terms\": {\n"
+            + "                \"classifications.ck.taxonKeys\": [\n"
+            + "                  \"1\",\n"
+            + "                  \"6\"\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"terms\": {\n"
+            + "                \"classifications.ck_dna_assisted.taxonKeys\": [\n"
+            + "                  \"1\",\n"
+            + "                  \"6\"\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Like predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchLikePredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new LikePredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", "ck", false, dna);
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"wildcard\": {\n"
+            + "          \"classifications.ck.usage.name\": {\n"
+            + "            \"value\": \"Puma*\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"wildcard\": {\n"
+            + "                \"classifications.ck.usage.name\": {\n"
+            + "                  \"value\": \"Puma*\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"wildcard\": {\n"
+            + "                \"classifications.ck_dna_assisted.usage.name\": {\n"
+            + "                  \"value\": \"Puma*\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** IsNotNull predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchIsNotNullPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "ck", dna);
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"exists\": {\n"
+            + "          \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** IsNull predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchIsNullPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "ck", dna);
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"must_not\": [\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // null in the checklist classification AND in the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"must_not\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"exists\": {\n"
+            + "                      \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"exists\": {\n"
+            + "                      \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Not predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchNotPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new NotPredicate(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna));
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"exists\": {\n"
+            + "          \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"must_not\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"212\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"must_not\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Disjunction predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchDisjunctionPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new DisjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "1", false, "ck", dna),
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "2", false, "ck", dna)));
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"1\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"2\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"1\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"1\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"2\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"2\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Conjunction predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchConjunctionPredicate()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new ConjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna),
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
+
+    // only the checklist classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"212\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"DK\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"DK\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Taxon key with the DNA taxon search AND country AND year: only the taxon key is expanded. */
+  @Test
+  public void testDnaTaxonSearchTaxonAndNonTaxonConjunction()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false),
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000")));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"DK\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"2000\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
+  }
+
+  /** Kingdom key with the DNA taxon search OR country. */
+  @Test
+  public void testDnaTaxonSearchTaxonOrNonTaxonDisjunction()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, "ck", true),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"1\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"1\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"DK\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
+  }
+
+  /**
+   * Taxon predicates with and without the DNA taxon search mixed with a non-taxon IN: only the
+   * flagged ones are expanded.
+   */
+  @Test
+  public void testDnaTaxonSearchMixedFlags()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, "ck", false),
+                new LikePredicate<>(
+                    OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", "ck", false, true),
+                new InPredicate<>(
+                    OccurrenceSearchParameter.BASIS_OF_RECORD,
+                    List.of("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"),
+                    false)));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"212\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                  \"value\": \"1\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"wildcard\": {\n"
+            + "                      \"classifications.ck.usage.name\": {\n"
+            + "                        \"value\": \"Puma*\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"wildcard\": {\n"
+            + "                      \"classifications.ck_dna_assisted.usage.name\": {\n"
+            + "                        \"value\": \"Puma*\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"terms\": {\n"
+            + "                \"basis_of_record\": [\n"
+            + "                  \"HUMAN_OBSERVATION\",\n"
+            + "                  \"PRESERVED_SPECIMEN\"\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
+  }
+
+  /**
+   * (taxon key 1 OR 2, both with the DNA taxon search) AND NOT country AND scientific name is not
+   * null with the DNA taxon search.
+   */
+  @Test
+  public void testDnaTaxonSearchNestedDisjunctionAndNot()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new DisjunctionPredicate(
+                    List.of(
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.TAXON_KEY, "1", false, "ck", true),
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.TAXON_KEY, "2", false, "ck", true))),
+                new NotPredicate(
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)),
+                new IsNotNullPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "ck", true)));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"bool\": {\n"
+            + "                      \"should\": [\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                              \"value\": \"1\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        },\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                              \"value\": \"1\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ]\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"bool\": {\n"
+            + "                      \"should\": [\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                              \"value\": \"2\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        },\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                              \"value\": \"2\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ]\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"country\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ],\n"
+            + "          \"must_not\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"country\": {\n"
+            + "                        \"value\": \"DK\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"exists\": {\n"
+            + "                      \"field\": \"classifications.ck.usage.name\"\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"exists\": {\n"
+            + "                      \"field\": \"classifications.ck_dna_assisted.usage.name\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
+  }
+
+  /** NOT (taxon key with the DNA taxon search AND country). */
+  @Test
+  public void testDnaTaxonSearchNotConjunction()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new NotPredicate(
+            new ConjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false))));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"should\": [\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"exists\": {\n"
+            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"exists\": {\n"
+            + "          \"field\": \"country\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"must_not\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"bool\": {\n"
+            + "                      \"should\": [\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                              \"value\": \"212\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        },\n"
+            + "                        {\n"
+            + "                          \"term\": {\n"
+            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                              \"value\": \"212\"\n"
+            + "                            }\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      ]\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"country\": {\n"
+            + "                        \"value\": \"DK\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
+  }
+
+  @Test
+  public void testDnaTaxonSearchDoesNotAffectNonTaxonomicFields()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false, null, true);
+    assertQueryEquals(
+        "{\"bool\":{\"filter\":[{\"term\":{\"country\":{\"value\":\"DK\"}}}]}}",
+        visitor.buildQuery(p));
   }
 }

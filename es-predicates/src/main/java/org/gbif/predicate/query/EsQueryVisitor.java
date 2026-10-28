@@ -60,6 +60,9 @@ import org.locationtech.jts.io.WKTReader;
 @Slf4j
 public abstract class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
+  /** Suffix of the checklist key that holds the DNA assisted classification of a checklist. */
+  private static final String DNA_ASSISTED_SUFFIX = "_dna_assisted";
+
   private final EsFieldMapper<S> esFieldMapper;
   private final String defaultChecklistKey;
 
@@ -77,6 +80,44 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     } catch (Exception e) {
       return null;
     }
+  }
+
+  private boolean isDnaTaxonSearch(Predicate predicate) {
+    try {
+      Method m = predicate.getClass().getMethod("getDnaTaxonSearch");
+      return Boolean.TRUE.equals(m.invoke(predicate));
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  /** The DNA taxon search doesn't apply to the Humboldt taxonomic scopes. */
+  private static boolean isHumboldtParameter(SearchParameter parameter) {
+    return parameter.name().startsWith("HUMBOLDT_");
+  }
+
+  /**
+   * If the predicate has the dnaTaxonSearch flag and the parameter is taxonomic (excluding the
+   * Humboldt ones), it joins the query with an OR to the same query on the DNA assisted
+   * classification of the checklist. Otherwise, the query is returned as it is.
+   *
+   * @param query the query on the checklist field
+   * @param queryFn creates the same query for another field
+   */
+  private Query addDnaTaxonQuery(
+      Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
+    String checklistKey = getChecklistKey(predicate);
+    if (checklistKey == null
+        || !esFieldMapper.isTaxonomic(parameter)
+        || isHumboldtParameter(parameter)
+        || !isDnaTaxonSearch(predicate)) {
+      return query;
+    }
+
+    String dnaField =
+        esFieldMapper.getChecklistField(checklistKey + DNA_ASSISTED_SUFFIX, parameter);
+    return buildBoolQuery(
+        Collections.emptyList(), List.of(query, queryFn.apply(dnaField)), Collections.emptyList());
   }
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
@@ -516,6 +557,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     return predicate.getPredicates().stream()
         .filter(p -> p instanceof EqualsPredicate)
         .filter(p -> ((EqualsPredicate<?>) p).getChecklistKey() == null)
+        .filter(p -> !Boolean.TRUE.equals(((EqualsPredicate<?>) p).getDnaTaxonSearch()))
         .map(p -> (EqualsPredicate<S>) p)
         .collect(Collectors.groupingBy(EqualsPredicate::getKey))
         .entrySet()
@@ -579,12 +621,15 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;
       q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));
     } else {
+      Object value = parseParamValue(predicate.getValue(), parameter);
       q =
           addNullableFieldPredicate(
               predicate,
-              termQuery(
-                  getExactMatchOrVerbatimField(predicate),
-                  parseParamValue(predicate.getValue(), parameter)));
+              addDnaTaxonQuery(
+                  predicate,
+                  parameter,
+                  termQuery(getExactMatchOrVerbatimField(predicate), value),
+                  f -> termQuery(f, value)));
     }
 
     addFilterQuery(q, queryData, parameter);
@@ -715,12 +760,16 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               .collect(Collectors.toList());
       visit(new DisjunctionPredicate(allPredicates), queryData);
     } else {
+      List<Object> values =
+          predicate.getValues().stream()
+              .map(v -> parseParamValue(v, parameter))
+              .collect(Collectors.toList());
       Query termsQ =
-          termsQuery(
-              getExactMatchOrVerbatimField(predicate),
-              predicate.getValues().stream()
-                  .map(v -> parseParamValue(v, parameter))
-                  .collect(Collectors.toList()));
+          addDnaTaxonQuery(
+              predicate,
+              parameter,
+              termsQuery(getExactMatchOrVerbatimField(predicate), values),
+              f -> termsQuery(f, values));
       addFilterQuery(termsQ, queryData, predicate.getKey());
     }
   }
@@ -752,7 +801,11 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles like predicate */
   public void visit(LikePredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
+        addDnaTaxonQuery(
+            predicate,
+            predicate.getKey(),
+            wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
+            f -> wildcardQuery(f, predicate.getValue())),
         queryData,
         predicate.getKey());
   }
@@ -770,17 +823,17 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   }
 
   private void addNotPredicateNonNullFilters(Predicate predicate, QueryData queryData) {
-    Map<S, Set<String>> fieldsByParameter = new LinkedHashMap<>();
+    Map<S, Map<String, Query>> fieldsByParameter = new LinkedHashMap<>();
     collectNotPredicateFields(predicate, fieldsByParameter);
 
     fieldsByParameter.forEach(
-        (parameter, fields) ->
-            fields.forEach(field -> addFilterQuery(existsQuery(field), queryData, parameter)));
+        (parameter, existsQueries) ->
+            existsQueries.values().forEach(q -> addFilterQuery(q, queryData, parameter)));
   }
 
   @SuppressWarnings("unchecked")
   private void collectNotPredicateFields(
-      Predicate predicate, Map<S, Set<String>> fieldsByParameter) {
+      Predicate predicate, Map<S, Map<String, Query>> fieldsByParameter) {
     if (predicate instanceof ConjunctionPredicate) {
       ((ConjunctionPredicate) predicate)
           .getPredicates()
@@ -792,17 +845,25 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     } else if (predicate instanceof InPredicate) {
       InPredicate<S> p = (InPredicate<S>) predicate;
       addNotPredicateFieldToNonNullChecks(
-          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));
+          fieldsByParameter, p, p.getKey(), getExactMatchOrVerbatimField(p));
     } else if (predicate instanceof SimplePredicate) {
       SimplePredicate<S> p = (SimplePredicate<S>) predicate;
       addNotPredicateFieldToNonNullChecks(
-          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));
+          fieldsByParameter, p, p.getKey(), getExactMatchOrVerbatimField(p));
     }
   }
 
   private void addNotPredicateFieldToNonNullChecks(
-      Map<S, Set<String>> fieldsByParameter, S parameter, String fieldName) {
-    fieldsByParameter.computeIfAbsent(parameter, ignored -> new LinkedHashSet<>()).add(fieldName);
+      Map<S, Map<String, Query>> fieldsByParameter,
+      Predicate predicate,
+      S parameter,
+      String fieldName) {
+    fieldsByParameter
+        .computeIfAbsent(parameter, ignored -> new LinkedHashMap<>())
+        .putIfAbsent(
+            fieldName,
+            addDnaTaxonQuery(
+                predicate, parameter, existsQuery(fieldName), EsQueryVisitor::existsQuery));
   }
 
   /**
@@ -926,15 +987,28 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles ISNOTNULL Predicate */
   public void visit(IsNotNullPredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        existsQuery(getExactMatchFieldName(predicate)), queryData, predicate.getParameter());
-  }
-
-  /** handles ISNULL Predicate */
-  public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
-    addFilterQuery(
-        Query.of(q -> q.bool(b -> b.mustNot(existsQuery(getExactMatchFieldName(predicate))))),
+        addDnaTaxonQuery(
+            predicate,
+            predicate.getParameter(),
+            existsQuery(getExactMatchFieldName(predicate)),
+            EsQueryVisitor::existsQuery),
         queryData,
         predicate.getParameter());
+  }
+
+  /**
+   * handles ISNULL Predicate. With the DNA taxon search the value has to be null in both
+   * classifications, so this is always the negation of the ISNOTNULL predicate.
+   */
+  public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
+    Query exists =
+        addDnaTaxonQuery(
+            predicate,
+            predicate.getParameter(),
+            existsQuery(getExactMatchFieldName(predicate)),
+            EsQueryVisitor::existsQuery);
+    addFilterQuery(
+        Query.of(q -> q.bool(b -> b.mustNot(exists))), queryData, predicate.getParameter());
   }
 
   private void visit(Object object, QueryData queryData) throws QueryBuildingException {
