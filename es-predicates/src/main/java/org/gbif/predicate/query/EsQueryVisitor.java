@@ -82,13 +82,21 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     }
   }
 
-  private boolean isDnaTaxonSearch(Predicate predicate) {
-    try {
-      Method m = predicate.getClass().getMethod("getDnaTaxonSearch");
-      return Boolean.TRUE.equals(m.invoke(predicate));
-    } catch (Exception e) {
-      return false;
+  /** Only the predicates that support the dnaTaxonSearch flag can enable it. */
+  private static boolean isDnaTaxonSearch(Predicate predicate) {
+    Boolean dnaTaxonSearch = null;
+    if (predicate instanceof EqualsPredicate) {
+      dnaTaxonSearch = ((EqualsPredicate<?>) predicate).getDnaTaxonSearch();
+    } else if (predicate instanceof InPredicate) {
+      dnaTaxonSearch = ((InPredicate<?>) predicate).getDnaTaxonSearch();
+    } else if (predicate instanceof LikePredicate) {
+      dnaTaxonSearch = ((LikePredicate<?>) predicate).getDnaTaxonSearch();
+    } else if (predicate instanceof IsNotNullPredicate) {
+      dnaTaxonSearch = ((IsNotNullPredicate<?>) predicate).getDnaTaxonSearch();
+    } else if (predicate instanceof IsNullPredicate) {
+      dnaTaxonSearch = ((IsNullPredicate<?>) predicate).getDnaTaxonSearch();
     }
+    return Boolean.TRUE.equals(dnaTaxonSearch);
   }
 
   /** The DNA taxon search doesn't apply to the Humboldt taxonomic scopes. */

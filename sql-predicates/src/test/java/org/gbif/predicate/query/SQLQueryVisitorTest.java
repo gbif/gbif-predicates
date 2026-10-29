@@ -1135,9 +1135,6 @@ public class SQLQueryVisitorTest {
       } else if (OccurrenceSearchParameter.GEO_DISTANCE == param) {
         predicates.add(new GeoDistancePredicate("10", "20", "10km"));
         continue;
-      } else if (OccurrenceSearchParameter.DNA_TAXON_SEARCH == param) {
-        // flag used in the taxonomic predicates, not a column
-        continue;
       } else if (UUID.class.isAssignableFrom(param.type())) {
         value1 = UUID.randomUUID().toString();
         value2 = UUID.randomUUID().toString();
@@ -2823,5 +2820,33 @@ public class SQLQueryVisitorTest {
     Predicate p =
         new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, true);
     assertThrows(QueryBuildingException.class, () -> visitor.buildQuery(p));
+  }
+
+  @Test
+  public void testTaxonomicIssueIsNotNull() throws QueryBuildingException {
+    String column = "occurrence.gbif_classification.taxonomicissue";
+    assertEquals(
+        "(" + column + " IS NOT NULL AND size(" + column + ") > 0)",
+        visitor.buildQuery(new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXONOMIC_ISSUE)));
+  }
+
+  @Test
+  public void testDnaTaxonSearchTaxonomicIssueIsNotNull() throws QueryBuildingException {
+    String column = "occurrence.gbif_classification.taxonomicissue";
+    String dnaColumn = "occurrence.gbif_dna_classification.taxonomicissue";
+    assertEquals(
+        "((("
+            + column
+            + " IS NOT NULL AND size("
+            + column
+            + ") > 0))"
+            + " OR "
+            + "(("
+            + dnaColumn
+            + " IS NOT NULL AND size("
+            + dnaColumn
+            + ") > 0)))",
+        dnaVisitor.buildQuery(
+            new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXONOMIC_ISSUE, null, true)));
   }
 }
