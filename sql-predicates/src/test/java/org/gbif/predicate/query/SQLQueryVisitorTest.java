@@ -14,10 +14,12 @@
 package org.gbif.predicate.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.gbif.api.exception.QueryBuildingException;
@@ -1560,6 +1562,25 @@ public class SQLQueryVisitorTest {
   }
 
   @Test
+  public void testHumboldtTaxonomyIsNullPredicates() throws QueryBuildingException {
+    String query =
+        visitor.buildQuery(
+            new IsNullPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME, "def"));
+    assertEquals(
+        "(h.targettaxonomicscope['def']['usagename'] IS NULL OR size(h.targettaxonomicscope['def']['usagename']) = 0)",
+        query);
+
+    query =
+        visitor.buildQuery(
+            new IsNotNullPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "def"));
+    assertEquals(
+        "(h.targettaxonomicscope['def']['taxonkeys'] IS NOT NULL AND size(h.targettaxonomicscope['def']['taxonkeys']) > 0)",
+        query);
+  }
+
+  @Test
   public void testHumboldtFields() throws QueryBuildingException {
     EqualsPredicate<EventSearchParameter> equalsPredicate =
         new EqualsPredicate<>(EventSearchParameter.HUMBOLDT_SITE_COUNT, "1", false);
@@ -2515,5 +2536,317 @@ public class SQLQueryVisitorTest {
             Constants.COL_DATASET_KEY.toString());
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
+  }
+
+  private final SQLQueryVisitor dnaVisitor =
+      new SQLQueryVisitor(
+          new OccurrenceTermsMapper(),
+          Constants.COL_DATASET_KEY.toString(),
+          Map.of(
+              Constants.NUB_DATASET_KEY.toString(),
+              "gbif_classification",
+              Constants.NUB_DATASET_KEY + "_dna_assisted",
+              "gbif_dna_classification"),
+          Constants.NUB_DATASET_KEY.toString(),
+          "occurrence");
+
+  /** Equals predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchEqualsPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, null, dna);
+
+    // only the checklist classification
+    assertEquals(
+        "(stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "(((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** In predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchInPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new InPredicate<>(
+                OccurrenceSearchParameter.KINGDOM_KEY, List.of("1", "6"), false, null, dna);
+
+    // only the checklist classification
+    assertEquals(
+        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','6')))",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "(((arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','6')))) OR ((arrays_overlap(occurrence.gbif_dna_classification.taxonkeys, array('1','6')))))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Like predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchLikePredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new LikePredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", null, false, dna);
+
+    // only the checklist classification
+    assertEquals(
+        "lower(occurrence.gbif_classification.scientificname) LIKE lower('Puma%')",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "((lower(occurrence.gbif_classification.scientificname) LIKE lower('Puma%')) OR (lower(occurrence.gbif_dna_classification.scientificname) LIKE lower('Puma%')))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** IsNotNull predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchIsNotNullPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, null, dna);
+
+    // only the checklist classification
+    assertEquals(
+        "occurrence.gbif_classification.taxonkey IS NOT NULL",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "((occurrence.gbif_classification.taxonkey IS NOT NULL) OR (occurrence.gbif_dna_classification.taxonkey IS NOT NULL))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** IsNull predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchIsNullPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna -> new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, null, dna);
+
+    // only the checklist classification
+    assertEquals(
+        "occurrence.gbif_classification.taxonkey IS NULL",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // null in the checklist classification AND in the DNA assisted classification
+    assertEquals(
+        "((occurrence.gbif_classification.taxonkey IS NULL) AND (occurrence.gbif_dna_classification.taxonkey IS NULL))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Not predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchNotPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new NotPredicate(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, null, dna));
+
+    // only the checklist classification
+    assertEquals(
+        "NOT (stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "NOT (((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Disjunction predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchDisjunctionPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new DisjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "1", false, null, dna),
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "2", false, null, dna)));
+
+    // only the checklist classification
+    assertEquals(
+        "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "(((arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))) OR ((arrays_overlap(occurrence.gbif_dna_classification.taxonkeys, array('1','2')))))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Conjunction predicate with the DNA taxon search disabled and enabled. */
+  @Test
+  public void testDnaTaxonSearchConjunctionPredicate() throws QueryBuildingException {
+    Function<Boolean, Predicate> predicate =
+        dna ->
+            new ConjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, null, dna),
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
+
+    // only the checklist classification
+    assertEquals(
+        "(((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) AND (countrycode = 'DK'))",
+        dnaVisitor.buildQuery(predicate.apply(false)));
+
+    // the checklist classification OR the DNA assisted classification
+    assertEquals(
+        "(((((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))) AND (countrycode = 'DK'))",
+        dnaVisitor.buildQuery(predicate.apply(true)));
+  }
+
+  /** Taxon key with the DNA taxon search AND country AND year: only the taxon key is expanded. */
+  @Test
+  public void testDnaTaxonSearchTaxonAndNonTaxonConjunction() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, null, true),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false),
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000")));
+    assertEquals(
+        "(((((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))) AND (countrycode = 'DK') AND (year >= 2000))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  /** Kingdom key with the DNA taxon search OR country. */
+  @Test
+  public void testDnaTaxonSearchTaxonOrNonTaxonDisjunction() throws QueryBuildingException {
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, true),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
+    assertEquals(
+        "((((occurrence.gbif_classification.kingdomkey = '1') OR (occurrence.gbif_dna_classification.kingdomkey = '1'))) OR (countrycode = 'DK'))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  /**
+   * Taxon predicates with and without the DNA taxon search mixed with a non-taxon IN: only the
+   * flagged ones are expanded.
+   */
+  @Test
+  public void testDnaTaxonSearchMixedFlags() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, null, true),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, false),
+                new LikePredicate<>(
+                    OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", null, false, true),
+                new InPredicate<>(
+                    OccurrenceSearchParameter.BASIS_OF_RECORD,
+                    List.of("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"),
+                    false)));
+    assertEquals(
+        "(((((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))) AND (occurrence.gbif_classification.kingdomkey = '1') AND (((lower(occurrence.gbif_classification.scientificname) LIKE lower('Puma%')) OR (lower(occurrence.gbif_dna_classification.scientificname) LIKE lower('Puma%')))) AND ((basisofrecord IN('HUMAN_OBSERVATION', 'PRESERVED_SPECIMEN'))))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  /**
+   * (taxon key 1 OR 2, both with the DNA taxon search) AND NOT country AND scientific name is not
+   * null with the DNA taxon search.
+   */
+  @Test
+  public void testDnaTaxonSearchNestedDisjunctionAndNot() throws QueryBuildingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new DisjunctionPredicate(
+                    List.of(
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.TAXON_KEY, "1", false, null, true),
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.TAXON_KEY, "2", false, null, true))),
+                new NotPredicate(
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)),
+                new IsNotNullPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, null, true)));
+    assertEquals(
+        "(((((arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))) OR ((arrays_overlap(occurrence.gbif_dna_classification.taxonkeys, array('1','2')))))) AND (NOT countrycode = 'DK') AND (((occurrence.gbif_classification.scientificname IS NOT NULL) OR (occurrence.gbif_dna_classification.scientificname IS NOT NULL))))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  /** NOT (taxon key with the DNA taxon search AND country). */
+  @Test
+  public void testDnaTaxonSearchNotConjunction() throws QueryBuildingException {
+    Predicate p =
+        new NotPredicate(
+            new ConjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, null, true),
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false))));
+    assertEquals(
+        "NOT (((((stringArrayContains(occurrence.gbif_classification.taxonkeys, '212', true))) OR ((stringArrayContains(occurrence.gbif_dna_classification.taxonkeys, '212', true))))) AND (countrycode = 'DK'))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  @Test
+  public void testDnaTaxonSearchDoesNotAffectNonTaxonomicFields() throws QueryBuildingException {
+    Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false, null, true);
+    assertEquals("countrycode = 'DK'", dnaVisitor.buildQuery(p));
+  }
+
+  @Test
+  public void testDnaTaxonSearchDoesNotAffectHumboldtTaxonFields() throws QueryBuildingException {
+    Predicate p =
+        new EqualsPredicate<>(
+            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
+            "6",
+            false,
+            "def",
+            true);
+    assertEquals(
+        "(stringArrayContains(h.targettaxonomicscope['def']['taxonkeys'], '6', true))",
+        dnaVisitor.buildQuery(p));
+  }
+
+  @Test
+  public void testDnaTaxonSearchWithoutDnaChecklistMapped() {
+    Predicate p =
+        new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, true);
+    assertThrows(QueryBuildingException.class, () -> visitor.buildQuery(p));
+  }
+
+  @Test
+  public void testTaxonomicIssueIsNotNull() throws QueryBuildingException {
+    String column = "occurrence.gbif_classification.taxonomicissue";
+    assertEquals(
+        "(" + column + " IS NOT NULL AND size(" + column + ") > 0)",
+        visitor.buildQuery(new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXONOMIC_ISSUE)));
+  }
+
+  @Test
+  public void testDnaTaxonSearchTaxonomicIssueIsNotNull() throws QueryBuildingException {
+    String column = "occurrence.gbif_classification.taxonomicissue";
+    String dnaColumn = "occurrence.gbif_dna_classification.taxonomicissue";
+    assertEquals(
+        "((("
+            + column
+            + " IS NOT NULL AND size("
+            + column
+            + ") > 0))"
+            + " OR "
+            + "(("
+            + dnaColumn
+            + " IS NOT NULL AND size("
+            + dnaColumn
+            + ") > 0)))",
+        dnaVisitor.buildQuery(
+            new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXONOMIC_ISSUE, null, true)));
   }
 }

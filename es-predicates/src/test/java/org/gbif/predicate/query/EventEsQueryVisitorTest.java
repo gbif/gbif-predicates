@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -2099,5 +2100,130 @@ public class EventEsQueryVisitorTest {
             + "          }\n"
             + "        }\n";
     assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * The DNA taxon search doesn't apply to the Humboldt taxonomic scopes, so the queries are the
+   * same with and without the flag.
+   */
+  @Test
+  public void testDnaTaxonSearchDoesNotAffectHumboldtTaxonFields()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> equals =
+        dna ->
+            new EqualsPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
+                "6",
+                false,
+                "ck",
+                dna);
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"event.humboldt\",\n"
+            + "          \"query\": {\n"
+            + "            \"term\": {\n"
+            + "              \"event.humboldt.targetTaxonomicScope.ck.taxonKeys\": {\n"
+            + "                \"value\": \"6\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(equals.apply(true)));
+    assertEquals(visitor.buildQuery(equals.apply(false)), visitor.buildQuery(equals.apply(true)));
+
+    Function<Boolean, Predicate> isNull =
+        dna ->
+            new IsNullPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME, "ck", dna);
+    assertEquals(visitor.buildQuery(isNull.apply(false)), visitor.buildQuery(isNull.apply(true)));
+
+    Function<Boolean, Predicate> notIn =
+        dna ->
+            new NotPredicate(
+                new InPredicate<>(
+                    EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
+                    List.of("1", "2"),
+                    false,
+                    "ck",
+                    dna));
+    assertEquals(visitor.buildQuery(notIn.apply(false)), visitor.buildQuery(notIn.apply(true)));
+  }
+
+  /** With the flag in both, only the event taxon key is expanded, not the Humboldt one. */
+  @Test
+  public void testDnaTaxonSearchHumboldtAndTaxonKey()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
+                    "6",
+                    false,
+                    "ck",
+                    true),
+                new EqualsPredicate<>(EventSearchParameter.TAXON_KEY, "6", false, "ck", true)));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                        \"value\": \"6\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                        \"value\": \"6\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"event.humboldt\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"term\": {\n"
+            + "                    \"event.humboldt.targetTaxonomicScope.ck.taxonKeys\": {\n"
+            + "                      \"value\": \"6\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
   }
 }
