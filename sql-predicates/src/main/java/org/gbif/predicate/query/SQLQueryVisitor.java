@@ -47,6 +47,7 @@ import org.gbif.api.util.Range;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.MediaType;
+import org.gbif.api.vocabulary.OccurrenceStatus;
 import org.gbif.dwc.terms.*;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -237,6 +238,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @return the converted value expected by Hive
    */
   protected String toSQLValue(S param, String value, boolean matchCase) {
+    if (OccurrenceStatus.class.isAssignableFrom(param.type())) {
+      return '\''
+          + VocabularyUtils.lookup(value, OccurrenceStatus.class)
+              .map(OccurrenceStatus::normalize)
+              .map(Enum::name)
+              .orElse(value.toUpperCase())
+          + '\'';
+    }
     if (Enum.class.isAssignableFrom(param.type())) {
       // all enum parameters are uppercase
       return '\'' + value.toUpperCase() + '\'';
