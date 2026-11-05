@@ -2027,286 +2027,332 @@
 <a class="jxr_linenumber" name="L2019" href="#L2019">2019</a>   }
 <a class="jxr_linenumber" name="L2020" href="#L2020">2020</a> 
 <a class="jxr_linenumber" name="L2021" href="#L2021">2021</a>   @Test
-<a class="jxr_linenumber" name="L2022" href="#L2022">2022</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testRangeQueries() <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
-<a class="jxr_linenumber" name="L2023" href="#L2023">2023</a>     Predicate p =
-<a class="jxr_linenumber" name="L2024" href="#L2024">2024</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2025" href="#L2025">2025</a>             List.of(
-<a class="jxr_linenumber" name="L2026" href="#L2026">2026</a>                 <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
-<a class="jxr_linenumber" name="L2027" href="#L2027">2027</a>                     OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of(<span class="jxr_string">"PRESENT"</span>), false),
-<a class="jxr_linenumber" name="L2028" href="#L2028">2028</a>                 <strong class="jxr_keyword">new</strong> DisjunctionPredicate(
-<a class="jxr_linenumber" name="L2029" href="#L2029">2029</a>                     List.of(
-<a class="jxr_linenumber" name="L2030" href="#L2030">2030</a>                         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2031" href="#L2031">2031</a>                             List.of(
-<a class="jxr_linenumber" name="L2032" href="#L2032">2032</a>                                 <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
-<a class="jxr_linenumber" name="L2033" href="#L2033">2033</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L2034" href="#L2034">2034</a>                                     <span class="jxr_string">"10"</span>),
-<a class="jxr_linenumber" name="L2035" href="#L2035">2035</a>                                 <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(
-<a class="jxr_linenumber" name="L2036" href="#L2036">2036</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L2037" href="#L2037">2037</a>                                     <span class="jxr_string">"20"</span>))),
-<a class="jxr_linenumber" name="L2038" href="#L2038">2038</a>                         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2039" href="#L2039">2039</a>                             List.of(
-<a class="jxr_linenumber" name="L2040" href="#L2040">2040</a>                                 <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
-<a class="jxr_linenumber" name="L2041" href="#L2041">2041</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L2042" href="#L2042">2042</a>                                     <span class="jxr_string">"20"</span>),
-<a class="jxr_linenumber" name="L2043" href="#L2043">2043</a>                                 <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(
-<a class="jxr_linenumber" name="L2044" href="#L2044">2044</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L2045" href="#L2045">2045</a>                                     <span class="jxr_string">"30"</span>)))))));
-<a class="jxr_linenumber" name="L2046" href="#L2046">2046</a>     String query = visitor.buildQuery(p);
-<a class="jxr_linenumber" name="L2047" href="#L2047">2047</a>     String expectedQuery =
+<a class="jxr_linenumber" name="L2022" href="#L2022">2022</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testOccurrenceStatusNormalized()
+<a class="jxr_linenumber" name="L2023" href="#L2023">2023</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
+<a class="jxr_linenumber" name="L2024" href="#L2024">2024</a>     String expectedDetected =
+<a class="jxr_linenumber" name="L2025" href="#L2025">2025</a>         <span class="jxr_string">"{\n"</span>
+<a class="jxr_linenumber" name="L2026" href="#L2026">2026</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2027" href="#L2027">2027</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2028" href="#L2028">2028</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2029" href="#L2029">2029</a>             + <span class="jxr_string">"        \&quot;term\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2030" href="#L2030">2030</a>             + <span class="jxr_string">"          \&quot;occurrence_status\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2031" href="#L2031">2031</a>             + <span class="jxr_string">"            \&quot;value\&quot;: \&quot;DETECTED\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2032" href="#L2032">2032</a>             + <span class="jxr_string">"          }\n"</span>
+<a class="jxr_linenumber" name="L2033" href="#L2033">2033</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2034" href="#L2034">2034</a>             + <span class="jxr_string">"      }\n"</span>
+<a class="jxr_linenumber" name="L2035" href="#L2035">2035</a>             + <span class="jxr_string">"    ]\n"</span>
+<a class="jxr_linenumber" name="L2036" href="#L2036">2036</a>             + <span class="jxr_string">"  }\n"</span>
+<a class="jxr_linenumber" name="L2037" href="#L2037">2037</a>             + <span class="jxr_string">"}"</span>;
+<a class="jxr_linenumber" name="L2038" href="#L2038">2038</a>     assertQueryEquals(
+<a class="jxr_linenumber" name="L2039" href="#L2039">2039</a>         expectedDetected,
+<a class="jxr_linenumber" name="L2040" href="#L2040">2040</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L2041" href="#L2041">2041</a>             <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.OCCURRENCE_STATUS, <span class="jxr_string">"PRESENT"</span>, false)));
+<a class="jxr_linenumber" name="L2042" href="#L2042">2042</a>     assertQueryEquals(
+<a class="jxr_linenumber" name="L2043" href="#L2043">2043</a>         expectedDetected,
+<a class="jxr_linenumber" name="L2044" href="#L2044">2044</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L2045" href="#L2045">2045</a>             <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.OCCURRENCE_STATUS, <span class="jxr_string">"DETECTED"</span>, false)));
+<a class="jxr_linenumber" name="L2046" href="#L2046">2046</a> 
+<a class="jxr_linenumber" name="L2047" href="#L2047">2047</a>     String expectedNotDetected =
 <a class="jxr_linenumber" name="L2048" href="#L2048">2048</a>         <span class="jxr_string">"{\n"</span>
 <a class="jxr_linenumber" name="L2049" href="#L2049">2049</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
 <a class="jxr_linenumber" name="L2050" href="#L2050">2050</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
 <a class="jxr_linenumber" name="L2051" href="#L2051">2051</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2052" href="#L2052">2052</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2053" href="#L2053">2053</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2054" href="#L2054">2054</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2055" href="#L2055">2055</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2056" href="#L2056">2056</a>             + <span class="jxr_string">"                \&quot;occurrence_status\&quot;: [\&quot;PRESENT\&quot;]\n"</span>
-<a class="jxr_linenumber" name="L2057" href="#L2057">2057</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2058" href="#L2058">2058</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2059" href="#L2059">2059</a>             + <span class="jxr_string">"          ]\n"</span>
-<a class="jxr_linenumber" name="L2060" href="#L2060">2060</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2061" href="#L2061">2061</a>             + <span class="jxr_string">"      },\n"</span>
-<a class="jxr_linenumber" name="L2062" href="#L2062">2062</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2063" href="#L2063">2063</a>             + <span class="jxr_string">"        \&quot;nested\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2064" href="#L2064">2064</a>             + <span class="jxr_string">"          \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2065" href="#L2065">2065</a>             + <span class="jxr_string">"          \&quot;query\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2066" href="#L2066">2066</a>             + <span class="jxr_string">"            \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2067" href="#L2067">2067</a>             + <span class="jxr_string">"              \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2068" href="#L2068">2068</a>             + <span class="jxr_string">"                {\n"</span>
-<a class="jxr_linenumber" name="L2069" href="#L2069">2069</a>             + <span class="jxr_string">"                  \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2070" href="#L2070">2070</a>             + <span class="jxr_string">"                    \&quot;should\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2071" href="#L2071">2071</a>             + <span class="jxr_string">"                      {\n"</span>
-<a class="jxr_linenumber" name="L2072" href="#L2072">2072</a>             + <span class="jxr_string">"                        \&quot;range\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2073" href="#L2073">2073</a>             + <span class="jxr_string">"                          \&quot;nucleotideSequence.sequenceLength\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2074" href="#L2074">2074</a>             + <span class="jxr_string">"                            \&quot;gte\&quot;: \&quot;10\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2075" href="#L2075">2075</a>             + <span class="jxr_string">"                            \&quot;lte\&quot;: \&quot;20\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2076" href="#L2076">2076</a>             + <span class="jxr_string">"                          }\n"</span>
-<a class="jxr_linenumber" name="L2077" href="#L2077">2077</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2078" href="#L2078">2078</a>             + <span class="jxr_string">"                      },\n"</span>
-<a class="jxr_linenumber" name="L2079" href="#L2079">2079</a>             + <span class="jxr_string">"                      {\n"</span>
-<a class="jxr_linenumber" name="L2080" href="#L2080">2080</a>             + <span class="jxr_string">"                        \&quot;range\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2081" href="#L2081">2081</a>             + <span class="jxr_string">"                          \&quot;nucleotideSequence.sequenceLength\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2082" href="#L2082">2082</a>             + <span class="jxr_string">"                            \&quot;gte\&quot;: \&quot;20\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2083" href="#L2083">2083</a>             + <span class="jxr_string">"                            \&quot;lte\&quot;: \&quot;30\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2084" href="#L2084">2084</a>             + <span class="jxr_string">"                          }\n"</span>
-<a class="jxr_linenumber" name="L2085" href="#L2085">2085</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2086" href="#L2086">2086</a>             + <span class="jxr_string">"                      }\n"</span>
-<a class="jxr_linenumber" name="L2087" href="#L2087">2087</a>             + <span class="jxr_string">"                    ]\n"</span>
-<a class="jxr_linenumber" name="L2088" href="#L2088">2088</a>             + <span class="jxr_string">"                  }\n"</span>
-<a class="jxr_linenumber" name="L2089" href="#L2089">2089</a>             + <span class="jxr_string">"                }\n"</span>
-<a class="jxr_linenumber" name="L2090" href="#L2090">2090</a>             + <span class="jxr_string">"              ]\n"</span>
-<a class="jxr_linenumber" name="L2091" href="#L2091">2091</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2092" href="#L2092">2092</a>             + <span class="jxr_string">"          },\n"</span>
-<a class="jxr_linenumber" name="L2093" href="#L2093">2093</a>             + <span class="jxr_string">"          \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2094" href="#L2094">2094</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2095" href="#L2095">2095</a>             + <span class="jxr_string">"      }\n"</span>
-<a class="jxr_linenumber" name="L2096" href="#L2096">2096</a>             + <span class="jxr_string">"    ]\n"</span>
-<a class="jxr_linenumber" name="L2097" href="#L2097">2097</a>             + <span class="jxr_string">"  }\n"</span>
-<a class="jxr_linenumber" name="L2098" href="#L2098">2098</a>             + <span class="jxr_string">"}"</span>;
-<a class="jxr_linenumber" name="L2099" href="#L2099">2099</a>     assertQueryEquals(expectedQuery, query);
-<a class="jxr_linenumber" name="L2100" href="#L2100">2100</a>   }
-<a class="jxr_linenumber" name="L2101" href="#L2101">2101</a> 
-<a class="jxr_linenumber" name="L2102" href="#L2102">2102</a>   @Test
-<a class="jxr_linenumber" name="L2103" href="#L2103">2103</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> conjunctionWithNotPredicateTest()
-<a class="jxr_linenumber" name="L2104" href="#L2104">2104</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
-<a class="jxr_linenumber" name="L2105" href="#L2105">2105</a>     Predicate predicate =
-<a class="jxr_linenumber" name="L2106" href="#L2106">2106</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2107" href="#L2107">2107</a>             Arrays.asList(
-<a class="jxr_linenumber" name="L2108" href="#L2108">2108</a>                 <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2109" href="#L2109">2109</a>                     OccurrenceSearchParameter.DATASET_KEY,
-<a class="jxr_linenumber" name="L2110" href="#L2110">2110</a>                     Arrays.asList(
-<a class="jxr_linenumber" name="L2111" href="#L2111">2111</a>                         <span class="jxr_string">"b364710b-3f07-4876-a554-1943b702363f"</span>,
-<a class="jxr_linenumber" name="L2112" href="#L2112">2112</a>                         <span class="jxr_string">"6595e04b-13d2-4eac-933f-73786627b5a2"</span>),
-<a class="jxr_linenumber" name="L2113" href="#L2113">2113</a>                     false),
-<a class="jxr_linenumber" name="L2114" href="#L2114">2114</a>                 <strong class="jxr_keyword">new</strong> NotPredicate(
-<a class="jxr_linenumber" name="L2115" href="#L2115">2115</a>                     <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2116" href="#L2116">2116</a>                         Arrays.asList(
-<a class="jxr_linenumber" name="L2117" href="#L2117">2117</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2118" href="#L2118">2118</a>                                 OccurrenceSearchParameter.INSTITUTION_KEY,
-<a class="jxr_linenumber" name="L2119" href="#L2119">2119</a>                                 List.of(<span class="jxr_string">"75f50140-830d-4630-a290-3d6e951a7c29"</span>),
-<a class="jxr_linenumber" name="L2120" href="#L2120">2120</a>                                 false),
-<a class="jxr_linenumber" name="L2121" href="#L2121">2121</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2122" href="#L2122">2122</a>                                 OccurrenceSearchParameter.COLLECTION_KEY,
-<a class="jxr_linenumber" name="L2123" href="#L2123">2123</a>                                 List.of(<span class="jxr_string">"2294871f-f0f7-44b2-b707-e9511ff5a878"</span>),
-<a class="jxr_linenumber" name="L2124" href="#L2124">2124</a>                                 false))))));
-<a class="jxr_linenumber" name="L2125" href="#L2125">2125</a>     String query = visitor.buildQuery(predicate);
-<a class="jxr_linenumber" name="L2126" href="#L2126">2126</a>     String expectedQuery =
-<a class="jxr_linenumber" name="L2127" href="#L2127">2127</a>         <span class="jxr_string">"{\n"</span>
-<a class="jxr_linenumber" name="L2128" href="#L2128">2128</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2129" href="#L2129">2129</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2130" href="#L2130">2130</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2131" href="#L2131">2131</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2132" href="#L2132">2132</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2133" href="#L2133">2133</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2134" href="#L2134">2134</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2135" href="#L2135">2135</a>             + <span class="jxr_string">"                \&quot;dataset_key\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2136" href="#L2136">2136</a>             + <span class="jxr_string">"                  \&quot;b364710b-3f07-4876-a554-1943b702363f\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2137" href="#L2137">2137</a>             + <span class="jxr_string">"                  \&quot;6595e04b-13d2-4eac-933f-73786627b5a2\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2138" href="#L2138">2138</a>             + <span class="jxr_string">"                ]\n"</span>
-<a class="jxr_linenumber" name="L2139" href="#L2139">2139</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2140" href="#L2140">2140</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2141" href="#L2141">2141</a>             + <span class="jxr_string">"          ]\n"</span>
-<a class="jxr_linenumber" name="L2142" href="#L2142">2142</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2143" href="#L2143">2143</a>             + <span class="jxr_string">"      },\n"</span>
-<a class="jxr_linenumber" name="L2144" href="#L2144">2144</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2145" href="#L2145">2145</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2146" href="#L2146">2146</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2147" href="#L2147">2147</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2148" href="#L2148">2148</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2149" href="#L2149">2149</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;institution_key.keyword\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2150" href="#L2150">2150</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2151" href="#L2151">2151</a>             + <span class="jxr_string">"            },\n"</span>
-<a class="jxr_linenumber" name="L2152" href="#L2152">2152</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2153" href="#L2153">2153</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2154" href="#L2154">2154</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;collection_key.keyword\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2155" href="#L2155">2155</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2156" href="#L2156">2156</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2157" href="#L2157">2157</a>             + <span class="jxr_string">"          ],\n"</span>
-<a class="jxr_linenumber" name="L2158" href="#L2158">2158</a>             + <span class="jxr_string">"          \&quot;must_not\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2159" href="#L2159">2159</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2160" href="#L2160">2160</a>             + <span class="jxr_string">"              \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2161" href="#L2161">2161</a>             + <span class="jxr_string">"                \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2162" href="#L2162">2162</a>             + <span class="jxr_string">"                  {\n"</span>
-<a class="jxr_linenumber" name="L2163" href="#L2163">2163</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2164" href="#L2164">2164</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2165" href="#L2165">2165</a>             + <span class="jxr_string">"                        {\n"</span>
-<a class="jxr_linenumber" name="L2166" href="#L2166">2166</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2167" href="#L2167">2167</a>             + <span class="jxr_string">"                            \&quot;institution_key.keyword\&quot;: [\&quot;75f50140-830d-4630-a290-3d6e951a7c29\&quot;]\n"</span>
-<a class="jxr_linenumber" name="L2168" href="#L2168">2168</a>             + <span class="jxr_string">"                          }\n"</span>
-<a class="jxr_linenumber" name="L2169" href="#L2169">2169</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2170" href="#L2170">2170</a>             + <span class="jxr_string">"                      ]\n"</span>
-<a class="jxr_linenumber" name="L2171" href="#L2171">2171</a>             + <span class="jxr_string">"                    }\n"</span>
-<a class="jxr_linenumber" name="L2172" href="#L2172">2172</a>             + <span class="jxr_string">"                  },\n"</span>
-<a class="jxr_linenumber" name="L2173" href="#L2173">2173</a>             + <span class="jxr_string">"                  {\n"</span>
-<a class="jxr_linenumber" name="L2174" href="#L2174">2174</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2175" href="#L2175">2175</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2176" href="#L2176">2176</a>             + <span class="jxr_string">"                        {\n"</span>
-<a class="jxr_linenumber" name="L2177" href="#L2177">2177</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2178" href="#L2178">2178</a>             + <span class="jxr_string">"                            \&quot;collection_key.keyword\&quot;: [\&quot;2294871f-f0f7-44b2-b707-e9511ff5a878\&quot;]\n"</span>
-<a class="jxr_linenumber" name="L2179" href="#L2179">2179</a>             + <span class="jxr_string">"                          }\n"</span>
-<a class="jxr_linenumber" name="L2180" href="#L2180">2180</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2181" href="#L2181">2181</a>             + <span class="jxr_string">"                      ]\n"</span>
-<a class="jxr_linenumber" name="L2182" href="#L2182">2182</a>             + <span class="jxr_string">"                    }\n"</span>
-<a class="jxr_linenumber" name="L2183" href="#L2183">2183</a>             + <span class="jxr_string">"                  }\n"</span>
+<a class="jxr_linenumber" name="L2052" href="#L2052">2052</a>             + <span class="jxr_string">"        \&quot;term\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2053" href="#L2053">2053</a>             + <span class="jxr_string">"          \&quot;occurrence_status\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2054" href="#L2054">2054</a>             + <span class="jxr_string">"            \&quot;value\&quot;: \&quot;NOT_DETECTED\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2055" href="#L2055">2055</a>             + <span class="jxr_string">"          }\n"</span>
+<a class="jxr_linenumber" name="L2056" href="#L2056">2056</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2057" href="#L2057">2057</a>             + <span class="jxr_string">"      }\n"</span>
+<a class="jxr_linenumber" name="L2058" href="#L2058">2058</a>             + <span class="jxr_string">"    ]\n"</span>
+<a class="jxr_linenumber" name="L2059" href="#L2059">2059</a>             + <span class="jxr_string">"  }\n"</span>
+<a class="jxr_linenumber" name="L2060" href="#L2060">2060</a>             + <span class="jxr_string">"}"</span>;
+<a class="jxr_linenumber" name="L2061" href="#L2061">2061</a>     assertQueryEquals(
+<a class="jxr_linenumber" name="L2062" href="#L2062">2062</a>         expectedNotDetected,
+<a class="jxr_linenumber" name="L2063" href="#L2063">2063</a>         visitor.buildQuery(
+<a class="jxr_linenumber" name="L2064" href="#L2064">2064</a>             <strong class="jxr_keyword">new</strong> EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.OCCURRENCE_STATUS, <span class="jxr_string">"ABSENT"</span>, false)));
+<a class="jxr_linenumber" name="L2065" href="#L2065">2065</a>   }
+<a class="jxr_linenumber" name="L2066" href="#L2066">2066</a> 
+<a class="jxr_linenumber" name="L2067" href="#L2067">2067</a>   @Test
+<a class="jxr_linenumber" name="L2068" href="#L2068">2068</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> testRangeQueries() <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
+<a class="jxr_linenumber" name="L2069" href="#L2069">2069</a>     Predicate p =
+<a class="jxr_linenumber" name="L2070" href="#L2070">2070</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2071" href="#L2071">2071</a>             List.of(
+<a class="jxr_linenumber" name="L2072" href="#L2072">2072</a>                 <strong class="jxr_keyword">new</strong> InPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L2073" href="#L2073">2073</a>                     OccurrenceSearchParameter.OCCURRENCE_STATUS, List.of(<span class="jxr_string">"PRESENT"</span>), false),
+<a class="jxr_linenumber" name="L2074" href="#L2074">2074</a>                 <strong class="jxr_keyword">new</strong> DisjunctionPredicate(
+<a class="jxr_linenumber" name="L2075" href="#L2075">2075</a>                     List.of(
+<a class="jxr_linenumber" name="L2076" href="#L2076">2076</a>                         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2077" href="#L2077">2077</a>                             List.of(
+<a class="jxr_linenumber" name="L2078" href="#L2078">2078</a>                                 <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L2079" href="#L2079">2079</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L2080" href="#L2080">2080</a>                                     <span class="jxr_string">"10"</span>),
+<a class="jxr_linenumber" name="L2081" href="#L2081">2081</a>                                 <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L2082" href="#L2082">2082</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L2083" href="#L2083">2083</a>                                     <span class="jxr_string">"20"</span>))),
+<a class="jxr_linenumber" name="L2084" href="#L2084">2084</a>                         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2085" href="#L2085">2085</a>                             List.of(
+<a class="jxr_linenumber" name="L2086" href="#L2086">2086</a>                                 <strong class="jxr_keyword">new</strong> GreaterThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L2087" href="#L2087">2087</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L2088" href="#L2088">2088</a>                                     <span class="jxr_string">"20"</span>),
+<a class="jxr_linenumber" name="L2089" href="#L2089">2089</a>                                 <strong class="jxr_keyword">new</strong> LessThanOrEqualsPredicate&lt;&gt;(
+<a class="jxr_linenumber" name="L2090" href="#L2090">2090</a>                                     OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L2091" href="#L2091">2091</a>                                     <span class="jxr_string">"30"</span>)))))));
+<a class="jxr_linenumber" name="L2092" href="#L2092">2092</a>     String query = visitor.buildQuery(p);
+<a class="jxr_linenumber" name="L2093" href="#L2093">2093</a>     String expectedQuery =
+<a class="jxr_linenumber" name="L2094" href="#L2094">2094</a>         <span class="jxr_string">"{\n"</span>
+<a class="jxr_linenumber" name="L2095" href="#L2095">2095</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2096" href="#L2096">2096</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2097" href="#L2097">2097</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2098" href="#L2098">2098</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2099" href="#L2099">2099</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2100" href="#L2100">2100</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2101" href="#L2101">2101</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2102" href="#L2102">2102</a>             + <span class="jxr_string">"                \&quot;occurrence_status\&quot;: [\&quot;DETECTED\&quot;]\n"</span>
+<a class="jxr_linenumber" name="L2103" href="#L2103">2103</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2104" href="#L2104">2104</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2105" href="#L2105">2105</a>             + <span class="jxr_string">"          ]\n"</span>
+<a class="jxr_linenumber" name="L2106" href="#L2106">2106</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2107" href="#L2107">2107</a>             + <span class="jxr_string">"      },\n"</span>
+<a class="jxr_linenumber" name="L2108" href="#L2108">2108</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2109" href="#L2109">2109</a>             + <span class="jxr_string">"        \&quot;nested\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2110" href="#L2110">2110</a>             + <span class="jxr_string">"          \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2111" href="#L2111">2111</a>             + <span class="jxr_string">"          \&quot;query\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2112" href="#L2112">2112</a>             + <span class="jxr_string">"            \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2113" href="#L2113">2113</a>             + <span class="jxr_string">"              \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2114" href="#L2114">2114</a>             + <span class="jxr_string">"                {\n"</span>
+<a class="jxr_linenumber" name="L2115" href="#L2115">2115</a>             + <span class="jxr_string">"                  \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2116" href="#L2116">2116</a>             + <span class="jxr_string">"                    \&quot;should\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2117" href="#L2117">2117</a>             + <span class="jxr_string">"                      {\n"</span>
+<a class="jxr_linenumber" name="L2118" href="#L2118">2118</a>             + <span class="jxr_string">"                        \&quot;range\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2119" href="#L2119">2119</a>             + <span class="jxr_string">"                          \&quot;nucleotideSequence.sequenceLength\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2120" href="#L2120">2120</a>             + <span class="jxr_string">"                            \&quot;gte\&quot;: \&quot;10\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2121" href="#L2121">2121</a>             + <span class="jxr_string">"                            \&quot;lte\&quot;: \&quot;20\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2122" href="#L2122">2122</a>             + <span class="jxr_string">"                          }\n"</span>
+<a class="jxr_linenumber" name="L2123" href="#L2123">2123</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2124" href="#L2124">2124</a>             + <span class="jxr_string">"                      },\n"</span>
+<a class="jxr_linenumber" name="L2125" href="#L2125">2125</a>             + <span class="jxr_string">"                      {\n"</span>
+<a class="jxr_linenumber" name="L2126" href="#L2126">2126</a>             + <span class="jxr_string">"                        \&quot;range\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2127" href="#L2127">2127</a>             + <span class="jxr_string">"                          \&quot;nucleotideSequence.sequenceLength\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2128" href="#L2128">2128</a>             + <span class="jxr_string">"                            \&quot;gte\&quot;: \&quot;20\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2129" href="#L2129">2129</a>             + <span class="jxr_string">"                            \&quot;lte\&quot;: \&quot;30\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2130" href="#L2130">2130</a>             + <span class="jxr_string">"                          }\n"</span>
+<a class="jxr_linenumber" name="L2131" href="#L2131">2131</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2132" href="#L2132">2132</a>             + <span class="jxr_string">"                      }\n"</span>
+<a class="jxr_linenumber" name="L2133" href="#L2133">2133</a>             + <span class="jxr_string">"                    ]\n"</span>
+<a class="jxr_linenumber" name="L2134" href="#L2134">2134</a>             + <span class="jxr_string">"                  }\n"</span>
+<a class="jxr_linenumber" name="L2135" href="#L2135">2135</a>             + <span class="jxr_string">"                }\n"</span>
+<a class="jxr_linenumber" name="L2136" href="#L2136">2136</a>             + <span class="jxr_string">"              ]\n"</span>
+<a class="jxr_linenumber" name="L2137" href="#L2137">2137</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2138" href="#L2138">2138</a>             + <span class="jxr_string">"          },\n"</span>
+<a class="jxr_linenumber" name="L2139" href="#L2139">2139</a>             + <span class="jxr_string">"          \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2140" href="#L2140">2140</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2141" href="#L2141">2141</a>             + <span class="jxr_string">"      }\n"</span>
+<a class="jxr_linenumber" name="L2142" href="#L2142">2142</a>             + <span class="jxr_string">"    ]\n"</span>
+<a class="jxr_linenumber" name="L2143" href="#L2143">2143</a>             + <span class="jxr_string">"  }\n"</span>
+<a class="jxr_linenumber" name="L2144" href="#L2144">2144</a>             + <span class="jxr_string">"}"</span>;
+<a class="jxr_linenumber" name="L2145" href="#L2145">2145</a>     assertQueryEquals(expectedQuery, query);
+<a class="jxr_linenumber" name="L2146" href="#L2146">2146</a>   }
+<a class="jxr_linenumber" name="L2147" href="#L2147">2147</a> 
+<a class="jxr_linenumber" name="L2148" href="#L2148">2148</a>   @Test
+<a class="jxr_linenumber" name="L2149" href="#L2149">2149</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> conjunctionWithNotPredicateTest()
+<a class="jxr_linenumber" name="L2150" href="#L2150">2150</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
+<a class="jxr_linenumber" name="L2151" href="#L2151">2151</a>     Predicate predicate =
+<a class="jxr_linenumber" name="L2152" href="#L2152">2152</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2153" href="#L2153">2153</a>             Arrays.asList(
+<a class="jxr_linenumber" name="L2154" href="#L2154">2154</a>                 <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2155" href="#L2155">2155</a>                     OccurrenceSearchParameter.DATASET_KEY,
+<a class="jxr_linenumber" name="L2156" href="#L2156">2156</a>                     Arrays.asList(
+<a class="jxr_linenumber" name="L2157" href="#L2157">2157</a>                         <span class="jxr_string">"b364710b-3f07-4876-a554-1943b702363f"</span>,
+<a class="jxr_linenumber" name="L2158" href="#L2158">2158</a>                         <span class="jxr_string">"6595e04b-13d2-4eac-933f-73786627b5a2"</span>),
+<a class="jxr_linenumber" name="L2159" href="#L2159">2159</a>                     false),
+<a class="jxr_linenumber" name="L2160" href="#L2160">2160</a>                 <strong class="jxr_keyword">new</strong> NotPredicate(
+<a class="jxr_linenumber" name="L2161" href="#L2161">2161</a>                     <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2162" href="#L2162">2162</a>                         Arrays.asList(
+<a class="jxr_linenumber" name="L2163" href="#L2163">2163</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2164" href="#L2164">2164</a>                                 OccurrenceSearchParameter.INSTITUTION_KEY,
+<a class="jxr_linenumber" name="L2165" href="#L2165">2165</a>                                 List.of(<span class="jxr_string">"75f50140-830d-4630-a290-3d6e951a7c29"</span>),
+<a class="jxr_linenumber" name="L2166" href="#L2166">2166</a>                                 false),
+<a class="jxr_linenumber" name="L2167" href="#L2167">2167</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2168" href="#L2168">2168</a>                                 OccurrenceSearchParameter.COLLECTION_KEY,
+<a class="jxr_linenumber" name="L2169" href="#L2169">2169</a>                                 List.of(<span class="jxr_string">"2294871f-f0f7-44b2-b707-e9511ff5a878"</span>),
+<a class="jxr_linenumber" name="L2170" href="#L2170">2170</a>                                 false))))));
+<a class="jxr_linenumber" name="L2171" href="#L2171">2171</a>     String query = visitor.buildQuery(predicate);
+<a class="jxr_linenumber" name="L2172" href="#L2172">2172</a>     String expectedQuery =
+<a class="jxr_linenumber" name="L2173" href="#L2173">2173</a>         <span class="jxr_string">"{\n"</span>
+<a class="jxr_linenumber" name="L2174" href="#L2174">2174</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2175" href="#L2175">2175</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2176" href="#L2176">2176</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2177" href="#L2177">2177</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2178" href="#L2178">2178</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2179" href="#L2179">2179</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2180" href="#L2180">2180</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2181" href="#L2181">2181</a>             + <span class="jxr_string">"                \&quot;dataset_key\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2182" href="#L2182">2182</a>             + <span class="jxr_string">"                  \&quot;b364710b-3f07-4876-a554-1943b702363f\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2183" href="#L2183">2183</a>             + <span class="jxr_string">"                  \&quot;6595e04b-13d2-4eac-933f-73786627b5a2\&quot;\n"</span>
 <a class="jxr_linenumber" name="L2184" href="#L2184">2184</a>             + <span class="jxr_string">"                ]\n"</span>
 <a class="jxr_linenumber" name="L2185" href="#L2185">2185</a>             + <span class="jxr_string">"              }\n"</span>
 <a class="jxr_linenumber" name="L2186" href="#L2186">2186</a>             + <span class="jxr_string">"            }\n"</span>
 <a class="jxr_linenumber" name="L2187" href="#L2187">2187</a>             + <span class="jxr_string">"          ]\n"</span>
 <a class="jxr_linenumber" name="L2188" href="#L2188">2188</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2189" href="#L2189">2189</a>             + <span class="jxr_string">"      }\n"</span>
-<a class="jxr_linenumber" name="L2190" href="#L2190">2190</a>             + <span class="jxr_string">"    ]\n"</span>
-<a class="jxr_linenumber" name="L2191" href="#L2191">2191</a>             + <span class="jxr_string">"  }\n"</span>
-<a class="jxr_linenumber" name="L2192" href="#L2192">2192</a>             + <span class="jxr_string">"}"</span>;
-<a class="jxr_linenumber" name="L2193" href="#L2193">2193</a>     assertQueryEquals(expectedQuery, query);
-<a class="jxr_linenumber" name="L2194" href="#L2194">2194</a>   }
-<a class="jxr_linenumber" name="L2195" href="#L2195">2195</a> 
-<a class="jxr_linenumber" name="L2196" href="#L2196">2196</a>   @Test
-<a class="jxr_linenumber" name="L2197" href="#L2197">2197</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> conjunctionWithNotPredicateAndNestedFieldTest()
-<a class="jxr_linenumber" name="L2198" href="#L2198">2198</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
-<a class="jxr_linenumber" name="L2199" href="#L2199">2199</a>     Predicate predicate =
-<a class="jxr_linenumber" name="L2200" href="#L2200">2200</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2201" href="#L2201">2201</a>             Arrays.asList(
-<a class="jxr_linenumber" name="L2202" href="#L2202">2202</a>                 <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2203" href="#L2203">2203</a>                     OccurrenceSearchParameter.DATASET_KEY,
-<a class="jxr_linenumber" name="L2204" href="#L2204">2204</a>                     Arrays.asList(
-<a class="jxr_linenumber" name="L2205" href="#L2205">2205</a>                         <span class="jxr_string">"b364710b-3f07-4876-a554-1943b702363f"</span>,
-<a class="jxr_linenumber" name="L2206" href="#L2206">2206</a>                         <span class="jxr_string">"6595e04b-13d2-4eac-933f-73786627b5a2"</span>),
-<a class="jxr_linenumber" name="L2207" href="#L2207">2207</a>                     false),
-<a class="jxr_linenumber" name="L2208" href="#L2208">2208</a>                 <strong class="jxr_keyword">new</strong> NotPredicate(
-<a class="jxr_linenumber" name="L2209" href="#L2209">2209</a>                     <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
-<a class="jxr_linenumber" name="L2210" href="#L2210">2210</a>                         Arrays.asList(
-<a class="jxr_linenumber" name="L2211" href="#L2211">2211</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2212" href="#L2212">2212</a>                                 OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L2213" href="#L2213">2213</a>                                 List.of(<span class="jxr_string">"7"</span>),
-<a class="jxr_linenumber" name="L2214" href="#L2214">2214</a>                                 false),
-<a class="jxr_linenumber" name="L2215" href="#L2215">2215</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
-<a class="jxr_linenumber" name="L2216" href="#L2216">2216</a>                                 OccurrenceSearchParameter.COLLECTION_KEY,
-<a class="jxr_linenumber" name="L2217" href="#L2217">2217</a>                                 List.of(<span class="jxr_string">"2294871f-f0f7-44b2-b707-e9511ff5a878"</span>),
-<a class="jxr_linenumber" name="L2218" href="#L2218">2218</a>                                 false))))));
-<a class="jxr_linenumber" name="L2219" href="#L2219">2219</a>     String query = visitor.buildQuery(predicate);
-<a class="jxr_linenumber" name="L2220" href="#L2220">2220</a>     String expectedQuery =
-<a class="jxr_linenumber" name="L2221" href="#L2221">2221</a>         <span class="jxr_string">"{\n"</span>
-<a class="jxr_linenumber" name="L2222" href="#L2222">2222</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2223" href="#L2223">2223</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2224" href="#L2224">2224</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2225" href="#L2225">2225</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2226" href="#L2226">2226</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2227" href="#L2227">2227</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2228" href="#L2228">2228</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2229" href="#L2229">2229</a>             + <span class="jxr_string">"                \&quot;dataset_key\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2230" href="#L2230">2230</a>             + <span class="jxr_string">"                  \&quot;b364710b-3f07-4876-a554-1943b702363f\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2231" href="#L2231">2231</a>             + <span class="jxr_string">"                  \&quot;6595e04b-13d2-4eac-933f-73786627b5a2\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2232" href="#L2232">2232</a>             + <span class="jxr_string">"                ]\n"</span>
-<a class="jxr_linenumber" name="L2233" href="#L2233">2233</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2234" href="#L2234">2234</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2235" href="#L2235">2235</a>             + <span class="jxr_string">"          ]\n"</span>
-<a class="jxr_linenumber" name="L2236" href="#L2236">2236</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2237" href="#L2237">2237</a>             + <span class="jxr_string">"      },\n"</span>
-<a class="jxr_linenumber" name="L2238" href="#L2238">2238</a>             + <span class="jxr_string">"      {\n"</span>
-<a class="jxr_linenumber" name="L2239" href="#L2239">2239</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2240" href="#L2240">2240</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2241" href="#L2241">2241</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2242" href="#L2242">2242</a>             + <span class="jxr_string">"              \&quot;nested\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2243" href="#L2243">2243</a>             + <span class="jxr_string">"                \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2244" href="#L2244">2244</a>             + <span class="jxr_string">"                \&quot;query\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2245" href="#L2245">2245</a>             + <span class="jxr_string">"                  \&quot;exists\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2246" href="#L2246">2246</a>             + <span class="jxr_string">"                    \&quot;field\&quot;: \&quot;nucleotideSequence.sequenceLength\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2247" href="#L2247">2247</a>             + <span class="jxr_string">"                  }\n"</span>
-<a class="jxr_linenumber" name="L2248" href="#L2248">2248</a>             + <span class="jxr_string">"                },\n"</span>
-<a class="jxr_linenumber" name="L2249" href="#L2249">2249</a>             + <span class="jxr_string">"                \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2250" href="#L2250">2250</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2251" href="#L2251">2251</a>             + <span class="jxr_string">"            },\n"</span>
-<a class="jxr_linenumber" name="L2252" href="#L2252">2252</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2253" href="#L2253">2253</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2254" href="#L2254">2254</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;collection_key.keyword\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2255" href="#L2255">2255</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2256" href="#L2256">2256</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2257" href="#L2257">2257</a>             + <span class="jxr_string">"          ],\n"</span>
-<a class="jxr_linenumber" name="L2258" href="#L2258">2258</a>             + <span class="jxr_string">"          \&quot;must_not\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2259" href="#L2259">2259</a>             + <span class="jxr_string">"            {\n"</span>
-<a class="jxr_linenumber" name="L2260" href="#L2260">2260</a>             + <span class="jxr_string">"              \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2261" href="#L2261">2261</a>             + <span class="jxr_string">"                \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2262" href="#L2262">2262</a>             + <span class="jxr_string">"                  {\n"</span>
-<a class="jxr_linenumber" name="L2263" href="#L2263">2263</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2264" href="#L2264">2264</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2265" href="#L2265">2265</a>             + <span class="jxr_string">"                        {\n"</span>
-<a class="jxr_linenumber" name="L2266" href="#L2266">2266</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2267" href="#L2267">2267</a>             + <span class="jxr_string">"                            \&quot;collection_key.keyword\&quot;: [\&quot;2294871f-f0f7-44b2-b707-e9511ff5a878\&quot;]\n"</span>
-<a class="jxr_linenumber" name="L2268" href="#L2268">2268</a>             + <span class="jxr_string">"                          }\n"</span>
-<a class="jxr_linenumber" name="L2269" href="#L2269">2269</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2270" href="#L2270">2270</a>             + <span class="jxr_string">"                      ]\n"</span>
-<a class="jxr_linenumber" name="L2271" href="#L2271">2271</a>             + <span class="jxr_string">"                    }\n"</span>
-<a class="jxr_linenumber" name="L2272" href="#L2272">2272</a>             + <span class="jxr_string">"                  },\n"</span>
-<a class="jxr_linenumber" name="L2273" href="#L2273">2273</a>             + <span class="jxr_string">"                  {\n"</span>
-<a class="jxr_linenumber" name="L2274" href="#L2274">2274</a>             + <span class="jxr_string">"                    \&quot;nested\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2275" href="#L2275">2275</a>             + <span class="jxr_string">"                      \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
-<a class="jxr_linenumber" name="L2276" href="#L2276">2276</a>             + <span class="jxr_string">"                      \&quot;query\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2277" href="#L2277">2277</a>             + <span class="jxr_string">"                        \&quot;bool\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2278" href="#L2278">2278</a>             + <span class="jxr_string">"                          \&quot;filter\&quot;: [\n"</span>
-<a class="jxr_linenumber" name="L2279" href="#L2279">2279</a>             + <span class="jxr_string">"                            {\n"</span>
-<a class="jxr_linenumber" name="L2280" href="#L2280">2280</a>             + <span class="jxr_string">"                              \&quot;terms\&quot;: {\n"</span>
-<a class="jxr_linenumber" name="L2281" href="#L2281">2281</a>             + <span class="jxr_string">"                                \&quot;nucleotideSequence.sequenceLength\&quot;: [\&quot;7\&quot;]\n"</span>
-<a class="jxr_linenumber" name="L2282" href="#L2282">2282</a>             + <span class="jxr_string">"                              }\n"</span>
-<a class="jxr_linenumber" name="L2283" href="#L2283">2283</a>             + <span class="jxr_string">"                            }\n"</span>
-<a class="jxr_linenumber" name="L2284" href="#L2284">2284</a>             + <span class="jxr_string">"                          ]\n"</span>
-<a class="jxr_linenumber" name="L2285" href="#L2285">2285</a>             + <span class="jxr_string">"                        }\n"</span>
-<a class="jxr_linenumber" name="L2286" href="#L2286">2286</a>             + <span class="jxr_string">"                      },\n"</span>
-<a class="jxr_linenumber" name="L2287" href="#L2287">2287</a>             + <span class="jxr_string">"                      \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
-<a class="jxr_linenumber" name="L2288" href="#L2288">2288</a>             + <span class="jxr_string">"                    }\n"</span>
-<a class="jxr_linenumber" name="L2289" href="#L2289">2289</a>             + <span class="jxr_string">"                  }\n"</span>
-<a class="jxr_linenumber" name="L2290" href="#L2290">2290</a>             + <span class="jxr_string">"                ]\n"</span>
-<a class="jxr_linenumber" name="L2291" href="#L2291">2291</a>             + <span class="jxr_string">"              }\n"</span>
-<a class="jxr_linenumber" name="L2292" href="#L2292">2292</a>             + <span class="jxr_string">"            }\n"</span>
-<a class="jxr_linenumber" name="L2293" href="#L2293">2293</a>             + <span class="jxr_string">"          ]\n"</span>
-<a class="jxr_linenumber" name="L2294" href="#L2294">2294</a>             + <span class="jxr_string">"        }\n"</span>
-<a class="jxr_linenumber" name="L2295" href="#L2295">2295</a>             + <span class="jxr_string">"      }\n"</span>
-<a class="jxr_linenumber" name="L2296" href="#L2296">2296</a>             + <span class="jxr_string">"    ]\n"</span>
-<a class="jxr_linenumber" name="L2297" href="#L2297">2297</a>             + <span class="jxr_string">"  }\n"</span>
-<a class="jxr_linenumber" name="L2298" href="#L2298">2298</a>             + <span class="jxr_string">"}"</span>;
-<a class="jxr_linenumber" name="L2299" href="#L2299">2299</a>     assertQueryEquals(expectedQuery, query);
-<a class="jxr_linenumber" name="L2300" href="#L2300">2300</a>   }
-<a class="jxr_linenumber" name="L2301" href="#L2301">2301</a> }
+<a class="jxr_linenumber" name="L2189" href="#L2189">2189</a>             + <span class="jxr_string">"      },\n"</span>
+<a class="jxr_linenumber" name="L2190" href="#L2190">2190</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2191" href="#L2191">2191</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2192" href="#L2192">2192</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2193" href="#L2193">2193</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2194" href="#L2194">2194</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2195" href="#L2195">2195</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;institution_key.keyword\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2196" href="#L2196">2196</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2197" href="#L2197">2197</a>             + <span class="jxr_string">"            },\n"</span>
+<a class="jxr_linenumber" name="L2198" href="#L2198">2198</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2199" href="#L2199">2199</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2200" href="#L2200">2200</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;collection_key.keyword\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2201" href="#L2201">2201</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2202" href="#L2202">2202</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2203" href="#L2203">2203</a>             + <span class="jxr_string">"          ],\n"</span>
+<a class="jxr_linenumber" name="L2204" href="#L2204">2204</a>             + <span class="jxr_string">"          \&quot;must_not\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2205" href="#L2205">2205</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2206" href="#L2206">2206</a>             + <span class="jxr_string">"              \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2207" href="#L2207">2207</a>             + <span class="jxr_string">"                \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2208" href="#L2208">2208</a>             + <span class="jxr_string">"                  {\n"</span>
+<a class="jxr_linenumber" name="L2209" href="#L2209">2209</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2210" href="#L2210">2210</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2211" href="#L2211">2211</a>             + <span class="jxr_string">"                        {\n"</span>
+<a class="jxr_linenumber" name="L2212" href="#L2212">2212</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2213" href="#L2213">2213</a>             + <span class="jxr_string">"                            \&quot;institution_key.keyword\&quot;: [\&quot;75f50140-830d-4630-a290-3d6e951a7c29\&quot;]\n"</span>
+<a class="jxr_linenumber" name="L2214" href="#L2214">2214</a>             + <span class="jxr_string">"                          }\n"</span>
+<a class="jxr_linenumber" name="L2215" href="#L2215">2215</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2216" href="#L2216">2216</a>             + <span class="jxr_string">"                      ]\n"</span>
+<a class="jxr_linenumber" name="L2217" href="#L2217">2217</a>             + <span class="jxr_string">"                    }\n"</span>
+<a class="jxr_linenumber" name="L2218" href="#L2218">2218</a>             + <span class="jxr_string">"                  },\n"</span>
+<a class="jxr_linenumber" name="L2219" href="#L2219">2219</a>             + <span class="jxr_string">"                  {\n"</span>
+<a class="jxr_linenumber" name="L2220" href="#L2220">2220</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2221" href="#L2221">2221</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2222" href="#L2222">2222</a>             + <span class="jxr_string">"                        {\n"</span>
+<a class="jxr_linenumber" name="L2223" href="#L2223">2223</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2224" href="#L2224">2224</a>             + <span class="jxr_string">"                            \&quot;collection_key.keyword\&quot;: [\&quot;2294871f-f0f7-44b2-b707-e9511ff5a878\&quot;]\n"</span>
+<a class="jxr_linenumber" name="L2225" href="#L2225">2225</a>             + <span class="jxr_string">"                          }\n"</span>
+<a class="jxr_linenumber" name="L2226" href="#L2226">2226</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2227" href="#L2227">2227</a>             + <span class="jxr_string">"                      ]\n"</span>
+<a class="jxr_linenumber" name="L2228" href="#L2228">2228</a>             + <span class="jxr_string">"                    }\n"</span>
+<a class="jxr_linenumber" name="L2229" href="#L2229">2229</a>             + <span class="jxr_string">"                  }\n"</span>
+<a class="jxr_linenumber" name="L2230" href="#L2230">2230</a>             + <span class="jxr_string">"                ]\n"</span>
+<a class="jxr_linenumber" name="L2231" href="#L2231">2231</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2232" href="#L2232">2232</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2233" href="#L2233">2233</a>             + <span class="jxr_string">"          ]\n"</span>
+<a class="jxr_linenumber" name="L2234" href="#L2234">2234</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2235" href="#L2235">2235</a>             + <span class="jxr_string">"      }\n"</span>
+<a class="jxr_linenumber" name="L2236" href="#L2236">2236</a>             + <span class="jxr_string">"    ]\n"</span>
+<a class="jxr_linenumber" name="L2237" href="#L2237">2237</a>             + <span class="jxr_string">"  }\n"</span>
+<a class="jxr_linenumber" name="L2238" href="#L2238">2238</a>             + <span class="jxr_string">"}"</span>;
+<a class="jxr_linenumber" name="L2239" href="#L2239">2239</a>     assertQueryEquals(expectedQuery, query);
+<a class="jxr_linenumber" name="L2240" href="#L2240">2240</a>   }
+<a class="jxr_linenumber" name="L2241" href="#L2241">2241</a> 
+<a class="jxr_linenumber" name="L2242" href="#L2242">2242</a>   @Test
+<a class="jxr_linenumber" name="L2243" href="#L2243">2243</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> conjunctionWithNotPredicateAndNestedFieldTest()
+<a class="jxr_linenumber" name="L2244" href="#L2244">2244</a>       <strong class="jxr_keyword">throws</strong> QueryBuildingException, JsonProcessingException {
+<a class="jxr_linenumber" name="L2245" href="#L2245">2245</a>     Predicate predicate =
+<a class="jxr_linenumber" name="L2246" href="#L2246">2246</a>         <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2247" href="#L2247">2247</a>             Arrays.asList(
+<a class="jxr_linenumber" name="L2248" href="#L2248">2248</a>                 <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2249" href="#L2249">2249</a>                     OccurrenceSearchParameter.DATASET_KEY,
+<a class="jxr_linenumber" name="L2250" href="#L2250">2250</a>                     Arrays.asList(
+<a class="jxr_linenumber" name="L2251" href="#L2251">2251</a>                         <span class="jxr_string">"b364710b-3f07-4876-a554-1943b702363f"</span>,
+<a class="jxr_linenumber" name="L2252" href="#L2252">2252</a>                         <span class="jxr_string">"6595e04b-13d2-4eac-933f-73786627b5a2"</span>),
+<a class="jxr_linenumber" name="L2253" href="#L2253">2253</a>                     false),
+<a class="jxr_linenumber" name="L2254" href="#L2254">2254</a>                 <strong class="jxr_keyword">new</strong> NotPredicate(
+<a class="jxr_linenumber" name="L2255" href="#L2255">2255</a>                     <strong class="jxr_keyword">new</strong> ConjunctionPredicate(
+<a class="jxr_linenumber" name="L2256" href="#L2256">2256</a>                         Arrays.asList(
+<a class="jxr_linenumber" name="L2257" href="#L2257">2257</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2258" href="#L2258">2258</a>                                 OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L2259" href="#L2259">2259</a>                                 List.of(<span class="jxr_string">"7"</span>),
+<a class="jxr_linenumber" name="L2260" href="#L2260">2260</a>                                 false),
+<a class="jxr_linenumber" name="L2261" href="#L2261">2261</a>                             <strong class="jxr_keyword">new</strong> InPredicate(
+<a class="jxr_linenumber" name="L2262" href="#L2262">2262</a>                                 OccurrenceSearchParameter.COLLECTION_KEY,
+<a class="jxr_linenumber" name="L2263" href="#L2263">2263</a>                                 List.of(<span class="jxr_string">"2294871f-f0f7-44b2-b707-e9511ff5a878"</span>),
+<a class="jxr_linenumber" name="L2264" href="#L2264">2264</a>                                 false))))));
+<a class="jxr_linenumber" name="L2265" href="#L2265">2265</a>     String query = visitor.buildQuery(predicate);
+<a class="jxr_linenumber" name="L2266" href="#L2266">2266</a>     String expectedQuery =
+<a class="jxr_linenumber" name="L2267" href="#L2267">2267</a>         <span class="jxr_string">"{\n"</span>
+<a class="jxr_linenumber" name="L2268" href="#L2268">2268</a>             + <span class="jxr_string">"  \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2269" href="#L2269">2269</a>             + <span class="jxr_string">"    \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2270" href="#L2270">2270</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2271" href="#L2271">2271</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2272" href="#L2272">2272</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2273" href="#L2273">2273</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2274" href="#L2274">2274</a>             + <span class="jxr_string">"              \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2275" href="#L2275">2275</a>             + <span class="jxr_string">"                \&quot;dataset_key\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2276" href="#L2276">2276</a>             + <span class="jxr_string">"                  \&quot;b364710b-3f07-4876-a554-1943b702363f\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2277" href="#L2277">2277</a>             + <span class="jxr_string">"                  \&quot;6595e04b-13d2-4eac-933f-73786627b5a2\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2278" href="#L2278">2278</a>             + <span class="jxr_string">"                ]\n"</span>
+<a class="jxr_linenumber" name="L2279" href="#L2279">2279</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2280" href="#L2280">2280</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2281" href="#L2281">2281</a>             + <span class="jxr_string">"          ]\n"</span>
+<a class="jxr_linenumber" name="L2282" href="#L2282">2282</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2283" href="#L2283">2283</a>             + <span class="jxr_string">"      },\n"</span>
+<a class="jxr_linenumber" name="L2284" href="#L2284">2284</a>             + <span class="jxr_string">"      {\n"</span>
+<a class="jxr_linenumber" name="L2285" href="#L2285">2285</a>             + <span class="jxr_string">"        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2286" href="#L2286">2286</a>             + <span class="jxr_string">"          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2287" href="#L2287">2287</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2288" href="#L2288">2288</a>             + <span class="jxr_string">"              \&quot;nested\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2289" href="#L2289">2289</a>             + <span class="jxr_string">"                \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2290" href="#L2290">2290</a>             + <span class="jxr_string">"                \&quot;query\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2291" href="#L2291">2291</a>             + <span class="jxr_string">"                  \&quot;exists\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2292" href="#L2292">2292</a>             + <span class="jxr_string">"                    \&quot;field\&quot;: \&quot;nucleotideSequence.sequenceLength\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2293" href="#L2293">2293</a>             + <span class="jxr_string">"                  }\n"</span>
+<a class="jxr_linenumber" name="L2294" href="#L2294">2294</a>             + <span class="jxr_string">"                },\n"</span>
+<a class="jxr_linenumber" name="L2295" href="#L2295">2295</a>             + <span class="jxr_string">"                \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2296" href="#L2296">2296</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2297" href="#L2297">2297</a>             + <span class="jxr_string">"            },\n"</span>
+<a class="jxr_linenumber" name="L2298" href="#L2298">2298</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2299" href="#L2299">2299</a>             + <span class="jxr_string">"              \&quot;exists\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2300" href="#L2300">2300</a>             + <span class="jxr_string">"                \&quot;field\&quot;: \&quot;collection_key.keyword\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2301" href="#L2301">2301</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2302" href="#L2302">2302</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2303" href="#L2303">2303</a>             + <span class="jxr_string">"          ],\n"</span>
+<a class="jxr_linenumber" name="L2304" href="#L2304">2304</a>             + <span class="jxr_string">"          \&quot;must_not\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2305" href="#L2305">2305</a>             + <span class="jxr_string">"            {\n"</span>
+<a class="jxr_linenumber" name="L2306" href="#L2306">2306</a>             + <span class="jxr_string">"              \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2307" href="#L2307">2307</a>             + <span class="jxr_string">"                \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2308" href="#L2308">2308</a>             + <span class="jxr_string">"                  {\n"</span>
+<a class="jxr_linenumber" name="L2309" href="#L2309">2309</a>             + <span class="jxr_string">"                    \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2310" href="#L2310">2310</a>             + <span class="jxr_string">"                      \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2311" href="#L2311">2311</a>             + <span class="jxr_string">"                        {\n"</span>
+<a class="jxr_linenumber" name="L2312" href="#L2312">2312</a>             + <span class="jxr_string">"                          \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2313" href="#L2313">2313</a>             + <span class="jxr_string">"                            \&quot;collection_key.keyword\&quot;: [\&quot;2294871f-f0f7-44b2-b707-e9511ff5a878\&quot;]\n"</span>
+<a class="jxr_linenumber" name="L2314" href="#L2314">2314</a>             + <span class="jxr_string">"                          }\n"</span>
+<a class="jxr_linenumber" name="L2315" href="#L2315">2315</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2316" href="#L2316">2316</a>             + <span class="jxr_string">"                      ]\n"</span>
+<a class="jxr_linenumber" name="L2317" href="#L2317">2317</a>             + <span class="jxr_string">"                    }\n"</span>
+<a class="jxr_linenumber" name="L2318" href="#L2318">2318</a>             + <span class="jxr_string">"                  },\n"</span>
+<a class="jxr_linenumber" name="L2319" href="#L2319">2319</a>             + <span class="jxr_string">"                  {\n"</span>
+<a class="jxr_linenumber" name="L2320" href="#L2320">2320</a>             + <span class="jxr_string">"                    \&quot;nested\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2321" href="#L2321">2321</a>             + <span class="jxr_string">"                      \&quot;path\&quot;: \&quot;nucleotideSequence\&quot;,\n"</span>
+<a class="jxr_linenumber" name="L2322" href="#L2322">2322</a>             + <span class="jxr_string">"                      \&quot;query\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2323" href="#L2323">2323</a>             + <span class="jxr_string">"                        \&quot;bool\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2324" href="#L2324">2324</a>             + <span class="jxr_string">"                          \&quot;filter\&quot;: [\n"</span>
+<a class="jxr_linenumber" name="L2325" href="#L2325">2325</a>             + <span class="jxr_string">"                            {\n"</span>
+<a class="jxr_linenumber" name="L2326" href="#L2326">2326</a>             + <span class="jxr_string">"                              \&quot;terms\&quot;: {\n"</span>
+<a class="jxr_linenumber" name="L2327" href="#L2327">2327</a>             + <span class="jxr_string">"                                \&quot;nucleotideSequence.sequenceLength\&quot;: [\&quot;7\&quot;]\n"</span>
+<a class="jxr_linenumber" name="L2328" href="#L2328">2328</a>             + <span class="jxr_string">"                              }\n"</span>
+<a class="jxr_linenumber" name="L2329" href="#L2329">2329</a>             + <span class="jxr_string">"                            }\n"</span>
+<a class="jxr_linenumber" name="L2330" href="#L2330">2330</a>             + <span class="jxr_string">"                          ]\n"</span>
+<a class="jxr_linenumber" name="L2331" href="#L2331">2331</a>             + <span class="jxr_string">"                        }\n"</span>
+<a class="jxr_linenumber" name="L2332" href="#L2332">2332</a>             + <span class="jxr_string">"                      },\n"</span>
+<a class="jxr_linenumber" name="L2333" href="#L2333">2333</a>             + <span class="jxr_string">"                      \&quot;score_mode\&quot;: \&quot;none\&quot;\n"</span>
+<a class="jxr_linenumber" name="L2334" href="#L2334">2334</a>             + <span class="jxr_string">"                    }\n"</span>
+<a class="jxr_linenumber" name="L2335" href="#L2335">2335</a>             + <span class="jxr_string">"                  }\n"</span>
+<a class="jxr_linenumber" name="L2336" href="#L2336">2336</a>             + <span class="jxr_string">"                ]\n"</span>
+<a class="jxr_linenumber" name="L2337" href="#L2337">2337</a>             + <span class="jxr_string">"              }\n"</span>
+<a class="jxr_linenumber" name="L2338" href="#L2338">2338</a>             + <span class="jxr_string">"            }\n"</span>
+<a class="jxr_linenumber" name="L2339" href="#L2339">2339</a>             + <span class="jxr_string">"          ]\n"</span>
+<a class="jxr_linenumber" name="L2340" href="#L2340">2340</a>             + <span class="jxr_string">"        }\n"</span>
+<a class="jxr_linenumber" name="L2341" href="#L2341">2341</a>             + <span class="jxr_string">"      }\n"</span>
+<a class="jxr_linenumber" name="L2342" href="#L2342">2342</a>             + <span class="jxr_string">"    ]\n"</span>
+<a class="jxr_linenumber" name="L2343" href="#L2343">2343</a>             + <span class="jxr_string">"  }\n"</span>
+<a class="jxr_linenumber" name="L2344" href="#L2344">2344</a>             + <span class="jxr_string">"}"</span>;
+<a class="jxr_linenumber" name="L2345" href="#L2345">2345</a>     assertQueryEquals(expectedQuery, query);
+<a class="jxr_linenumber" name="L2346" href="#L2346">2346</a>   }
+<a class="jxr_linenumber" name="L2347" href="#L2347">2347</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026 <a href="https://www.gbif.org">Global Biodiversity Information Facility (GBIF)</a>. All rights reserved.</div>
