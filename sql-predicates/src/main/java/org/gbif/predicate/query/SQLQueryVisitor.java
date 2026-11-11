@@ -835,44 +835,34 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else {
       // Replace % → \% and _ → \_
       // Then replace * → % and ? → _
-      LikePredicate<S> likePredicate =
-          new LikePredicate<>(
-              predicate.getKey(),
-              predicate
-                  .getValue()
-                  .replace("%", "\\%")
-                  .replace("_", "\\_")
-                  .replace('*', '%')
-                  .replace('?', '_'),
-              predicate.getChecklistKey(),
-              predicate.isMatchCase());
+      // The escaped value is kept as a plain string: wrapping it in a new predicate would fail the
+      // value validation of gbif-api.
+      String likeValue =
+          predicate
+              .getValue()
+              .replace("%", "\\%")
+              .replace("_", "\\_")
+              .replace('*', '%')
+              .replace('?', '_');
 
       if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
 
-        String columnName = sqlColumnsUtils.getSQLQueryColumn(term(likePredicate.getKey()));
-        String resolvedColumn = resolveTaxonColumnName(columnName, likePredicate.getChecklistKey());
-        if (likePredicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
+        String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
+        String resolvedColumn = resolveTaxonColumnName(columnName, predicate.getChecklistKey());
+        if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
             && !predicate.isMatchCase()) {
           builder
               .append(toSQLLower(resolvedColumn))
               .append(LIKE_OPERATOR)
-              .append(
-                  toSQLValue(
-                      likePredicate.getKey(),
-                      likePredicate.getValue(),
-                      likePredicate.isMatchCase()));
+              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
         } else {
           builder
               .append(resolvedColumn)
               .append(LIKE_OPERATOR)
-              .append(
-                  toSQLValue(
-                      likePredicate.getKey(),
-                      likePredicate.getValue(),
-                      likePredicate.isMatchCase()));
+              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
         }
       } else {
-        visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+        visitSimplePredicate(predicate, LIKE_OPERATOR, likeValue);
       }
     }
   }

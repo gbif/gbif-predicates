@@ -1122,6 +1122,11 @@ public class SQLQueryVisitorTest {
       } else if (OccurrenceSearchParameter.GEO_DISTANCE == param) {
         predicates.add(new GeoDistancePredicate("10", "20", "10km"));
         continue;
+      } else if (Optional.ofNullable(visitor.term(param))
+          .map(SQLColumnsUtils::isVocabulary)
+          .orElse(false)) {
+        value1 = "valueA";
+        value2 = "valueB";
       } else if (UUID.class.isAssignableFrom(param.type())) {
         value1 = UUID.randomUUID().toString();
         value2 = UUID.randomUUID().toString();
@@ -1175,31 +1180,31 @@ public class SQLQueryVisitorTest {
                 String hiveQueryField = sqlColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
-                String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
-                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
+                String query = visitor.buildQuery(new EqualsPredicate<>(param, "valueA", false));
+                assertEquals("stringArrayContains(" + hiveQueryField + ",'valueA',false)", query);
 
                 // InPredicate
                 query =
                     visitor.buildQuery(
-                        new InPredicate<>(param, List.of("value_1", "value_2"), false));
+                        new InPredicate<>(param, List.of("valueA", "valueB"), false));
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
-                        + ",'value_1',false) OR stringArrayContains("
+                        + ",'valueA',false) OR stringArrayContains("
                         + hiveQueryField
-                        + ",'value_2',false))",
+                        + ",'valueB',false))",
                     query);
 
                 // LikePredicate
-                query = visitor.buildQuery(new LikePredicate<>(param, "value_*", false));
-                assertEquals("lower(" + hiveQueryField + ") LIKE lower('value\\_%')", query);
+                query = visitor.buildQuery(new LikePredicate<>(param, "value*", false));
+                assertEquals("lower(" + hiveQueryField + ") LIKE lower('value%')", query);
 
                 // Not
                 query =
                     visitor.buildQuery(
-                        new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
+                        new NotPredicate(new EqualsPredicate<>(param, "valueA", false)));
                 assertEquals(
-                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'valueA',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
@@ -1681,7 +1686,7 @@ public class SQLQueryVisitorTest {
                                 false))))));
     String query = visitor.buildQuery(predicate);
     String expectedQuery =
-        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((lower(institutionkey) IN(lower('75f50140-830d-4630-a290-3d6e951a7c29')))) AND ((lower(collectionkey) IN(lower('2294871f-f0f7-44b2-b707-e9511ff5a878')))))))";
+        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((institutionkey IN('75f50140-830d-4630-a290-3d6e951a7c29'))) AND ((collectionkey IN('2294871f-f0f7-44b2-b707-e9511ff5a878'))))))";
     assertEquals(expectedQuery, query);
   }
 
