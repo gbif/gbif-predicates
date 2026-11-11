@@ -121,7 +121,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final UUID denormalizedTaxonomy;
 
-  private final Map<String, String> checklistNestedStructMap;
+  private final Map<UUID, String> checklistNestedStructMap;
 
   private final String disambiguationTable;
 
@@ -144,7 +144,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
       UUID denormalizedTaxonomy,
-      Map<String, String> checklistNestedStructMap,
+      Map<UUID, String> checklistNestedStructMap,
       UUID defaultChecklistKey,
       String disambiguationTable,
       int lambdaQueryThreshold) {
@@ -160,7 +160,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
       UUID denormalizedTaxonomy,
-      Map<String, String> checklistNestedStructMap,
+      Map<UUID, String> checklistNestedStructMap,
       UUID defaultChecklistKey,
       String disambiguationTable) {
     this(
