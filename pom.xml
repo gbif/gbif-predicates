@@ -10,7 +10,7 @@
 
   <groupId>org.gbif.predicates</groupId>
   <artifactId>predicates-parent</artifactId>
-  <version>2.2.6-SNAPSHOT</version>
+  <version>2.2.7-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <modules>
@@ -61,7 +61,7 @@
     <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
     <project.resources.sourceEncoding>${encoding}</project.resources.sourceEncoding>
 
-    <gbif-api.version>2.4.29-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>2.4.29</gbif-api.version>
     <dwc-api.version>2.1.16-SNAPSHOT</dwc-api.version>
 
     <!-- Logging -->
