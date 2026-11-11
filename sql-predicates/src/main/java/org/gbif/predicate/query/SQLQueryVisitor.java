@@ -320,6 +320,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     List<String> values = new ArrayList<>();
     S parameter = null;
     String checklistsKey = null;
+    UUID suppliedChecklistKey = null;
     Boolean dnaTaxonSearch = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
@@ -328,8 +329,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
-          checklistsKey = getChecklistKey(equalsSubPredicate.getChecklistKey());
           dnaTaxonSearch = isDnaTaxonSearch(equalsSubPredicate.getDnaTaxonSearch());
+          suppliedChecklistKey = equalsSubPredicate.getChecklistKey();
+          checklistsKey = getChecklistKey(suppliedChecklistKey);
         } else if (parameter != equalsSubPredicate.getKey()
             || matchCase != equalsSubPredicate.isMatchCase()
             || !Objects.equals(checklistsKey, getChecklistKey(equalsSubPredicate.getChecklistKey()))
@@ -345,7 +347,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     if (useIn && OccurrenceSearchParameter.GEOLOGICAL_TIME != parameter) {
-      visit(new InPredicate<>(parameter, values, matchCase, checklistsKey, dnaTaxonSearch));
+      visit(new InPredicate<>(parameter, values, matchCase, suppliedChecklistKey, dnaTaxonSearch));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
     }
@@ -589,6 +591,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
     }
     return queryFieldPrefix + sqlField;
+  }
+
+  public String resolveTaxonColumnName(String sqlField, UUID suppliedChecklistKey) {
+    return resolveTaxonColumnName(
+        sqlField, suppliedChecklistKey != null ? suppliedChecklistKey.toString() : null);
   }
 
   public void visit(GreaterThanOrEqualsPredicate<S> predicate) throws QueryBuildingException {
@@ -872,44 +879,34 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else {
       // Replace % → \% and _ → \_
       // Then replace * → % and ? → _
-      LikePredicate<S> likePredicate =
-          new LikePredicate<>(
-              predicate.getKey(),
-              predicate
-                  .getValue()
-                  .replace("%", "\\%")
-                  .replace("_", "\\_")
-                  .replace('*', '%')
-                  .replace('?', '_'),
-              predicate.getChecklistKey(),
-              predicate.isMatchCase());
+      // The escaped value is kept as a plain string: wrapping it in a new predicate would fail the
+      // value validation of gbif-api.
+      String likeValue =
+          predicate
+              .getValue()
+              .replace("%", "\\%")
+              .replace("_", "\\_")
+              .replace('*', '%')
+              .replace('?', '_');
 
       if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
 
-        String columnName = sqlColumnsUtils.getSQLQueryColumn(term(likePredicate.getKey()));
-        String resolvedColumn = resolveTaxonColumnName(columnName, likePredicate.getChecklistKey());
-        if (likePredicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
+        String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
+        String resolvedColumn = resolveTaxonColumnName(columnName, predicate.getChecklistKey());
+        if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
             && !predicate.isMatchCase()) {
           builder
               .append(toSQLLower(resolvedColumn))
               .append(LIKE_OPERATOR)
-              .append(
-                  toSQLValue(
-                      likePredicate.getKey(),
-                      likePredicate.getValue(),
-                      likePredicate.isMatchCase()));
+              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
         } else {
           builder
               .append(resolvedColumn)
               .append(LIKE_OPERATOR)
-              .append(
-                  toSQLValue(
-                      likePredicate.getKey(),
-                      likePredicate.getValue(),
-                      likePredicate.isMatchCase()));
+              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
         }
       } else {
-        visitSimplePredicate(likePredicate, LIKE_OPERATOR);
+        visitSimplePredicate(predicate, LIKE_OPERATOR, likeValue);
       }
     }
   }
@@ -1280,7 +1277,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(')');
   }
 
-  private void appendHumboldtTaxonUnary(S parameter, String checklistKey, String unaryOperator) {
+  private void appendHumboldtTaxonUnary(S parameter, UUID checklistKey, String unaryOperator) {
     Objects.requireNonNull(checklistKey);
     String column =
         String.format(
@@ -1561,6 +1558,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     builder.append(')').append(operator).append('(');
     appender.append(checklistKey + DNA_ASSISTED_SUFFIX);
     builder.append("))");
+  }
+
+  private String getChecklistKey(UUID checklistKey) {
+    return checklistKey != null ? checklistKey.toString() : defaultChecklistKey;
   }
 
   /** Taxon parameters stored as ARRAY columns, both top-level and in the classification struct. */
