@@ -317,6 +317,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     List<String> values = new ArrayList<>();
     S parameter = null;
     String checklistsKey = null;
+    UUID suppliedChecklistKey = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       if (subPredicate instanceof EqualsPredicate) {
@@ -324,7 +325,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
-          checklistsKey = getChecklistKey(equalsSubPredicate.getChecklistKey());
+          suppliedChecklistKey = equalsSubPredicate.getChecklistKey();
+          checklistsKey = getChecklistKey(suppliedChecklistKey);
         } else if (parameter != equalsSubPredicate.getKey()
             || matchCase != equalsSubPredicate.isMatchCase()
             || !Objects.equals(
@@ -340,7 +342,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     if (useIn && OccurrenceSearchParameter.GEOLOGICAL_TIME != parameter) {
-      visit(new InPredicate<>(parameter, values, matchCase, checklistsKey));
+      visit(new InPredicate<>(parameter, values, matchCase, suppliedChecklistKey));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
     }
@@ -572,6 +574,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
     }
     return queryFieldPrefix + sqlField;
+  }
+
+  public String resolveTaxonColumnName(String sqlField, UUID suppliedChecklistKey) {
+    return resolveTaxonColumnName(
+        sqlField, suppliedChecklistKey != null ? suppliedChecklistKey.toString() : null);
   }
 
   public void visit(GreaterThanOrEqualsPredicate<S> predicate) throws QueryBuildingException {
@@ -1473,6 +1480,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private String getChecklistKey(String checklistKey) {
     return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
+  }
+
+  private String getChecklistKey(UUID checklistKey) {
+    return checklistKey != null ? checklistKey.toString() : defaultChecklistKey;
   }
 
   /** Taxon parameters stored as ARRAY columns, both top-level and in the classification struct. */

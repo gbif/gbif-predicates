@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -1482,7 +1483,7 @@ public class EventEsQueryVisitorTest {
             EventSearchParameter.TAXON_KEY,
             "urn:lsid:marinespecies.org:taxname:368663",
             false,
-            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+            UUID.fromString("2d59e5db-57ad-41ff-97d6-11f5fb264527"));
     try {
       String query = visitor.buildQuery(equalsPredicate);
       String expectedQuery =
@@ -1515,7 +1516,7 @@ public class EventEsQueryVisitorTest {
                 "urn:lsid:marinespecies.org:taxname:368663",
                 "urn:lsid:marinespecies.org:taxname:368664"),
             false,
-            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+            UUID.fromString("2d59e5db-57ad-41ff-97d6-11f5fb264527"));
     try {
       String query = visitor.buildQuery(inPredicate);
       String expectedQuery =
@@ -1553,12 +1554,12 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    "checklistkey1"),
+                    UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b")),
                 new EqualsPredicate<>(
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    "checklistkey2")));
+                    UUID.fromString("9ca92552-f23a-41a8-a140-01abaa31c931"))));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1570,7 +1571,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1583,7 +1584,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                          \"classifications.9ca92552-f23a-41a8-a140-01abaa31c931.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1614,12 +1615,12 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    "checklistkey1"),
+                    UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b")),
                 new EqualsPredicate<>(
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    "checklistkey2")));
+                    UUID.fromString("9ca92552-f23a-41a8-a140-01abaa31c931"))));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1631,7 +1632,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1644,7 +1645,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                          \"classifications.9ca92552-f23a-41a8-a140-01abaa31c931.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1667,8 +1668,12 @@ public class EventEsQueryVisitorTest {
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
-                new IsNotNullPredicate<>(EventSearchParameter.TAXON_KEY, "test-checklist-key"),
-                new IsNullPredicate<>(EventSearchParameter.SCIENTIFIC_NAME, "test-checklist-key")));
+                new IsNotNullPredicate<>(
+                    EventSearchParameter.TAXON_KEY,
+                    UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c")),
+                new IsNullPredicate<>(
+                    EventSearchParameter.SCIENTIFIC_NAME,
+                    UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c"))));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1680,7 +1685,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"exists\": {\n"
-              + "                          \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"
+              + "                          \"field\": \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.taxonKeys\"\n"
               + "                        }\n"
               + "                      }\n"
               + "                    ]\n"
@@ -1694,7 +1699,7 @@ public class EventEsQueryVisitorTest {
               + "                          \"must_not\": [\n"
               + "                            {\n"
               + "                              \"exists\": {\n"
-              + "                                \"field\": \"classifications.test-checklist-key.usage.name\"\n"
+              + "                                \"field\": \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.usage.name\"\n"
               + "                              }\n"
               + "                            }\n"
               + "                          ]\n"
@@ -1717,7 +1722,10 @@ public class EventEsQueryVisitorTest {
 
     LikePredicate predicate =
         new LikePredicate<>(
-            EventSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);
+            EventSearchParameter.SCIENTIFIC_NAME,
+            "Acacia",
+            UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c"),
+            false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1726,7 +1734,7 @@ public class EventEsQueryVisitorTest {
               + "              \"filter\": [\n"
               + "                {\n"
               + "                  \"wildcard\": {\n"
-              + "                    \"classifications.test-checklist-key.usage.name\": {\n"
+              + "                    \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.usage.name\": {\n"
               + "                      \"value\": \"Acacia\"\n"
               + "                    }\n"
               + "                  }\n"

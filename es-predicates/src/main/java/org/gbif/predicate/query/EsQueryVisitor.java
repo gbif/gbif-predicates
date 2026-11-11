@@ -72,8 +72,8 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
     try {
       Method m = clazz.getMethod("getChecklistKey");
-      String checklistKey = (String) m.invoke(predicate);
-      if (checklistKey != null) return checklistKey;
+      Object checklistKey = m.invoke(predicate);
+      if (checklistKey != null) return checklistKey.toString();
       return defaultChecklistKey;
     } catch (Exception e) {
       return null;
@@ -706,7 +706,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
                           getParam(OccurrenceSearchParameter.EVENT_DATE.name()).get(),
                           value,
                           predicate.isMatchCase(),
-                          getChecklistKey(predicate));
+                          predicate.getChecklistKey());
                   visit(subPredicate, shouldQueryData);
                   queryData.shouldQueries.add(
                       addNullableFieldPredicate(
