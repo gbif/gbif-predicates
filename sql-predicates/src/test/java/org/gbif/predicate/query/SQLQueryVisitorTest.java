@@ -14,6 +14,8 @@
 package org.gbif.predicate.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Instant;
@@ -56,15 +58,15 @@ public class SQLQueryVisitorTest {
   private static final OccurrenceSearchParameter PARAM2 =
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
-  private final Map<String, String> checklistKeyMap =
-      Map.of(Constants.NUB_DATASET_KEY.toString(), "gbif_classification");
+  private final Map<UUID, String> checklistKeyMap =
+      Map.of(Constants.NUB_DATASET_KEY, "gbif_classification");
 
   private final SQLQueryVisitor visitor =
       new SQLQueryVisitor(
           new OccurrenceTermsMapper(),
-          Constants.COL_DATASET_KEY.toString(),
+          Constants.COL_DATASET_KEY,
           checklistKeyMap,
-          Constants.NUB_DATASET_KEY.toString(),
+          Constants.NUB_DATASET_KEY,
           "occurrence");
 
   @Test
@@ -74,7 +76,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             "212",
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     Predicate passer =
         new LikePredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "Passer*", false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
@@ -97,12 +99,12 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             "212",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     Predicate passer =
         new LikePredicate<>(
             OccurrenceSearchParameter.SCIENTIFIC_NAME,
             "Passer*",
-            Constants.COL_DATASET_KEY.toString(),
+            Constants.COL_DATASET_KEY,
             false);
     Predicate UK = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "GB", false);
     Predicate before1989 = new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1989");
@@ -121,10 +123,10 @@ public class SQLQueryVisitorTest {
   public void testMoreComplexQuery() throws QueryBuildingException {
     Predicate taxon1 =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY);
     Predicate taxon2 =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY);
     DisjunctionPredicate taxa = new DisjunctionPredicate(List.of(taxon1, taxon2));
 
     Predicate basis =
@@ -189,10 +191,10 @@ public class SQLQueryVisitorTest {
   public void testDisjunctionToInTaxonPredicate() throws QueryBuildingException {
     Predicate p1 =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "1", false, Constants.NUB_DATASET_KEY);
     Predicate p2 =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "2", false, Constants.NUB_DATASET_KEY);
 
     DisjunctionPredicate p = new DisjunctionPredicate(List.of(p1, p2));
     String query = visitor.buildQuery(p);
@@ -349,7 +351,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             List.of("1", "2"),
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
@@ -363,7 +365,7 @@ public class SQLQueryVisitorTest {
 
     Predicate p =
         new InPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, ids, false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, ids, false, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(EXISTS(occurrence.gbif_classification.taxonkeys, taxonkey -> taxonkey IN ("
@@ -379,7 +381,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             List.of("1", "2"),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("(arrays_overlap(taxonkeys, array('1','2')))", query);
   }
@@ -400,7 +402,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             List.of("1", "2"),
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals(
         "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('1','2')))", query);
@@ -692,7 +694,7 @@ public class SQLQueryVisitorTest {
   public void testIsNullTaxonKeyWithChecklistKey() throws QueryBuildingException {
     IsNullPredicate p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.taxonkey IS NULL", query);
   }
@@ -701,7 +703,7 @@ public class SQLQueryVisitorTest {
   public void testIsNullTaxonKeyWithColChecklistKey() throws QueryBuildingException {
     IsNullPredicate p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("taxonkey IS NULL", query);
   }
@@ -1155,6 +1157,9 @@ public class SQLQueryVisitorTest {
       } else if (IsoDateInterval.class.isAssignableFrom(param.type())) {
         value1 = "2014-01-23,2015-05";
         value2 = null;
+      } else if (String.class.isAssignableFrom(param.type())) {
+        value1 = "A";
+        value2 = "B";
       }
 
       predicates.add(new EqualsPredicate<>(param, value1, false));
@@ -1186,31 +1191,31 @@ public class SQLQueryVisitorTest {
                 String hiveQueryField = sqlColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
-                String query = visitor.buildQuery(new EqualsPredicate<>(param, "value_1", false));
-                assertEquals("stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
+                String query = visitor.buildQuery(new EqualsPredicate<>(param, "valueOne", false));
+                assertEquals("stringArrayContains(" + hiveQueryField + ",'valueOne',false)", query);
 
                 // InPredicate
                 query =
                     visitor.buildQuery(
-                        new InPredicate<>(param, List.of("value_1", "value_2"), false));
+                        new InPredicate<>(param, List.of("valueOne", "valueTwo"), false));
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
-                        + ",'value_1',false) OR stringArrayContains("
+                        + ",'valueOne',false) OR stringArrayContains("
                         + hiveQueryField
-                        + ",'value_2',false))",
+                        + ",'valueTwo',false))",
                     query);
 
                 // LikePredicate
-                query = visitor.buildQuery(new LikePredicate<>(param, "value_*", false));
-                assertEquals("lower(" + hiveQueryField + ") LIKE lower('value\\_%')", query);
+                query = visitor.buildQuery(new LikePredicate<>(param, "value*", false));
+                assertEquals("lower(" + hiveQueryField + ") LIKE lower('value%')", query);
 
                 // Not
                 query =
                     visitor.buildQuery(
-                        new NotPredicate(new EqualsPredicate<>(param, "value_1", false)));
+                        new NotPredicate(new EqualsPredicate<>(param, "valueOne", false)));
                 assertEquals(
-                    "NOT stringArrayContains(" + hiveQueryField + ",'value_1',false)", query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'valueOne',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
@@ -1337,7 +1342,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             "6",
             false,
-            "d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+            Constants.NUB_DATASET_KEY);
 
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
@@ -1348,7 +1353,7 @@ public class SQLQueryVisitorTest {
   public void testMultiTaxonomyEqualsPredicate() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
         "(stringArrayContains(occurrence.gbif_classification.taxonkeys, '6', true))", query);
@@ -1361,7 +1366,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             List.of("6", "7"),
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(inPredicate);
     assertEquals(
         "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('6','7')))", query);
@@ -1376,12 +1381,12 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY,
                     "6",
                     false,
-                    Constants.NUB_DATASET_KEY.toString()),
+                    Constants.NUB_DATASET_KEY),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY,
                     "7",
                     false,
-                    Constants.NUB_DATASET_KEY.toString())));
+                    Constants.NUB_DATASET_KEY)));
     String query = visitor.buildQuery(predicate);
     assertEquals(
         "(arrays_overlap(occurrence.gbif_classification.taxonkeys, array('6','7')))", query);
@@ -1396,12 +1401,12 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY,
                     "6",
                     false,
-                    Constants.NUB_DATASET_KEY.toString()),
+                    Constants.NUB_DATASET_KEY),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY,
                     "7",
                     false,
-                    Constants.NUB_DATASET_KEY.toString())));
+                    Constants.NUB_DATASET_KEY)));
     String query = visitor.buildQuery(predicate);
     assertEquals(
         "(((stringArrayContains(occurrence.gbif_classification.taxonkeys, '6', true))) AND ((stringArrayContains(occurrence.gbif_classification.taxonkeys, '7', true))))",
@@ -1415,7 +1420,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_ISSUE,
             "6",
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals(
         "(stringArrayContains(occurrence.gbif_classification.taxonomicissue, '6', true))", query);
@@ -1428,7 +1433,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             "SYNONYM",
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("occurrence.gbif_classification.taxonomicstatus = 'SYNONYM'", query);
   }
@@ -1440,7 +1445,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             List.of("SYNONYM", "ACCEPTED"),
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals(
         "(occurrence.gbif_classification.taxonomicstatus IN ('SYNONYM','ACCEPTED'))", query);
@@ -1453,7 +1458,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             List.of("SYNONYM", "ACCEPTED"),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("(taxonomicstatus IN ('SYNONYM','ACCEPTED'))", query);
   }
@@ -1467,12 +1472,12 @@ public class SQLQueryVisitorTest {
                     OccurrenceSearchParameter.TAXONOMIC_ISSUE,
                     "6",
                     false,
-                    Constants.NUB_DATASET_KEY.toString()),
+                    Constants.NUB_DATASET_KEY),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXONOMIC_ISSUE,
                     "7",
                     false,
-                    Constants.NUB_DATASET_KEY.toString())));
+                    Constants.NUB_DATASET_KEY)));
     String query = visitor.buildQuery(predicate);
     assertEquals(
         "(((stringArrayContains(occurrence.gbif_classification.taxonomicissue, '6', true))) AND ((stringArrayContains(occurrence.gbif_classification.taxonomicissue, '7', true))))",
@@ -1513,17 +1518,17 @@ public class SQLQueryVisitorTest {
   public void testHumboldtTaxonomyEqualsPredicate() throws QueryBuildingException {
     EqualsPredicate<EventSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, "def");
+            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY, "6", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(h.targettaxonomicscope['def']['taxonkeys'], '6', true))", query);
+        "(stringArrayContains(h.targettaxonomicscope['7ddf754f-d193-4cc9-b351-99906754a03b']['taxonkeys'], '6', true))", query);
 
     equalsPredicate =
         new EqualsPredicate<>(
-            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, "def");
+            EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY, "6", false, Constants.COL_DATASET_KEY);
     query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(h.targettaxonomicscope['def']['usagekey'], '6', true))", query);
+        "(stringArrayContains(h.targettaxonomicscope['7ddf754f-d193-4cc9-b351-99906754a03b']['usagekey'], '6', true))", query);
   }
 
   @Test
@@ -1535,7 +1540,7 @@ public class SQLQueryVisitorTest {
 
     equalsPredicate =
         new EqualsPredicate<>(
-            EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, "def");
+            EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED, "true", false, Constants.COL_DATASET_KEY);
     query = visitor.buildQuery(equalsPredicate);
     assertEquals("h.isabsencereported = true", query);
   }
@@ -1544,7 +1549,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate eq =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("occurrence.gbif_classification.kingdomkey IS NULL", query);
   }
@@ -1553,7 +1558,7 @@ public class SQLQueryVisitorTest {
   public void testColTaxonKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate eq =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("kingdomkey IS NULL", query);
   }
@@ -1562,7 +1567,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate eq =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("occurrence.gbif_classification.kingdomkey IS NOT NULL", query);
   }
@@ -1571,7 +1576,7 @@ public class SQLQueryVisitorTest {
   public void testColTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate eq =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(eq);
     assertEquals("classkey IS NOT NULL", query);
   }
@@ -1673,7 +1678,7 @@ public class SQLQueryVisitorTest {
                                 false))))));
     String query = visitor.buildQuery(predicate);
     String expectedQuery =
-        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((lower(institutionkey) IN(lower('75f50140-830d-4630-a290-3d6e951a7c29')))) AND ((lower(collectionkey) IN(lower('2294871f-f0f7-44b2-b707-e9511ff5a878')))))))";
+        "(((occurrence.datasetkey IN('b364710b-3f07-4876-a554-1943b702363f', '6595e04b-13d2-4eac-933f-73786627b5a2'))) AND (NOT (((institutionkey IN('75f50140-830d-4630-a290-3d6e951a7c29'))) AND ((collectionkey IN('2294871f-f0f7-44b2-b707-e9511ff5a878'))))))";
     assertEquals(expectedQuery, query);
   }
 
@@ -1681,7 +1686,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonKeyField() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
         "(stringArrayContains(occurrence.gbif_classification.taxonkeys, '6', true))", query);
@@ -1703,7 +1708,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.SCIENTIFIC_NAME,
             "Homo sapiens",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("lower(scientificname) = lower('Homo sapiens')", query);
   }
@@ -1723,7 +1728,7 @@ public class SQLQueryVisitorTest {
         new LikePredicate<>(
             OccurrenceSearchParameter.SCIENTIFIC_NAME,
             "Homo s*",
-            Constants.COL_DATASET_KEY.toString(),
+            Constants.COL_DATASET_KEY,
             false);
     String query = visitor.buildQuery(likePredicate);
     assertEquals("lower(scientificname) LIKE lower('Homo s%')", query);
@@ -1744,7 +1749,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.SCIENTIFIC_NAME,
             "Homo sapiens",
             true,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("scientificname = 'Homo sapiens'", query);
   }
@@ -1857,7 +1862,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_ISSUE,
             OccurrenceIssue.TAXON_MATCH_NONE.toString(),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("(stringArrayContains(taxonomicissue, 'TAXON_MATCH_NONE', true))", query);
   }
@@ -1877,7 +1882,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.ACCEPTED_TAXON_KEY,
             "42",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("acceptedtaxonkey = '42'", query);
   }
@@ -1889,7 +1894,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.KINGDOM_KEY,
             "1",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("kingdomkey = '1'", query);
   }
@@ -1898,7 +1903,7 @@ public class SQLQueryVisitorTest {
   public void testPhylumKeyFieldCol() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.PHYLUM_KEY, "2", false, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.PHYLUM_KEY, "2", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("phylumkey = '2'", query);
   }
@@ -1907,7 +1912,7 @@ public class SQLQueryVisitorTest {
   public void testClassKeyFieldCol() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, "3", false, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, "3", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("classkey = '3'", query);
   }
@@ -1916,7 +1921,7 @@ public class SQLQueryVisitorTest {
   public void testOrderKeyFieldCol() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.ORDER_KEY, "4", false, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ORDER_KEY, "4", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("orderkey = '4'", query);
   }
@@ -1925,7 +1930,7 @@ public class SQLQueryVisitorTest {
   public void testFamilyKeyFieldCol() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.FAMILY_KEY, "6", false, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.FAMILY_KEY, "6", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("familykey = '6'", query);
   }
@@ -1934,7 +1939,7 @@ public class SQLQueryVisitorTest {
   public void testGenusKeyFieldCol() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.GENUS_KEY, "10", false, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.GENUS_KEY, "10", false, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("genuskey = '10'", query);
   }
@@ -1946,7 +1951,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.SUBGENUS_KEY,
             "11",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("subgenuskey = '11'", query);
   }
@@ -1958,7 +1963,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.SPECIES_KEY,
             "12",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("specieskey = '12'", query);
   }
@@ -1970,7 +1975,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
             "LC",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("lower(iucnredlistcategory) = lower('LC')", query);
   }
@@ -1982,7 +1987,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
             List.of("LC", "EX"),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(inPredicate);
     assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
   }
@@ -1994,7 +1999,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
             List.of("LC", "EX"),
             false,
-            Constants.NUB_DATASET_KEY.toString());
+            Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(inPredicate);
     assertEquals(
         "(lower(occurrence.gbif_classification.iucnredlistcategory) IN (lower('LC'),lower('EX')))",
@@ -2008,7 +2013,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.ISSUE,
             OccurrenceIssue.ZERO_COORDINATE.toString(),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("stringArrayContains(issue,'ZERO_COORDINATE',true)", query);
   }
@@ -2020,7 +2025,7 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.TAXONOMIC_STATUS,
             "ACCEPTED",
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("taxonomicstatus = 'ACCEPTED'", query);
   }
@@ -2029,7 +2034,7 @@ public class SQLQueryVisitorTest {
   public void testScientificNameIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.scientificname IS NULL", query);
   }
@@ -2038,7 +2043,7 @@ public class SQLQueryVisitorTest {
   public void testScientificNameIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.scientificname IS NOT NULL", query);
   }
@@ -2047,7 +2052,7 @@ public class SQLQueryVisitorTest {
   public void testAcceptedTaxonKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.acceptedtaxonkey IS NULL", query);
   }
@@ -2056,7 +2061,7 @@ public class SQLQueryVisitorTest {
   public void testAcceptedTaxonKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.acceptedtaxonkey IS NOT NULL", query);
   }
@@ -2065,7 +2070,7 @@ public class SQLQueryVisitorTest {
   public void testKingdomKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.kingdomkey IS NULL", query);
   }
@@ -2074,7 +2079,7 @@ public class SQLQueryVisitorTest {
   public void testKingdomKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.kingdomkey IS NOT NULL", query);
   }
@@ -2083,7 +2088,7 @@ public class SQLQueryVisitorTest {
   public void testPhylumKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.phylumkey IS NULL", query);
   }
@@ -2092,7 +2097,7 @@ public class SQLQueryVisitorTest {
   public void testPhylumKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.phylumkey IS NOT NULL", query);
   }
@@ -2101,7 +2106,7 @@ public class SQLQueryVisitorTest {
   public void testClassKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.classkey IS NULL", query);
   }
@@ -2110,7 +2115,7 @@ public class SQLQueryVisitorTest {
   public void testClassKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.classkey IS NOT NULL", query);
   }
@@ -2119,7 +2124,7 @@ public class SQLQueryVisitorTest {
   public void testOrderKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.orderkey IS NULL", query);
   }
@@ -2128,7 +2133,7 @@ public class SQLQueryVisitorTest {
   public void testOrderKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ORDER_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.orderkey IS NOT NULL", query);
   }
@@ -2137,7 +2142,7 @@ public class SQLQueryVisitorTest {
   public void testFamilyKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.familykey IS NULL", query);
   }
@@ -2146,7 +2151,7 @@ public class SQLQueryVisitorTest {
   public void testFamilyKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.familykey IS NOT NULL", query);
   }
@@ -2155,7 +2160,7 @@ public class SQLQueryVisitorTest {
   public void testGenusKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.genuskey IS NULL", query);
   }
@@ -2164,7 +2169,7 @@ public class SQLQueryVisitorTest {
   public void testGenusKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.GENUS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.genuskey IS NOT NULL", query);
   }
@@ -2173,7 +2178,7 @@ public class SQLQueryVisitorTest {
   public void testSubgenusKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.subgenuskey IS NULL", query);
   }
@@ -2182,7 +2187,7 @@ public class SQLQueryVisitorTest {
   public void testSubgenusKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.subgenuskey IS NOT NULL", query);
   }
@@ -2191,7 +2196,7 @@ public class SQLQueryVisitorTest {
   public void testSpeciesKeyIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.specieskey IS NULL", query);
   }
@@ -2200,7 +2205,7 @@ public class SQLQueryVisitorTest {
   public void testSpeciesKeyIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.specieskey IS NOT NULL", query);
   }
@@ -2209,7 +2214,7 @@ public class SQLQueryVisitorTest {
   public void testIucnRedListCategoryIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.iucnredlistcategory IS NULL", query);
   }
@@ -2218,7 +2223,7 @@ public class SQLQueryVisitorTest {
   public void testIucnRedListCategoryIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.iucnredlistcategory IS NOT NULL", query);
   }
@@ -2227,7 +2232,7 @@ public class SQLQueryVisitorTest {
   public void testIssuesIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("(issue IS NULL OR size(issue) = 0)", query);
   }
@@ -2236,7 +2241,7 @@ public class SQLQueryVisitorTest {
   public void testIssuesIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ISSUE, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("(issue IS NOT NULL AND size(issue) > 0)", query);
   }
@@ -2245,7 +2250,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicStatusIsNullPredicate() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.taxonomicstatus IS NULL", query);
   }
@@ -2254,7 +2259,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicStatusIsNotNullPredicate() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.NUB_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("occurrence.gbif_classification.taxonomicstatus IS NOT NULL", query);
   }
@@ -2263,7 +2268,7 @@ public class SQLQueryVisitorTest {
   public void testScientificNameIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("scientificname IS NULL", query);
   }
@@ -2272,7 +2277,7 @@ public class SQLQueryVisitorTest {
   public void testScientificNameIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("scientificname IS NOT NULL", query);
   }
@@ -2281,7 +2286,7 @@ public class SQLQueryVisitorTest {
   public void testAcceptedTaxonKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("acceptedtaxonkey IS NULL", query);
   }
@@ -2290,7 +2295,7 @@ public class SQLQueryVisitorTest {
   public void testAcceptedTaxonKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ACCEPTED_TAXON_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("acceptedtaxonkey IS NOT NULL", query);
   }
@@ -2299,7 +2304,7 @@ public class SQLQueryVisitorTest {
   public void testKingdomKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("kingdomkey IS NULL", query);
   }
@@ -2308,7 +2313,7 @@ public class SQLQueryVisitorTest {
   public void testKingdomKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.KINGDOM_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("kingdomkey IS NOT NULL", query);
   }
@@ -2317,7 +2322,7 @@ public class SQLQueryVisitorTest {
   public void testPhylumKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("phylumkey IS NULL", query);
   }
@@ -2326,7 +2331,7 @@ public class SQLQueryVisitorTest {
   public void testPhylumKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.PHYLUM_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("phylumkey IS NOT NULL", query);
   }
@@ -2335,7 +2340,7 @@ public class SQLQueryVisitorTest {
   public void testClassKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("classkey IS NULL", query);
   }
@@ -2344,7 +2349,7 @@ public class SQLQueryVisitorTest {
   public void testClassKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.CLASS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("classkey IS NOT NULL", query);
   }
@@ -2353,7 +2358,7 @@ public class SQLQueryVisitorTest {
   public void testOrderKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("orderkey IS NULL", query);
   }
@@ -2362,7 +2367,7 @@ public class SQLQueryVisitorTest {
   public void testOrderKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ORDER_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("orderkey IS NOT NULL", query);
   }
@@ -2371,7 +2376,7 @@ public class SQLQueryVisitorTest {
   public void testFamilyKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("familykey IS NULL", query);
   }
@@ -2380,7 +2385,7 @@ public class SQLQueryVisitorTest {
   public void testFamilyKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.FAMILY_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("familykey IS NOT NULL", query);
   }
@@ -2389,7 +2394,7 @@ public class SQLQueryVisitorTest {
   public void testGenusKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("genuskey IS NULL", query);
   }
@@ -2398,7 +2403,7 @@ public class SQLQueryVisitorTest {
   public void testGenusKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.GENUS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("genuskey IS NOT NULL", query);
   }
@@ -2407,7 +2412,7 @@ public class SQLQueryVisitorTest {
   public void testSubgenusKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("subgenuskey IS NULL", query);
   }
@@ -2416,7 +2421,7 @@ public class SQLQueryVisitorTest {
   public void testSubgenusKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SUBGENUS_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("subgenuskey IS NOT NULL", query);
   }
@@ -2425,7 +2430,7 @@ public class SQLQueryVisitorTest {
   public void testSpeciesKeyIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("specieskey IS NULL", query);
   }
@@ -2434,7 +2439,7 @@ public class SQLQueryVisitorTest {
   public void testSpeciesKeyIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.SPECIES_KEY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("specieskey IS NOT NULL", query);
   }
@@ -2443,7 +2448,7 @@ public class SQLQueryVisitorTest {
   public void testIucnRedListCategoryIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("iucnredlistcategory IS NULL", query);
   }
@@ -2452,7 +2457,7 @@ public class SQLQueryVisitorTest {
   public void testIucnRedListCategoryIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("iucnredlistcategory IS NOT NULL", query);
   }
@@ -2461,7 +2466,7 @@ public class SQLQueryVisitorTest {
   public void testIssuesIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("(issue IS NULL OR size(issue) = 0)", query);
   }
@@ -2470,7 +2475,7 @@ public class SQLQueryVisitorTest {
   public void testIssuesIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.ISSUE, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("(issue IS NOT NULL AND size(issue) > 0)", query);
   }
@@ -2479,7 +2484,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicStatusIsNullPredicateCol() throws QueryBuildingException {
     IsNullPredicate<OccurrenceSearchParameter> p =
         new IsNullPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("taxonomicstatus IS NULL", query);
   }
@@ -2488,7 +2493,7 @@ public class SQLQueryVisitorTest {
   public void testTaxonomicStatusIsNotNullPredicateCol() throws QueryBuildingException {
     IsNotNullPredicate<OccurrenceSearchParameter> p =
         new IsNotNullPredicate<>(
-            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY.toString());
+            OccurrenceSearchParameter.TAXONOMIC_STATUS, Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(p);
     assertEquals("taxonomicstatus IS NOT NULL", query);
   }
@@ -2500,8 +2505,259 @@ public class SQLQueryVisitorTest {
             OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY,
             List.of("LC", "EX"),
             false,
-            Constants.COL_DATASET_KEY.toString());
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // SQL injection tests
+  // ---------------------------------------------------------------------------------------------
+
+  private static final String INJECTION_MARKER = "INJECTED";
+
+  /** Plain quote. */
+  private static final String P_QUOTE = "x' OR INJECTED OR 'a'='a";
+
+  /** Backslash before the quote. */
+  private static final String P_BACKSLASH_QUOTE = "x\\' OR INJECTED OR 'a'='a";
+
+  /** Two backslashes before the quote. */
+  private static final String P_DOUBLE_BACKSLASH = "x\\\\' OR INJECTED --";
+
+  /** A trailing backslash escapes the closing quote, so the next value in a list breaks out. */
+  private static final String P_TRAILING_BACKSLASH = "x\\";
+
+  private static final String P_FOLLOW_UP = ") OR INJECTED OR ('";
+
+  private static final List<String> INJECTION_PAYLOADS =
+      List.of(P_QUOTE, P_BACKSLASH_QUOTE, P_DOUBLE_BACKSLASH, P_TRAILING_BACKSLASH, P_FOLLOW_UP);
+
+  /**
+   * Removes Hive/Spark single-quoted string literals (backslash escapes) from the SQL, failing on
+   * an unterminated literal, and checks the injection marker does not appear in what is left.
+   */
+  private static void assertNoInjection(String sql) {
+    StringBuilder outside = new StringBuilder();
+    boolean inLiteral = false;
+    for (int i = 0; i < sql.length(); i++) {
+      char c = sql.charAt(i);
+      if (inLiteral) {
+        if (c == '\\') {
+          i++; // skip the escaped character
+        } else if (c == '\'') {
+          inLiteral = false;
+        }
+      } else if (c == '\'') {
+        inLiteral = true;
+      } else {
+        outside.append(c);
+      }
+    }
+    assertFalse(inLiteral, "Unterminated string literal in: " + sql);
+    assertFalse(
+        outside.toString().contains(INJECTION_MARKER), "Value escaped its string literal: " + sql);
+  }
+
+  private void assertNoInjection(Predicate p) throws QueryBuildingException {
+    assertNoInjection(visitor.buildQuery(p));
+  }
+
+  @Test
+  public void testAssertNoInjectionDetectsBreakout() {
+    // Sanity check of the test helper itself, using the output the old escaping produced.
+    assertThrows(
+        AssertionError.class,
+        () -> assertNoInjection("catalognumber = 'x\\\\' OR INJECTED OR \\'a\\'=\\'a'"));
+    assertThrows(AssertionError.class, () -> assertNoInjection("catalognumber = 'unterminated"));
+    assertNoInjection("catalognumber = 'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'");
+  }
+
+  @Test
+  public void testQuoteEscapesBackslashesAndQuotes() {
+    assertEquals("'abc'", SQLQueryVisitor.quote("abc"));
+    assertEquals("'O\\'Shea'", SQLQueryVisitor.quote("O'Shea"));
+    assertEquals("'x\\\\'", SQLQueryVisitor.quote("x\\"));
+    assertEquals(
+        "'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'", SQLQueryVisitor.quote(P_BACKSLASH_QUOTE));
+    assertEquals("'x\\\\\\\\\\' OR INJECTED --'", SQLQueryVisitor.quote(P_DOUBLE_BACKSLASH));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.quote(null));
+    for (String payload : INJECTION_PAYLOADS) {
+      assertNoInjection("x = " + SQLQueryVisitor.quote(payload));
+    }
+  }
+
+  @Test
+  public void testLikePatternBodyEscaping() {
+    assertEquals("v_l%ue\\_\\%", SQLQueryVisitor.toSQLLikePatternBody("v?l*ue_%"));
+    assertEquals("a\\\\\\\\b\\'c", SQLQueryVisitor.toSQLLikePatternBody("a\\b'c"));
+    for (String payload : INJECTION_PAYLOADS) {
+      assertNoInjection("x LIKE '" + SQLQueryVisitor.toSQLLikePatternBody(payload) + "'");
+    }
+  }
+
+  @Test
+  public void testRequireNumericAndBoolean() {
+    assertEquals("12", SQLQueryVisitor.requireNumeric("12"));
+    assertEquals("-3.5", SQLQueryVisitor.requireNumeric(" -3.5 "));
+    assertEquals("1.0E10", SQLQueryVisitor.requireNumeric("1.0E10"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric("1 OR 1=1"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric("NaN"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric(null));
+
+    assertEquals("true", SQLQueryVisitor.requireBoolean("true"));
+    assertEquals("FALSE", SQLQueryVisitor.requireBoolean("FALSE"));
+    assertThrows(
+        IllegalArgumentException.class, () -> SQLQueryVisitor.requireBoolean("true OR 1=1"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireBoolean(null));
+  }
+
+  @Test
+  public void testBackslashEscapingEquals() throws QueryBuildingException {
+    assertEquals(
+        "catalognumber = 'x\\\\'",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_TRAILING_BACKSLASH, true)));
+    assertEquals(
+        "catalognumber = 'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_BACKSLASH_QUOTE, true)));
+    assertEquals(
+        "lower(catalognumber) = lower('x\\\\\\' OR INJECTED OR \\'a\\'=\\'a')",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_BACKSLASH_QUOTE, false)));
+    assertEquals(
+        "stringArrayContains(recordedby,'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a',false)",
+        visitor.buildQuery(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.RECORDED_BY, P_BACKSLASH_QUOTE, false)));
+  }
+
+  @Test
+  public void testBackslashEscapingInList() throws QueryBuildingException {
+    // A trailing backslash used to escape the closing quote, letting the next value break out.
+    assertEquals(
+        "(catalognumber IN('x\\\\', ') OR INJECTED OR (\\''))",
+        visitor.buildQuery(
+            new InPredicate<>(PARAM, List.of(P_TRAILING_BACKSLASH, P_FOLLOW_UP), true)));
+  }
+
+  @Test
+  public void testBackslashEscapingLike() throws QueryBuildingException {
+    // A backslash in the user's value matches a literal backslash.
+    assertEquals(
+        "catalognumber LIKE 'a\\\\\\\\b'",
+        visitor.buildQuery(new LikePredicate<>(PARAM, "a\\b", true)));
+    assertEquals(
+        "catalognumber LIKE 'O\\'Sh%'",
+        visitor.buildQuery(new LikePredicate<>(PARAM, "O'Sh*", true)));
+    assertEquals(
+        "stringArrayLike(recordedby,'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a',false)",
+        visitor.buildQuery(
+            new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, P_BACKSLASH_QUOTE, false)));
+  }
+
+  @Test
+  public void testTaxonKeyEscaping() throws QueryBuildingException {
+    try {
+      new EqualsPredicate<>(
+            OccurrenceSearchParameter.TAXON_KEY,
+            P_QUOTE,
+            false,
+            Constants.NUB_DATASET_KEY);
+      fail("Predicate with an apostrophe should not be possible.");
+    } catch (IllegalArgumentException e) {
+    }
+  }
+
+  @Test
+  public void testInjectionPayloadsStayInsideLiterals() throws QueryBuildingException {
+    UUID nub = Constants.NUB_DATASET_KEY;
+    List<String> largeList = new ArrayList<>(INJECTION_PAYLOADS);
+    IntStream.range(0, 60).forEach(i -> largeList.add(String.valueOf(i)));
+
+    for (String payload : INJECTION_PAYLOADS) {
+      List<String> values = List.of(payload, P_FOLLOW_UP);
+      for (boolean matchCase : new boolean[]{true, false}) {
+        // Plain string column
+        assertNoInjection(new EqualsPredicate<>(PARAM, payload, matchCase));
+        assertNoInjection(new InPredicate<>(PARAM, values, matchCase));
+        assertNoInjection(new LikePredicate<>(PARAM, payload, matchCase));
+        assertNoInjection(new NotPredicate(new EqualsPredicate<>(PARAM, payload, matchCase)));
+        assertNoInjection(
+          new DisjunctionPredicate(
+            List.of(
+              new EqualsPredicate<>(PARAM, payload, matchCase),
+              new EqualsPredicate<>(PARAM, P_FOLLOW_UP, matchCase))));
+
+        // Array column
+        assertNoInjection(
+          new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, payload, matchCase));
+        assertNoInjection(
+          new InPredicate<>(OccurrenceSearchParameter.RECORDED_BY, values, matchCase));
+        assertNoInjection(
+          new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, payload, matchCase));
+
+        // Taxonomic columns
+        assertNoInjection(
+          new EqualsPredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, payload, matchCase, nub));
+        assertNoInjection(
+          new LikePredicate<>(
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, payload, nub, matchCase));
+        assertNoInjection(
+          new InPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, values, matchCase, nub));
+      }
+    }
+  }
+
+  @Test
+  public void testVocabularyInjection() {
+    Arrays.stream(OccurrenceSearchParameter.values())
+        .filter(
+            p ->
+                Optional.ofNullable(visitor.term(p))
+                    .map(SQLColumnsUtils::isVocabulary)
+                    .orElse(false))
+        .forEach(
+            param -> {
+              for (String payload : INJECTION_PAYLOADS) {
+                try {
+                  try {
+                    assertNoInjection(new EqualsPredicate<>(param, payload, false));
+                    assertNoInjection(new InPredicate<>(param, List.of(payload, P_FOLLOW_UP), false));
+                    assertNoInjection(new LikePredicate<>(param, payload, false));
+                  } catch (IllegalArgumentException e) {
+                  }
+                } catch (QueryBuildingException e) {
+                  fail(e);
+                }
+              }
+            });
+  }
+
+  @Test
+  public void testGeologicalTimeMustBeNumeric() {
+    // GEOLOGICAL_TIME is a String parameter, so the API doesn't validate it, and it is written to
+    // the SQL unquoted.
+    String payload = "12 OR INJECTED";
+    OccurrenceSearchParameter gt = OccurrenceSearchParameter.GEOLOGICAL_TIME;
+    for (Predicate p :
+        List.<Predicate>of(
+            new EqualsPredicate<>(gt, payload, false),
+            new GreaterThanOrEqualsPredicate<>(gt, payload),
+            new GreaterThanPredicate<>(gt, payload),
+            new LessThanOrEqualsPredicate<>(gt, payload),
+            new LessThanPredicate<>(gt, payload),
+            new InPredicate<>(gt, List.of("12", payload), false))) {
+      assertThrows(QueryBuildingException.class, () -> visitor.buildQuery(p), p.toString());
+    }
+  }
+
+  @Test
+  public void testUnquotedNumbersAreValidated() {
+    // Double.parseDouble (used by the API's validation) accepts NaN, but it isn't a SQL number.
+    assertThrows(
+        QueryBuildingException.class,
+        () ->
+            visitor.buildQuery(
+                new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "NaN", false)));
   }
 }
