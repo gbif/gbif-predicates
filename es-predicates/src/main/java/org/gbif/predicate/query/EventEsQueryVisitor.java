@@ -2,7 +2,6 @@ package org.gbif.predicate.query;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import org.gbif.api.model.event.search.EventSearchParameter;
 
 public class EventEsQueryVisitor extends EsQueryVisitor<EventSearchParameter> {

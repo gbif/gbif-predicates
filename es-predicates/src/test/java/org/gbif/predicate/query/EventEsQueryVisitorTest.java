@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
@@ -1671,7 +1670,8 @@ public class EventEsQueryVisitorTest {
         new DisjunctionPredicate(
             Arrays.asList(
                 new IsNotNullPredicate<>(EventSearchParameter.TAXON_KEY, Constants.COL_DATASET_KEY),
-                new IsNullPredicate<>(EventSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY)));
+                new IsNullPredicate<>(
+                    EventSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =

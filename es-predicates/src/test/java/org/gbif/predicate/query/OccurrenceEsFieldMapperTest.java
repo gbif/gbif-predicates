@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;

@@ -2,7 +2,6 @@ package org.gbif.predicate.query;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 
 public class OccurrenceEsQueryVisitor extends EsQueryVisitor<OccurrenceSearchParameter> {

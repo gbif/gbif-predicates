@@ -6,7 +6,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 

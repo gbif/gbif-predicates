@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
