@@ -22,7 +22,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -55,7 +58,7 @@ public class OccurrenceEsQueryVisitorTest {
   private final EsFieldMapper<OccurrenceSearchParameter> fieldMapper =
       new OccurrenceEsFieldMapperTest();
   private final OccurrenceEsQueryVisitor visitor =
-      new OccurrenceEsQueryVisitor(fieldMapper, "defaultChecklistKey");
+      new OccurrenceEsQueryVisitor(fieldMapper, Constants.COL_DATASET_KEY);
 
   private void assertQueryEquals(String expectedJson, String actualQuery)
       throws JsonProcessingException {
@@ -1583,7 +1586,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.defaultChecklistKey.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"6\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1655,7 +1658,7 @@ public class OccurrenceEsQueryVisitorTest {
             OccurrenceSearchParameter.TAXON_KEY,
             "urn:lsid:marinespecies.org:taxname:368663",
             false,
-            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+            UUID.fromString("2d59e5db-57ad-41ff-97d6-11f5fb264527"));
     try {
       String query = visitor.buildQuery(equalsPredicate);
       String expectedQuery =
@@ -1688,7 +1691,7 @@ public class OccurrenceEsQueryVisitorTest {
                 "urn:lsid:marinespecies.org:taxname:368663",
                 "urn:lsid:marinespecies.org:taxname:368664"),
             false,
-            "2d59e5db-57ad-41ff-97d6-11f5fb264527");
+            UUID.fromString("2d59e5db-57ad-41ff-97d6-11f5fb264527"));
     try {
       String query = visitor.buildQuery(inPredicate);
       String expectedQuery =
@@ -1726,12 +1729,12 @@ public class OccurrenceEsQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    "checklistkey1"),
+                    Constants.NUB_DATASET_KEY),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    "checklistkey2")));
+                    Constants.COL_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1743,7 +1746,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                          \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1756,7 +1759,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1787,12 +1790,12 @@ public class OccurrenceEsQueryVisitorTest {
                     OccurrenceSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    "checklistkey1"),
+                    Constants.COL_DATASET_KEY),
                 new EqualsPredicate<>(
                     OccurrenceSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    "checklistkey2")));
+                    Constants.NUB_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1804,7 +1807,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey1.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1817,7 +1820,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.checklistkey2.taxonKeys\": {\n"
+              + "                          \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1841,9 +1844,9 @@ public class OccurrenceEsQueryVisitorTest {
         new DisjunctionPredicate(
             Arrays.asList(
                 new IsNotNullPredicate<>(
-                    OccurrenceSearchParameter.SPECIES_KEY, "test-checklist-key"),
+                    OccurrenceSearchParameter.SPECIES_KEY, Constants.NUB_DATASET_KEY),
                 new IsNullPredicate<>(
-                    OccurrenceSearchParameter.KINGDOM_KEY, "test-checklist-key")));
+                    OccurrenceSearchParameter.KINGDOM_KEY, Constants.NUB_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1855,7 +1858,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"exists\": {\n"
-              + "                          \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"
+              + "                          \"field\": \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\"\n"
               + "                        }\n"
               + "                      }\n"
               + "                    ]\n"
@@ -1869,7 +1872,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "                          \"must_not\": [\n"
               + "                            {\n"
               + "                              \"exists\": {\n"
-              + "                                \"field\": \"classifications.test-checklist-key.taxonKeys\"\n"
+              + "                                \"field\": \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\"\n"
               + "                              }\n"
               + "                            }\n"
               + "                          ]\n"
@@ -1892,7 +1895,7 @@ public class OccurrenceEsQueryVisitorTest {
 
     LikePredicate predicate =
         new LikePredicate<>(
-            OccurrenceSearchParameter.SCIENTIFIC_NAME, "Acacia", "test-checklist-key", false);
+            OccurrenceSearchParameter.SCIENTIFIC_NAME, "Acacia", Constants.NUB_DATASET_KEY, false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1901,7 +1904,7 @@ public class OccurrenceEsQueryVisitorTest {
               + "              \"filter\": [\n"
               + "                {\n"
               + "                  \"wildcard\": {\n"
-              + "                    \"classifications.test-checklist-key.usage.name\": {\n"
+              + "                    \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.usage.name\": {\n"
               + "                      \"value\": \"Acacia\"\n"
               + "                    }\n"
               + "                  }\n"

@@ -5,12 +5,15 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
 public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParameter> {
 
-  private String defaultChecklistKey = "defaultChecklistKey";
+  private UUID defaultChecklistKey = Constants.COL_DATASET_KEY;
 
   private static final Set<EventSearchParameter> TAXONOMIC_SET =
       new HashSet<>(
@@ -71,7 +74,7 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
   }
 
   @Override
-  public String getChecklistField(String checklistKey, EventSearchParameter searchParameter) {
+  public String getChecklistField(UUID checklistKey, EventSearchParameter searchParameter) {
 
     if (searchParameter == EventSearchParameter.SCIENTIFIC_NAME) {
       return "classifications."

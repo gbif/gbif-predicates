@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
+
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.GreaterThanOrEqualsPredicate;
 import org.gbif.api.model.predicate.GreaterThanPredicate;
@@ -98,7 +100,7 @@ public class OccurrenceEsFieldMapperTest implements EsFieldMapper<OccurrenceSear
   }
 
   @Override
-  public String getChecklistField(String checklistKey, OccurrenceSearchParameter searchParameter) {
+  public String getChecklistField(UUID checklistKey, OccurrenceSearchParameter searchParameter) {
 
     if (searchParameter == OccurrenceSearchParameter.SCIENTIFIC_NAME) {
       return "classifications."
