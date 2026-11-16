@@ -14,6 +14,8 @@
 package org.gbif.predicate.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Instant;
@@ -56,15 +58,15 @@ public class SQLQueryVisitorTest {
   private static final OccurrenceSearchParameter PARAM2 =
       OccurrenceSearchParameter.INSTITUTION_CODE;
 
-  private final Map<String, String> checklistKeyMap =
-      Map.of(Constants.NUB_DATASET_KEY.toString(), "gbif_classification");
+  private final Map<UUID, String> checklistKeyMap =
+      Map.of(Constants.NUB_DATASET_KEY, "gbif_classification");
 
   private final SQLQueryVisitor visitor =
       new SQLQueryVisitor(
           new OccurrenceTermsMapper(),
-          Constants.COL_DATASET_KEY.toString(),
+          Constants.COL_DATASET_KEY,
           checklistKeyMap,
-          Constants.NUB_DATASET_KEY.toString(),
+          Constants.NUB_DATASET_KEY,
           "occurrence");
 
   @Test
@@ -1149,6 +1151,11 @@ public class SQLQueryVisitorTest {
       } else if (IsoDateInterval.class.isAssignableFrom(param.type())) {
         value1 = "2014-01-23,2015-05";
         value2 = null;
+      } else if (String.class.isAssignableFrom(param.type())
+          && OccurrenceSearchParameter.GEOLOGICAL_TIME != param) {
+        // some string parameters only accept letters; the geological time is numeric
+        value1 = "A";
+        value2 = "B";
       }
 
       predicates.add(new EqualsPredicate<>(param, value1, false));
@@ -1180,19 +1187,19 @@ public class SQLQueryVisitorTest {
                 String hiveQueryField = sqlColumnsUtils.getSQLQueryColumn(visitor.term(param));
 
                 // EqualsPredicate
-                String query = visitor.buildQuery(new EqualsPredicate<>(param, "valueA", false));
-                assertEquals("stringArrayContains(" + hiveQueryField + ",'valueA',false)", query);
+                String query = visitor.buildQuery(new EqualsPredicate<>(param, "valueOne", false));
+                assertEquals("stringArrayContains(" + hiveQueryField + ",'valueOne',false)", query);
 
                 // InPredicate
                 query =
                     visitor.buildQuery(
-                        new InPredicate<>(param, List.of("valueA", "valueB"), false));
+                        new InPredicate<>(param, List.of("valueOne", "valueTwo"), false));
                 assertEquals(
                     "(stringArrayContains("
                         + hiveQueryField
-                        + ",'valueA',false) OR stringArrayContains("
+                        + ",'valueOne',false) OR stringArrayContains("
                         + hiveQueryField
-                        + ",'valueB',false))",
+                        + ",'valueTwo',false))",
                     query);
 
                 // LikePredicate
@@ -1202,9 +1209,9 @@ public class SQLQueryVisitorTest {
                 // Not
                 query =
                     visitor.buildQuery(
-                        new NotPredicate(new EqualsPredicate<>(param, "valueA", false)));
+                        new NotPredicate(new EqualsPredicate<>(param, "valueOne", false)));
                 assertEquals(
-                    "NOT stringArrayContains(" + hiveQueryField + ",'valueA',false)", query);
+                    "NOT stringArrayContains(" + hiveQueryField + ",'valueOne',false)", query);
 
                 // IsNotNull
                 query = visitor.buildQuery(new IsNotNullPredicate<>(param));
@@ -1328,10 +1335,7 @@ public class SQLQueryVisitorTest {
   public void testBackboneTaxonomyEqualsPredicate() throws QueryBuildingException {
     EqualsPredicate<OccurrenceSearchParameter> equalsPredicate =
         new EqualsPredicate<>(
-            OccurrenceSearchParameter.TAXON_KEY,
-            "6",
-            false,
-            UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"));
+            OccurrenceSearchParameter.TAXON_KEY, "6", false, Constants.NUB_DATASET_KEY);
 
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
@@ -1522,10 +1526,10 @@ public class SQLQueryVisitorTest {
             EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
             "6",
             false,
-            UUID.fromString("a3c9e2f1-6b4d-4e8a-9f1c-2d7b5e8a0c43"));
+            Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(h.targettaxonomicscope['a3c9e2f1-6b4d-4e8a-9f1c-2d7b5e8a0c43']['taxonkeys'], '6', true))",
+        "(stringArrayContains(h.targettaxonomicscope['7ddf754f-d193-4cc9-b351-99906754a03b']['taxonkeys'], '6', true))",
         query);
 
     equalsPredicate =
@@ -1533,10 +1537,10 @@ public class SQLQueryVisitorTest {
             EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
             "6",
             false,
-            UUID.fromString("a3c9e2f1-6b4d-4e8a-9f1c-2d7b5e8a0c43"));
+            Constants.COL_DATASET_KEY);
     query = visitor.buildQuery(equalsPredicate);
     assertEquals(
-        "(stringArrayContains(h.targettaxonomicscope['a3c9e2f1-6b4d-4e8a-9f1c-2d7b5e8a0c43']['usagekey'], '6', true))",
+        "(stringArrayContains(h.targettaxonomicscope['7ddf754f-d193-4cc9-b351-99906754a03b']['usagekey'], '6', true))",
         query);
   }
 
@@ -1552,7 +1556,7 @@ public class SQLQueryVisitorTest {
             EventSearchParameter.HUMBOLDT_IS_ABSENCE_REPORTED,
             "true",
             false,
-            UUID.fromString("a3c9e2f1-6b4d-4e8a-9f1c-2d7b5e8a0c43"));
+            Constants.COL_DATASET_KEY);
     query = visitor.buildQuery(equalsPredicate);
     assertEquals("h.isabsencereported = true", query);
   }
@@ -2463,5 +2467,254 @@ public class SQLQueryVisitorTest {
             Constants.COL_DATASET_KEY);
     String query = visitor.buildQuery(equalsPredicate);
     assertEquals("(lower(iucnredlistcategory) IN (lower('LC'),lower('EX')))", query);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // SQL injection tests
+  // ---------------------------------------------------------------------------------------------
+
+  private static final String INJECTION_MARKER = "INJECTED";
+
+  /** Plain quote. */
+  private static final String P_QUOTE = "x' OR INJECTED OR 'a'='a";
+
+  /** Backslash before the quote. */
+  private static final String P_BACKSLASH_QUOTE = "x\\' OR INJECTED OR 'a'='a";
+
+  /** Two backslashes before the quote. */
+  private static final String P_DOUBLE_BACKSLASH = "x\\\\' OR INJECTED --";
+
+  /** A trailing backslash escapes the closing quote, so the next value in a list breaks out. */
+  private static final String P_TRAILING_BACKSLASH = "x\\";
+
+  private static final String P_FOLLOW_UP = ") OR INJECTED OR ('";
+
+  private static final List<String> INJECTION_PAYLOADS =
+      List.of(P_QUOTE, P_BACKSLASH_QUOTE, P_DOUBLE_BACKSLASH, P_TRAILING_BACKSLASH, P_FOLLOW_UP);
+
+  /**
+   * Removes Hive/Spark single-quoted string literals (backslash escapes) from the SQL, failing on
+   * an unterminated literal, and checks the injection marker does not appear in what is left.
+   */
+  private static void assertNoInjection(String sql) {
+    StringBuilder outside = new StringBuilder();
+    boolean inLiteral = false;
+    for (int i = 0; i < sql.length(); i++) {
+      char c = sql.charAt(i);
+      if (inLiteral) {
+        if (c == '\\') {
+          i++; // skip the escaped character
+        } else if (c == '\'') {
+          inLiteral = false;
+        }
+      } else if (c == '\'') {
+        inLiteral = true;
+      } else {
+        outside.append(c);
+      }
+    }
+    assertFalse(inLiteral, "Unterminated string literal in: " + sql);
+    assertFalse(
+        outside.toString().contains(INJECTION_MARKER), "Value escaped its string literal: " + sql);
+  }
+
+  private void assertNoInjection(Predicate p) throws QueryBuildingException {
+    assertNoInjection(visitor.buildQuery(p));
+  }
+
+  @Test
+  public void testAssertNoInjectionDetectsBreakout() {
+    // Sanity check of the test helper itself, using the output the old escaping produced.
+    assertThrows(
+        AssertionError.class,
+        () -> assertNoInjection("catalognumber = 'x\\\\' OR INJECTED OR \\'a\\'=\\'a'"));
+    assertThrows(AssertionError.class, () -> assertNoInjection("catalognumber = 'unterminated"));
+    assertNoInjection("catalognumber = 'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'");
+  }
+
+  @Test
+  public void testQuoteEscapesBackslashesAndQuotes() {
+    assertEquals("'abc'", SQLQueryVisitor.quote("abc"));
+    assertEquals("'O\\'Shea'", SQLQueryVisitor.quote("O'Shea"));
+    assertEquals("'x\\\\'", SQLQueryVisitor.quote("x\\"));
+    assertEquals(
+        "'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'", SQLQueryVisitor.quote(P_BACKSLASH_QUOTE));
+    assertEquals("'x\\\\\\\\\\' OR INJECTED --'", SQLQueryVisitor.quote(P_DOUBLE_BACKSLASH));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.quote(null));
+    for (String payload : INJECTION_PAYLOADS) {
+      assertNoInjection("x = " + SQLQueryVisitor.quote(payload));
+    }
+  }
+
+  @Test
+  public void testLikePatternBodyEscaping() {
+    assertEquals("v_l%ue\\_\\%", SQLQueryVisitor.toSQLLikePatternBody("v?l*ue_%"));
+    assertEquals("a\\\\\\\\b\\'c", SQLQueryVisitor.toSQLLikePatternBody("a\\b'c"));
+    for (String payload : INJECTION_PAYLOADS) {
+      assertNoInjection("x LIKE '" + SQLQueryVisitor.toSQLLikePatternBody(payload) + "'");
+    }
+  }
+
+  @Test
+  public void testRequireNumericAndBoolean() {
+    assertEquals("12", SQLQueryVisitor.requireNumeric("12"));
+    assertEquals("-3.5", SQLQueryVisitor.requireNumeric(" -3.5 "));
+    assertEquals("1.0E10", SQLQueryVisitor.requireNumeric("1.0E10"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric("1 OR 1=1"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric("NaN"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireNumeric(null));
+
+    assertEquals("true", SQLQueryVisitor.requireBoolean("true"));
+    assertEquals("FALSE", SQLQueryVisitor.requireBoolean("FALSE"));
+    assertThrows(
+        IllegalArgumentException.class, () -> SQLQueryVisitor.requireBoolean("true OR 1=1"));
+    assertThrows(IllegalArgumentException.class, () -> SQLQueryVisitor.requireBoolean(null));
+  }
+
+  @Test
+  public void testBackslashEscapingEquals() throws QueryBuildingException {
+    assertEquals(
+        "catalognumber = 'x\\\\'",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_TRAILING_BACKSLASH, true)));
+    assertEquals(
+        "catalognumber = 'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a'",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_BACKSLASH_QUOTE, true)));
+    assertEquals(
+        "lower(catalognumber) = lower('x\\\\\\' OR INJECTED OR \\'a\\'=\\'a')",
+        visitor.buildQuery(new EqualsPredicate<>(PARAM, P_BACKSLASH_QUOTE, false)));
+    assertEquals(
+        "stringArrayContains(recordedby,'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a',false)",
+        visitor.buildQuery(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.RECORDED_BY, P_BACKSLASH_QUOTE, false)));
+  }
+
+  @Test
+  public void testBackslashEscapingInList() throws QueryBuildingException {
+    // A trailing backslash used to escape the closing quote, letting the next value break out.
+    assertEquals(
+        "(catalognumber IN('x\\\\', ') OR INJECTED OR (\\''))",
+        visitor.buildQuery(
+            new InPredicate<>(PARAM, List.of(P_TRAILING_BACKSLASH, P_FOLLOW_UP), true)));
+  }
+
+  @Test
+  public void testBackslashEscapingLike() throws QueryBuildingException {
+    // A backslash in the user's value matches a literal backslash.
+    assertEquals(
+        "catalognumber LIKE 'a\\\\\\\\b'",
+        visitor.buildQuery(new LikePredicate<>(PARAM, "a\\b", true)));
+    assertEquals(
+        "catalognumber LIKE 'O\\'Sh%'",
+        visitor.buildQuery(new LikePredicate<>(PARAM, "O'Sh*", true)));
+    assertEquals(
+        "stringArrayLike(recordedby,'x\\\\\\' OR INJECTED OR \\'a\\'=\\'a',false)",
+        visitor.buildQuery(
+            new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, P_BACKSLASH_QUOTE, false)));
+  }
+
+  @Test
+  public void testTaxonKeyEscaping() throws QueryBuildingException {
+    try {
+      new EqualsPredicate<>(
+          OccurrenceSearchParameter.TAXON_KEY, P_QUOTE, false, Constants.NUB_DATASET_KEY);
+      fail("Predicate with an apostrophe should not be possible.");
+    } catch (IllegalArgumentException e) {
+    }
+  }
+
+  @Test
+  public void testInjectionPayloadsStayInsideLiterals() throws QueryBuildingException {
+    UUID nub = Constants.NUB_DATASET_KEY;
+    List<String> largeList = new ArrayList<>(INJECTION_PAYLOADS);
+    IntStream.range(0, 60).forEach(i -> largeList.add(String.valueOf(i)));
+
+    for (String payload : INJECTION_PAYLOADS) {
+      List<String> values = List.of(payload, P_FOLLOW_UP);
+      for (boolean matchCase : new boolean[] {true, false}) {
+        // Plain string column
+        assertNoInjection(new EqualsPredicate<>(PARAM, payload, matchCase));
+        assertNoInjection(new InPredicate<>(PARAM, values, matchCase));
+        assertNoInjection(new LikePredicate<>(PARAM, payload, matchCase));
+        assertNoInjection(new NotPredicate(new EqualsPredicate<>(PARAM, payload, matchCase)));
+        assertNoInjection(
+            new DisjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(PARAM, payload, matchCase),
+                    new EqualsPredicate<>(PARAM, P_FOLLOW_UP, matchCase))));
+
+        // Array column
+        assertNoInjection(
+            new EqualsPredicate<>(OccurrenceSearchParameter.RECORDED_BY, payload, matchCase));
+        assertNoInjection(
+            new InPredicate<>(OccurrenceSearchParameter.RECORDED_BY, values, matchCase));
+        assertNoInjection(
+            new LikePredicate<>(OccurrenceSearchParameter.RECORDED_BY, payload, matchCase));
+
+        // Taxonomic columns
+        assertNoInjection(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, payload, matchCase, nub));
+        assertNoInjection(
+            new LikePredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, payload, nub, matchCase));
+        assertNoInjection(
+            new InPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, values, matchCase, nub));
+      }
+    }
+  }
+
+  @Test
+  public void testVocabularyInjection() {
+    Arrays.stream(OccurrenceSearchParameter.values())
+        .filter(
+            p ->
+                Optional.ofNullable(visitor.term(p))
+                    .map(SQLColumnsUtils::isVocabulary)
+                    .orElse(false))
+        .forEach(
+            param -> {
+              for (String payload : INJECTION_PAYLOADS) {
+                try {
+                  try {
+                    assertNoInjection(new EqualsPredicate<>(param, payload, false));
+                    assertNoInjection(
+                        new InPredicate<>(param, List.of(payload, P_FOLLOW_UP), false));
+                    assertNoInjection(new LikePredicate<>(param, payload, false));
+                  } catch (IllegalArgumentException e) {
+                  }
+                } catch (QueryBuildingException e) {
+                  fail(e);
+                }
+              }
+            });
+  }
+
+  @Test
+  public void testGeologicalTimeMustBeNumeric() {
+    // GEOLOGICAL_TIME is a String parameter, so the API doesn't validate it, and it is written to
+    // the SQL unquoted.
+    String payload = "12 OR INJECTED";
+    OccurrenceSearchParameter gt = OccurrenceSearchParameter.GEOLOGICAL_TIME;
+    for (Predicate p :
+        List.<Predicate>of(
+            new EqualsPredicate<>(gt, payload, false),
+            new GreaterThanOrEqualsPredicate<>(gt, payload),
+            new GreaterThanPredicate<>(gt, payload),
+            new LessThanOrEqualsPredicate<>(gt, payload),
+            new LessThanPredicate<>(gt, payload),
+            new InPredicate<>(gt, List.of("12", payload), false))) {
+      assertThrows(QueryBuildingException.class, () -> visitor.buildQuery(p), p.toString());
+    }
+  }
+
+  @Test
+  public void testUnquotedNumbersAreValidated() {
+    // Double.parseDouble (used by the API's validation) accepts NaN, but it isn't a SQL number.
+    assertThrows(
+        QueryBuildingException.class,
+        () ->
+            visitor.buildQuery(
+                new EqualsPredicate<>(OccurrenceSearchParameter.ELEVATION, "NaN", false)));
   }
 }

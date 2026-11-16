@@ -62,9 +62,9 @@ import org.locationtech.jts.io.WKTReader;
 public abstract class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
-  private final String defaultChecklistKey;
+  private final UUID defaultChecklistKey;
 
-  private String getChecklistKey(Predicate predicate) {
+  private UUID getChecklistKey(Predicate predicate) {
 
     if (predicate == null) return null;
 
@@ -72,8 +72,8 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
     try {
       Method m = clazz.getMethod("getChecklistKey");
-      Object checklistKey = m.invoke(predicate);
-      if (checklistKey != null) return checklistKey.toString();
+      UUID checklistKey = (UUID) m.invoke(predicate);
+      if (checklistKey != null) return checklistKey;
       return defaultChecklistKey;
     } catch (Exception e) {
       return null;
