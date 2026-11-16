@@ -24,6 +24,15 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   String getChecklistField(String checklistKey, P searchParameter);
 
+  /**
+   * Returns the field of the DNA-assisted classification of the checklist. By default, it is the
+   * checklist field nested under "dnaClassifications", e.g. {@code
+   * dnaClassifications.classifications.<checklistKey>.taxonKeys}.
+   */
+  default String getDnaChecklistField(String checklistKey, P searchParameter) {
+    return "dnaClassifications." + getChecklistField(checklistKey, searchParameter);
+  }
+
   String getNestedPath(P searchParameter);
 
   String getFullTextField();

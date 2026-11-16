@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.UUID;
+import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -47,6 +47,8 @@ import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */
 public class EventEsQueryVisitorTest {
+
+  private static final UUID CHECKLIST_KEY = UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b");
 
   private static final EventSearchParameter PARAM = EventSearchParameter.ISLAND;
   private static final EventSearchParameter PARAM2 = EventSearchParameter.INSTITUTION_CODE;
@@ -2111,11 +2113,11 @@ public class EventEsQueryVisitorTest {
   }
 
   /**
-   * The DNA taxon search doesn't apply to the Humboldt taxonomic scopes, so the queries are the
-   * same with and without the flag.
+   * The DNA assistance doesn't apply to the Humboldt taxonomic scopes, so the queries are the same
+   * with and without the flag.
    */
   @Test
-  public void testDnaTaxonSearchDoesNotAffectHumboldtTaxonFields()
+  public void testUseDnaAssistanceDoesNotAffectHumboldtTaxonFields()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> equals =
         dna ->
@@ -2123,7 +2125,7 @@ public class EventEsQueryVisitorTest {
                 EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
                 "6",
                 false,
-                "ck",
+                CHECKLIST_KEY,
                 dna);
     assertQueryEquals(
         "{\n"
@@ -2134,7 +2136,7 @@ public class EventEsQueryVisitorTest {
             + "          \"path\": \"event.humboldt\",\n"
             + "          \"query\": {\n"
             + "            \"term\": {\n"
-            + "              \"event.humboldt.targetTaxonomicScope.ck.taxonKeys\": {\n"
+            + "              \"event.humboldt.targetTaxonomicScope.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                \"value\": \"6\"\n"
             + "              }\n"
             + "            }\n"
@@ -2151,7 +2153,9 @@ public class EventEsQueryVisitorTest {
     Function<Boolean, Predicate> isNull =
         dna ->
             new IsNullPredicate<>(
-                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME, "ck", dna);
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,
+                CHECKLIST_KEY,
+                dna);
     assertEquals(visitor.buildQuery(isNull.apply(false)), visitor.buildQuery(isNull.apply(true)));
 
     Function<Boolean, Predicate> notIn =
@@ -2161,14 +2165,14 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
                     List.of("1", "2"),
                     false,
-                    "ck",
+                    CHECKLIST_KEY,
                     dna));
     assertEquals(visitor.buildQuery(notIn.apply(false)), visitor.buildQuery(notIn.apply(true)));
   }
 
   /** With the flag in both, only the event taxon key is expanded, not the Humboldt one. */
   @Test
-  public void testDnaTaxonSearchHumboldtAndTaxonKey()
+  public void testUseDnaAssistanceHumboldtAndTaxonKey()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
@@ -2177,9 +2181,10 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
                     "6",
                     false,
-                    "ck",
+                    CHECKLIST_KEY,
                     true),
-                new EqualsPredicate<>(EventSearchParameter.TAXON_KEY, "6", false, "ck", true)));
+                new EqualsPredicate<>(
+                    EventSearchParameter.TAXON_KEY, "6", false, CHECKLIST_KEY, true)));
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2192,14 +2197,14 @@ public class EventEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"6\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"6\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -2218,7 +2223,7 @@ public class EventEsQueryVisitorTest {
             + "              \"filter\": [\n"
             + "                {\n"
             + "                  \"term\": {\n"
-            + "                    \"event.humboldt.targetTaxonomicScope.ck.taxonKeys\": {\n"
+            + "                    \"event.humboldt.targetTaxonomicScope.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                      \"value\": \"6\"\n"
             + "                    }\n"
             + "                  }\n"

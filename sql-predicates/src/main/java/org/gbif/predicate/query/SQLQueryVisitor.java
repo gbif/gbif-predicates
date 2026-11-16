@@ -6,7 +6,6 @@ import static org.gbif.predicate.query.SQLColumnsUtils.GEOLOGICAL_TIME_LTE_COLUM
 import static org.gbif.predicate.query.SQLColumnsUtils.HUMBOLDT_TAXON_COLUMNS;
 import static org.gbif.predicate.query.SQLColumnsUtils.isInterpretedUtcDateMilliseconds;
 
-import jakarta.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -66,8 +65,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
-  /** Suffix of the checklist key that holds the DNA assisted classification of a checklist. */
-  private static final String DNA_ASSISTED_SUFFIX = "_dna_assisted";
 
   private static final String EQUALS_OPERATOR = " = ";
   private static final String IN_OPERATOR = " IN";
@@ -119,14 +116,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private final SQLTermsMapper<S> sqlTermsMapper;
 
-  private final String defaultChecklistKey;
+  private final UUID defaultChecklistKey;
 
   // used when there is a column that exists in more than one table
   private final SQLColumnsUtils sqlColumnsUtils;
 
-  private final String denormalisedTaxonomy;
+  private final UUID denormalisedTaxonomy;
 
-  private final Map<String, String> checklistNestedStructMap;
+  private final Map<UUID, String> checklistNestedStructMap;
+
+  private final Map<UUID, String> dnaChecklistNestedStructMap;
 
   private final String disambiguationTable;
 
@@ -145,6 +144,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *     one table
    * @param lambdaQueryThreshold the threshold for lambda queries to use EXISTS instead of IN for
    *     large lists of values
+   * @param dnaChecklistNestedStructMap the map of checklist keys to nested struct names of the
+   *     DNA-assisted classifications, used by the predicates with the useDnaAssistance flag
    */
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
@@ -152,11 +153,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       Map<String, String> checklistNestedStructMap,
       String defaultChecklistKey,
       String disambiguationTable,
-      int lambdaQueryThreshold) {
-    this.denormalisedTaxonomy = denormalisedTaxonomy;
-    this.checklistNestedStructMap = checklistNestedStructMap;
+      int lambdaQueryThreshold,
+      Map<String, String> dnaChecklistNestedStructMap) {
+    // the checklist keys come as strings from the configuration, but they have to be UUIDs
+    this.denormalisedTaxonomy = UUID.fromString(denormalisedTaxonomy);
+    this.checklistNestedStructMap = toUuidKeys(checklistNestedStructMap);
+    this.dnaChecklistNestedStructMap = toUuidKeys(dnaChecklistNestedStructMap);
     this.sqlTermsMapper = sqlTermsMapper;
-    this.defaultChecklistKey = defaultChecklistKey;
+    this.defaultChecklistKey = UUID.fromString(defaultChecklistKey);
     this.disambiguationTable = disambiguationTable;
     this.lambdaQueryThreshold = lambdaQueryThreshold;
     sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
@@ -174,7 +178,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         checklistNestedStructMap,
         defaultChecklistKey,
         disambiguationTable,
-        50);
+        50,
+        Map.of());
   }
 
   /** Transforms the value to the SQL statement lower(val). */
@@ -319,9 +324,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     Boolean matchCase = null;
     List<String> values = new ArrayList<>();
     S parameter = null;
-    String checklistsKey = null;
+    UUID checklistsKey = null;
     UUID suppliedChecklistKey = null;
-    Boolean dnaTaxonSearch = null;
+    Boolean useDnaAssistance = null;
+    UUID dnaAssistedChecklistKey = null;
 
     for (Predicate subPredicate : predicate.getPredicates()) {
       if (subPredicate instanceof EqualsPredicate) {
@@ -329,13 +335,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         if (parameter == null) {
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
-          dnaTaxonSearch = isDnaTaxonSearch(equalsSubPredicate.getDnaTaxonSearch());
+          useDnaAssistance = isUseDnaAssistance(equalsSubPredicate.getUseDnaAssistance());
+          dnaAssistedChecklistKey = equalsSubPredicate.getDnaAssistedChecklistKey();
           suppliedChecklistKey = equalsSubPredicate.getChecklistKey();
           checklistsKey = getChecklistKey(suppliedChecklistKey);
         } else if (parameter != equalsSubPredicate.getKey()
             || matchCase != equalsSubPredicate.isMatchCase()
             || !Objects.equals(checklistsKey, getChecklistKey(equalsSubPredicate.getChecklistKey()))
-            || dnaTaxonSearch != isDnaTaxonSearch(equalsSubPredicate.getDnaTaxonSearch())) {
+            || useDnaAssistance != isUseDnaAssistance(equalsSubPredicate.getUseDnaAssistance())
+            || !Objects.equals(
+                dnaAssistedChecklistKey, equalsSubPredicate.getDnaAssistedChecklistKey())) {
           useIn = false;
           break;
         }
@@ -347,7 +356,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
 
     if (useIn && OccurrenceSearchParameter.GEOLOGICAL_TIME != parameter) {
-      visit(new InPredicate<>(parameter, values, matchCase, suppliedChecklistKey, dnaTaxonSearch));
+      visit(
+          new InPredicate<>(
+              parameter,
+              values,
+              matchCase,
+              suppliedChecklistKey,
+              useDnaAssistance,
+              dnaAssistedChecklistKey));
     } else {
       visitCompoundPredicate(predicate, DISJUNCTION_OPERATOR);
     }
@@ -363,22 +379,35 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
-    if (isDnaTaxonSearch(predicate.getKey(), predicate.getDnaTaxonSearch())) {
-      appendDnaTaxonSearch(
-          predicate.getChecklistKey(),
-          DISJUNCTION_OPERATOR,
-          checklistKey ->
-              visit(
-                  new EqualsPredicate<>(
-                      predicate.getKey(),
-                      predicate.getValue(),
-                      predicate.isMatchCase(),
-                      checklistKey,
-                      false)));
-    } else if (isHumboldtTaxonParameter(predicate.getKey())) {
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
+      appendDnaAssistedFilter(
+          DISJUNCTION_OPERATOR, dnaAssisted -> appendEquals(predicate, dnaAssisted));
+    } else if (isDnaAssistedOnly(
+        predicate.getKey(),
+        predicate.getUseDnaAssistance(),
+        predicate.getDnaAssistedChecklistKey())) {
+      appendEquals(
+          new EqualsPredicate<>(
+              predicate.getKey(),
+              predicate.getValue(),
+              predicate.isMatchCase(),
+              predicate.getDnaAssistedChecklistKey()),
+          true);
+    } else {
+      appendEquals(predicate, false);
+    }
+  }
+
+  /**
+   * Appends the filter of the predicate. When dnaAssisted is true, the taxon columns are resolved
+   * against the DNA-assisted classification of the checklist.
+   */
+  private void appendEquals(EqualsPredicate<S> predicate, boolean dnaAssisted)
+      throws QueryBuildingException {
+    if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
-      appendTaxonomicFilter(predicate);
+      appendTaxonomicFilter(predicate, dnaAssisted);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       appendGadmFilterList(GADM_GIDS, predicate.getValue());
     } else if (predicate.getKey() == OccurrenceSearchParameter.MEDIA_TYPE) {
@@ -511,7 +540,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
-  private void appendTaxonomicFilter(EqualsPredicate<S> predicate) {
+  private void appendTaxonomicFilter(EqualsPredicate<S> predicate, boolean dnaAssisted) {
 
     // For TAXON_KEY use the taxonKeys column - this will support taxon keys at any rank
     if (predicate.getKey() == OccurrenceSearchParameter.TAXON_KEY) {
@@ -520,7 +549,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "stringArrayContains(%s, '%s', true)",
-                  resolveTaxonColumnName("taxonkeys", predicate.getChecklistKey()),
+                  resolveTaxonColumnName("taxonkeys", predicate.getChecklistKey(), dnaAssisted),
                   predicate.getValue()))
           .append(')');
     } else if (isTaxonomicArrayParameter(predicate.getKey())) {
@@ -532,21 +561,27 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               String.format(
                   "stringArrayContains(%s, '%s', true)",
                   resolveTaxonColumnName(
-                      taxonomicArrayColumn(predicate.getKey()), predicate.getChecklistKey()),
+                      taxonomicArrayColumn(predicate.getKey()),
+                      predicate.getChecklistKey(),
+                      dnaAssisted),
                   predicate.getValue()))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
       // special case for IUCN to make case insensitive for backwards compatibility
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       builder
-          .append("lower(" + resolveTaxonColumnName(columnName, predicate.getChecklistKey()) + ")")
+          .append(
+              "lower("
+                  + resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted)
+                  + ")")
           .append(EQUALS_OPERATOR)
           .append("lower('")
           .append(predicate.getValue())
           .append("')");
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
-      String resolvedColumn = resolveTaxonColumnName(columnName, predicate.getChecklistKey());
+      String resolvedColumn =
+          resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted);
       String escapedValue = predicate.getValue().replaceAll("'", "\\\\'");
       if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
           && !predicate.isMatchCase()) {
@@ -572,13 +607,31 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *
    * @param sqlField the SQL field name to resolve
    * @param suppliedChecklistKey the checklist key provided in the predicate, may be null
+   * @param dnaAssisted whether to resolve the column against the DNA-assisted classification of the
+   *     checklist
    * @return the resolved column name with the appropriate prefix if necessary
    * @throws IllegalArgumentException if the checklist key is not mapped to a nested struct in the
    *     table
    */
-  public String resolveTaxonColumnName(String sqlField, String suppliedChecklistKey) {
+  private String resolveTaxonColumnName(
+      String sqlField, UUID suppliedChecklistKey, boolean dnaAssisted) {
     String queryFieldPrefix = "";
-    String checklistKey = getChecklistKey(suppliedChecklistKey);
+    UUID checklistKey = getChecklistKey(suppliedChecklistKey);
+    if (dnaAssisted) {
+      // the DNA-assisted classifications are only in nested structs
+      if (dnaChecklistNestedStructMap.containsKey(checklistKey)) {
+        return disambiguationTable
+            + "."
+            + dnaChecklistNestedStructMap.get(checklistKey)
+            + "."
+            + sqlField;
+      }
+      throw new IllegalArgumentException(
+          "Checklist key "
+              + checklistKey
+              + " is not mapped to a DNA-assisted nested struct in the table. Please add it to the"
+              + " dnaChecklistNestedStructMap.");
+    }
     if (!denormalisedTaxonomy.equals(checklistKey)) {
       if (checklistNestedStructMap.containsKey(checklistKey)) {
         queryFieldPrefix =
@@ -591,11 +644,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
     }
     return queryFieldPrefix + sqlField;
-  }
-
-  public String resolveTaxonColumnName(String sqlField, UUID suppliedChecklistKey) {
-    return resolveTaxonColumnName(
-        sqlField, suppliedChecklistKey != null ? suppliedChecklistKey.toString() : null);
   }
 
   public void visit(GreaterThanOrEqualsPredicate<S> predicate) throws QueryBuildingException {
@@ -754,32 +802,45 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
   public void visit(InPredicate<S> predicate) throws QueryBuildingException {
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
+      appendDnaAssistedFilter(
+          DISJUNCTION_OPERATOR, dnaAssisted -> appendIn(predicate, dnaAssisted));
+    } else if (isDnaAssistedOnly(
+        predicate.getKey(),
+        predicate.getUseDnaAssistance(),
+        predicate.getDnaAssistedChecklistKey())) {
+      appendIn(
+          new InPredicate<>(
+              predicate.getKey(),
+              predicate.getValues(),
+              predicate.isMatchCase(),
+              predicate.getDnaAssistedChecklistKey()),
+          true);
+    } else {
+      appendIn(predicate, false);
+    }
+  }
+
+  /**
+   * Appends the filter of the predicate. When dnaAssisted is true, the taxon columns are resolved
+   * against the DNA-assisted classification of the checklist.
+   */
+  private void appendIn(InPredicate<S> predicate, boolean dnaAssisted)
+      throws QueryBuildingException {
     log.info("InPredicate " + predicate);
 
     boolean isMatchCase = Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE);
 
-    if (isDnaTaxonSearch(predicate.getKey(), predicate.getDnaTaxonSearch())) {
-      appendDnaTaxonSearch(
-          predicate.getChecklistKey(),
-          DISJUNCTION_OPERATOR,
-          checklistKey ->
-              visit(
-                  new InPredicate<>(
-                      predicate.getKey(),
-                      predicate.getValues(),
-                      predicate.isMatchCase(),
-                      checklistKey,
-                      false)));
-    } else if (isSQLArray(predicate.getKey())
-        || SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
+    if (isSQLArray(predicate.getKey()) || SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
       // Array values must be converted to ORs.
       builder.append('(');
       Iterator<String> iterator = predicate.getValues().iterator();
       while (iterator.hasNext()) {
         // Use the equals predicate to get the behaviour for array.
-        visit(
+        appendEquals(
             new EqualsPredicate<S>(
-                predicate.getKey(), iterator.next(), isMatchCase, predicate.getChecklistKey()));
+                predicate.getKey(), iterator.next(), isMatchCase, predicate.getChecklistKey()),
+            dnaAssisted);
         if (iterator.hasNext()) {
           builder.append(DISJUNCTION_OPERATOR);
         }
@@ -788,13 +849,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (isHumboldtTaxonParameter(predicate.getKey())) {
       appendHumboldtTaxonFilter(predicate);
     } else if (TAXON_KEY_SEARCH_PARAMETERS.contains(predicate.getKey())) {
-      appendTaxonKeyArrayFilter(predicate);
+      appendTaxonKeyArrayFilter(predicate, dnaAssisted);
     } else if (isTaxonomicArrayParameter(predicate.getKey())) {
-      appendTaxonomicArrayFilter(predicate, taxonomicArrayColumn(predicate.getKey()));
+      appendTaxonomicArrayFilter(predicate, taxonomicArrayColumn(predicate.getKey()), dnaAssisted);
     } else if (predicate.getKey() == OccurrenceSearchParameter.TAXONOMIC_STATUS) {
-      appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus");
+      appendTaxonomicSingleValueFilter(predicate, "taxonomicstatus", dnaAssisted);
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
-      appendTaxonomicSingleValueFilterCaseInsensitive(predicate, "iucnredlistcategory");
+      appendTaxonomicSingleValueFilterCaseInsensitive(
+          predicate, "iucnredlistcategory", dnaAssisted);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
@@ -858,19 +920,32 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
-    if (isDnaTaxonSearch(predicate.getKey(), predicate.getDnaTaxonSearch())) {
-      appendDnaTaxonSearch(
-          predicate.getChecklistKey(),
-          DISJUNCTION_OPERATOR,
-          checklistKey ->
-              visit(
-                  new LikePredicate<>(
-                      predicate.getKey(),
-                      predicate.getValue(),
-                      checklistKey,
-                      predicate.isMatchCase(),
-                      false)));
-    } else if (sqlTermsMapper.isArray(predicate.getKey())) {
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
+      appendDnaAssistedFilter(
+          DISJUNCTION_OPERATOR, dnaAssisted -> appendLike(predicate, dnaAssisted));
+    } else if (isDnaAssistedOnly(
+        predicate.getKey(),
+        predicate.getUseDnaAssistance(),
+        predicate.getDnaAssistedChecklistKey())) {
+      appendLike(
+          new LikePredicate<>(
+              predicate.getKey(),
+              predicate.getValue(),
+              predicate.getDnaAssistedChecklistKey(),
+              predicate.isMatchCase()),
+          true);
+    } else {
+      appendLike(predicate, false);
+    }
+  }
+
+  /**
+   * Appends the filter of the predicate. When dnaAssisted is true, the taxon columns are resolved
+   * against the DNA-assisted classification of the checklist.
+   */
+  private void appendLike(LikePredicate<S> predicate, boolean dnaAssisted)
+      throws QueryBuildingException {
+    if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
           String.format(
               getArrayLikeFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
@@ -892,7 +967,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
 
         String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
-        String resolvedColumn = resolveTaxonColumnName(columnName, predicate.getChecklistKey());
+        String resolvedColumn =
+            resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted);
         if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
             && !predicate.isMatchCase()) {
           builder
@@ -917,19 +993,33 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
-    if (isDnaTaxonSearch(predicate.getParameter(), predicate.getDnaTaxonSearch())) {
-      appendDnaTaxonSearch(
-          predicate.getChecklistKey(),
-          DISJUNCTION_OPERATOR,
-          checklistKey ->
-              visit(new IsNotNullPredicate<>(predicate.getParameter(), checklistKey, false)));
-    } else if (isHumboldtTaxonParameter(predicate.getParameter())) {
+    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())) {
+      appendDnaAssistedFilter(
+          DISJUNCTION_OPERATOR, dnaAssisted -> appendIsNotNull(predicate, dnaAssisted));
+    } else if (isDnaAssistedOnly(
+        predicate.getParameter(),
+        predicate.getUseDnaAssistance(),
+        predicate.getDnaAssistedChecklistKey())) {
+      appendIsNotNull(
+          new IsNotNullPredicate<>(
+              predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
+          true);
+    } else {
+      appendIsNotNull(predicate, false);
+    }
+  }
+
+  /**
+   * Appends the filter of the predicate. When dnaAssisted is true, the taxon columns are resolved
+   * against the DNA-assisted classification of the checklist.
+   */
+  private void appendIsNotNull(IsNotNullPredicate<S> predicate, boolean dnaAssisted)
+      throws QueryBuildingException {
+    if (isHumboldtTaxonParameter(predicate.getParameter())) {
       appendHumboldtTaxonUnary(
-          predicate.getParameter(),
-          getChecklistKey(predicate.getChecklistKey()),
-          IS_NOT_NULL_ARRAY_OPERATOR);
+          predicate.getParameter(), predicate.getChecklistKey(), IS_NOT_NULL_ARRAY_OPERATOR);
     } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getParameter())) {
-      appendTaxonKeyIsNotNull(predicate);
+      appendTaxonKeyIsNotNull(predicate, dnaAssisted);
     } else if (isSQLArray(predicate.getParameter())
         || SQLColumnsUtils.isVocabulary(term(predicate.getParameter()))) {
       builder.append(
@@ -944,20 +1034,33 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
-    if (isDnaTaxonSearch(predicate.getParameter(), predicate.getDnaTaxonSearch())) {
+    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())) {
       // the value has to be null in both classifications, so this is the negation of IS NOT NULL
-      appendDnaTaxonSearch(
-          predicate.getChecklistKey(),
-          CONJUNCTION_OPERATOR,
-          checklistKey ->
-              visit(new IsNullPredicate<>(predicate.getParameter(), checklistKey, false)));
-    } else if (TAXON_SEARCH_PARAMETERS.contains(predicate.getParameter())) {
-      appendTaxonKeyNull(predicate);
+      appendDnaAssistedFilter(
+          CONJUNCTION_OPERATOR, dnaAssisted -> appendIsNull(predicate, dnaAssisted));
+    } else if (isDnaAssistedOnly(
+        predicate.getParameter(),
+        predicate.getUseDnaAssistance(),
+        predicate.getDnaAssistedChecklistKey())) {
+      appendIsNull(
+          new IsNullPredicate<>(predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
+          true);
+    } else {
+      appendIsNull(predicate, false);
+    }
+  }
+
+  /**
+   * Appends the filter of the predicate. When dnaAssisted is true, the taxon columns are resolved
+   * against the DNA-assisted classification of the checklist.
+   */
+  private void appendIsNull(IsNullPredicate<S> predicate, boolean dnaAssisted)
+      throws QueryBuildingException {
+    if (TAXON_SEARCH_PARAMETERS.contains(predicate.getParameter())) {
+      appendTaxonKeyNull(predicate, dnaAssisted);
     } else if (isHumboldtTaxonParameter(predicate.getParameter())) {
       appendHumboldtTaxonUnary(
-          predicate.getParameter(),
-          getChecklistKey(predicate.getChecklistKey()),
-          IS_NULL_ARRAY_OPERATOR);
+          predicate.getParameter(), predicate.getChecklistKey(), IS_NULL_ARRAY_OPERATOR);
     } else if (predicate.getParameter() == OccurrenceSearchParameter.GADM_GID) {
       appendUnaryList(GADM_GIDS, IS_NULL_OPERATOR);
     } else {
@@ -973,30 +1076,34 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Searches any of the NUB keys in Hive of any rank. */
-  private void appendTaxonKeyIsNotNull(IsNotNullPredicate<S> predicate) {
+  private void appendTaxonKeyIsNotNull(IsNotNullPredicate<S> predicate, boolean dnaAssisted) {
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
     if (isTaxonomicArrayParameter(predicate.getParameter())) {
-      String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
+      String taxonomicIssueColumn =
+          resolveTaxonColumnName(sqlField, predicate.getChecklistKey(), dnaAssisted);
       builder.append(String.format(IS_NOT_NULL_ARRAY_OPERATOR, taxonomicIssueColumn));
     } else {
       builder.append(
           String.format(
-              "%s IS NOT NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+              "%s IS NOT NULL",
+              resolveTaxonColumnName(sqlField, predicate.getChecklistKey(), dnaAssisted)));
     }
   }
 
   /** Searches any of the NUB keys in Hive of any rank. */
-  private void appendTaxonKeyNull(IsNullPredicate<S> predicate) {
+  private void appendTaxonKeyNull(IsNullPredicate<S> predicate, boolean dnaAssisted) {
     String sqlField = predicate.getParameter().name().replace("_", "").toLowerCase();
     if (isTaxonomicArrayParameter(predicate.getParameter())) {
-      String taxonomicIssueColumn = resolveTaxonColumnName(sqlField, predicate.getChecklistKey());
+      String taxonomicIssueColumn =
+          resolveTaxonColumnName(sqlField, predicate.getChecklistKey(), dnaAssisted);
       builder.append(
           String.format(
               "%s IS NOT NULL OR size(%s) = 0", taxonomicIssueColumn, taxonomicIssueColumn));
     } else {
       builder.append(
           String.format(
-              "%s IS NULL", resolveTaxonColumnName(sqlField, predicate.getChecklistKey())));
+              "%s IS NULL",
+              resolveTaxonColumnName(sqlField, predicate.getChecklistKey(), dnaAssisted)));
     }
   }
 
@@ -1225,8 +1332,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return sqlTermsMapper.term(parameter);
   }
 
-  private void appendHumboldtTaxonFilter(String checklistKey, S parameter, String value) {
-    Objects.requireNonNull(checklistKey);
+  private void appendHumboldtTaxonFilter(UUID checklistKey, S parameter, String value) {
 
     String field = HUMBOLDT_TAXON_COLUMNS.getOrDefault(parameter, null);
 
@@ -1240,7 +1346,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             String.format(
                 "stringArrayContains(%s['%s']['%s'], '%s', true)",
                 sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-                getChecklistKey(checklistKey),
+                Objects.requireNonNull(getChecklistKey(checklistKey)),
                 field,
                 value))
         .append(')');
@@ -1248,9 +1354,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private void appendHumboldtTaxonFilter(EqualsPredicate<S> taxonPredicate) {
     appendHumboldtTaxonFilter(
-        getChecklistKey(taxonPredicate.getChecklistKey()),
-        taxonPredicate.getKey(),
-        taxonPredicate.getValue());
+        taxonPredicate.getChecklistKey(), taxonPredicate.getKey(), taxonPredicate.getValue());
   }
 
   private void appendHumboldtTaxonFilter(InPredicate<S> taxonPredicate) {
@@ -1278,12 +1382,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   private void appendHumboldtTaxonUnary(S parameter, UUID checklistKey, String unaryOperator) {
-    Objects.requireNonNull(checklistKey);
     String column =
         String.format(
             "%s['%s']['%s']",
             sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-            getChecklistKey(checklistKey),
+            Objects.requireNonNull(getChecklistKey(checklistKey)),
             HUMBOLDT_TAXON_COLUMNS.get(parameter));
     builder.append(String.format(unaryOperator, column));
   }
@@ -1293,7 +1396,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *
    * @param taxonKeyPredicate to append as filter
    */
-  private void appendTaxonomicArrayFilter(InPredicate<S> taxonKeyPredicate, String sqlField) {
+  private void appendTaxonomicArrayFilter(
+      InPredicate<S> taxonKeyPredicate, String sqlField, boolean dnaAssisted) {
     // Using arrays_overlap() instead of EXISTS because it is a standard SQL function
     // and may be supported by more SQL engines.
     // Also, the expected number of values in the array is small, so performance should be
@@ -1303,8 +1407,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(
             String.format(
                 "arrays_overlap(%s, array(%s))",
-                resolveTaxonColumnName(
-                    sqlField, getChecklistKey(taxonKeyPredicate.getChecklistKey())),
+                resolveTaxonColumnName(sqlField, taxonKeyPredicate.getChecklistKey(), dnaAssisted),
                 formatArray(taxonKeyPredicate.getValues())))
         .append(')');
   }
@@ -1326,13 +1429,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *
    * @param taxonPredicate to append as filter
    */
-  private void appendTaxonomicSingleValueFilter(InPredicate<S> taxonPredicate, String sqlField) {
+  private void appendTaxonomicSingleValueFilter(
+      InPredicate<S> taxonPredicate, String sqlField, boolean dnaAssisted) {
     builder
         .append('(')
         .append(
             String.format(
                 "%s IN (%s)",
-                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
+                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey(), dnaAssisted),
                 formatArray(taxonPredicate.getValues())))
         .append(')');
   }
@@ -1343,13 +1447,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * @param taxonPredicate to append as filter
    */
   private void appendTaxonomicSingleValueFilterCaseInsensitive(
-      InPredicate<S> taxonPredicate, String sqlField) {
+      InPredicate<S> taxonPredicate, String sqlField, boolean dnaAssisted) {
     builder
         .append('(')
         .append(
             String.format(
                 "lower(%s) IN (%s)",
-                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey()),
+                resolveTaxonColumnName(sqlField, taxonPredicate.getChecklistKey(), dnaAssisted),
                 formatArrayLowerCase(taxonPredicate.getValues())))
         .append(')');
   }
@@ -1376,7 +1480,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *
    * @param taxonomicPredicate to append as filter
    */
-  private void appendTaxonKeyArrayFilter(InPredicate<S> taxonomicPredicate) {
+  private void appendTaxonKeyArrayFilter(InPredicate<S> taxonomicPredicate, boolean dnaAssisted) {
 
     List<String> taxonKeys =
         taxonomicPredicate.getValues().stream()
@@ -1396,7 +1500,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   // using 'taxonkey' as it needs to be a recognised column
                   // to get past calcite validation
                   "EXISTS(%s, taxonkey -> taxonkey IN (%s))",
-                  resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
+                  resolveTaxonColumnName(
+                      "taxonkeys", taxonomicPredicate.getChecklistKey(), dnaAssisted),
                   formatArray(taxonKeys)))
           .append(')');
     } else {
@@ -1405,7 +1510,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append(
               String.format(
                   "arrays_overlap(%s, array(%s))",
-                  resolveTaxonColumnName("taxonkeys", taxonomicPredicate.getChecklistKey()),
+                  resolveTaxonColumnName(
+                      "taxonkeys", taxonomicPredicate.getChecklistKey(), dnaAssisted),
                   formatArray(taxonKeys)))
           .append(')');
     }
@@ -1526,42 +1632,56 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return HUMBOLDT_TAXON_COLUMNS.containsKey(parameter);
   }
 
-  private String getChecklistKey(String checklistKey) {
-    return !isNullOrEmpty(checklistKey) ? checklistKey : defaultChecklistKey;
+  private static boolean isUseDnaAssistance(Boolean useDnaAssistance) {
+    return Boolean.TRUE.equals(useDnaAssistance);
   }
 
-  private static boolean isDnaTaxonSearch(Boolean dnaTaxonSearch) {
-    return Boolean.TRUE.equals(dnaTaxonSearch);
-  }
-
-  /** The DNA taxon search only applies to the taxonomic parameters, excluding the Humboldt ones. */
-  private boolean isDnaTaxonSearch(S parameter, Boolean dnaTaxonSearch) {
-    return isDnaTaxonSearch(dnaTaxonSearch) && TAXON_SEARCH_PARAMETERS.contains(parameter);
-  }
-
-  /** Appends a taxonomic filter for a given checklist key. */
-  @FunctionalInterface
-  private interface ChecklistFilterAppender {
-    void append(String checklistKey) throws QueryBuildingException;
+  /** The DNA assistance only applies to the taxonomic parameters, excluding the Humboldt ones. */
+  private boolean isUseDnaAssistance(S parameter, Boolean useDnaAssistance) {
+    return isUseDnaAssistance(useDnaAssistance) && TAXON_SEARCH_PARAMETERS.contains(parameter);
   }
 
   /**
-   * Appends the filter for the checklist classification and for the DNA assisted classification of
+   * The dnaAssistedChecklistKey searches only in the DNA-assisted classification of the checklist.
+   * It only applies to the taxonomic parameters, excluding the Humboldt ones, and it is ignored
+   * when the useDnaAssistance flag is used.
+   */
+  private boolean isDnaAssistedOnly(
+      S parameter, Boolean useDnaAssistance, UUID dnaAssistedChecklistKey) {
+    return dnaAssistedChecklistKey != null
+        && !isUseDnaAssistance(useDnaAssistance)
+        && TAXON_SEARCH_PARAMETERS.contains(parameter);
+  }
+
+  /** Appends a filter, on the regular or on the DNA-assisted classification. */
+  @FunctionalInterface
+  private interface TaxonFilterAppender {
+    void append(boolean dnaAssisted) throws QueryBuildingException;
+  }
+
+  /**
+   * Appends the filter for the checklist classification and for the DNA-assisted classification of
    * the same checklist, joined by the given operator.
    */
-  private void appendDnaTaxonSearch(
-      String suppliedChecklistKey, String operator, ChecklistFilterAppender appender)
+  private void appendDnaAssistedFilter(String operator, TaxonFilterAppender appender)
       throws QueryBuildingException {
-    String checklistKey = getChecklistKey(suppliedChecklistKey);
     builder.append("((");
-    appender.append(checklistKey);
+    appender.append(false);
     builder.append(')').append(operator).append('(');
-    appender.append(checklistKey + DNA_ASSISTED_SUFFIX);
+    appender.append(true);
     builder.append("))");
   }
 
-  private String getChecklistKey(UUID checklistKey) {
-    return checklistKey != null ? checklistKey.toString() : defaultChecklistKey;
+  private UUID getChecklistKey(UUID checklistKey) {
+    return checklistKey != null ? checklistKey : defaultChecklistKey;
+  }
+
+  private static Map<UUID, String> toUuidKeys(Map<String, String> checklistKeyMap) {
+    if (checklistKeyMap == null) {
+      return Map.of();
+    }
+    return checklistKeyMap.entrySet().stream()
+        .collect(Collectors.toMap(e -> UUID.fromString(e.getKey()), Map.Entry::getValue));
   }
 
   /** Taxon parameters stored as ARRAY columns, both top-level and in the classification struct. */
@@ -1574,9 +1694,5 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return parameter == OccurrenceSearchParameter.TAXONOMIC_ISSUE
         ? "taxonomicissue"
         : "environments";
-  }
-
-  public static boolean isNullOrEmpty(@Nullable String string) {
-    return string == null || string.isEmpty();
   }
 }

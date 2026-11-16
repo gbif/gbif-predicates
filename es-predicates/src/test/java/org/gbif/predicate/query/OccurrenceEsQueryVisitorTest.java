@@ -14,7 +14,9 @@
 package org.gbif.predicate.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,8 +24,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.UUID;
+import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
@@ -47,6 +49,8 @@ import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */
 public class OccurrenceEsQueryVisitorTest {
+
+  private static final UUID CHECKLIST_KEY = UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b");
 
   private static final OccurrenceSearchParameter PARAM = OccurrenceSearchParameter.CATALOG_NUMBER;
   private static final OccurrenceSearchParameter PARAM2 =
@@ -2352,12 +2356,61 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
-  /** Equals predicate with the DNA taxon search disabled and enabled. */
+  /** The dnaAssistedChecklistKey searches only in the DNA-assisted classification. */
   @Test
-  public void testDnaTaxonSearchEqualsPredicate()
+  public void testDnaAssistedChecklistKey() throws QueryBuildingException {
+    String dnaField = "\"dnaClassifications.classifications." + CHECKLIST_KEY + ".taxonKeys\"";
+    String checklistField = "\"classifications." + CHECKLIST_KEY + ".taxonKeys\"";
+
+    List<Predicate> predicates =
+        List.of(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, "212", false, null, null, CHECKLIST_KEY),
+            new InPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY,
+                List.of("1", "6"),
+                false,
+                null,
+                null,
+                CHECKLIST_KEY),
+            new IsNotNullPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, null, null, CHECKLIST_KEY),
+            new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, null, null, CHECKLIST_KEY));
+    for (Predicate p : predicates) {
+      String query = visitor.buildQuery(p);
+      assertTrue(query.contains(dnaField), query);
+      // only the DNA-assisted classification
+      assertFalse(query.replace(dnaField, "").contains(checklistField), query);
+    }
+  }
+
+  /** The dnaAssistedChecklistKey is ignored with the useDnaAssistance flag. */
+  @Test
+  public void testDnaAssistedChecklistKeyIgnoredWithUseDnaAssistance()
+      throws QueryBuildingException {
+    UUID otherChecklistKey = UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+    assertEquals(
+        visitor.buildQuery(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, true)),
+        visitor.buildQuery(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY,
+                "212",
+                false,
+                CHECKLIST_KEY,
+                true,
+                otherChecklistKey)));
+  }
+
+  /** Equals predicate with the DNA assistance disabled and enabled. */
+  @Test
+  public void testUseDnaAssistanceEqualsPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
-        dna -> new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna);
+        dna ->
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, dna);
 
     // only the checklist classification
     assertQueryEquals(
@@ -2366,7 +2419,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "    \"filter\": [\n"
             + "      {\n"
             + "        \"term\": {\n"
-            + "          \"classifications.ck.taxonKeys\": {\n"
+            + "          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "            \"value\": \"212\"\n"
             + "          }\n"
             + "        }\n"
@@ -2376,7 +2429,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2386,14 +2439,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"212\"\n"
             + "                }\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"212\"\n"
             + "                }\n"
             + "              }\n"
@@ -2407,14 +2460,18 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** In predicate with the DNA taxon search disabled and enabled. */
+  /** In predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchInPredicate()
+  public void testUseDnaAssistanceInPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
         dna ->
             new InPredicate<>(
-                OccurrenceSearchParameter.KINGDOM_KEY, List.of("1", "6"), false, "ck", dna);
+                OccurrenceSearchParameter.KINGDOM_KEY,
+                List.of("1", "6"),
+                false,
+                CHECKLIST_KEY,
+                dna);
 
     // only the checklist classification
     assertQueryEquals(
@@ -2423,7 +2480,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "    \"filter\": [\n"
             + "      {\n"
             + "        \"terms\": {\n"
-            + "          \"classifications.ck.taxonKeys\": [\n"
+            + "          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": [\n"
             + "            \"1\",\n"
             + "            \"6\"\n"
             + "          ]\n"
@@ -2434,7 +2491,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2444,7 +2501,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"terms\": {\n"
-            + "                \"classifications.ck.taxonKeys\": [\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": [\n"
             + "                  \"1\",\n"
             + "                  \"6\"\n"
             + "                ]\n"
@@ -2452,7 +2509,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "            },\n"
             + "            {\n"
             + "              \"terms\": {\n"
-            + "                \"classifications.ck_dna_assisted.taxonKeys\": [\n"
+            + "                \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": [\n"
             + "                  \"1\",\n"
             + "                  \"6\"\n"
             + "                ]\n"
@@ -2467,14 +2524,14 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** Like predicate with the DNA taxon search disabled and enabled. */
+  /** Like predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchLikePredicate()
+  public void testUseDnaAssistanceLikePredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
         dna ->
             new LikePredicate<>(
-                OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", "ck", false, dna);
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", CHECKLIST_KEY, false, dna);
 
     // only the checklist classification
     assertQueryEquals(
@@ -2483,7 +2540,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "    \"filter\": [\n"
             + "      {\n"
             + "        \"wildcard\": {\n"
-            + "          \"classifications.ck.usage.name\": {\n"
+            + "          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
             + "            \"value\": \"Puma*\"\n"
             + "          }\n"
             + "        }\n"
@@ -2493,7 +2550,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2503,14 +2560,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"wildcard\": {\n"
-            + "                \"classifications.ck.usage.name\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
             + "                  \"value\": \"Puma*\"\n"
             + "                }\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
             + "              \"wildcard\": {\n"
-            + "                \"classifications.ck_dna_assisted.usage.name\": {\n"
+            + "                \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
             + "                  \"value\": \"Puma*\"\n"
             + "                }\n"
             + "              }\n"
@@ -2524,12 +2581,12 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** IsNotNull predicate with the DNA taxon search disabled and enabled. */
+  /** IsNotNull predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchIsNotNullPredicate()
+  public void testUseDnaAssistanceIsNotNullPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
-        dna -> new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "ck", dna);
+        dna -> new IsNotNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, CHECKLIST_KEY, dna);
 
     // only the checklist classification
     assertQueryEquals(
@@ -2538,7 +2595,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "    \"filter\": [\n"
             + "      {\n"
             + "        \"exists\": {\n"
-            + "          \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "          \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "        }\n"
             + "      }\n"
             + "    ]\n"
@@ -2546,7 +2603,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2556,12 +2613,12 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "                \"field\": \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            }\n"
             + "          ]\n"
@@ -2573,12 +2630,12 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** IsNull predicate with the DNA taxon search disabled and enabled. */
+  /** IsNull predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchIsNullPredicate()
+  public void testUseDnaAssistanceIsNullPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
-        dna -> new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "ck", dna);
+        dna -> new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, CHECKLIST_KEY, dna);
 
     // only the checklist classification
     assertQueryEquals(
@@ -2590,7 +2647,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"must_not\": [\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            }\n"
             + "          ]\n"
@@ -2601,7 +2658,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // null in the checklist classification AND in the DNA assisted classification
+    // null in the checklist classification AND in the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2614,12 +2671,12 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"exists\": {\n"
-            + "                      \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                      \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"exists\": {\n"
-            + "                      \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "                      \"field\": \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "                    }\n"
             + "                  }\n"
             + "                ]\n"
@@ -2634,15 +2691,15 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** Not predicate with the DNA taxon search disabled and enabled. */
+  /** Not predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchNotPredicate()
+  public void testUseDnaAssistanceNotPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
         dna ->
             new NotPredicate(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna));
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, dna));
 
     // only the checklist classification
     assertQueryEquals(
@@ -2651,7 +2708,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "    \"filter\": [\n"
             + "      {\n"
             + "        \"exists\": {\n"
-            + "          \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "          \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "        }\n"
             + "      }\n"
             + "    ],\n"
@@ -2661,7 +2718,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"212\"\n"
             + "                }\n"
             + "              }\n"
@@ -2674,7 +2731,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2684,12 +2741,12 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "                \"field\": \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            }\n"
             + "          ]\n"
@@ -2705,14 +2762,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -2729,18 +2786,18 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** Disjunction predicate with the DNA taxon search disabled and enabled. */
+  /** Disjunction predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchDisjunctionPredicate()
+  public void testUseDnaAssistanceDisjunctionPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
         dna ->
             new DisjunctionPredicate(
                 List.of(
                     new EqualsPredicate<>(
-                        OccurrenceSearchParameter.TAXON_KEY, "1", false, "ck", dna),
+                        OccurrenceSearchParameter.TAXON_KEY, "1", false, CHECKLIST_KEY, dna),
                     new EqualsPredicate<>(
-                        OccurrenceSearchParameter.TAXON_KEY, "2", false, "ck", dna)));
+                        OccurrenceSearchParameter.TAXON_KEY, "2", false, CHECKLIST_KEY, dna)));
 
     // only the checklist classification
     assertQueryEquals(
@@ -2752,7 +2809,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"1\"\n"
             + "                }\n"
             + "              }\n"
@@ -2765,7 +2822,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"2\"\n"
             + "                }\n"
             + "              }\n"
@@ -2778,7 +2835,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2791,14 +2848,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"1\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"1\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -2817,14 +2874,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"2\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"2\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -2841,16 +2898,16 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** Conjunction predicate with the DNA taxon search disabled and enabled. */
+  /** Conjunction predicate with the DNA assistance disabled and enabled. */
   @Test
-  public void testDnaTaxonSearchConjunctionPredicate()
+  public void testUseDnaAssistanceConjunctionPredicate()
       throws QueryBuildingException, JsonProcessingException {
     Function<Boolean, Predicate> predicate =
         dna ->
             new ConjunctionPredicate(
                 List.of(
                     new EqualsPredicate<>(
-                        OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", dna),
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, dna),
                     new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
 
     // only the checklist classification
@@ -2863,7 +2920,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"212\"\n"
             + "                }\n"
             + "              }\n"
@@ -2889,7 +2946,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "}\n",
         visitor.buildQuery(predicate.apply(false)));
 
-    // the checklist classification OR the DNA assisted classification
+    // the checklist classification OR the DNA-assisted classification
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -2902,14 +2959,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -2939,15 +2996,15 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(predicate.apply(true)));
   }
 
-  /** Taxon key with the DNA taxon search AND country AND year: only the taxon key is expanded. */
+  /** Taxon key with the DNA assistance AND country AND year: only the taxon key is expanded. */
   @Test
-  public void testDnaTaxonSearchTaxonAndNonTaxonConjunction()
+  public void testUseDnaAssistanceTaxonAndNonTaxonConjunction()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
             List.of(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, true),
                 new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false),
                 new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000")));
     assertQueryEquals(
@@ -2962,14 +3019,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -3012,15 +3069,15 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(p));
   }
 
-  /** Kingdom key with the DNA taxon search OR country. */
+  /** Kingdom key with the DNA assistance OR country. */
   @Test
-  public void testDnaTaxonSearchTaxonOrNonTaxonDisjunction()
+  public void testUseDnaAssistanceTaxonOrNonTaxonDisjunction()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new DisjunctionPredicate(
             List.of(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, "ck", true),
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, CHECKLIST_KEY, true),
                 new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
     assertQueryEquals(
         "{\n"
@@ -3034,14 +3091,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"1\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"1\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -3072,21 +3129,21 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   /**
-   * Taxon predicates with and without the DNA taxon search mixed with a non-taxon IN: only the
+   * Taxon predicates with and without the DNA assistance mixed with a non-taxon IN: only the
    * flagged ones are expanded.
    */
   @Test
-  public void testDnaTaxonSearchMixedFlags()
+  public void testUseDnaAssistanceMixedFlags()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
             List.of(
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                    OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, true),
                 new EqualsPredicate<>(
-                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, "ck", false),
+                    OccurrenceSearchParameter.KINGDOM_KEY, "1", false, CHECKLIST_KEY, false),
                 new LikePredicate<>(
-                    OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", "ck", false, true),
+                    OccurrenceSearchParameter.SCIENTIFIC_NAME, "Puma*", CHECKLIST_KEY, false, true),
                 new InPredicate<>(
                     OccurrenceSearchParameter.BASIS_OF_RECORD,
                     List.of("HUMAN_OBSERVATION", "PRESERVED_SPECIMEN"),
@@ -3103,14 +3160,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck.taxonKeys\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"term\": {\n"
-            + "                      \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                        \"value\": \"212\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -3126,7 +3183,7 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"filter\": [\n"
             + "            {\n"
             + "              \"term\": {\n"
-            + "                \"classifications.ck.taxonKeys\": {\n"
+            + "                \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                  \"value\": \"1\"\n"
             + "                }\n"
             + "              }\n"
@@ -3142,14 +3199,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"wildcard\": {\n"
-            + "                      \"classifications.ck.usage.name\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
             + "                        \"value\": \"Puma*\"\n"
             + "                      }\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"wildcard\": {\n"
-            + "                      \"classifications.ck_dna_assisted.usage.name\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
             + "                        \"value\": \"Puma*\"\n"
             + "                      }\n"
             + "                    }\n"
@@ -3181,11 +3238,11 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   /**
-   * (taxon key 1 OR 2, both with the DNA taxon search) AND NOT country AND scientific name is not
-   * null with the DNA taxon search.
+   * (taxon key 1 OR 2, both with the DNA assistance) AND NOT country AND scientific name is not
+   * null with the DNA assistance.
    */
   @Test
-  public void testDnaTaxonSearchNestedDisjunctionAndNot()
+  public void testUseDnaAssistanceNestedDisjunctionAndNot()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new ConjunctionPredicate(
@@ -3193,12 +3250,13 @@ public class OccurrenceEsQueryVisitorTest {
                 new DisjunctionPredicate(
                     List.of(
                         new EqualsPredicate<>(
-                            OccurrenceSearchParameter.TAXON_KEY, "1", false, "ck", true),
+                            OccurrenceSearchParameter.TAXON_KEY, "1", false, CHECKLIST_KEY, true),
                         new EqualsPredicate<>(
-                            OccurrenceSearchParameter.TAXON_KEY, "2", false, "ck", true))),
+                            OccurrenceSearchParameter.TAXON_KEY, "2", false, CHECKLIST_KEY, true))),
                 new NotPredicate(
                     new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)),
-                new IsNotNullPredicate<>(OccurrenceSearchParameter.SCIENTIFIC_NAME, "ck", true)));
+                new IsNotNullPredicate<>(
+                    OccurrenceSearchParameter.SCIENTIFIC_NAME, CHECKLIST_KEY, true)));
     assertQueryEquals(
         "{\n"
             + "  \"bool\": {\n"
@@ -3214,14 +3272,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                      \"should\": [\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                            \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"1\"\n"
             + "                            }\n"
             + "                          }\n"
             + "                        },\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                            \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"1\"\n"
             + "                            }\n"
             + "                          }\n"
@@ -3240,14 +3298,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                      \"should\": [\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                            \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"2\"\n"
             + "                            }\n"
             + "                          }\n"
             + "                        },\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                            \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"2\"\n"
             + "                            }\n"
             + "                          }\n"
@@ -3295,12 +3353,12 @@ public class OccurrenceEsQueryVisitorTest {
             + "                \"should\": [\n"
             + "                  {\n"
             + "                    \"exists\": {\n"
-            + "                      \"field\": \"classifications.ck.usage.name\"\n"
+            + "                      \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\"\n"
             + "                    }\n"
             + "                  },\n"
             + "                  {\n"
             + "                    \"exists\": {\n"
-            + "                      \"field\": \"classifications.ck_dna_assisted.usage.name\"\n"
+            + "                      \"field\": \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\"\n"
             + "                    }\n"
             + "                  }\n"
             + "                ]\n"
@@ -3315,16 +3373,16 @@ public class OccurrenceEsQueryVisitorTest {
         visitor.buildQuery(p));
   }
 
-  /** NOT (taxon key with the DNA taxon search AND country). */
+  /** NOT (taxon key with the DNA assistance AND country). */
   @Test
-  public void testDnaTaxonSearchNotConjunction()
+  public void testUseDnaAssistanceNotConjunction()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p =
         new NotPredicate(
             new ConjunctionPredicate(
                 List.of(
                     new EqualsPredicate<>(
-                        OccurrenceSearchParameter.TAXON_KEY, "212", false, "ck", true),
+                        OccurrenceSearchParameter.TAXON_KEY, "212", false, CHECKLIST_KEY, true),
                     new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false))));
     assertQueryEquals(
         "{\n"
@@ -3335,12 +3393,12 @@ public class OccurrenceEsQueryVisitorTest {
             + "          \"should\": [\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck.taxonKeys\"\n"
+            + "                \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            },\n"
             + "            {\n"
             + "              \"exists\": {\n"
-            + "                \"field\": \"classifications.ck_dna_assisted.taxonKeys\"\n"
+            + "                \"field\": \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
             + "              }\n"
             + "            }\n"
             + "          ]\n"
@@ -3364,14 +3422,14 @@ public class OccurrenceEsQueryVisitorTest {
             + "                      \"should\": [\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck.taxonKeys\": {\n"
+            + "                            \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"212\"\n"
             + "                            }\n"
             + "                          }\n"
             + "                        },\n"
             + "                        {\n"
             + "                          \"term\": {\n"
-            + "                            \"classifications.ck_dna_assisted.taxonKeys\": {\n"
+            + "                            \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
             + "                              \"value\": \"212\"\n"
             + "                            }\n"
             + "                          }\n"
@@ -3405,7 +3463,7 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   @Test
-  public void testDnaTaxonSearchDoesNotAffectNonTaxonomicFields()
+  public void testUseDnaAssistanceDoesNotAffectNonTaxonomicFields()
       throws QueryBuildingException, JsonProcessingException {
     Predicate p = new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false, null, true);
     assertQueryEquals(

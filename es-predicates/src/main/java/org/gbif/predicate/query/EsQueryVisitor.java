@@ -61,9 +61,6 @@ import org.locationtech.jts.io.WKTReader;
 @Slf4j
 public abstract class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
-  /** Suffix of the checklist key that holds the DNA assisted classification of a checklist. */
-  private static final String DNA_ASSISTED_SUFFIX = "_dna_assisted";
-
   private final EsFieldMapper<S> esFieldMapper;
   private final String defaultChecklistKey;
 
@@ -83,30 +80,62 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     }
   }
 
-  /** Only the predicates that support the dnaTaxonSearch flag can enable it. */
-  private static boolean isDnaTaxonSearch(Predicate predicate) {
-    Boolean dnaTaxonSearch = null;
+  /** Returns the dnaAssistedChecklistKey of the predicate, or null if it doesn't have one. */
+  private static String getDnaAssistedChecklistKey(Predicate predicate) {
+    UUID dnaAssistedChecklistKey = null;
     if (predicate instanceof EqualsPredicate) {
-      dnaTaxonSearch = ((EqualsPredicate<?>) predicate).getDnaTaxonSearch();
+      dnaAssistedChecklistKey = ((EqualsPredicate<?>) predicate).getDnaAssistedChecklistKey();
     } else if (predicate instanceof InPredicate) {
-      dnaTaxonSearch = ((InPredicate<?>) predicate).getDnaTaxonSearch();
+      dnaAssistedChecklistKey = ((InPredicate<?>) predicate).getDnaAssistedChecklistKey();
     } else if (predicate instanceof LikePredicate) {
-      dnaTaxonSearch = ((LikePredicate<?>) predicate).getDnaTaxonSearch();
+      dnaAssistedChecklistKey = ((LikePredicate<?>) predicate).getDnaAssistedChecklistKey();
     } else if (predicate instanceof IsNotNullPredicate) {
-      dnaTaxonSearch = ((IsNotNullPredicate<?>) predicate).getDnaTaxonSearch();
+      dnaAssistedChecklistKey = ((IsNotNullPredicate<?>) predicate).getDnaAssistedChecklistKey();
     } else if (predicate instanceof IsNullPredicate) {
-      dnaTaxonSearch = ((IsNullPredicate<?>) predicate).getDnaTaxonSearch();
+      dnaAssistedChecklistKey = ((IsNullPredicate<?>) predicate).getDnaAssistedChecklistKey();
     }
-    return Boolean.TRUE.equals(dnaTaxonSearch);
+    return dnaAssistedChecklistKey != null ? dnaAssistedChecklistKey.toString() : null;
   }
 
-  /** The DNA taxon search doesn't apply to the Humboldt taxonomic scopes. */
+  /**
+   * Returns the field of a taxonomic parameter. If the predicate has a dnaAssistedChecklistKey, the
+   * field is only searched in the DNA-assisted classification of that checklist. It is ignored when
+   * the useDnaAssistance flag is used and for the Humboldt parameters.
+   */
+  private String getChecklistField(Predicate predicate, S parameter) {
+    String dnaAssistedChecklistKey = getDnaAssistedChecklistKey(predicate);
+    if (dnaAssistedChecklistKey != null
+        && !isUseDnaAssistance(predicate)
+        && !isHumboldtParameter(parameter)) {
+      return esFieldMapper.getDnaChecklistField(dnaAssistedChecklistKey, parameter);
+    }
+    return esFieldMapper.getChecklistField(getChecklistKey(predicate), parameter);
+  }
+
+  /** Only the predicates that support the useDnaAssistance flag can enable it. */
+  private static boolean isUseDnaAssistance(Predicate predicate) {
+    Boolean useDnaAssistance = null;
+    if (predicate instanceof EqualsPredicate) {
+      useDnaAssistance = ((EqualsPredicate<?>) predicate).getUseDnaAssistance();
+    } else if (predicate instanceof InPredicate) {
+      useDnaAssistance = ((InPredicate<?>) predicate).getUseDnaAssistance();
+    } else if (predicate instanceof LikePredicate) {
+      useDnaAssistance = ((LikePredicate<?>) predicate).getUseDnaAssistance();
+    } else if (predicate instanceof IsNotNullPredicate) {
+      useDnaAssistance = ((IsNotNullPredicate<?>) predicate).getUseDnaAssistance();
+    } else if (predicate instanceof IsNullPredicate) {
+      useDnaAssistance = ((IsNullPredicate<?>) predicate).getUseDnaAssistance();
+    }
+    return Boolean.TRUE.equals(useDnaAssistance);
+  }
+
+  /** The DNA assistance doesn't apply to the Humboldt taxonomic scopes. */
   private static boolean isHumboldtParameter(SearchParameter parameter) {
     return parameter.name().startsWith("HUMBOLDT_");
   }
 
   /**
-   * If the predicate has the dnaTaxonSearch flag and the parameter is taxonomic (excluding the
+   * If the predicate has the useDnaAssistance flag and the parameter is taxonomic (excluding the
    * Humboldt ones), it joins the query with an OR to the same query on the DNA assisted
    * classification of the checklist. Otherwise, the query is returned as it is.
    *
@@ -119,19 +148,18 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     if (checklistKey == null
         || !esFieldMapper.isTaxonomic(parameter)
         || isHumboldtParameter(parameter)
-        || !isDnaTaxonSearch(predicate)) {
+        || !isUseDnaAssistance(predicate)) {
       return query;
     }
 
-    String dnaField =
-        esFieldMapper.getChecklistField(checklistKey + DNA_ASSISTED_SUFFIX, parameter);
+    String dnaField = esFieldMapper.getDnaChecklistField(checklistKey, parameter);
     return buildBoolQuery(
         Collections.emptyList(), List.of(query, queryFn.apply(dnaField)), Collections.emptyList());
   }
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getParameter());
+      return getChecklistField(predicate, predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -139,7 +167,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   private String getExactMatchFieldName(IsNullPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getParameter())) {
-      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getParameter());
+      return getChecklistField(predicate, predicate.getParameter());
     }
 
     return esFieldMapper.getExactMatchFieldName(predicate.getParameter());
@@ -149,14 +177,13 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     if (predicate instanceof EqualsPredicate) {
       EqualsPredicate<S> equalsPredicate = (EqualsPredicate<S>) predicate;
       if (esFieldMapper.isTaxonomic(equalsPredicate.getKey())) {
-        return esFieldMapper.getChecklistField(
-            getChecklistKey(equalsPredicate), predicate.getKey());
+        return getChecklistField(equalsPredicate, predicate.getKey());
       }
     }
     if (predicate instanceof LikePredicate) {
       LikePredicate<S> likePredicate = (LikePredicate<S>) predicate;
       if (esFieldMapper.isTaxonomic(likePredicate.getKey())) {
-        return esFieldMapper.getChecklistField(getChecklistKey(likePredicate), predicate.getKey());
+        return getChecklistField(likePredicate, predicate.getKey());
       }
     }
 
@@ -167,7 +194,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   private String getExactMatchOrVerbatimField(InPredicate<S> predicate) {
     if (esFieldMapper.isTaxonomic(predicate.getKey())) {
-      return esFieldMapper.getChecklistField(getChecklistKey(predicate), predicate.getKey());
+      return getChecklistField(predicate, predicate.getKey());
     }
 
     return Optional.ofNullable(predicate.isMatchCase()).orElse(Boolean.FALSE)
@@ -572,7 +599,8 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     return predicate.getPredicates().stream()
         .filter(p -> p instanceof EqualsPredicate)
         .filter(p -> ((EqualsPredicate<?>) p).getChecklistKey() == null)
-        .filter(p -> !Boolean.TRUE.equals(((EqualsPredicate<?>) p).getDnaTaxonSearch()))
+        .filter(p -> ((EqualsPredicate<?>) p).getDnaAssistedChecklistKey() == null)
+        .filter(p -> !Boolean.TRUE.equals(((EqualsPredicate<?>) p).getUseDnaAssistance()))
         .map(p -> (EqualsPredicate<S>) p)
         .collect(Collectors.groupingBy(EqualsPredicate::getKey))
         .entrySet()
@@ -1012,7 +1040,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   }
 
   /**
-   * handles ISNULL Predicate. With the DNA taxon search the value has to be null in both
+   * handles ISNULL Predicate. With the DNA assistance the value has to be null in both
    * classifications, so this is always the negation of the ISNOTNULL predicate.
    */
   public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
