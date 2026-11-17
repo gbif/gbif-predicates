@@ -2147,6 +2147,304 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /** gbif/occurrence#630: an interval on a nested field was dropped, returning an empty query. */
+  @Test
+  public void nestedFieldRangeIntervalTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                new LessThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gte\": \"1000\",\n"
+            + "                      \"lte\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /** gbif/occurrence#630: same as above with exclusive bounds. */
+  @Test
+  public void nestedFieldExclusiveRangeIntervalTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                new LessThanPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gt\": \"1000\",\n"
+            + "                      \"lt\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * gbif/occurrence#630: an interval on a nested field must be combined with the other conditions
+   * on the same nested path and kept alongside non-nested conditions.
+   */
+  @Test
+  public void nestedFieldRangeIntervalWithOtherConditionsTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                new LessThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, "COI", false),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"DK\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gte\": \"1000\",\n"
+            + "                      \"lte\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                {\n"
+            + "                  \"term\": {\n"
+            + "                    \"nucleotide_sequence_target_gene.keyword\": {\n"
+            + "                      \"value\": \"COI\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * gbif/occurrence#630: inside an OR, a conjunction with a nested interval and a flat condition
+   * must keep both conditions instead of only the nested range.
+   */
+  @Test
+  public void nestedFieldRangeIntervalWithFlatConditionInDisjunctionTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new ConjunctionPredicate(
+                    List.of(
+                        new GreaterThanOrEqualsPredicate<>(
+                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                        new LessThanOrEqualsPredicate<>(
+                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),
+                        new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false))),
+                new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "ES", false)));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"filter\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"country\": {\n"
+            + "                        \"value\": \"DK\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"nested\": {\n"
+            + "                \"path\": \"nucleotideSequence\",\n"
+            + "                \"query\": {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"1000\",\n"
+            + "                            \"lte\": \"2000\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                \"score_mode\": \"none\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"term\": {\n"
+            + "                \"country\": {\n"
+            + "                  \"value\": \"ES\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * gbif/occurrence#630: negating a nested interval must exclude the range instead of an empty
+   * query, which excluded every record.
+   */
+  @Test
+  public void nestedFieldRangeIntervalInNotPredicateTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new NotPredicate(
+            new ConjunctionPredicate(
+                List.of(
+                    new GreaterThanOrEqualsPredicate<>(
+                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                    new LessThanOrEqualsPredicate<>(
+                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"))));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"exists\": {\n"
+            + "              \"field\": \"nucleotideSequence.sequenceLength\"\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ],\n"
+            + "    \"must_not\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"nested\": {\n"
+            + "                \"path\": \"nucleotideSequence\",\n"
+            + "                \"query\": {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"1000\",\n"
+            + "                            \"lte\": \"2000\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                \"score_mode\": \"none\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
   @Test
   public void conjunctionWithNotPredicateTest()
       throws QueryBuildingException, JsonProcessingException {
