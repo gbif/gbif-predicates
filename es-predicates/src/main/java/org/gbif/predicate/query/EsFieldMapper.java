@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.predicate.SimplePredicate;
 
@@ -22,14 +23,14 @@ public interface EsFieldMapper<P extends SearchParameter> {
 
   boolean isVocabulary(P searchParameter);
 
-  String getChecklistField(String checklistKey, P searchParameter);
+  String getChecklistField(UUID checklistKey, P searchParameter);
 
   /**
    * Returns the field of the DNA-assisted classification of the checklist. By default, it is the
    * checklist field nested under "dnaClassifications", e.g. {@code
    * dnaClassifications.classifications.<checklistKey>.taxonKeys}.
    */
-  default String getDnaChecklistField(String checklistKey, P searchParameter) {
+  default String getDnaChecklistField(UUID checklistKey, P searchParameter) {
     return "dnaClassifications." + getChecklistField(checklistKey, searchParameter);
   }
 

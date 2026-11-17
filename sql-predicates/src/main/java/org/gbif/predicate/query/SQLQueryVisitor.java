@@ -12,7 +12,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -121,7 +120,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   // used when there is a column that exists in more than one table
   private final SQLColumnsUtils sqlColumnsUtils;
 
-  private final UUID denormalisedTaxonomy;
+  private final UUID denormalizedTaxonomy;
 
   private final Map<UUID, String> checklistNestedStructMap;
 
@@ -135,7 +134,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * Constructor for SQLQueryVisitor.
    *
    * @param sqlTermsMapper mapper for search parameters to SQL terms
-   * @param denormalisedTaxonomy the checklist key (UUID) of the taxonomy that populates the non
+   * @param denormalizedTaxonomy the checklist key (UUID) of the taxonomy that populates the non
    *     nested struct columns in the table
    * @param checklistNestedStructMap the map of checklist keys to nested struct names for taxonomic
    *     queries
@@ -149,18 +148,18 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    */
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
-      String denormalisedTaxonomy,
-      Map<String, String> checklistNestedStructMap,
-      String defaultChecklistKey,
+      UUID denormalizedTaxonomy,
+      Map<UUID, String> checklistNestedStructMap,
+      UUID defaultChecklistKey,
       String disambiguationTable,
       int lambdaQueryThreshold,
-      Map<String, String> dnaChecklistNestedStructMap) {
-    // the checklist keys come as strings from the configuration, but they have to be UUIDs
-    this.denormalisedTaxonomy = UUID.fromString(denormalisedTaxonomy);
-    this.checklistNestedStructMap = toUuidKeys(checklistNestedStructMap);
-    this.dnaChecklistNestedStructMap = toUuidKeys(dnaChecklistNestedStructMap);
+      Map<UUID, String> dnaChecklistNestedStructMap) {
+    this.denormalizedTaxonomy = denormalizedTaxonomy;
+    this.checklistNestedStructMap = checklistNestedStructMap;
+    this.dnaChecklistNestedStructMap =
+        dnaChecklistNestedStructMap != null ? dnaChecklistNestedStructMap : Map.of();
     this.sqlTermsMapper = sqlTermsMapper;
-    this.defaultChecklistKey = UUID.fromString(defaultChecklistKey);
+    this.defaultChecklistKey = defaultChecklistKey;
     this.disambiguationTable = disambiguationTable;
     this.lambdaQueryThreshold = lambdaQueryThreshold;
     sqlColumnsUtils = new SQLColumnsUtils(disambiguationTable);
@@ -168,13 +167,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   public SQLQueryVisitor(
       SQLTermsMapper<S> sqlTermsMapper,
-      String denormalisedTaxonomy,
-      Map<String, String> checklistNestedStructMap,
-      String defaultChecklistKey,
+      UUID denormalizedTaxonomy,
+      Map<UUID, String> checklistNestedStructMap,
+      UUID defaultChecklistKey,
       String disambiguationTable) {
     this(
         sqlTermsMapper,
-        denormalisedTaxonomy,
+        denormalizedTaxonomy,
         checklistNestedStructMap,
         defaultChecklistKey,
         disambiguationTable,
@@ -185,6 +184,99 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   /** Transforms the value to the SQL statement lower(val). */
   protected String toSQLLower(String val) {
     return "lower(" + val + ")";
+  }
+
+  /**
+   * Escapes a value for use inside a single-quoted Hive/Spark SQL string literal. Backslashes are
+   * escaped first, so a user-supplied backslash can't be used to escape the closing quote.
+   */
+  public static String escapeSQLString(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Null values cannot be used in a SQL string literal");
+    }
+    StringBuilder sb = new StringBuilder(value.length() + 8);
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      switch (c) {
+        case '\\':
+          sb.append("\\\\");
+          break;
+        case '\'':
+          sb.append("\\'");
+          break;
+        default:
+          sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  /** Escapes and single-quotes a value as a Hive/Spark SQL string literal. */
+  public static String quote(String value) {
+    return '\'' + escapeSQLString(value) + '\'';
+  }
+
+  /**
+   * Converts a user wildcard pattern (* and ?) to the body of a quoted SQL LIKE pattern. SQL LIKE
+   * wildcards (% and _) and backslashes in the user's value are matched literally.
+   *
+   * <p>The returned value is already escaped for use inside a single-quoted literal.
+   */
+  protected static String toSQLLikePatternBody(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Null values cannot be used in a LIKE pattern");
+    }
+    StringBuilder sb = new StringBuilder(value.length() + 8);
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      switch (c) {
+        case '%':
+          // Hive and Spark keep the backslash in '\%' and '\_', so LIKE sees an escaped wildcard.
+          sb.append("\\%");
+          break;
+        case '_':
+          sb.append("\\_");
+          break;
+        case '*':
+          sb.append('%');
+          break;
+        case '?':
+          sb.append('_');
+          break;
+        case '\\':
+          // Escaped once for LIKE and once for the string literal.
+          sb.append("\\\\\\\\");
+          break;
+        default:
+          sb.append(escapeSQLString(String.valueOf(c)));
+      }
+    }
+    return sb.toString();
+  }
+
+  /** Checks that a value is a plain decimal number, so it can be written unquoted. */
+  protected static String requireNumeric(String value) {
+    if (value == null) {
+      throw new IllegalArgumentException("Null is not a valid number");
+    }
+    String trimmed = value.trim();
+    try {
+      new java.math.BigDecimal(trimmed);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Not a valid number: " + value, e);
+    }
+    return trimmed;
+  }
+
+  /** Checks that a value is a boolean, so it can be written unquoted. */
+  protected static String requireBoolean(String value) {
+    if (value != null) {
+      String trimmed = value.trim();
+      if ("true".equalsIgnoreCase(trimmed) || "false".equalsIgnoreCase(trimmed)) {
+        return trimmed;
+      }
+    }
+    throw new IllegalArgumentException("Not a valid boolean: " + value);
   }
 
   protected String toSQLField(S param, boolean matchCase) {
@@ -247,16 +339,15 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    */
   protected String toSQLValue(S param, String value, boolean matchCase) {
     if (OccurrenceStatus.class.isAssignableFrom(param.type())) {
-      return '\''
-          + VocabularyUtils.lookup(value, OccurrenceStatus.class)
+      return quote(
+          VocabularyUtils.lookup(value, OccurrenceStatus.class)
               .map(OccurrenceStatus::normalize)
               .map(Enum::name)
-              .orElse(value.toUpperCase())
-          + '\'';
+              .orElse(value.toUpperCase()));
     }
     if (Enum.class.isAssignableFrom(param.type())) {
       // all enum parameters are uppercase
-      return '\'' + value.toUpperCase() + '\'';
+      return quote(value.toUpperCase());
     }
 
     if (Date.class.isAssignableFrom(param.type())) {
@@ -269,14 +360,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         return String.valueOf(i.getEpochSecond());
       }
 
-    } else if (Number.class.isAssignableFrom(param.type())
-        || Boolean.class.isAssignableFrom(param.type())) {
-      // do not quote numbers
-      return value;
+    } else if (Number.class.isAssignableFrom(param.type())) {
+      // do not quote numbers, but make sure they really are numbers
+      return requireNumeric(value);
+
+    } else if (Boolean.class.isAssignableFrom(param.type())) {
+      return requireBoolean(value);
 
     } else {
-      // quote value, escape existing quotes
-      String strVal = '\'' + value.replaceAll("'", "\\\\'") + '\'';
+      // quote and escape the value
+      String strVal = quote(value);
       if (String.class.isAssignableFrom(param.type())
           && !"GEOMETRY".equals(param.name())
           && OccurrenceSearchParameter.GEOLOGICAL_TIME != param
@@ -369,12 +462,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     }
   }
 
-  public Function<Term, String> getArrayFn() {
-    return t -> "stringArrayContains(" + sqlColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+  private String arrayContains(Term term, String value, boolean matchCase) {
+    return String.format(
+        "stringArrayContains(%s,'%s',%b)",
+        sqlColumnsUtils.getSQLQueryColumn(term), escapeSQLString(value), matchCase);
   }
 
-  public Function<Term, String> getArrayLikeFn() {
-    return t -> "stringArrayLike(" + sqlColumnsUtils.getSQLQueryColumn(t) + ",'%s',%b)";
+  private String arrayLike(Term term, String value, boolean matchCase) {
+    return String.format(
+        "stringArrayLike(%s,'%s',%b)",
+        sqlColumnsUtils.getSQLQueryColumn(term), escapeSQLString(value), matchCase);
   }
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
@@ -414,18 +511,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       Optional.ofNullable(VocabularyUtils.lookupEnum(predicate.getValue(), MediaType.class))
           .ifPresent(
               mediaType ->
-                  builder.append(
-                      String.format(
-                          getArrayFn().apply(GbifTerm.mediaType), mediaType.name(), true)));
+                  builder.append(arrayContains(GbifTerm.mediaType, mediaType.name(), true)));
     } else if (predicate.getKey() == OccurrenceSearchParameter.ISSUE) {
-      builder.append(
-          String.format(
-              getArrayFn().apply(GbifTerm.issue), predicate.getValue().toUpperCase(), true));
+      builder.append(arrayContains(GbifTerm.issue, predicate.getValue().toUpperCase(), true));
     } else if (isSQLArray(predicate.getKey())) {
       builder.append(
-          String.format(
-              getArrayFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
-              predicate.getValue().replaceAll("'", "\\\\'"),
+          arrayContains(
+              sqlTermsMapper.getTermArray(predicate.getKey()),
+              predicate.getValue(),
               predicate.isMatchCase()));
     } else if (sqlTermsMapper.isDenormedTerm(predicate.getKey())) {
       builder
@@ -442,8 +535,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           .append("))")
           .append(")");
     } else if (SQLColumnsUtils.isVocabulary(term(predicate.getKey()))) {
-      builder.append(
-          String.format(getArrayFn().apply(term(predicate.getKey())), predicate.getValue(), false));
+      builder.append(arrayContains(term(predicate.getKey()), predicate.getValue(), false));
     } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {
       // Dates may contain a range even for an EqualsPredicate (e.g. "2000" or "2000-02")
       // The user's query value is inclusive, but the parsed dateRange is exclusive of the
@@ -526,14 +618,15 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               .append(range.upperEndpoint());
         }
       } else {
+        String value = requireNumeric(predicate.getValue());
         builder
             .append(GEOLOGICAL_TIME_GT_COLUMN)
             .append(GREATER_THAN_EQUALS_OPERATOR)
-            .append(predicate.getValue())
+            .append(value)
             .append(CONJUNCTION_OPERATOR)
             .append(GEOLOGICAL_TIME_LTE_COLUMN)
             .append(LESS_THAN_EQUALS_OPERATOR)
-            .append(predicate.getValue());
+            .append(value);
       }
     } else {
       visitSimplePredicate(predicate, EQUALS_OPERATOR);
@@ -550,7 +643,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               String.format(
                   "stringArrayContains(%s, '%s', true)",
                   resolveTaxonColumnName("taxonkeys", predicate.getChecklistKey(), dnaAssisted),
-                  predicate.getValue()))
+                  escapeSQLString(predicate.getValue())))
           .append(')');
     } else if (isTaxonomicArrayParameter(predicate.getKey())) {
       // special case for taxonomic issues and environments, which are stored in an ARRAY, the
@@ -564,10 +657,10 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                       taxonomicArrayColumn(predicate.getKey()),
                       predicate.getChecklistKey(),
                       dnaAssisted),
-                  predicate.getValue()))
+                  escapeSQLString(predicate.getValue())))
           .append(')');
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
-      // special case for IUCN to make case insensitive for backwards compatibility
+      // special case for IUCN to make case-insensitive for backwards compatibility
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       builder
           .append(
@@ -575,27 +668,20 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
                   + resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted)
                   + ")")
           .append(EQUALS_OPERATOR)
-          .append("lower('")
-          .append(predicate.getValue())
-          .append("')");
+          .append(toSQLLower(quote(predicate.getValue())));
     } else {
       String columnName = sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey()));
       String resolvedColumn =
           resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted);
-      String escapedValue = predicate.getValue().replaceAll("'", "\\\\'");
+      String quotedValue = quote(predicate.getValue());
       if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
           && !predicate.isMatchCase()) {
         builder
             .append(toSQLLower(resolvedColumn))
             .append(EQUALS_OPERATOR)
-            .append(toSQLLower("'" + escapedValue + "'"));
+            .append(toSQLLower(quotedValue));
       } else {
-        builder
-            .append(resolvedColumn)
-            .append(EQUALS_OPERATOR)
-            .append('\'')
-            .append(escapedValue)
-            .append('\'');
+        builder.append(resolvedColumn).append(EQUALS_OPERATOR).append(quotedValue);
       }
     }
   }
@@ -632,7 +718,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
               + " is not mapped to a DNA-assisted nested struct in the table. Please add it to the"
               + " dnaChecklistNestedStructMap.");
     }
-    if (!denormalisedTaxonomy.equals(checklistKey)) {
+    if (!denormalizedTaxonomy.equals(checklistKey)) {
       if (checklistNestedStructMap.containsKey(checklistKey)) {
         queryFieldPrefix =
             disambiguationTable + "." + checklistNestedStructMap.get(checklistKey) + ".";
@@ -670,7 +756,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder
           .append(GEOLOGICAL_TIME_GT_COLUMN)
           .append(GREATER_THAN_EQUALS_OPERATOR)
-          .append(predicate.getValue());
+          .append(requireNumeric(predicate.getValue()));
     } else {
       visitSimplePredicate(predicate, GREATER_THAN_EQUALS_OPERATOR);
     }
@@ -703,7 +789,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder
           .append(GEOLOGICAL_TIME_LTE_COLUMN)
           .append(GREATER_THAN_OPERATOR)
-          .append(predicate.getValue());
+          .append(requireNumeric(predicate.getValue()));
     } else {
       visitSimplePredicate(predicate, GREATER_THAN_OPERATOR);
     }
@@ -729,7 +815,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder
           .append(GEOLOGICAL_TIME_LTE_COLUMN)
           .append(LESS_THAN_EQUALS_OPERATOR)
-          .append(predicate.getValue());
+          .append(requireNumeric(predicate.getValue()));
     } else {
       visitSimplePredicate(predicate, LESS_THAN_EQUALS_OPERATOR);
     }
@@ -757,7 +843,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder
           .append(GEOLOGICAL_TIME_GT_COLUMN)
           .append(LESS_THAN_OPERATOR)
-          .append(predicate.getValue());
+          .append(requireNumeric(predicate.getValue()));
     } else {
       visitSimplePredicate(predicate, LESS_THAN_OPERATOR);
     }
@@ -857,6 +943,8 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     } else if (predicate.getKey() == OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY) {
       appendTaxonomicSingleValueFilterCaseInsensitive(
           predicate, "iucnredlistcategory", dnaAssisted);
+    } else if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME) {
+      appendScientificNameInFilter(predicate, isMatchCase, dnaAssisted);
     } else if (predicate.getKey() == OccurrenceSearchParameter.GADM_GID) {
       // GADM GIDs must be expanded into a disjunction of in predicates
       appendGadmGidFilter(predicate.getValues());
@@ -947,22 +1035,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       throws QueryBuildingException {
     if (sqlTermsMapper.isArray(predicate.getKey())) {
       builder.append(
-          String.format(
-              getArrayLikeFn().apply(sqlTermsMapper.getTermArray(predicate.getKey())),
-              predicate.getValue().replaceAll("'", "\\\\'"),
+          arrayLike(
+              sqlTermsMapper.getTermArray(predicate.getKey()),
+              predicate.getValue(),
               predicate.isMatchCase()));
     } else {
-      // Replace % → \% and _ → \_
-      // Then replace * → % and ? → _
-      // The escaped value is kept as a plain string: wrapping it in a new predicate would fail the
-      // value validation of gbif-api.
+      // % → \%, _ → \_, \ → \\, then * → % and ? → _, escaped for the string literal.
       String likeValue =
-          predicate
-              .getValue()
-              .replace("%", "\\%")
-              .replace("_", "\\_")
-              .replace('*', '%')
-              .replace('?', '_');
+          toSQLLikeValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase());
 
       if (TAXON_SEARCH_PARAMETERS.contains(predicate.getKey())) {
 
@@ -971,20 +1051,32 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             resolveTaxonColumnName(columnName, predicate.getChecklistKey(), dnaAssisted);
         if (predicate.getKey() == OccurrenceSearchParameter.SCIENTIFIC_NAME
             && !predicate.isMatchCase()) {
-          builder
-              .append(toSQLLower(resolvedColumn))
-              .append(LIKE_OPERATOR)
-              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
+          builder.append(toSQLLower(resolvedColumn)).append(LIKE_OPERATOR).append(likeValue);
         } else {
-          builder
-              .append(resolvedColumn)
-              .append(LIKE_OPERATOR)
-              .append(toSQLValue(predicate.getKey(), likeValue, predicate.isMatchCase()));
+          builder.append(resolvedColumn).append(LIKE_OPERATOR).append(likeValue);
         }
       } else {
-        visitSimplePredicate(predicate, LIKE_OPERATOR, likeValue);
+        appendSimplePredicate(predicate, LIKE_OPERATOR, likeValue);
       }
     }
+  }
+
+  /**
+   * Converts a user wildcard value into a quoted SQL LIKE pattern, lowercased in the same cases as
+   * {@link #toSQLValue(SearchParameter, String, boolean)}.
+   */
+  protected String toSQLLikeValue(S param, String value, boolean matchCase) {
+    if (Enum.class.isAssignableFrom(param.type())) {
+      return '\'' + toSQLLikePatternBody(value.toUpperCase()) + '\'';
+    }
+    String strVal = '\'' + toSQLLikePatternBody(value) + '\'';
+    if (String.class.isAssignableFrom(param.type())
+        && !"GEOMETRY".equals(param.name())
+        && OccurrenceSearchParameter.GEOLOGICAL_TIME != param
+        && !matchCase) {
+      return toSQLLower(strVal);
+    }
+    return strVal;
   }
 
   public void visit(NotPredicate predicate) throws QueryBuildingException {
@@ -1170,9 +1262,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         withinGeometry = within.getGeometry();
       }
       builder
-          .append("contains('")
-          .append(withinGeometry)
-          .append("', ")
+          .append("contains(")
+          .append(quote(withinGeometry))
+          .append(", ")
           .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
           .append(", ")
           .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude));
@@ -1192,9 +1284,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(geoDistance.getGeoDistance().getLatitude())
         .append(", ")
         .append(geoDistance.getGeoDistance().getLongitude())
-        .append(", '")
-        .append(geoDistance.getGeoDistance().getDistance().toString())
-        .append("', ")
+        .append(", ")
+        .append(quote(geoDistance.getGeoDistance().getDistance().toString()))
+        .append(", ")
         .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLatitude))
         .append(", ")
         .append(sqlColumnsUtils.getSQLQueryColumn(DwcTerm.decimalLongitude))
@@ -1278,36 +1370,26 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       }
     }
 
-    if (sqlTermsMapper.includeNullInPredicate(predicate)) {
-      String column = sqlColumnsUtils.getSQLColumn(term(predicate.getKey()));
-      builder
-          .append('(')
-          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
-          .append(op)
-          .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()))
-          .append(DISJUNCTION_OPERATOR)
-          .append(
-              isSQLArray(predicate.getKey())
-                  ? String.format(IS_NOT_NULL_ARRAY_OPERATOR, column)
-                  : column + IS_NULL_OPERATOR)
-          .append(')');
-    } else {
-      builder
-          .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
-          .append(op)
-          .append(toSQLValue(predicate.getKey(), predicate.getValue(), predicate.isMatchCase()));
-    }
+    visitSimplePredicate(predicate, op, predicate.getValue());
   }
 
   public void visitSimplePredicate(SimplePredicate<S> predicate, String op, String value)
       throws QueryBuildingException {
+    appendSimplePredicate(
+        predicate, op, toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
+  }
+
+  /**
+   * Appends "field op value", where sqlValue has already been converted to a safe SQL expression.
+   */
+  private void appendSimplePredicate(SimplePredicate<S> predicate, String op, String sqlValue) {
     if (sqlTermsMapper.includeNullInPredicate(predicate)) {
       String column = sqlColumnsUtils.getSQLColumn(term(predicate.getKey()));
       builder
           .append('(')
           .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
           .append(op)
-          .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()))
+          .append(sqlValue)
           .append(DISJUNCTION_OPERATOR)
           .append(
               isSQLArray(predicate.getKey())
@@ -1318,7 +1400,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       builder
           .append(toSQLField(predicate.getKey(), predicate.isMatchCase()))
           .append(op)
-          .append(toSQLValue(predicate.getKey(), value, predicate.isMatchCase()));
+          .append(sqlValue);
     }
   }
 
@@ -1344,11 +1426,11 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append('(')
         .append(
             String.format(
-                "stringArrayContains(%s['%s']['%s'], '%s', true)",
+                "stringArrayContains(%s['%s']['%s'], %s, true)",
                 sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
                 Objects.requireNonNull(getChecklistKey(checklistKey)),
                 field,
-                value))
+                quote(value)))
         .append(')');
   }
 
@@ -1364,18 +1446,16 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
       return;
     }
 
-    Set<String> taxonKeys =
-        taxonPredicate.getValues().stream()
-            .map(v -> toSQLValue(taxonPredicate.getKey(), v, true))
-            .collect(Collectors.toSet());
+    // formatArray quotes and escapes the values
+    Set<String> taxonKeys = new HashSet<>(taxonPredicate.getValues());
 
     builder
         .append('(')
         .append(
             String.format(
-                "arrays_overlap(%s['%s']['%s'], array(%s))",
+                "arrays_overlap(%s[%s]['%s'], array(%s))",
                 sqlColumnsUtils.getSQLQueryColumn(EcoTerm.targetTaxonomicScope),
-                getChecklistKey(taxonPredicate.getChecklistKey()),
+                quote(getChecklistKey(taxonPredicate.getChecklistKey()).toString()),
                 field,
                 formatArray(taxonKeys)))
         .append(')');
@@ -1412,16 +1492,14 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(')');
   }
 
+  /** Quotes and escapes raw (unquoted) values as a comma-separated list of string literals. */
   private String formatArray(Collection<String> values) {
-    return values.stream()
-        .map(v -> "'" + v.replace("'", "") + "'")
-        .collect(Collectors.joining(","));
+    return values.stream().map(SQLQueryVisitor::quote).collect(Collectors.joining(","));
   }
 
+  /** As {@link #formatArray(Collection)}, wrapping each literal in lower(). */
   private String formatArrayLowerCase(Collection<String> values) {
-    return values.stream()
-        .map(v -> "lower('" + v.replace("'", "") + "')")
-        .collect(Collectors.joining(","));
+    return values.stream().map(v -> toSQLLower(quote(v))).collect(Collectors.joining(","));
   }
 
   /**
@@ -1459,6 +1537,29 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   /** Creates a disjunction of all the given terms. */
+  /**
+   * Scientific names are searched in the classification of the checklist, like the other taxon
+   * parameters.
+   */
+  private void appendScientificNameInFilter(
+      InPredicate<S> predicate, boolean matchCase, boolean dnaAssisted) {
+    String column =
+        resolveTaxonColumnName(
+            sqlColumnsUtils.getSQLQueryColumn(term(predicate.getKey())),
+            predicate.getChecklistKey(),
+            dnaAssisted);
+    builder
+        .append('(')
+        .append(matchCase ? column : toSQLLower(column))
+        .append(IN_OPERATOR)
+        .append('(')
+        .append(
+            predicate.getValues().stream()
+                .map(v -> toSQLValue(predicate.getKey(), v, matchCase))
+                .collect(Collectors.joining(", ")))
+        .append("))");
+  }
+
   private void appendGadmFilterList(List<? extends Term> terms, String value) {
     builder
         .append('(')
@@ -1466,11 +1567,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             terms.stream()
                 .map(
                     term ->
-                        sqlColumnsUtils.getSQLQueryColumn(term)
-                            + EQUALS_OPERATOR
-                            + "'"
-                            + value
-                            + "'")
+                        sqlColumnsUtils.getSQLQueryColumn(term) + EQUALS_OPERATOR + quote(value))
                 .collect(Collectors.joining(DISJUNCTION_OPERATOR)))
         .append(')');
   }
@@ -1482,11 +1579,9 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    */
   private void appendTaxonKeyArrayFilter(InPredicate<S> taxonomicPredicate, boolean dnaAssisted) {
 
+    // formatArray quotes and escapes the values
     List<String> taxonKeys =
-        taxonomicPredicate.getValues().stream()
-            .map(v -> toSQLValue(taxonomicPredicate.getKey(), v, true))
-            .distinct()
-            .collect(Collectors.toList());
+        taxonomicPredicate.getValues().stream().distinct().collect(Collectors.toList());
 
     // if the set is huge, use the lambda EXISTS function
     // if not, use the arrays_overlap function
@@ -1674,14 +1769,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private UUID getChecklistKey(UUID checklistKey) {
     return checklistKey != null ? checklistKey : defaultChecklistKey;
-  }
-
-  private static Map<UUID, String> toUuidKeys(Map<String, String> checklistKeyMap) {
-    if (checklistKeyMap == null) {
-      return Map.of();
-    }
-    return checklistKeyMap.entrySet().stream()
-        .collect(Collectors.toMap(e -> UUID.fromString(e.getKey()), Map.Entry::getValue));
   }
 
   /** Taxon parameters stored as ARRAY columns, both top-level and in the classification struct. */

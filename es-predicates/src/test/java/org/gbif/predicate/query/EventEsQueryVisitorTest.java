@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
+import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
 import org.gbif.api.model.predicate.ConjunctionPredicate;
 import org.gbif.api.model.predicate.DisjunctionPredicate;
@@ -57,7 +58,7 @@ public class EventEsQueryVisitorTest {
 
   private final EsFieldMapper<EventSearchParameter> fieldMapper = new EventEsFieldMapperTest();
   private final EventEsQueryVisitor visitor =
-      new EventEsQueryVisitor(fieldMapper, "defaultChecklistKey");
+      new EventEsQueryVisitor(fieldMapper, Constants.COL_DATASET_KEY);
 
   private void assertQueryEquals(String expectedJson, String actualQuery)
       throws JsonProcessingException {
@@ -1557,12 +1558,12 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b")),
+                    Constants.NUB_DATASET_KEY),
                 new EqualsPredicate<>(
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    UUID.fromString("9ca92552-f23a-41a8-a140-01abaa31c931"))));
+                    Constants.COL_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1574,7 +1575,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
+              + "                          \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:1\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1587,7 +1588,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.9ca92552-f23a-41a8-a140-01abaa31c931.taxonKeys\": {\n"
+              + "                          \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1618,12 +1619,12 @@ public class EventEsQueryVisitorTest {
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:1",
                     false,
-                    UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b")),
+                    Constants.COL_DATASET_KEY),
                 new EqualsPredicate<>(
                     EventSearchParameter.TAXON_KEY,
                     "urn:lsid:marinespecies.org:taxname:2",
                     false,
-                    UUID.fromString("9ca92552-f23a-41a8-a140-01abaa31c931"))));
+                    Constants.NUB_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1648,7 +1649,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"term\": {\n"
-              + "                          \"classifications.9ca92552-f23a-41a8-a140-01abaa31c931.taxonKeys\": {\n"
+              + "                          \"classifications.d7dddbf4-2cf0-4f39-9b2a-bb099caae36c.taxonKeys\": {\n"
               + "                            \"value\": \"urn:lsid:marinespecies.org:taxname:2\"\n"
               + "                          }\n"
               + "                        }\n"
@@ -1671,12 +1672,9 @@ public class EventEsQueryVisitorTest {
     DisjunctionPredicate predicate =
         new DisjunctionPredicate(
             Arrays.asList(
-                new IsNotNullPredicate<>(
-                    EventSearchParameter.TAXON_KEY,
-                    UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c")),
+                new IsNotNullPredicate<>(EventSearchParameter.TAXON_KEY, Constants.COL_DATASET_KEY),
                 new IsNullPredicate<>(
-                    EventSearchParameter.SCIENTIFIC_NAME,
-                    UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c"))));
+                    EventSearchParameter.SCIENTIFIC_NAME, Constants.COL_DATASET_KEY)));
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1688,7 +1686,7 @@ public class EventEsQueryVisitorTest {
               + "                    \"filter\": [\n"
               + "                      {\n"
               + "                        \"exists\": {\n"
-              + "                          \"field\": \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.taxonKeys\"\n"
+              + "                          \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\"\n"
               + "                        }\n"
               + "                      }\n"
               + "                    ]\n"
@@ -1702,7 +1700,7 @@ public class EventEsQueryVisitorTest {
               + "                          \"must_not\": [\n"
               + "                            {\n"
               + "                              \"exists\": {\n"
-              + "                                \"field\": \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.usage.name\"\n"
+              + "                                \"field\": \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\"\n"
               + "                              }\n"
               + "                            }\n"
               + "                          ]\n"
@@ -1725,10 +1723,7 @@ public class EventEsQueryVisitorTest {
 
     LikePredicate predicate =
         new LikePredicate<>(
-            EventSearchParameter.SCIENTIFIC_NAME,
-            "Acacia",
-            UUID.fromString("a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c"),
-            false);
+            EventSearchParameter.SCIENTIFIC_NAME, "Acacia", Constants.COL_DATASET_KEY, false);
     try {
       String query = visitor.buildQuery(predicate);
       String expectedQuery =
@@ -1737,7 +1732,7 @@ public class EventEsQueryVisitorTest {
               + "              \"filter\": [\n"
               + "                {\n"
               + "                  \"wildcard\": {\n"
-              + "                    \"classifications.a9ffb4b9-f9c6-4b6f-9e2f-3a6b8a1d8b6c.usage.name\": {\n"
+              + "                    \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.usage.name\": {\n"
               + "                      \"value\": \"Acacia\"\n"
               + "                    }\n"
               + "                  }\n"

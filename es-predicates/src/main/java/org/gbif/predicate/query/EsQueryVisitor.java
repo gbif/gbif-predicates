@@ -62,9 +62,9 @@ import org.locationtech.jts.io.WKTReader;
 public abstract class EsQueryVisitor<S extends SearchParameter> implements QueryVisitor {
 
   private final EsFieldMapper<S> esFieldMapper;
-  private final String defaultChecklistKey;
+  private final UUID defaultChecklistKey;
 
-  private String getChecklistKey(Predicate predicate) {
+  private UUID getChecklistKey(Predicate predicate) {
 
     if (predicate == null) return null;
 
@@ -72,8 +72,8 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
     try {
       Method m = clazz.getMethod("getChecklistKey");
-      Object checklistKey = m.invoke(predicate);
-      if (checklistKey != null) return checklistKey.toString();
+      UUID checklistKey = (UUID) m.invoke(predicate);
+      if (checklistKey != null) return checklistKey;
       return defaultChecklistKey;
     } catch (Exception e) {
       return null;
@@ -81,7 +81,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   }
 
   /** Returns the dnaAssistedChecklistKey of the predicate, or null if it doesn't have one. */
-  private static String getDnaAssistedChecklistKey(Predicate predicate) {
+  private static UUID getDnaAssistedChecklistKey(Predicate predicate) {
     UUID dnaAssistedChecklistKey = null;
     if (predicate instanceof EqualsPredicate) {
       dnaAssistedChecklistKey = ((EqualsPredicate<?>) predicate).getDnaAssistedChecklistKey();
@@ -94,7 +94,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     } else if (predicate instanceof IsNullPredicate) {
       dnaAssistedChecklistKey = ((IsNullPredicate<?>) predicate).getDnaAssistedChecklistKey();
     }
-    return dnaAssistedChecklistKey != null ? dnaAssistedChecklistKey.toString() : null;
+    return dnaAssistedChecklistKey;
   }
 
   /**
@@ -103,7 +103,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * the useDnaAssistance flag is used and for the Humboldt parameters.
    */
   private String getChecklistField(Predicate predicate, S parameter) {
-    String dnaAssistedChecklistKey = getDnaAssistedChecklistKey(predicate);
+    UUID dnaAssistedChecklistKey = getDnaAssistedChecklistKey(predicate);
     if (dnaAssistedChecklistKey != null
         && !isUseDnaAssistance(predicate)
         && !isHumboldtParameter(parameter)) {
@@ -144,7 +144,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   private Query addDnaTaxonQuery(
       Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
-    String checklistKey = getChecklistKey(predicate);
+    UUID checklistKey = getChecklistKey(predicate);
     if (checklistKey == null
         || !esFieldMapper.isTaxonomic(parameter)
         || isHumboldtParameter(parameter)
