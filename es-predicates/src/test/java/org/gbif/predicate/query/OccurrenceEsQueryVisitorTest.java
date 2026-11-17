@@ -2189,6 +2189,48 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /** gbif/occurrence#630: same as above with exclusive bounds. */
+  @Test
+  public void nestedFieldExclusiveRangeIntervalTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                new LessThanPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gt\": \"1000\",\n"
+            + "                      \"lt\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
   /**
    * gbif/occurrence#630: an interval on a nested field must be combined with the other conditions
    * on the same nested path and kept alongside non-nested conditions.
