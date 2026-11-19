@@ -64,7 +64,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   private static final String CONJUNCTION_OPERATOR = " AND ";
   private static final String DISJUNCTION_OPERATOR = " OR ";
-
   private static final String EQUALS_OPERATOR = " = ";
   private static final String IN_OPERATOR = " IN";
   private static final String GREATER_THAN_OPERATOR = " > ";
@@ -1534,7 +1533,6 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append(')');
   }
 
-  /** Creates a disjunction of all the given terms. */
   /**
    * Scientific names are searched in the classification of the checklist, like the other taxon
    * parameters.
@@ -1558,6 +1556,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         .append("))");
   }
 
+  /** Creates a disjunction of all the given terms. */
   private void appendGadmFilterList(List<? extends Term> terms, String value) {
     builder
         .append('(')
