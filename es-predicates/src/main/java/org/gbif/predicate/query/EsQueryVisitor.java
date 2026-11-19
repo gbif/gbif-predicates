@@ -412,8 +412,11 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               bounds.get(0),
               rangeQuery(esFieldMapper.getExactMatchFieldName(key), gte, lte, gt, lt, null));
       if (esFieldMapper.isNestedField(key)) {
-        queryData.rawQueries = List.of(q);
-        queryData.nestedPath = esFieldMapper.getNestedPath(key);
+        // grouped with the other conditions on the same nested path so it's wrapped in a single
+        // nested query below (gbif/occurrence#630)
+        queriesByNestedPath
+            .computeIfAbsent(esFieldMapper.getNestedPath(key), k -> new ArrayList<>())
+            .add(q);
       } else {
         queryData.filterQueries.add(q);
         nonNestedQueriesFound = true;
