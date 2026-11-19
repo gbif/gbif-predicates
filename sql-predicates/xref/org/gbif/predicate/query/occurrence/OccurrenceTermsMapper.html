@@ -332,142 +332,143 @@
 <a class="jxr_linenumber" name="L324" href="#L324">324</a>     paramMap.put(OccurrenceSearchParameter.IS_IN_CLUSTER, GbifInternalTerm.isInCluster);
 <a class="jxr_linenumber" name="L325" href="#L325">325</a>     paramMap.put(OccurrenceSearchParameter.DWCA_EXTENSION, GbifInternalTerm.dwcaExtension);
 <a class="jxr_linenumber" name="L326" href="#L326">326</a>     paramMap.put(OccurrenceSearchParameter.IUCN_RED_LIST_CATEGORY, IucnTerm.iucnRedListCategory);
-<a class="jxr_linenumber" name="L327" href="#L327">327</a>     paramMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);
-<a class="jxr_linenumber" name="L328" href="#L328">328</a>     paramMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);
-<a class="jxr_linenumber" name="L329" href="#L329">329</a>     paramMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);
-<a class="jxr_linenumber" name="L330" href="#L330">330</a>     paramMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);
-<a class="jxr_linenumber" name="L331" href="#L331">331</a>     paramMap.put(
-<a class="jxr_linenumber" name="L332" href="#L332">332</a>         OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,
-<a class="jxr_linenumber" name="L333" href="#L333">333</a>         GbifTerm.distanceFromCentroidInMeters);
-<a class="jxr_linenumber" name="L334" href="#L334">334</a>     paramMap.put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID);
-<a class="jxr_linenumber" name="L335" href="#L335">335</a>     paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
-<a class="jxr_linenumber" name="L336" href="#L336">336</a>     paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte);
-<a class="jxr_linenumber" name="L337" href="#L337">337</a>     paramMap.put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);
-<a class="jxr_linenumber" name="L338" href="#L338">338</a>     paramMap.put(
-<a class="jxr_linenumber" name="L339" href="#L339">339</a>         OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);
-<a class="jxr_linenumber" name="L340" href="#L340">340</a>     paramMap.put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced);
-<a class="jxr_linenumber" name="L341" href="#L341">341</a>     paramMap.put(OccurrenceSearchParameter.ISLAND, DwcTerm.island);
-<a class="jxr_linenumber" name="L342" href="#L342">342</a>     paramMap.put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);
-<a class="jxr_linenumber" name="L343" href="#L343">343</a>     paramMap.put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);
-<a class="jxr_linenumber" name="L344" href="#L344">344</a>     paramMap.put(
-<a class="jxr_linenumber" name="L345" href="#L345">345</a>         OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,
-<a class="jxr_linenumber" name="L346" href="#L346">346</a>         DwcTerm.earliestEonOrLowestEonothem);
-<a class="jxr_linenumber" name="L347" href="#L347">347</a>     paramMap.put(
-<a class="jxr_linenumber" name="L348" href="#L348">348</a>         OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,
-<a class="jxr_linenumber" name="L349" href="#L349">349</a>         DwcTerm.latestEonOrHighestEonothem);
-<a class="jxr_linenumber" name="L350" href="#L350">350</a>     paramMap.put(
-<a class="jxr_linenumber" name="L351" href="#L351">351</a>         OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,
-<a class="jxr_linenumber" name="L352" href="#L352">352</a>         DwcTerm.earliestEraOrLowestErathem);
-<a class="jxr_linenumber" name="L353" href="#L353">353</a>     paramMap.put(
-<a class="jxr_linenumber" name="L354" href="#L354">354</a>         OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM, DwcTerm.latestEraOrHighestErathem);
-<a class="jxr_linenumber" name="L355" href="#L355">355</a>     paramMap.put(
-<a class="jxr_linenumber" name="L356" href="#L356">356</a>         OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,
-<a class="jxr_linenumber" name="L357" href="#L357">357</a>         DwcTerm.earliestPeriodOrLowestSystem);
-<a class="jxr_linenumber" name="L358" href="#L358">358</a>     paramMap.put(
-<a class="jxr_linenumber" name="L359" href="#L359">359</a>         OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,
-<a class="jxr_linenumber" name="L360" href="#L360">360</a>         DwcTerm.latestPeriodOrHighestSystem);
-<a class="jxr_linenumber" name="L361" href="#L361">361</a>     paramMap.put(
-<a class="jxr_linenumber" name="L362" href="#L362">362</a>         OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,
-<a class="jxr_linenumber" name="L363" href="#L363">363</a>         DwcTerm.earliestEpochOrLowestSeries);
-<a class="jxr_linenumber" name="L364" href="#L364">364</a>     paramMap.put(
-<a class="jxr_linenumber" name="L365" href="#L365">365</a>         OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,
-<a class="jxr_linenumber" name="L366" href="#L366">366</a>         DwcTerm.latestEpochOrHighestSeries);
-<a class="jxr_linenumber" name="L367" href="#L367">367</a>     paramMap.put(
-<a class="jxr_linenumber" name="L368" href="#L368">368</a>         OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE, DwcTerm.earliestAgeOrLowestStage);
-<a class="jxr_linenumber" name="L369" href="#L369">369</a>     paramMap.put(
-<a class="jxr_linenumber" name="L370" href="#L370">370</a>         OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE, DwcTerm.latestAgeOrHighestStage);
-<a class="jxr_linenumber" name="L371" href="#L371">371</a>     paramMap.put(
-<a class="jxr_linenumber" name="L372" href="#L372">372</a>         OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE, DwcTerm.lowestBiostratigraphicZone);
-<a class="jxr_linenumber" name="L373" href="#L373">373</a>     paramMap.put(
-<a class="jxr_linenumber" name="L374" href="#L374">374</a>         OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,
-<a class="jxr_linenumber" name="L375" href="#L375">375</a>         DwcTerm.highestBiostratigraphicZone);
-<a class="jxr_linenumber" name="L376" href="#L376">376</a>     paramMap.put(OccurrenceSearchParameter.GROUP, DwcTerm.group);
-<a class="jxr_linenumber" name="L377" href="#L377">377</a>     paramMap.put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation);
-<a class="jxr_linenumber" name="L378" href="#L378">378</a>     paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);
-<a class="jxr_linenumber" name="L379" href="#L379">379</a>     paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);
-<a class="jxr_linenumber" name="L380" href="#L380">380</a>     paramMap.put(OccurrenceSearchParameter.PROJECT_ID, DwcTerm.projectID);
-<a class="jxr_linenumber" name="L381" href="#L381">381</a>     paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
-<a class="jxr_linenumber" name="L382" href="#L382">382</a>     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
-<a class="jxr_linenumber" name="L383" href="#L383">383</a>     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
-<a class="jxr_linenumber" name="L384" href="#L384">384</a> 
-<a class="jxr_linenumber" name="L385" href="#L385">385</a>     <em class="jxr_comment">// nucleotide</em>
-<a class="jxr_linenumber" name="L386" href="#L386">386</a>     paramMap.put(
-<a class="jxr_linenumber" name="L387" href="#L387">387</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NUCLEOTIDE_SEQUENCE_ID,
-<a class="jxr_linenumber" name="L388" href="#L388">388</a>         GbifInternalTerm.nucleotide_nucleotideSequenceID);
-<a class="jxr_linenumber" name="L389" href="#L389">389</a>     paramMap.put(OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, MixsTerm.target_gene);
-<a class="jxr_linenumber" name="L390" href="#L390">390</a>     paramMap.put(
-<a class="jxr_linenumber" name="L391" href="#L391">391</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE,
-<a class="jxr_linenumber" name="L392" href="#L392">392</a>         GbifInternalTerm.nucleotide_sequence);
-<a class="jxr_linenumber" name="L393" href="#L393">393</a>     paramMap.put(
-<a class="jxr_linenumber" name="L394" href="#L394">394</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
-<a class="jxr_linenumber" name="L395" href="#L395">395</a>         GbifInternalTerm.nucleotide_sequenceLength);
-<a class="jxr_linenumber" name="L396" href="#L396">396</a>     paramMap.put(
-<a class="jxr_linenumber" name="L397" href="#L397">397</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GC_CONTENT,
-<a class="jxr_linenumber" name="L398" href="#L398">398</a>         GbifInternalTerm.nucleotide_gcContent);
-<a class="jxr_linenumber" name="L399" href="#L399">399</a>     paramMap.put(
-<a class="jxr_linenumber" name="L400" href="#L400">400</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_IUPAC_FRACTION,
-<a class="jxr_linenumber" name="L401" href="#L401">401</a>         GbifInternalTerm.nucleotide_nonIupacFraction);
-<a class="jxr_linenumber" name="L402" href="#L402">402</a>     paramMap.put(
-<a class="jxr_linenumber" name="L403" href="#L403">403</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_ACGTN_FRACTION,
-<a class="jxr_linenumber" name="L404" href="#L404">404</a>         GbifInternalTerm.nucleotide_nonACGTNFraction);
-<a class="jxr_linenumber" name="L405" href="#L405">405</a>     paramMap.put(
-<a class="jxr_linenumber" name="L406" href="#L406">406</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_FRACTION,
-<a class="jxr_linenumber" name="L407" href="#L407">407</a>         GbifInternalTerm.nucleotide_nFraction);
-<a class="jxr_linenumber" name="L408" href="#L408">408</a>     paramMap.put(
-<a class="jxr_linenumber" name="L409" href="#L409">409</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_RUNS_CAPPED,
-<a class="jxr_linenumber" name="L410" href="#L410">410</a>         GbifInternalTerm.nucleotide_nRunsCapped);
-<a class="jxr_linenumber" name="L411" href="#L411">411</a>     paramMap.put(
-<a class="jxr_linenumber" name="L412" href="#L412">412</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NATURAL_LANGUAGE_DETECTED,
-<a class="jxr_linenumber" name="L413" href="#L413">413</a>         GbifInternalTerm.nucleotide_naturalLanguageDetected);
-<a class="jxr_linenumber" name="L414" href="#L414">414</a>     paramMap.put(
-<a class="jxr_linenumber" name="L415" href="#L415">415</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_ENDS_TRIMMED,
-<a class="jxr_linenumber" name="L416" href="#L416">416</a>         GbifInternalTerm.nucleotide_endsTrimmed);
-<a class="jxr_linenumber" name="L417" href="#L417">417</a>     paramMap.put(
-<a class="jxr_linenumber" name="L418" href="#L418">418</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GAPS_OR_WHITESPACE_REMOVED,
-<a class="jxr_linenumber" name="L419" href="#L419">419</a>         GbifInternalTerm.nucleotide_gapsOrWhitespaceRemoved);
-<a class="jxr_linenumber" name="L420" href="#L420">420</a>     paramMap.put(
-<a class="jxr_linenumber" name="L421" href="#L421">421</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_INVALID, GbifInternalTerm.nucleotide_invalid);
-<a class="jxr_linenumber" name="L422" href="#L422">422</a> 
-<a class="jxr_linenumber" name="L423" href="#L423">423</a>     <em class="jxr_comment">// Add all from EVENTS_PARAM_TO_TERM</em>
-<a class="jxr_linenumber" name="L424" href="#L424">424</a>     paramMap.putAll(EVENTS_PARAM_TO_TERM);
-<a class="jxr_linenumber" name="L425" href="#L425">425</a>     paramMap.putAll(ARRAY_STRING_TERMS);
-<a class="jxr_linenumber" name="L426" href="#L426">426</a>     PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);
-<a class="jxr_linenumber" name="L427" href="#L427">427</a>   }
-<a class="jxr_linenumber" name="L428" href="#L428">428</a> 
-<a class="jxr_linenumber" name="L429" href="#L429">429</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();
-<a class="jxr_linenumber" name="L430" href="#L430">430</a> 
-<a class="jxr_linenumber" name="L431" href="#L431">431</a>   @Override
-<a class="jxr_linenumber" name="L432" href="#L432">432</a>   <strong class="jxr_keyword">public</strong> Term term(SearchParameter searchParameter) {
-<a class="jxr_linenumber" name="L433" href="#L433">433</a>     <strong class="jxr_keyword">return</strong> PARAM_TO_TERM.get(searchParameter);
-<a class="jxr_linenumber" name="L434" href="#L434">434</a>   }
-<a class="jxr_linenumber" name="L435" href="#L435">435</a> 
-<a class="jxr_linenumber" name="L436" href="#L436">436</a>   @Override
-<a class="jxr_linenumber" name="L437" href="#L437">437</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isArray(SearchParameter searchParameter) {
-<a class="jxr_linenumber" name="L438" href="#L438">438</a>     <strong class="jxr_keyword">return</strong> ARRAY_STRING_TERMS.containsKey(searchParameter);
-<a class="jxr_linenumber" name="L439" href="#L439">439</a>   }
-<a class="jxr_linenumber" name="L440" href="#L440">440</a> 
-<a class="jxr_linenumber" name="L441" href="#L441">441</a>   @Override
-<a class="jxr_linenumber" name="L442" href="#L442">442</a>   <strong class="jxr_keyword">public</strong> Term getTermArray(SearchParameter searchParameter) {
-<a class="jxr_linenumber" name="L443" href="#L443">443</a>     <strong class="jxr_keyword">return</strong> ARRAY_STRING_TERMS.get(searchParameter);
-<a class="jxr_linenumber" name="L444" href="#L444">444</a>   }
-<a class="jxr_linenumber" name="L445" href="#L445">445</a> 
-<a class="jxr_linenumber" name="L446" href="#L446">446</a>   @Override
-<a class="jxr_linenumber" name="L447" href="#L447">447</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isDenormedTerm(SearchParameter searchParameter) {
-<a class="jxr_linenumber" name="L448" href="#L448">448</a>     <strong class="jxr_keyword">return</strong> DENORMED_TERMS.containsKey(searchParameter);
-<a class="jxr_linenumber" name="L449" href="#L449">449</a>   }
-<a class="jxr_linenumber" name="L450" href="#L450">450</a> 
-<a class="jxr_linenumber" name="L451" href="#L451">451</a>   @Override
-<a class="jxr_linenumber" name="L452" href="#L452">452</a>   <strong class="jxr_keyword">public</strong> SearchParameter getDefaultGadmLevel() {
-<a class="jxr_linenumber" name="L453" href="#L453">453</a>     <strong class="jxr_keyword">return</strong> OccurrenceSearchParameter.GADM_LEVEL_0_GID;
-<a class="jxr_linenumber" name="L454" href="#L454">454</a>   }
-<a class="jxr_linenumber" name="L455" href="#L455">455</a> 
-<a class="jxr_linenumber" name="L456" href="#L456">456</a>   @Override
-<a class="jxr_linenumber" name="L457" href="#L457">457</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {
-<a class="jxr_linenumber" name="L458" href="#L458">458</a>     <strong class="jxr_keyword">return</strong> OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
-<a class="jxr_linenumber" name="L459" href="#L459">459</a>         &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate
-<a class="jxr_linenumber" name="L460" href="#L460">460</a>             || predicate instanceof GreaterThanPredicate);
-<a class="jxr_linenumber" name="L461" href="#L461">461</a>   }
-<a class="jxr_linenumber" name="L462" href="#L462">462</a> }
+<a class="jxr_linenumber" name="L327" href="#L327">327</a>     paramMap.put(OccurrenceSearchParameter.ENVIRONMENTS, GbifTerm.environments);
+<a class="jxr_linenumber" name="L328" href="#L328">328</a>     paramMap.put(OccurrenceSearchParameter.DATASET_ID, DwcTerm.datasetID);
+<a class="jxr_linenumber" name="L329" href="#L329">329</a>     paramMap.put(OccurrenceSearchParameter.DATASET_NAME, DwcTerm.datasetName);
+<a class="jxr_linenumber" name="L330" href="#L330">330</a>     paramMap.put(OccurrenceSearchParameter.OTHER_CATALOG_NUMBERS, DwcTerm.otherCatalogNumbers);
+<a class="jxr_linenumber" name="L331" href="#L331">331</a>     paramMap.put(OccurrenceSearchParameter.PREPARATIONS, DwcTerm.preparations);
+<a class="jxr_linenumber" name="L332" href="#L332">332</a>     paramMap.put(
+<a class="jxr_linenumber" name="L333" href="#L333">333</a>         OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS,
+<a class="jxr_linenumber" name="L334" href="#L334">334</a>         GbifTerm.distanceFromCentroidInMeters);
+<a class="jxr_linenumber" name="L335" href="#L335">335</a>     paramMap.put(OccurrenceSearchParameter.GBIF_ID, GbifTerm.gbifID);
+<a class="jxr_linenumber" name="L336" href="#L336">336</a>     paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
+<a class="jxr_linenumber" name="L337" href="#L337">337</a>     paramMap.put(InternalOccurrenceSearchParameter.EVENT_DATE_LTE, GbifInternalTerm.eventDateLte);
+<a class="jxr_linenumber" name="L338" href="#L338">338</a>     paramMap.put(OccurrenceSearchParameter.GBIF_REGION, GbifTerm.gbifRegion);
+<a class="jxr_linenumber" name="L339" href="#L339">339</a>     paramMap.put(
+<a class="jxr_linenumber" name="L340" href="#L340">340</a>         OccurrenceSearchParameter.PUBLISHED_BY_GBIF_REGION, GbifTerm.publishedByGbifRegion);
+<a class="jxr_linenumber" name="L341" href="#L341">341</a>     paramMap.put(OccurrenceSearchParameter.IS_SEQUENCED, GbifTerm.isSequenced);
+<a class="jxr_linenumber" name="L342" href="#L342">342</a>     paramMap.put(OccurrenceSearchParameter.ISLAND, DwcTerm.island);
+<a class="jxr_linenumber" name="L343" href="#L343">343</a>     paramMap.put(OccurrenceSearchParameter.ISLAND_GROUP, DwcTerm.islandGroup);
+<a class="jxr_linenumber" name="L344" href="#L344">344</a>     paramMap.put(OccurrenceSearchParameter.FIELD_NUMBER, DwcTerm.fieldNumber);
+<a class="jxr_linenumber" name="L345" href="#L345">345</a>     paramMap.put(
+<a class="jxr_linenumber" name="L346" href="#L346">346</a>         OccurrenceSearchParameter.EARLIEST_EON_OR_LOWEST_EONOTHEM,
+<a class="jxr_linenumber" name="L347" href="#L347">347</a>         DwcTerm.earliestEonOrLowestEonothem);
+<a class="jxr_linenumber" name="L348" href="#L348">348</a>     paramMap.put(
+<a class="jxr_linenumber" name="L349" href="#L349">349</a>         OccurrenceSearchParameter.LATEST_EON_OR_HIGHEST_EONOTHEM,
+<a class="jxr_linenumber" name="L350" href="#L350">350</a>         DwcTerm.latestEonOrHighestEonothem);
+<a class="jxr_linenumber" name="L351" href="#L351">351</a>     paramMap.put(
+<a class="jxr_linenumber" name="L352" href="#L352">352</a>         OccurrenceSearchParameter.EARLIEST_ERA_OR_LOWEST_ERATHEM,
+<a class="jxr_linenumber" name="L353" href="#L353">353</a>         DwcTerm.earliestEraOrLowestErathem);
+<a class="jxr_linenumber" name="L354" href="#L354">354</a>     paramMap.put(
+<a class="jxr_linenumber" name="L355" href="#L355">355</a>         OccurrenceSearchParameter.LATEST_ERA_OR_HIGHEST_ERATHEM, DwcTerm.latestEraOrHighestErathem);
+<a class="jxr_linenumber" name="L356" href="#L356">356</a>     paramMap.put(
+<a class="jxr_linenumber" name="L357" href="#L357">357</a>         OccurrenceSearchParameter.EARLIEST_PERIOD_OR_LOWEST_SYSTEM,
+<a class="jxr_linenumber" name="L358" href="#L358">358</a>         DwcTerm.earliestPeriodOrLowestSystem);
+<a class="jxr_linenumber" name="L359" href="#L359">359</a>     paramMap.put(
+<a class="jxr_linenumber" name="L360" href="#L360">360</a>         OccurrenceSearchParameter.LATEST_PERIOD_OR_HIGHEST_SYSTEM,
+<a class="jxr_linenumber" name="L361" href="#L361">361</a>         DwcTerm.latestPeriodOrHighestSystem);
+<a class="jxr_linenumber" name="L362" href="#L362">362</a>     paramMap.put(
+<a class="jxr_linenumber" name="L363" href="#L363">363</a>         OccurrenceSearchParameter.EARLIEST_EPOCH_OR_LOWEST_SERIES,
+<a class="jxr_linenumber" name="L364" href="#L364">364</a>         DwcTerm.earliestEpochOrLowestSeries);
+<a class="jxr_linenumber" name="L365" href="#L365">365</a>     paramMap.put(
+<a class="jxr_linenumber" name="L366" href="#L366">366</a>         OccurrenceSearchParameter.LATEST_EPOCH_OR_HIGHEST_SERIES,
+<a class="jxr_linenumber" name="L367" href="#L367">367</a>         DwcTerm.latestEpochOrHighestSeries);
+<a class="jxr_linenumber" name="L368" href="#L368">368</a>     paramMap.put(
+<a class="jxr_linenumber" name="L369" href="#L369">369</a>         OccurrenceSearchParameter.EARLIEST_AGE_OR_LOWEST_STAGE, DwcTerm.earliestAgeOrLowestStage);
+<a class="jxr_linenumber" name="L370" href="#L370">370</a>     paramMap.put(
+<a class="jxr_linenumber" name="L371" href="#L371">371</a>         OccurrenceSearchParameter.LATEST_AGE_OR_HIGHEST_STAGE, DwcTerm.latestAgeOrHighestStage);
+<a class="jxr_linenumber" name="L372" href="#L372">372</a>     paramMap.put(
+<a class="jxr_linenumber" name="L373" href="#L373">373</a>         OccurrenceSearchParameter.LOWEST_BIOSTRATIGRAPHIC_ZONE, DwcTerm.lowestBiostratigraphicZone);
+<a class="jxr_linenumber" name="L374" href="#L374">374</a>     paramMap.put(
+<a class="jxr_linenumber" name="L375" href="#L375">375</a>         OccurrenceSearchParameter.HIGHEST_BIOSTRATIGRAPHIC_ZONE,
+<a class="jxr_linenumber" name="L376" href="#L376">376</a>         DwcTerm.highestBiostratigraphicZone);
+<a class="jxr_linenumber" name="L377" href="#L377">377</a>     paramMap.put(OccurrenceSearchParameter.GROUP, DwcTerm.group);
+<a class="jxr_linenumber" name="L378" href="#L378">378</a>     paramMap.put(OccurrenceSearchParameter.FORMATION, DwcTerm.formation);
+<a class="jxr_linenumber" name="L379" href="#L379">379</a>     paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);
+<a class="jxr_linenumber" name="L380" href="#L380">380</a>     paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);
+<a class="jxr_linenumber" name="L381" href="#L381">381</a>     paramMap.put(OccurrenceSearchParameter.PROJECT_ID, DwcTerm.projectID);
+<a class="jxr_linenumber" name="L382" href="#L382">382</a>     paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
+<a class="jxr_linenumber" name="L383" href="#L383">383</a>     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
+<a class="jxr_linenumber" name="L384" href="#L384">384</a>     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
+<a class="jxr_linenumber" name="L385" href="#L385">385</a> 
+<a class="jxr_linenumber" name="L386" href="#L386">386</a>     <em class="jxr_comment">// nucleotide</em>
+<a class="jxr_linenumber" name="L387" href="#L387">387</a>     paramMap.put(
+<a class="jxr_linenumber" name="L388" href="#L388">388</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NUCLEOTIDE_SEQUENCE_ID,
+<a class="jxr_linenumber" name="L389" href="#L389">389</a>         GbifInternalTerm.nucleotide_nucleotideSequenceID);
+<a class="jxr_linenumber" name="L390" href="#L390">390</a>     paramMap.put(OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, MixsTerm.target_gene);
+<a class="jxr_linenumber" name="L391" href="#L391">391</a>     paramMap.put(
+<a class="jxr_linenumber" name="L392" href="#L392">392</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE,
+<a class="jxr_linenumber" name="L393" href="#L393">393</a>         GbifInternalTerm.nucleotide_sequence);
+<a class="jxr_linenumber" name="L394" href="#L394">394</a>     paramMap.put(
+<a class="jxr_linenumber" name="L395" href="#L395">395</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,
+<a class="jxr_linenumber" name="L396" href="#L396">396</a>         GbifInternalTerm.nucleotide_sequenceLength);
+<a class="jxr_linenumber" name="L397" href="#L397">397</a>     paramMap.put(
+<a class="jxr_linenumber" name="L398" href="#L398">398</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GC_CONTENT,
+<a class="jxr_linenumber" name="L399" href="#L399">399</a>         GbifInternalTerm.nucleotide_gcContent);
+<a class="jxr_linenumber" name="L400" href="#L400">400</a>     paramMap.put(
+<a class="jxr_linenumber" name="L401" href="#L401">401</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_IUPAC_FRACTION,
+<a class="jxr_linenumber" name="L402" href="#L402">402</a>         GbifInternalTerm.nucleotide_nonIupacFraction);
+<a class="jxr_linenumber" name="L403" href="#L403">403</a>     paramMap.put(
+<a class="jxr_linenumber" name="L404" href="#L404">404</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NON_ACGTN_FRACTION,
+<a class="jxr_linenumber" name="L405" href="#L405">405</a>         GbifInternalTerm.nucleotide_nonACGTNFraction);
+<a class="jxr_linenumber" name="L406" href="#L406">406</a>     paramMap.put(
+<a class="jxr_linenumber" name="L407" href="#L407">407</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_FRACTION,
+<a class="jxr_linenumber" name="L408" href="#L408">408</a>         GbifInternalTerm.nucleotide_nFraction);
+<a class="jxr_linenumber" name="L409" href="#L409">409</a>     paramMap.put(
+<a class="jxr_linenumber" name="L410" href="#L410">410</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_N_RUNS_CAPPED,
+<a class="jxr_linenumber" name="L411" href="#L411">411</a>         GbifInternalTerm.nucleotide_nRunsCapped);
+<a class="jxr_linenumber" name="L412" href="#L412">412</a>     paramMap.put(
+<a class="jxr_linenumber" name="L413" href="#L413">413</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_NATURAL_LANGUAGE_DETECTED,
+<a class="jxr_linenumber" name="L414" href="#L414">414</a>         GbifInternalTerm.nucleotide_naturalLanguageDetected);
+<a class="jxr_linenumber" name="L415" href="#L415">415</a>     paramMap.put(
+<a class="jxr_linenumber" name="L416" href="#L416">416</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_ENDS_TRIMMED,
+<a class="jxr_linenumber" name="L417" href="#L417">417</a>         GbifInternalTerm.nucleotide_endsTrimmed);
+<a class="jxr_linenumber" name="L418" href="#L418">418</a>     paramMap.put(
+<a class="jxr_linenumber" name="L419" href="#L419">419</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_GAPS_OR_WHITESPACE_REMOVED,
+<a class="jxr_linenumber" name="L420" href="#L420">420</a>         GbifInternalTerm.nucleotide_gapsOrWhitespaceRemoved);
+<a class="jxr_linenumber" name="L421" href="#L421">421</a>     paramMap.put(
+<a class="jxr_linenumber" name="L422" href="#L422">422</a>         OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_INVALID, GbifInternalTerm.nucleotide_invalid);
+<a class="jxr_linenumber" name="L423" href="#L423">423</a> 
+<a class="jxr_linenumber" name="L424" href="#L424">424</a>     <em class="jxr_comment">// Add all from EVENTS_PARAM_TO_TERM</em>
+<a class="jxr_linenumber" name="L425" href="#L425">425</a>     paramMap.putAll(EVENTS_PARAM_TO_TERM);
+<a class="jxr_linenumber" name="L426" href="#L426">426</a>     paramMap.putAll(ARRAY_STRING_TERMS);
+<a class="jxr_linenumber" name="L427" href="#L427">427</a>     PARAM_TO_TERM = Collections.unmodifiableMap(paramMap);
+<a class="jxr_linenumber" name="L428" href="#L428">428</a>   }
+<a class="jxr_linenumber" name="L429" href="#L429">429</a> 
+<a class="jxr_linenumber" name="L430" href="#L430">430</a>   <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> Map&lt;SearchParameter, Term&gt; DENORMED_TERMS = Collections.emptyMap();
+<a class="jxr_linenumber" name="L431" href="#L431">431</a> 
+<a class="jxr_linenumber" name="L432" href="#L432">432</a>   @Override
+<a class="jxr_linenumber" name="L433" href="#L433">433</a>   <strong class="jxr_keyword">public</strong> Term term(SearchParameter searchParameter) {
+<a class="jxr_linenumber" name="L434" href="#L434">434</a>     <strong class="jxr_keyword">return</strong> PARAM_TO_TERM.get(searchParameter);
+<a class="jxr_linenumber" name="L435" href="#L435">435</a>   }
+<a class="jxr_linenumber" name="L436" href="#L436">436</a> 
+<a class="jxr_linenumber" name="L437" href="#L437">437</a>   @Override
+<a class="jxr_linenumber" name="L438" href="#L438">438</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isArray(SearchParameter searchParameter) {
+<a class="jxr_linenumber" name="L439" href="#L439">439</a>     <strong class="jxr_keyword">return</strong> ARRAY_STRING_TERMS.containsKey(searchParameter);
+<a class="jxr_linenumber" name="L440" href="#L440">440</a>   }
+<a class="jxr_linenumber" name="L441" href="#L441">441</a> 
+<a class="jxr_linenumber" name="L442" href="#L442">442</a>   @Override
+<a class="jxr_linenumber" name="L443" href="#L443">443</a>   <strong class="jxr_keyword">public</strong> Term getTermArray(SearchParameter searchParameter) {
+<a class="jxr_linenumber" name="L444" href="#L444">444</a>     <strong class="jxr_keyword">return</strong> ARRAY_STRING_TERMS.get(searchParameter);
+<a class="jxr_linenumber" name="L445" href="#L445">445</a>   }
+<a class="jxr_linenumber" name="L446" href="#L446">446</a> 
+<a class="jxr_linenumber" name="L447" href="#L447">447</a>   @Override
+<a class="jxr_linenumber" name="L448" href="#L448">448</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> isDenormedTerm(SearchParameter searchParameter) {
+<a class="jxr_linenumber" name="L449" href="#L449">449</a>     <strong class="jxr_keyword">return</strong> DENORMED_TERMS.containsKey(searchParameter);
+<a class="jxr_linenumber" name="L450" href="#L450">450</a>   }
+<a class="jxr_linenumber" name="L451" href="#L451">451</a> 
+<a class="jxr_linenumber" name="L452" href="#L452">452</a>   @Override
+<a class="jxr_linenumber" name="L453" href="#L453">453</a>   <strong class="jxr_keyword">public</strong> SearchParameter getDefaultGadmLevel() {
+<a class="jxr_linenumber" name="L454" href="#L454">454</a>     <strong class="jxr_keyword">return</strong> OccurrenceSearchParameter.GADM_LEVEL_0_GID;
+<a class="jxr_linenumber" name="L455" href="#L455">455</a>   }
+<a class="jxr_linenumber" name="L456" href="#L456">456</a> 
+<a class="jxr_linenumber" name="L457" href="#L457">457</a>   @Override
+<a class="jxr_linenumber" name="L458" href="#L458">458</a>   <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">boolean</strong> includeNullInPredicate(SimplePredicate&lt;SearchParameter&gt; predicate) {
+<a class="jxr_linenumber" name="L459" href="#L459">459</a>     <strong class="jxr_keyword">return</strong> OccurrenceSearchParameter.DISTANCE_FROM_CENTROID_IN_METERS == predicate.getKey()
+<a class="jxr_linenumber" name="L460" href="#L460">460</a>         &amp;&amp; (predicate instanceof GreaterThanOrEqualsPredicate
+<a class="jxr_linenumber" name="L461" href="#L461">461</a>             || predicate instanceof GreaterThanPredicate);
+<a class="jxr_linenumber" name="L462" href="#L462">462</a>   }
+<a class="jxr_linenumber" name="L463" href="#L463">463</a> }
 </pre>
 <hr/>
 <div id="footer">Copyright &#169; 2026 <a href="https://www.gbif.org">Global Biodiversity Information Facility (GBIF)</a>. All rights reserved.</div>
