@@ -429,7 +429,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
           parameter = equalsSubPredicate.getKey();
           matchCase = equalsSubPredicate.isMatchCase();
           useDnaAssistance = isUseDnaAssistance(equalsSubPredicate.getUseDnaAssistance());
-          dnaAssistedChecklistKey = equalsSubPredicate.getDnaAssistedChecklistKey();
+          dnaAssistedChecklistKey = getEffectiveDnaAssistedChecklistKey(equalsSubPredicate);
           suppliedChecklistKey = equalsSubPredicate.getChecklistKey();
           checklistsKey = getChecklistKey(suppliedChecklistKey);
         } else if (parameter != equalsSubPredicate.getKey()
@@ -437,7 +437,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
             || !Objects.equals(checklistsKey, getChecklistKey(equalsSubPredicate.getChecklistKey()))
             || useDnaAssistance != isUseDnaAssistance(equalsSubPredicate.getUseDnaAssistance())
             || !Objects.equals(
-                dnaAssistedChecklistKey, equalsSubPredicate.getDnaAssistedChecklistKey())) {
+                dnaAssistedChecklistKey, getEffectiveDnaAssistedChecklistKey(equalsSubPredicate))) {
           useIn = false;
           break;
         }
@@ -1744,6 +1744,13 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     return dnaAssistedChecklistKey != null
         && !isUseDnaAssistance(useDnaAssistance)
         && TAXON_SEARCH_PARAMETERS.contains(parameter);
+  }
+
+  /** The dnaAssistedChecklistKey of the predicate, or null if it is ignored by useDnaAssistance. */
+  private static UUID getEffectiveDnaAssistedChecklistKey(EqualsPredicate<?> predicate) {
+    return isUseDnaAssistance(predicate.getUseDnaAssistance())
+        ? null
+        : predicate.getDnaAssistedChecklistKey();
   }
 
   /** Appends a filter, on the regular or on the DNA-assisted classification. */

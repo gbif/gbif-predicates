@@ -2611,19 +2611,60 @@ public class SQLQueryVisitorTest {
     }
   }
 
-  /** The DNA-assisted classification of the checklist has to be mapped to a nested struct. */
+  /** Scientific names of an IN predicate are searched in the classification of the checklist. */
   @Test
-  public void testUseDnaAssistanceWithoutDnaStruct() {
-    SQLQueryVisitor visitorWithoutDnaStruct =
-        new SQLQueryVisitor(
-            new OccurrenceTermsMapper(),
-            Constants.COL_DATASET_KEY,
-            Map.of(Constants.NUB_DATASET_KEY, "gbif_classification"),
-            Constants.NUB_DATASET_KEY,
-            "occurrence");
-    Predicate p =
-        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "212", false, null, true);
-    assertThrows(QueryBuildingException.class, () -> visitorWithoutDnaStruct.buildQuery(p));
+  public void testScientificNameInPredicateWithDna() throws QueryBuildingException {
+    List<String> names = List.of("Puma concolor", "Felis");
+    String regular = "lower(occurrence.gbif_classification.scientificname)";
+    String dna = "lower(occurrence.gbif_dna_classification.scientificname)";
+    String values = " IN(lower('Puma concolor'), lower('Felis'))";
+
+    assertEquals(
+        "(((" + regular + values + ")) OR ((" + dna + values + ")))",
+        dnaVisitor.buildQuery(
+            new InPredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME, names, false, null, true)));
+    assertEquals(
+        "(" + dna + values + ")",
+        dnaVisitor.buildQuery(
+            new InPredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME,
+                names,
+                false,
+                null,
+                null,
+                Constants.NUB_DATASET_KEY)));
+  }
+
+  /**
+   * The dnaAssistedChecklistKey is ignored with useDnaAssistance, so it doesn't prevent the equals
+   * predicates of a disjunction from being collapsed into an IN.
+   */
+  @Test
+  public void testUseDnaAssistanceDisjunctionIgnoresDnaAssistedChecklistKey()
+      throws QueryBuildingException {
+    Predicate disjunction =
+        new DisjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY,
+                    "1",
+                    false,
+                    null,
+                    true,
+                    Constants.NUB_DATASET_KEY),
+                new EqualsPredicate<>(
+                    OccurrenceSearchParameter.KINGDOM_KEY,
+                    "6",
+                    false,
+                    null,
+                    true,
+                    Constants.COL_DATASET_KEY)));
+    assertEquals(
+        dnaVisitor.buildQuery(
+            new InPredicate<>(
+                OccurrenceSearchParameter.KINGDOM_KEY, List.of("1", "6"), false, null, true)),
+        dnaVisitor.buildQuery(disjunction));
   }
 
   /** Equals predicate with the DNA assistance disabled and enabled. */

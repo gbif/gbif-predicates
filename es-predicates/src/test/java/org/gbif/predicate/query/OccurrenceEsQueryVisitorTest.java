@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
@@ -2376,31 +2377,58 @@ public class OccurrenceEsQueryVisitorTest {
     }
   }
 
-  /** The dnaAssistedChecklistKey searches only in the DNA-assisted classification. */
+  /**
+   * The dnaAssistedChecklistKey searches only in the DNA-assisted classification of that checklist,
+   * whether the predicate has its own checklist key or uses the default one.
+   */
   @Test
   public void testDnaAssistedChecklistKey() throws QueryBuildingException {
-    String dnaField = "\"dnaClassifications.classifications." + CHECKLIST_KEY + ".taxonKeys\"";
-    String checklistField = "\"classifications." + CHECKLIST_KEY + ".taxonKeys\"";
+    UUID otherChecklistKey = UUID.fromString("d7dddbf4-2cf0-4f39-9b2a-bb099caae36c");
+    String dnaPrefix = "\"dnaClassifications.classifications." + CHECKLIST_KEY + ".";
 
-    List<Predicate> predicates =
-        List.of(
-            new EqualsPredicate<>(
-                OccurrenceSearchParameter.TAXON_KEY, "212", false, null, null, CHECKLIST_KEY),
-            new InPredicate<>(
-                OccurrenceSearchParameter.TAXON_KEY,
-                List.of("1", "6"),
-                false,
-                null,
-                null,
-                CHECKLIST_KEY),
-            new IsNotNullPredicate<>(
-                OccurrenceSearchParameter.TAXON_KEY, null, null, CHECKLIST_KEY),
-            new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, null, null, CHECKLIST_KEY));
-    for (Predicate p : predicates) {
-      String query = visitor.buildQuery(p);
-      assertTrue(query.contains(dnaField), query);
-      // only the DNA-assisted classification
-      assertFalse(query.replace(dnaField, "").contains(checklistField), query);
+    // checklist key of the predicate: null (default) and another one
+    for (UUID checklistKey : Arrays.asList(null, otherChecklistKey)) {
+      Map<Predicate, String> predicateToField =
+          Map.of(
+              new EqualsPredicate<>(
+                  OccurrenceSearchParameter.TAXON_KEY,
+                  "212",
+                  false,
+                  checklistKey,
+                  null,
+                  CHECKLIST_KEY),
+              "taxonKeys",
+              new InPredicate<>(
+                  OccurrenceSearchParameter.TAXON_KEY,
+                  List.of("1", "6"),
+                  false,
+                  checklistKey,
+                  null,
+                  CHECKLIST_KEY),
+              "taxonKeys",
+              new LikePredicate<>(
+                  OccurrenceSearchParameter.SCIENTIFIC_NAME,
+                  "Puma*",
+                  checklistKey,
+                  false,
+                  null,
+                  CHECKLIST_KEY),
+              "usage.name",
+              new IsNotNullPredicate<>(
+                  OccurrenceSearchParameter.TAXON_KEY, checklistKey, null, CHECKLIST_KEY),
+              "taxonKeys",
+              new IsNullPredicate<>(
+                  OccurrenceSearchParameter.TAXON_KEY, checklistKey, null, CHECKLIST_KEY),
+              "taxonKeys");
+
+      for (Map.Entry<Predicate, String> e : predicateToField.entrySet()) {
+        String query = visitor.buildQuery(e.getKey());
+        String dnaField = dnaPrefix + e.getValue() + "\"";
+        assertTrue(query.contains(dnaField), query);
+        // only the DNA-assisted classification of the dnaAssistedChecklistKey
+        String rest = query.replace(dnaField, "");
+        assertFalse(rest.contains("classifications."), query);
+      }
     }
   }
 
