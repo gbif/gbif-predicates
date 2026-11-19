@@ -2352,6 +2352,30 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /**
+   * The non-null filter of a NOT predicate includes the DNA-assisted field when any of the
+   * predicates on the field uses it, whatever their order.
+   */
+  @Test
+  public void testUseDnaAssistanceNotPredicateNonNullFilterOrder() throws QueryBuildingException {
+    Predicate plain =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "2", false, CHECKLIST_KEY);
+    Predicate dna =
+        new EqualsPredicate<>(OccurrenceSearchParameter.TAXON_KEY, "1", false, CHECKLIST_KEY, true);
+    String dnaExists =
+        "\"exists\":{\"field\":\"dnaClassifications.classifications."
+            + CHECKLIST_KEY
+            + ".taxonKeys\"}";
+
+    for (List<Predicate> operands : List.of(List.of(plain, dna), List.of(dna, plain))) {
+      String query =
+          visitor
+              .buildQuery(new NotPredicate(new DisjunctionPredicate(operands)))
+              .replaceAll("\\s", "");
+      assertTrue(query.contains(dnaExists), query);
+    }
+  }
+
   /** The dnaAssistedChecklistKey searches only in the DNA-assisted classification. */
   @Test
   public void testDnaAssistedChecklistKey() throws QueryBuildingException {

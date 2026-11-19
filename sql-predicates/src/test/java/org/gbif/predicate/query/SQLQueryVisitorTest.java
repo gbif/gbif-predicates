@@ -2577,6 +2577,40 @@ public class SQLQueryVisitorTest {
                 Constants.NUB_DATASET_KEY)));
   }
 
+  /** IS NULL on the taxonomic ARRAY columns matches the records without values. */
+  @Test
+  public void testTaxonomicArrayIsNull() throws QueryBuildingException {
+    for (OccurrenceSearchParameter param :
+        List.of(
+            OccurrenceSearchParameter.TAXONOMIC_ISSUE, OccurrenceSearchParameter.ENVIRONMENTS)) {
+      String column = param.name().replace("_", "").toLowerCase();
+      String regular = "occurrence.gbif_classification." + column;
+      String dna = "occurrence.gbif_dna_classification." + column;
+
+      assertEquals(
+          "(" + regular + " IS NULL OR size(" + regular + ") = 0)",
+          dnaVisitor.buildQuery(new IsNullPredicate<>(param)));
+
+      // null in both classifications
+      assertEquals(
+          "((("
+              + regular
+              + " IS NULL OR size("
+              + regular
+              + ") = 0)) AND (("
+              + dna
+              + " IS NULL OR size("
+              + dna
+              + ") = 0)))",
+          dnaVisitor.buildQuery(new IsNullPredicate<>(param, null, true)));
+
+      assertEquals(
+          "(" + dna + " IS NULL OR size(" + dna + ") = 0)",
+          dnaVisitor.buildQuery(
+              new IsNullPredicate<>(param, null, null, Constants.NUB_DATASET_KEY)));
+    }
+  }
+
   /** The DNA-assisted classification of the checklist has to be mapped to a nested struct. */
   @Test
   public void testUseDnaAssistanceWithoutDnaStruct() {

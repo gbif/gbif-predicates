@@ -1188,9 +1188,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (isTaxonomicArrayParameter(predicate.getParameter())) {
       String taxonomicIssueColumn =
           resolveTaxonColumnName(sqlField, predicate.getChecklistKey(), dnaAssisted);
-      builder.append(
-          String.format(
-              "%s IS NOT NULL OR size(%s) = 0", taxonomicIssueColumn, taxonomicIssueColumn));
+      builder.append(String.format(IS_NULL_ARRAY_OPERATOR, taxonomicIssueColumn));
     } else {
       builder.append(
           String.format(

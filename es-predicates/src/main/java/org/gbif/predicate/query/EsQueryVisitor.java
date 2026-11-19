@@ -144,17 +144,29 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   private Query addDnaTaxonQuery(
       Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
+    return getDnaAssistedField(predicate, parameter)
+        .map(
+            dnaField ->
+                buildBoolQuery(
+                    Collections.emptyList(),
+                    List.of(query, queryFn.apply(dnaField)),
+                    Collections.emptyList()))
+        .orElse(query);
+  }
+
+  /**
+   * Returns the field of the DNA-assisted classification that is also searched when the predicate
+   * has the useDnaAssistance flag and the parameter is taxonomic, excluding the Humboldt ones.
+   */
+  private Optional<String> getDnaAssistedField(Predicate predicate, S parameter) {
     UUID checklistKey = getChecklistKey(predicate);
     if (checklistKey == null
         || !esFieldMapper.isTaxonomic(parameter)
         || isHumboldtParameter(parameter)
         || !isUseDnaAssistance(predicate)) {
-      return query;
+      return Optional.empty();
     }
-
-    String dnaField = esFieldMapper.getDnaChecklistField(checklistKey, parameter);
-    return buildBoolQuery(
-        Collections.emptyList(), List.of(query, queryFn.apply(dnaField)), Collections.emptyList());
+    return Optional.of(esFieldMapper.getDnaChecklistField(checklistKey, parameter));
   }
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
@@ -866,17 +878,30 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   }
 
   private void addNotPredicateNonNullFilters(Predicate predicate, QueryData queryData) {
-    Map<S, Map<String, Query>> fieldsByParameter = new LinkedHashMap<>();
+    Map<S, Map<String, Set<String>>> fieldsByParameter = new LinkedHashMap<>();
     collectNotPredicateFields(predicate, fieldsByParameter);
 
     fieldsByParameter.forEach(
-        (parameter, existsQueries) ->
-            existsQueries.values().forEach(q -> addFilterQuery(q, queryData, parameter)));
+        (parameter, existsFields) ->
+            existsFields
+                .values()
+                .forEach(fields -> addFilterQuery(existsAnyQuery(fields), queryData, parameter)));
+  }
+
+  /** The value has to exist in any of the fields. */
+  private static Query existsAnyQuery(Set<String> fields) {
+    if (fields.size() == 1) {
+      return existsQuery(fields.iterator().next());
+    }
+    return buildBoolQuery(
+        Collections.emptyList(),
+        fields.stream().map(EsQueryVisitor::existsQuery).collect(Collectors.toList()),
+        Collections.emptyList());
   }
 
   @SuppressWarnings("unchecked")
   private void collectNotPredicateFields(
-      Predicate predicate, Map<S, Map<String, Query>> fieldsByParameter) {
+      Predicate predicate, Map<S, Map<String, Set<String>>> fieldsByParameter) {
     if (predicate instanceof ConjunctionPredicate) {
       ((ConjunctionPredicate) predicate)
           .getPredicates()
@@ -896,17 +921,22 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
     }
   }
 
+  /**
+   * Collects the fields whose values have to exist for the field of the predicate. The fields of
+   * all the predicates on the same field are merged, so the result doesn't depend on their order:
+   * the DNA-assisted field is added when any of them has the useDnaAssistance flag.
+   */
   private void addNotPredicateFieldToNonNullChecks(
-      Map<S, Map<String, Query>> fieldsByParameter,
+      Map<S, Map<String, Set<String>>> fieldsByParameter,
       Predicate predicate,
       S parameter,
       String fieldName) {
-    fieldsByParameter
-        .computeIfAbsent(parameter, ignored -> new LinkedHashMap<>())
-        .putIfAbsent(
-            fieldName,
-            addDnaTaxonQuery(
-                predicate, parameter, existsQuery(fieldName), EsQueryVisitor::existsQuery));
+    Set<String> fields =
+        fieldsByParameter
+            .computeIfAbsent(parameter, ignored -> new LinkedHashMap<>())
+            .computeIfAbsent(fieldName, ignored -> new LinkedHashSet<>());
+    fields.add(fieldName);
+    getDnaAssistedField(predicate, parameter).ifPresent(fields::add);
   }
 
   /**
