@@ -2932,11 +2932,78 @@ public class SQLQueryVisitorTest {
         dnaVisitor.buildQuery(p));
   }
 
+  /**
+   * Without a DNA-assisted classification for the checklist, useDnaAssistance only searches the
+   * regular classification, as nothing would match in the DNA-assisted one.
+   */
   @Test
-  public void testUseDnaAssistanceWithoutDnaChecklistMapped() {
-    Predicate p =
-        new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, true);
-    assertThrows(QueryBuildingException.class, () -> visitor.buildQuery(p));
+  public void testUseDnaAssistanceWithoutDnaChecklistMapped() throws QueryBuildingException {
+    assertEquals(
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false)),
+        visitor.buildQuery(
+            new EqualsPredicate<>(OccurrenceSearchParameter.KINGDOM_KEY, "1", false, null, true)));
+    assertEquals(
+        visitor.buildQuery(new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY)),
+        visitor.buildQuery(new IsNullPredicate<>(OccurrenceSearchParameter.TAXON_KEY, null, true)));
+  }
+
+  /**
+   * Without a DNA-assisted classification for the checklist, no record has a value in it: nothing
+   * matches, except IS NULL that matches all the records.
+   */
+  @Test
+  public void testDnaAssistedChecklistKeyWithoutDnaChecklistMapped() throws QueryBuildingException {
+    UUID dnaChecklistKey = Constants.NUB_DATASET_KEY;
+    assertEquals(
+        "false",
+        visitor.buildQuery(
+            new EqualsPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, "212", false, null, null, dnaChecklistKey)));
+    assertEquals(
+        "false",
+        visitor.buildQuery(
+            new InPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY,
+                List.of("1", "6"),
+                false,
+                null,
+                null,
+                dnaChecklistKey)));
+    assertEquals(
+        "false",
+        visitor.buildQuery(
+            new LikePredicate<>(
+                OccurrenceSearchParameter.SCIENTIFIC_NAME,
+                "Puma*",
+                null,
+                false,
+                null,
+                dnaChecklistKey)));
+    assertEquals(
+        "false",
+        visitor.buildQuery(
+            new IsNotNullPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, null, null, dnaChecklistKey)));
+    assertEquals(
+        "true",
+        visitor.buildQuery(
+            new IsNullPredicate<>(
+                OccurrenceSearchParameter.TAXON_KEY, null, null, dnaChecklistKey)));
+    // combined with other filters
+    assertEquals(
+        "((false) AND (countrycode = 'DK'))",
+        visitor.buildQuery(
+            new ConjunctionPredicate(
+                List.of(
+                    new EqualsPredicate<>(
+                        OccurrenceSearchParameter.TAXON_KEY,
+                        "212",
+                        false,
+                        null,
+                        null,
+                        dnaChecklistKey),
+                    new EqualsPredicate<>(OccurrenceSearchParameter.COUNTRY, "DK", false)))));
   }
 
   @Test

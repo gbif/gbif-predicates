@@ -78,6 +78,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   private static final String IS_NULL_ARRAY_OPERATOR = "(%1$s IS NULL OR size(%1$s) = 0)";
   // where query to execute a select all
   private static final String ALL_QUERY = "true";
+  private static final String NONE_QUERY = "false";
 
   private static final String SQL_ARRAY_PRE = "ARRAY";
 
@@ -475,20 +476,26 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
 
   /** Supports all parameters incl taxonKey expansion for higher taxa. */
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
-    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
-      appendDnaAssistedFilter(
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
+        && hasDnaClassification(predicate.getChecklistKey())) {
+      appendUseDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendEquals(predicate, dnaAssisted));
-    } else if (isDnaAssistedOnly(
+    } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
         predicate.getUseDnaAssistance(),
         predicate.getDnaAssistedChecklistKey())) {
-      appendEquals(
-          new EqualsPredicate<>(
-              predicate.getKey(),
-              predicate.getValue(),
-              predicate.isMatchCase(),
-              predicate.getDnaAssistedChecklistKey()),
-          true);
+      if (hasDnaClassification(predicate.getDnaAssistedChecklistKey())) {
+        appendEquals(
+            new EqualsPredicate<>(
+                predicate.getKey(),
+                predicate.getValue(),
+                predicate.isMatchCase(),
+                predicate.getDnaAssistedChecklistKey()),
+            true);
+      } else {
+        // the checklist has no DNA-assisted classification, so nothing matches
+        builder.append(NONE_QUERY);
+      }
     } else {
       appendEquals(predicate, false);
     }
@@ -887,20 +894,26 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    *   https://jira.apache.org/jira/browse/HIVE-11415#comment-14651085
    */
   public void visit(InPredicate<S> predicate) throws QueryBuildingException {
-    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
-      appendDnaAssistedFilter(
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
+        && hasDnaClassification(predicate.getChecklistKey())) {
+      appendUseDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendIn(predicate, dnaAssisted));
-    } else if (isDnaAssistedOnly(
+    } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
         predicate.getUseDnaAssistance(),
         predicate.getDnaAssistedChecklistKey())) {
-      appendIn(
-          new InPredicate<>(
-              predicate.getKey(),
-              predicate.getValues(),
-              predicate.isMatchCase(),
-              predicate.getDnaAssistedChecklistKey()),
-          true);
+      if (hasDnaClassification(predicate.getDnaAssistedChecklistKey())) {
+        appendIn(
+            new InPredicate<>(
+                predicate.getKey(),
+                predicate.getValues(),
+                predicate.isMatchCase(),
+                predicate.getDnaAssistedChecklistKey()),
+            true);
+      } else {
+        // the checklist has no DNA-assisted classification, so nothing matches
+        builder.append(NONE_QUERY);
+      }
     } else {
       appendIn(predicate, false);
     }
@@ -1007,20 +1020,26 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
-    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())) {
-      appendDnaAssistedFilter(
+    if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
+        && hasDnaClassification(predicate.getChecklistKey())) {
+      appendUseDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendLike(predicate, dnaAssisted));
-    } else if (isDnaAssistedOnly(
+    } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
         predicate.getUseDnaAssistance(),
         predicate.getDnaAssistedChecklistKey())) {
-      appendLike(
-          new LikePredicate<>(
-              predicate.getKey(),
-              predicate.getValue(),
-              predicate.getDnaAssistedChecklistKey(),
-              predicate.isMatchCase()),
-          true);
+      if (hasDnaClassification(predicate.getDnaAssistedChecklistKey())) {
+        appendLike(
+            new LikePredicate<>(
+                predicate.getKey(),
+                predicate.getValue(),
+                predicate.getDnaAssistedChecklistKey(),
+                predicate.isMatchCase()),
+            true);
+      } else {
+        // the checklist has no DNA-assisted classification, so nothing matches
+        builder.append(NONE_QUERY);
+      }
     } else {
       appendLike(predicate, false);
     }
@@ -1084,17 +1103,23 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
-    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())) {
-      appendDnaAssistedFilter(
+    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())
+        && hasDnaClassification(predicate.getChecklistKey())) {
+      appendUseDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendIsNotNull(predicate, dnaAssisted));
-    } else if (isDnaAssistedOnly(
+    } else if (searchesOnlyInDnaChecklist(
         predicate.getParameter(),
         predicate.getUseDnaAssistance(),
         predicate.getDnaAssistedChecklistKey())) {
-      appendIsNotNull(
-          new IsNotNullPredicate<>(
-              predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
-          true);
+      if (hasDnaClassification(predicate.getDnaAssistedChecklistKey())) {
+        appendIsNotNull(
+            new IsNotNullPredicate<>(
+                predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
+            true);
+      } else {
+        // the checklist has no DNA-assisted classification, so nothing matches
+        builder.append(NONE_QUERY);
+      }
     } else {
       appendIsNotNull(predicate, false);
     }
@@ -1125,17 +1150,23 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   }
 
   public void visit(IsNullPredicate<S> predicate) throws QueryBuildingException {
-    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())) {
+    if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())
+        && hasDnaClassification(predicate.getChecklistKey())) {
       // the value has to be null in both classifications, so this is the negation of IS NOT NULL
-      appendDnaAssistedFilter(
+      appendUseDnaAssistanceFilter(
           CONJUNCTION_OPERATOR, dnaAssisted -> appendIsNull(predicate, dnaAssisted));
-    } else if (isDnaAssistedOnly(
+    } else if (searchesOnlyInDnaChecklist(
         predicate.getParameter(),
         predicate.getUseDnaAssistance(),
         predicate.getDnaAssistedChecklistKey())) {
-      appendIsNull(
-          new IsNullPredicate<>(predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
-          true);
+      if (hasDnaClassification(predicate.getDnaAssistedChecklistKey())) {
+        appendIsNull(
+            new IsNullPredicate<>(predicate.getParameter(), predicate.getDnaAssistedChecklistKey()),
+            true);
+      } else {
+        // the checklist has no DNA-assisted classification, so the value is always null
+        builder.append(ALL_QUERY);
+      }
     } else {
       appendIsNull(predicate, false);
     }
@@ -1738,7 +1769,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * It only applies to the taxonomic parameters, excluding the Humboldt ones, and it is ignored
    * when the useDnaAssistance flag is used.
    */
-  private boolean isDnaAssistedOnly(
+  private boolean searchesOnlyInDnaChecklist(
       S parameter, Boolean useDnaAssistance, UUID dnaAssistedChecklistKey) {
     return dnaAssistedChecklistKey != null
         && !isUseDnaAssistance(useDnaAssistance)
@@ -1752,6 +1783,15 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
         : predicate.getDnaAssistedChecklistKey();
   }
 
+  /**
+   * Whether the checklist has a DNA-assisted classification in the table. Without it, the DNA
+   * options behave as if no record had a DNA-assisted classification for the checklist, like in
+   * Elasticsearch, instead of failing.
+   */
+  private boolean hasDnaClassification(UUID checklistKey) {
+    return dnaChecklistNestedStructMap.containsKey(getChecklistKey(checklistKey));
+  }
+
   /** Appends a filter, on the regular or on the DNA-assisted classification. */
   @FunctionalInterface
   private interface TaxonFilterAppender {
@@ -1762,7 +1802,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * Appends the filter for the checklist classification and for the DNA-assisted classification of
    * the same checklist, joined by the given operator.
    */
-  private void appendDnaAssistedFilter(String operator, TaxonFilterAppender appender)
+  private void appendUseDnaAssistanceFilter(String operator, TaxonFilterAppender appender)
       throws QueryBuildingException {
     builder.append("((");
     appender.append(false);
