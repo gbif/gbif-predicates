@@ -82,19 +82,22 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   /** Returns the dnaAssistedChecklistKey of the predicate, or null if it doesn't have one. */
   private static UUID getDnaAssistedChecklistKey(Predicate predicate) {
-    UUID dnaAssistedChecklistKey = null;
-    if (predicate instanceof EqualsPredicate) {
-      dnaAssistedChecklistKey = ((EqualsPredicate<?>) predicate).getDnaAssistedChecklistKey();
-    } else if (predicate instanceof InPredicate) {
-      dnaAssistedChecklistKey = ((InPredicate<?>) predicate).getDnaAssistedChecklistKey();
-    } else if (predicate instanceof LikePredicate) {
-      dnaAssistedChecklistKey = ((LikePredicate<?>) predicate).getDnaAssistedChecklistKey();
-    } else if (predicate instanceof IsNotNullPredicate) {
-      dnaAssistedChecklistKey = ((IsNotNullPredicate<?>) predicate).getDnaAssistedChecklistKey();
-    } else if (predicate instanceof IsNullPredicate) {
-      dnaAssistedChecklistKey = ((IsNullPredicate<?>) predicate).getDnaAssistedChecklistKey();
+    return getPredicateValue(predicate, "getDnaAssistedChecklistKey", UUID.class);
+  }
+
+  /**
+   * Returns the value of a getter of the predicate, or null if the predicate doesn't have it. Only
+   * some predicates have the checklist and DNA options.
+   */
+  private static <T> T getPredicateValue(Predicate predicate, String getter, Class<T> type) {
+    if (predicate == null) {
+      return null;
     }
-    return dnaAssistedChecklistKey;
+    try {
+      return type.cast(predicate.getClass().getMethod(getter).invoke(predicate));
+    } catch (ReflectiveOperationException e) {
+      return null;
+    }
   }
 
   /**
@@ -123,19 +126,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
 
   /** Only the predicates that support the useDnaAssistance flag can enable it. */
   private static boolean isUseDnaAssistance(Predicate predicate) {
-    Boolean useDnaAssistance = null;
-    if (predicate instanceof EqualsPredicate) {
-      useDnaAssistance = ((EqualsPredicate<?>) predicate).getUseDnaAssistance();
-    } else if (predicate instanceof InPredicate) {
-      useDnaAssistance = ((InPredicate<?>) predicate).getUseDnaAssistance();
-    } else if (predicate instanceof LikePredicate) {
-      useDnaAssistance = ((LikePredicate<?>) predicate).getUseDnaAssistance();
-    } else if (predicate instanceof IsNotNullPredicate) {
-      useDnaAssistance = ((IsNotNullPredicate<?>) predicate).getUseDnaAssistance();
-    } else if (predicate instanceof IsNullPredicate) {
-      useDnaAssistance = ((IsNullPredicate<?>) predicate).getUseDnaAssistance();
-    }
-    return Boolean.TRUE.equals(useDnaAssistance);
+    return Boolean.TRUE.equals(getPredicateValue(predicate, "getUseDnaAssistance", Boolean.class));
   }
 
   /** The DNA assistance doesn't apply to the Humboldt taxonomic scopes. */
