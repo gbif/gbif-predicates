@@ -144,29 +144,24 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   private Query addDnaTaxonQuery(
       Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
-    return getDnaAssistedField(predicate, parameter)
-        .map(
-            dnaField ->
-                buildBoolQuery(
-                    Collections.emptyList(),
-                    List.of(query, queryFn.apply(dnaField)),
-                    Collections.emptyList()))
-        .orElse(query);
+    if (!isUseDnaAssistance(predicate, parameter)) {
+      return query;
+    }
+    String dnaField = esFieldMapper.getDnaChecklistField(getChecklistKey(predicate), parameter);
+    return buildBoolQuery(
+        Collections.emptyList(), List.of(query, queryFn.apply(dnaField)), Collections.emptyList());
   }
 
   /**
-   * Returns the field of the DNA-assisted classification that is also searched when the predicate
-   * has the useDnaAssistance flag and the parameter is taxonomic, excluding the Humboldt ones.
+   * The useDnaAssistance flag also searches the DNA-assisted classification of the checklist of the
+   * predicate (or the default one), not of the dnaAssistedChecklistKey, which is ignored. It only
+   * applies to the taxonomic parameters, excluding the Humboldt ones.
    */
-  private Optional<String> getDnaAssistedField(Predicate predicate, S parameter) {
-    UUID checklistKey = getChecklistKey(predicate);
-    if (checklistKey == null
-        || !esFieldMapper.isTaxonomic(parameter)
-        || isHumboldtParameter(parameter)
-        || !isUseDnaAssistance(predicate)) {
-      return Optional.empty();
-    }
-    return Optional.of(esFieldMapper.getDnaChecklistField(checklistKey, parameter));
+  private boolean isUseDnaAssistance(Predicate predicate, S parameter) {
+    return isUseDnaAssistance(predicate)
+        && getChecklistKey(predicate) != null
+        && esFieldMapper.isTaxonomic(parameter)
+        && !isHumboldtParameter(parameter);
   }
 
   private String getExactMatchFieldName(IsNotNullPredicate<S> predicate) {
@@ -939,7 +934,9 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
             .computeIfAbsent(parameter, ignored -> new LinkedHashMap<>())
             .computeIfAbsent(fieldName, ignored -> new LinkedHashSet<>());
     fields.add(fieldName);
-    getDnaAssistedField(predicate, parameter).ifPresent(fields::add);
+    if (isUseDnaAssistance(predicate, parameter)) {
+      fields.add(esFieldMapper.getDnaChecklistField(getChecklistKey(predicate), parameter));
+    }
   }
 
   /**
