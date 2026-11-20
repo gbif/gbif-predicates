@@ -103,13 +103,22 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * the useDnaAssistance flag is used and for the Humboldt parameters.
    */
   private String getChecklistField(Predicate predicate, S parameter) {
-    UUID dnaAssistedChecklistKey = getDnaAssistedChecklistKey(predicate);
-    if (dnaAssistedChecklistKey != null
-        && !isUseDnaAssistance(predicate)
-        && !isHumboldtParameter(parameter)) {
-      return esFieldMapper.getDnaChecklistField(dnaAssistedChecklistKey, parameter);
+    if (searchesOnlyInDnaChecklist(predicate, parameter)) {
+      return esFieldMapper.getDnaChecklistField(getDnaAssistedChecklistKey(predicate), parameter);
     }
     return esFieldMapper.getChecklistField(getChecklistKey(predicate), parameter);
+  }
+
+  /**
+   * The dnaAssistedChecklistKey searches only in the DNA-assisted classification of the checklist.
+   * It only applies to the taxonomic parameters, excluding the Humboldt ones, and it is ignored
+   * when the useDnaAssistance flag is used.
+   */
+  private boolean searchesOnlyInDnaChecklist(Predicate predicate, S parameter) {
+    return getDnaAssistedChecklistKey(predicate) != null
+        && !isUseDnaAssistance(predicate)
+        && esFieldMapper.isTaxonomic(parameter)
+        && !isHumboldtParameter(parameter);
   }
 
   /** Only the predicates that support the useDnaAssistance flag can enable it. */
@@ -142,7 +151,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param query the query on the checklist field
    * @param queryFn creates the same query for another field
    */
-  private Query addDnaTaxonQuery(
+  private Query addUseDnaAssistanceQuery(
       Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
     if (!isUseDnaAssistance(predicate, parameter)) {
       return query;
@@ -678,7 +687,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       q =
           addNullableFieldPredicate(
               predicate,
-              addDnaTaxonQuery(
+              addUseDnaAssistanceQuery(
                   predicate,
                   parameter,
                   termQuery(getExactMatchOrVerbatimField(predicate), value),
@@ -818,7 +827,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               .map(v -> parseParamValue(v, parameter))
               .collect(Collectors.toList());
       Query termsQ =
-          addDnaTaxonQuery(
+          addUseDnaAssistanceQuery(
               predicate,
               parameter,
               termsQuery(getExactMatchOrVerbatimField(predicate), values),
@@ -854,7 +863,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles like predicate */
   public void visit(LikePredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        addDnaTaxonQuery(
+        addUseDnaAssistanceQuery(
             predicate,
             predicate.getKey(),
             wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
@@ -1060,7 +1069,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles ISNOTNULL Predicate */
   public void visit(IsNotNullPredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        addDnaTaxonQuery(
+        addUseDnaAssistanceQuery(
             predicate,
             predicate.getParameter(),
             existsQuery(getExactMatchFieldName(predicate)),
@@ -1075,7 +1084,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
     Query exists =
-        addDnaTaxonQuery(
+        addUseDnaAssistanceQuery(
             predicate,
             predicate.getParameter(),
             existsQuery(getExactMatchFieldName(predicate)),
