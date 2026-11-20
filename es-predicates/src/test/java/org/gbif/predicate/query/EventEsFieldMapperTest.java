@@ -21,7 +21,10 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
               EventSearchParameter.ACCEPTED_TAXON_KEY,
               EventSearchParameter.TAXON_KEY,
               EventSearchParameter.IUCN_RED_LIST_CATEGORY,
-              EventSearchParameter.TAXONOMIC_STATUS));
+              EventSearchParameter.TAXONOMIC_STATUS,
+              EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
+              EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,
+              EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY));
 
   private static final Set<EventSearchParameter> VOCABULARY_SET =
       new HashSet<>(
@@ -74,6 +77,18 @@ public class EventEsFieldMapperTest implements EsFieldMapper<EventSearchParamete
 
   @Override
   public String getChecklistField(UUID checklistKey, EventSearchParameter searchParameter) {
+    UUID key = checklistKey != null ? checklistKey : defaultChecklistKey;
+
+    // the humboldt taxonomic scopes are also classified with checklists, as in the real mapper
+    if (searchParameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY) {
+      return "event.humboldt.targetTaxonomicScope." + key + ".usage.key";
+    }
+    if (searchParameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME) {
+      return "event.humboldt.targetTaxonomicScope." + key + ".usage.name";
+    }
+    if (searchParameter == EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY) {
+      return "event.humboldt.targetTaxonomicScope." + key + ".taxonKeys";
+    }
 
     if (searchParameter == EventSearchParameter.SCIENTIFIC_NAME) {
       return "classifications."
