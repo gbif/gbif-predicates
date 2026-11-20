@@ -151,7 +151,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    * @param query the query on the checklist field
    * @param queryFn creates the same query for another field
    */
-  private Query addUseDnaAssistanceQuery(
+  private Query addDnaAssistanceQuery(
       Predicate predicate, S parameter, Query query, Function<String, Query> queryFn) {
     if (!isUseDnaAssistance(predicate, parameter)) {
       return query;
@@ -687,7 +687,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       q =
           addNullableFieldPredicate(
               predicate,
-              addUseDnaAssistanceQuery(
+              addDnaAssistanceQuery(
                   predicate,
                   parameter,
                   termQuery(getExactMatchOrVerbatimField(predicate), value),
@@ -827,7 +827,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               .map(v -> parseParamValue(v, parameter))
               .collect(Collectors.toList());
       Query termsQ =
-          addUseDnaAssistanceQuery(
+          addDnaAssistanceQuery(
               predicate,
               parameter,
               termsQuery(getExactMatchOrVerbatimField(predicate), values),
@@ -863,7 +863,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles like predicate */
   public void visit(LikePredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        addUseDnaAssistanceQuery(
+        addDnaAssistanceQuery(
             predicate,
             predicate.getKey(),
             wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),
@@ -1069,7 +1069,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
   /** handles ISNOTNULL Predicate */
   public void visit(IsNotNullPredicate<S> predicate, QueryData queryData) {
     addFilterQuery(
-        addUseDnaAssistanceQuery(
+        addDnaAssistanceQuery(
             predicate,
             predicate.getParameter(),
             existsQuery(getExactMatchFieldName(predicate)),
@@ -1084,7 +1084,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
    */
   public void visit(IsNullPredicate<S> predicate, QueryData queryData) {
     Query exists =
-        addUseDnaAssistanceQuery(
+        addDnaAssistanceQuery(
             predicate,
             predicate.getParameter(),
             existsQuery(getExactMatchFieldName(predicate)),

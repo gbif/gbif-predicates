@@ -478,7 +478,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(EqualsPredicate<S> predicate) throws QueryBuildingException {
     if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
         && hasDnaClassification(predicate.getChecklistKey())) {
-      appendUseDnaAssistanceFilter(
+      appendDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendEquals(predicate, dnaAssisted));
     } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
@@ -896,7 +896,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(InPredicate<S> predicate) throws QueryBuildingException {
     if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
         && hasDnaClassification(predicate.getChecklistKey())) {
-      appendUseDnaAssistanceFilter(
+      appendDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendIn(predicate, dnaAssisted));
     } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
@@ -1022,7 +1022,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(LikePredicate<S> predicate) throws QueryBuildingException {
     if (isUseDnaAssistance(predicate.getKey(), predicate.getUseDnaAssistance())
         && hasDnaClassification(predicate.getChecklistKey())) {
-      appendUseDnaAssistanceFilter(
+      appendDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendLike(predicate, dnaAssisted));
     } else if (searchesOnlyInDnaChecklist(
         predicate.getKey(),
@@ -1105,7 +1105,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
   public void visit(IsNotNullPredicate<S> predicate) throws QueryBuildingException {
     if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())
         && hasDnaClassification(predicate.getChecklistKey())) {
-      appendUseDnaAssistanceFilter(
+      appendDnaAssistanceFilter(
           DISJUNCTION_OPERATOR, dnaAssisted -> appendIsNotNull(predicate, dnaAssisted));
     } else if (searchesOnlyInDnaChecklist(
         predicate.getParameter(),
@@ -1153,7 +1153,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
     if (isUseDnaAssistance(predicate.getParameter(), predicate.getUseDnaAssistance())
         && hasDnaClassification(predicate.getChecklistKey())) {
       // the value has to be null in both classifications, so this is the negation of IS NOT NULL
-      appendUseDnaAssistanceFilter(
+      appendDnaAssistanceFilter(
           CONJUNCTION_OPERATOR, dnaAssisted -> appendIsNull(predicate, dnaAssisted));
     } else if (searchesOnlyInDnaChecklist(
         predicate.getParameter(),
@@ -1802,7 +1802,7 @@ public class SQLQueryVisitor<S extends SearchParameter> implements QueryVisitor 
    * Appends the filter for the checklist classification and for the DNA-assisted classification of
    * the same checklist, joined by the given operator.
    */
-  private void appendUseDnaAssistanceFilter(String operator, TaxonFilterAppender appender)
+  private void appendDnaAssistanceFilter(String operator, TaxonFilterAppender appender)
       throws QueryBuildingException {
     builder.append("((");
     appender.append(false);
