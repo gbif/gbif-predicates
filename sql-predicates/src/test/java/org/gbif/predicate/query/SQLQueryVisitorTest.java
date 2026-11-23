@@ -1113,16 +1113,57 @@ public class SQLQueryVisitorTest {
     assertEquals("(issue IS NOT NULL AND size(issue) > 0)", query);
   }
 
+  /** The checklist keys are arrays of the checklists with a match, regular or DNA-assisted. */
+  @Test
+  public void testChecklistKeyPredicates() throws QueryBuildingException {
+    String col = Constants.COL_DATASET_KEY.toString();
+    String nub = Constants.NUB_DATASET_KEY.toString();
+    Map<OccurrenceSearchParameter, String> columns =
+        Map.of(
+            OccurrenceSearchParameter.CHECKLIST_KEY, "checklistkey",
+            OccurrenceSearchParameter.DNA_ASSISTED_CHECKLIST_KEY, "dnachecklistkey");
+
+    for (Map.Entry<OccurrenceSearchParameter, String> e : columns.entrySet()) {
+      OccurrenceSearchParameter param = e.getKey();
+      String column = e.getValue();
+
+      assertEquals(
+          "stringArrayContains(" + column + ",'" + col + "',false)",
+          visitor.buildQuery(new EqualsPredicate<>(param, col, false)));
+      assertEquals(
+          "(stringArrayContains("
+              + column
+              + ",'"
+              + col
+              + "',false) OR stringArrayContains("
+              + column
+              + ",'"
+              + nub
+              + "',false))",
+          visitor.buildQuery(new InPredicate<>(param, List.of(col, nub), false)));
+      assertEquals(
+          "NOT stringArrayContains(" + column + ",'" + col + "',false)",
+          visitor.buildQuery(new NotPredicate(new EqualsPredicate<>(param, col, false))));
+      assertEquals(
+          "(" + column + " IS NOT NULL AND size(" + column + ") > 0)",
+          visitor.buildQuery(new IsNotNullPredicate<>(param)));
+      assertEquals(
+          "(" + column + " IS NULL OR size(" + column + ") = 0)",
+          visitor.buildQuery(new IsNullPredicate<>(param)));
+    }
+
+    assertEquals(
+        "stringArrayContains(checklistkey,'" + col + "',false)",
+        visitor.buildQuery(new EqualsPredicate<>(EventSearchParameter.CHECKLIST_KEY, col, false)));
+  }
+
   @Test
   public void testAllParamsExist() {
     List<Predicate> predicates = new ArrayList<>();
     for (OccurrenceSearchParameter param : OccurrenceSearchParameter.values()) {
       String value1 = "7";
       String value2 = "9";
-      if (OccurrenceSearchParameter.DNA_ASSISTED_CHECKLIST_KEY == param) {
-        // it isn't a filter, the predicates use the dnaAssistedChecklistKey field instead
-        continue;
-      } else if (OccurrenceSearchParameter.GEOMETRY == param) {
+      if (OccurrenceSearchParameter.GEOMETRY == param) {
         predicates.add(new WithinPredicate("POLYGON ((30 10, 10 20, 20 40, 40 40, 30 10))"));
         continue;
       } else if (OccurrenceSearchParameter.GEO_DISTANCE == param) {

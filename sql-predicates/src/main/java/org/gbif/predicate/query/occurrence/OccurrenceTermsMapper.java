@@ -32,7 +32,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     // Build EVENTS_PARAM_TO_TERM with LinkedHashMap to preserve insertion order
     Map<SearchParameter, Term> eventsMap = new LinkedHashMap<>();
     eventsMap.put(EventSearchParameter.DATASET_KEY, GbifTerm.datasetKey);
-    eventsMap.put(EventSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
     eventsMap.put(EventSearchParameter.YEAR, DwcTerm.year);
     eventsMap.put(EventSearchParameter.MONTH, DwcTerm.month);
     eventsMap.put(EventSearchParameter.DAY, DwcTerm.day);
@@ -207,6 +206,9 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(OccurrenceSearchParameter.MEASUREMENT_TYPE_ID, ObisTerm.measurementTypeID);
     arrayMap.put(OccurrenceSearchParameter.LITHOSTRATIGRAPHY, GbifTerm.lithostratigraphy);
     arrayMap.put(OccurrenceSearchParameter.BIOSTRATIGRAPHY, GbifTerm.biostratigraphy);
+    arrayMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
+    arrayMap.put(
+        OccurrenceSearchParameter.DNA_ASSISTED_CHECKLIST_KEY, GbifInternalTerm.dnaChecklistKey);
 
     // event array params
     arrayMap.put(EventSearchParameter.MEASUREMENT_TYPE, DwcTerm.measurementType);
@@ -224,6 +226,7 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     arrayMap.put(EventSearchParameter.GEOREFERENCED_BY, DwcTerm.georeferencedBy);
     arrayMap.put(EventSearchParameter.HIGHER_GEOGRAPHY, DwcTerm.higherGeography);
     arrayMap.put(EventSearchParameter.PROJECT_ID, DwcTerm.projectID);
+    arrayMap.put(EventSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
 
     ARRAY_STRING_TERMS = Collections.unmodifiableMap(arrayMap);
 
@@ -379,7 +382,6 @@ public class OccurrenceTermsMapper implements SQLTermsMapper<SearchParameter> {
     paramMap.put(OccurrenceSearchParameter.MEMBER, DwcTerm.member);
     paramMap.put(OccurrenceSearchParameter.BED, DwcTerm.bed);
     paramMap.put(OccurrenceSearchParameter.PROJECT_ID, DwcTerm.projectID);
-    paramMap.put(OccurrenceSearchParameter.CHECKLIST_KEY, GbifTerm.checklistKey);
     paramMap.put(OccurrenceSearchParameter.GEOLOGICAL_TIME, GbifTerm.geologicalTime);
     paramMap.put(OccurrenceSearchParameter.EVENT_DATE_GTE, GbifInternalTerm.eventDateGte);
 
