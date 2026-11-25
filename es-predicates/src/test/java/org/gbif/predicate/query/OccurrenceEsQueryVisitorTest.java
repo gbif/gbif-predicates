@@ -2323,8 +2323,8 @@ public class OccurrenceEsQueryVisitorTest {
   }
 
   /**
-   * gbif/occurrence#632: with many bounds, the first lower and upper bounds are merged and each
-   * remaining bound is applied as its own filter.
+   * gbif/occurrence#632: with more than one lower or upper bound, each bound is its own range and
+   * all of them are applied together in a single bool filter.
    */
   @Test
   public void manyRangeBoundsSameFieldTest()

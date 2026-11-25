@@ -279,8 +279,10 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       return rangeQuery(field, value, null, null, null, null);
     } else if (bound instanceof LessThanPredicate) {
       return rangeQuery(field, null, null, null, value, null);
+    } else if (bound instanceof LessThanOrEqualsPredicate) {
+      return rangeQuery(field, null, value, null, null, null);
     }
-    return rangeQuery(field, null, value, null, null, null);
+    throw new IllegalArgumentException("Not a range bound predicate: " + bound);
   }
 
   /**
@@ -340,7 +342,7 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
             gte = value;
           } else if (bound instanceof LessThanPredicate) {
             lt = value;
-          } else {
+          } else if (bound instanceof LessThanOrEqualsPredicate) {
             lte = value;
           }
         }
