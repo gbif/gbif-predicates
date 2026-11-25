@@ -270,6 +270,19 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
                         })));
   }
 
+  /** Range query for a single gt/gte/lt/lte predicate. */
+  private Query boundRangeQuery(String field, SimplePredicate<S> bound) {
+    Object value = parseParamValue(bound.getValue(), bound.getKey());
+    if (bound instanceof GreaterThanPredicate) {
+      return rangeQuery(field, null, null, value, null, null);
+    } else if (bound instanceof GreaterThanOrEqualsPredicate) {
+      return rangeQuery(field, value, null, null, null, null);
+    } else if (bound instanceof LessThanPredicate) {
+      return rangeQuery(field, null, null, null, value, null);
+    }
+    return rangeQuery(field, null, value, null, null, null);
+  }
+
   /**
    * handle conjunction predicate
    *
@@ -304,39 +317,44 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       }
 
       S key = entry.getKey();
-      // Only one lower bound (gt/gte) and one upper bound (lt/lte) can be merged into a single
-      // range query. Any additional bound on the same key is left out of the merge and visited
-      // as its own range query, so all of them are applied (gbif/occurrence#632).
-      Object gte = null, lte = null, gt = null, lt = null;
-      boolean hasLower = false, hasUpper = false;
-      for (SimplePredicate<S> bound : bounds) {
-        boolean isLower =
-            bound instanceof GreaterThanPredicate || bound instanceof GreaterThanOrEqualsPredicate;
-        if (isLower ? hasLower : hasUpper) {
-          continue;
+      String field = esFieldMapper.getExactMatchFieldName(key);
+      // All the bounds of a key go into a single query, so they stay together when this AND is
+      // inside an OR. With at most one lower (gt/gte) and one upper (lt/lte) bound they're merged
+      // into one range; otherwise each bound is its own range in a bool filter, so all of them are
+      // applied (gbif/occurrence#632).
+      long lowerBounds =
+          bounds.stream()
+              .filter(
+                  b ->
+                      b instanceof GreaterThanPredicate
+                          || b instanceof GreaterThanOrEqualsPredicate)
+              .count();
+      Query rangeQ;
+      if (lowerBounds <= 1 && bounds.size() - lowerBounds <= 1) {
+        Object gte = null, lte = null, gt = null, lt = null;
+        for (SimplePredicate<S> bound : bounds) {
+          Object value = parseParamValue(bound.getValue(), key);
+          if (bound instanceof GreaterThanPredicate) {
+            gt = value;
+          } else if (bound instanceof GreaterThanOrEqualsPredicate) {
+            gte = value;
+          } else if (bound instanceof LessThanPredicate) {
+            lt = value;
+          } else {
+            lte = value;
+          }
         }
-        Object value = parseParamValue(bound.getValue(), key);
-        if (bound instanceof GreaterThanPredicate) {
-          gt = value;
-        } else if (bound instanceof GreaterThanOrEqualsPredicate) {
-          gte = value;
-        } else if (bound instanceof LessThanPredicate) {
-          lt = value;
-        } else if (bound instanceof LessThanOrEqualsPredicate) {
-          lte = value;
-        }
-        if (isLower) {
-          hasLower = true;
-        } else {
-          hasUpper = true;
-        }
-        handledAsMergedRange.add(bound);
+        rangeQ = rangeQuery(field, gte, lte, gt, lt, null);
+      } else {
+        rangeQ =
+            buildBoolQuery(
+                bounds.stream().map(b -> boundRangeQuery(field, b)).collect(Collectors.toList()),
+                Collections.emptyList(),
+                Collections.emptyList());
       }
+      handledAsMergedRange.addAll(bounds);
 
-      Query q =
-          addNullableFieldPredicate(
-              bounds.get(0),
-              rangeQuery(esFieldMapper.getExactMatchFieldName(key), gte, lte, gt, lt, null));
+      Query q = addNullableFieldPredicate(bounds.get(0), rangeQ);
       if (esFieldMapper.isNestedField(key)) {
         // grouped with the other conditions on the same nested path so it's wrapped in a single
         // nested query below (gbif/occurrence#630)

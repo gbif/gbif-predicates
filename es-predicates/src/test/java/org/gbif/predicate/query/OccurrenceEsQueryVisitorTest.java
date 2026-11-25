@@ -2147,6 +2147,34 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /** gbif/occurrence#632: one lower and one upper bound are merged into a single range. */
+  @Test
+  public void lowerAndUpperBoundsMergedTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1518"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1541")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"range\": {\n"
+            + "          \"year\": {\n"
+            + "            \"gte\": \"1518\",\n"
+            + "            \"lt\": \"1541\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
   /**
    * gbif/occurrence#632: several bounds of the same kind on one field must all be applied instead
    * of the last one replacing the others.
@@ -2166,16 +2194,22 @@ public class OccurrenceEsQueryVisitorTest {
             + "  \"bool\": {\n"
             + "    \"filter\": [\n"
             + "      {\n"
-            + "        \"range\": {\n"
-            + "          \"year\": {\n"
-            + "            \"gte\": \"1518\",\n"
-            + "            \"lt\": \"1541\"\n"
-            + "          }\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
             + "        \"bool\": {\n"
             + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"1518\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lt\": \"1541\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
             + "            {\n"
             + "              \"range\": {\n"
             + "                \"year\": {\n"
@@ -2208,16 +2242,22 @@ public class OccurrenceEsQueryVisitorTest {
             + "  \"bool\": {\n"
             + "    \"filter\": [\n"
             + "      {\n"
-            + "        \"range\": {\n"
-            + "          \"year\": {\n"
-            + "            \"gte\": \"1518\",\n"
-            + "            \"lte\": \"1800\"\n"
-            + "          }\n"
-            + "        }\n"
-            + "      },\n"
-            + "      {\n"
             + "        \"bool\": {\n"
             + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"1518\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lte\": \"1800\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
             + "            {\n"
             + "              \"range\": {\n"
             + "                \"year\": {\n"
@@ -2226,6 +2266,262 @@ public class OccurrenceEsQueryVisitorTest {
             + "              }\n"
             + "            }\n"
             + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /** gbif/occurrence#632: several lower bounds on the same field must all be applied. */
+  @Test
+  public void severalLowerRangeBoundsSameFieldTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanPredicate<>(OccurrenceSearchParameter.YEAR, "1600"),
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1518"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1800")));
+    String query = visitor.buildQuery(p);
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gt\": \"1600\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"1518\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lt\": \"1800\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}",
+        query);
+  }
+
+  /**
+   * gbif/occurrence#632: with many bounds, the first lower and upper bounds are merged and each
+   * remaining bound is applied as its own filter.
+   */
+  @Test
+  public void manyRangeBoundsSameFieldTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1500"),
+                new GreaterThanPredicate<>(OccurrenceSearchParameter.YEAR, "1510"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1600"),
+                new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1700"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1550")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"1500\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gt\": \"1510\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lt\": \"1600\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lte\": \"1700\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lt\": \"1550\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /** gbif/occurrence#632: extra bounds on a nested field stay in the same nested query. */
+  @Test
+  public void severalRangeBoundsNestedFieldTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),
+                new LessThanOrEqualsPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),
+                new LessThanPredicate<>(
+                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1500")));
+    String query = visitor.buildQuery(p);
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"1000\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"lte\": \"2000\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"lt\": \"1500\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}",
+        query);
+  }
+
+  /**
+   * gbif/occurrence#632: inside an OR, all the bounds of a nested field in an AND must stay
+   * together instead of being ORed with the other branches.
+   */
+  @Test
+  public void severalRangeBoundsNestedFieldInDisjunctionTest()
+      throws QueryBuildingException, JsonProcessingException {
+    OccurrenceSearchParameter key = OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new ConjunctionPredicate(
+                    List.of(
+                        new GreaterThanOrEqualsPredicate<>(key, "10"),
+                        new LessThanOrEqualsPredicate<>(key, "20"),
+                        new LessThanPredicate<>(key, "15"))),
+                new ConjunctionPredicate(
+                    List.of(
+                        new GreaterThanOrEqualsPredicate<>(key, "30"),
+                        new LessThanOrEqualsPredicate<>(key, "40")))));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"should\": [\n"
+            + "                {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"10\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"lte\": \"20\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"lt\": \"15\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gte\": \"30\",\n"
+            + "                      \"lte\": \"40\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
             + "        }\n"
             + "      }\n"
             + "    ]\n"
