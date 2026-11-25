@@ -270,6 +270,21 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
                         })));
   }
 
+  /** Range query for a single gt/gte/lt/lte predicate. */
+  private Query boundRangeQuery(String field, SimplePredicate<S> bound) {
+    Object value = parseParamValue(bound.getValue(), bound.getKey());
+    if (bound instanceof GreaterThanPredicate) {
+      return rangeQuery(field, null, null, value, null, null);
+    } else if (bound instanceof GreaterThanOrEqualsPredicate) {
+      return rangeQuery(field, value, null, null, null, null);
+    } else if (bound instanceof LessThanPredicate) {
+      return rangeQuery(field, null, null, null, value, null);
+    } else if (bound instanceof LessThanOrEqualsPredicate) {
+      return rangeQuery(field, null, value, null, null, null);
+    }
+    throw new IllegalArgumentException("Not a range bound predicate: " + bound);
+  }
+
   /**
    * handle conjunction predicate
    *
@@ -304,25 +319,44 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       }
 
       S key = entry.getKey();
-      Object gte = null, lte = null, gt = null, lt = null;
-      for (SimplePredicate<S> bound : bounds) {
-        Object value = parseParamValue(bound.getValue(), key);
-        if (bound instanceof GreaterThanPredicate) {
-          gt = value;
-        } else if (bound instanceof GreaterThanOrEqualsPredicate) {
-          gte = value;
-        } else if (bound instanceof LessThanPredicate) {
-          lt = value;
-        } else if (bound instanceof LessThanOrEqualsPredicate) {
-          lte = value;
+      String field = esFieldMapper.getExactMatchFieldName(key);
+      // All the bounds of a key go into a single query, so they stay together when this AND is
+      // inside an OR. With at most one lower (gt/gte) and one upper (lt/lte) bound they're merged
+      // into one range; otherwise each bound is its own range in a bool filter, so all of them are
+      // applied (gbif/occurrence#632).
+      long lowerBounds =
+          bounds.stream()
+              .filter(
+                  b ->
+                      b instanceof GreaterThanPredicate
+                          || b instanceof GreaterThanOrEqualsPredicate)
+              .count();
+      Query rangeQ;
+      if (lowerBounds <= 1 && bounds.size() - lowerBounds <= 1) {
+        Object gte = null, lte = null, gt = null, lt = null;
+        for (SimplePredicate<S> bound : bounds) {
+          Object value = parseParamValue(bound.getValue(), key);
+          if (bound instanceof GreaterThanPredicate) {
+            gt = value;
+          } else if (bound instanceof GreaterThanOrEqualsPredicate) {
+            gte = value;
+          } else if (bound instanceof LessThanPredicate) {
+            lt = value;
+          } else if (bound instanceof LessThanOrEqualsPredicate) {
+            lte = value;
+          }
         }
-        handledAsMergedRange.add(bound);
+        rangeQ = rangeQuery(field, gte, lte, gt, lt, null);
+      } else {
+        rangeQ =
+            buildBoolQuery(
+                bounds.stream().map(b -> boundRangeQuery(field, b)).collect(Collectors.toList()),
+                Collections.emptyList(),
+                Collections.emptyList());
       }
+      handledAsMergedRange.addAll(bounds);
 
-      Query q =
-          addNullableFieldPredicate(
-              bounds.get(0),
-              rangeQuery(esFieldMapper.getExactMatchFieldName(key), gte, lte, gt, lt, null));
+      Query q = addNullableFieldPredicate(bounds.get(0), rangeQ);
       if (esFieldMapper.isNestedField(key)) {
         // grouped with the other conditions on the same nested path so it's wrapped in a single
         // nested query below (gbif/occurrence#630)
@@ -421,9 +455,18 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               addNullableFieldPredicate(subPredicate, buildBoolFromQueryData(shouldQueryData));
 
           if (shouldQueryData.isNested()) {
+            List<Query> nestedQueries = shouldQueryData.rawQueries;
+            if (subPredicate instanceof ConjunctionPredicate && nestedQueries.size() > 1) {
+              // the conditions of an AND must all match, so they're kept together in a single
+              // query instead of being ORed with the other branches
+              nestedQueries =
+                  List.of(
+                      buildBoolQuery(
+                          nestedQueries, Collections.emptyList(), Collections.emptyList()));
+            }
             queriesByNestedPath
                 .computeIfAbsent(shouldQueryData.nestedPath, k -> new ArrayList<>())
-                .addAll(shouldQueryData.rawQueries);
+                .addAll(nestedQueries);
           } else {
             nonNestedQueriesFound = true;
             queryData.shouldQueries.add(q);
