@@ -453,9 +453,18 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
               addNullableFieldPredicate(subPredicate, buildBoolFromQueryData(shouldQueryData));
 
           if (shouldQueryData.isNested()) {
+            List<Query> nestedQueries = shouldQueryData.rawQueries;
+            if (subPredicate instanceof ConjunctionPredicate && nestedQueries.size() > 1) {
+              // the conditions of an AND must all match, so they're kept together in a single
+              // query instead of being ORed with the other branches
+              nestedQueries =
+                  List.of(
+                      buildBoolQuery(
+                          nestedQueries, Collections.emptyList(), Collections.emptyList()));
+            }
             queriesByNestedPath
                 .computeIfAbsent(shouldQueryData.nestedPath, k -> new ArrayList<>())
-                .addAll(shouldQueryData.rawQueries);
+                .addAll(nestedQueries);
           } else {
             nonNestedQueriesFound = true;
             queryData.shouldQueries.add(q);

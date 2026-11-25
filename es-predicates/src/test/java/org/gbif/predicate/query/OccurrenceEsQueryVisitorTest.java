@@ -2530,6 +2530,172 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /**
+   * Inside an OR, an AND mixing flat and nested conditions keeps the nested ones in a single nested
+   * query, ANDed with the flat ones.
+   */
+  @Test
+  public void nestedAndFlatConditionsInConjunctionInsideDisjunctionTest()
+      throws QueryBuildingException, JsonProcessingException {
+    OccurrenceSearchParameter length =
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new ConjunctionPredicate(
+                    List.of(
+                        new GreaterThanOrEqualsPredicate<>(length, "600"),
+                        new LessThanOrEqualsPredicate<>(length, "700"),
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE,
+                            "COI",
+                            false),
+                        new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2000"),
+                        new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "2010"))),
+                new GreaterThanOrEqualsPredicate<>(length, "2000")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"gte\": \"2000\",\n"
+            + "                  \"lte\": \"2010\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            },\n"
+            + "            {\n"
+            + "              \"nested\": {\n"
+            + "                \"path\": \"nucleotideSequence\",\n"
+            + "                \"query\": {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"600\",\n"
+            + "                            \"lte\": \"700\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"term\": {\n"
+            + "                          \"nucleotide_sequence_target_gene.keyword\": {\n"
+            + "                            \"value\": \"COI\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                \"score_mode\": \"none\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"should\": [\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gte\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * Inside an OR, the conditions of an AND on the same nested path must all match together instead
+   * of being ORed with the other branches.
+   */
+  @Test
+  public void nestedConditionsInConjunctionInsideDisjunctionTest()
+      throws QueryBuildingException, JsonProcessingException {
+    OccurrenceSearchParameter length =
+        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;
+    Predicate p =
+        new DisjunctionPredicate(
+            List.of(
+                new ConjunctionPredicate(
+                    List.of(
+                        new GreaterThanOrEqualsPredicate<>(length, "600"),
+                        new LessThanOrEqualsPredicate<>(length, "700"),
+                        new EqualsPredicate<>(
+                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE,
+                            "COI",
+                            false))),
+                new GreaterThanOrEqualsPredicate<>(length, "2000")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"should\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"nucleotideSequence\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"should\": [\n"
+            + "                {\n"
+            + "                  \"bool\": {\n"
+            + "                    \"filter\": [\n"
+            + "                      {\n"
+            + "                        \"range\": {\n"
+            + "                          \"nucleotideSequence.sequenceLength\": {\n"
+            + "                            \"gte\": \"600\",\n"
+            + "                            \"lte\": \"700\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      },\n"
+            + "                      {\n"
+            + "                        \"term\": {\n"
+            + "                          \"nucleotide_sequence_target_gene.keyword\": {\n"
+            + "                            \"value\": \"COI\"\n"
+            + "                          }\n"
+            + "                        }\n"
+            + "                      }\n"
+            + "                    ]\n"
+            + "                  }\n"
+            + "                },\n"
+            + "                {\n"
+            + "                  \"range\": {\n"
+            + "                    \"nucleotideSequence.sequenceLength\": {\n"
+            + "                      \"gte\": \"2000\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
   /** gbif/occurrence#630: an interval on a nested field was dropped, returning an empty query. */
   @Test
   public void nestedFieldRangeIntervalTest()
