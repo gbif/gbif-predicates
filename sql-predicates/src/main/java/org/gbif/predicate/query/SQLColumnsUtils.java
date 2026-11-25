@@ -205,6 +205,8 @@ public class SQLColumnsUtils {
         || GbifTerm.lithostratigraphy == term
         || GbifTerm.biostratigraphy == term
         || GbifTerm.nonTaxonomicIssue == term
+        || GbifTerm.checklistKey == term
+        || GbifInternalTerm.dnaChecklistKey == term
         || EcoTerm.voucherInstitutions == term
         || EcoTerm.verbatimSiteNames == term
         || EcoTerm.verbatimSiteDescriptions == term

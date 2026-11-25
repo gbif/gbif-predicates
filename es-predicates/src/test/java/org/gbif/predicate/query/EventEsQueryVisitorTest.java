@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import org.gbif.api.exception.QueryBuildingException;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.event.search.EventSearchParameter;
@@ -47,6 +48,8 @@ import org.junit.jupiter.api.Test;
 
 /** Test cases for the Elasticsearch query visitor. */
 public class EventEsQueryVisitorTest {
+
+  private static final UUID CHECKLIST_KEY = UUID.fromString("7ddf754f-d193-4cc9-b351-99906754a03b");
 
   private static final EventSearchParameter PARAM = EventSearchParameter.ISLAND;
   private static final EventSearchParameter PARAM2 = EventSearchParameter.INSTITUTION_CODE;
@@ -2102,5 +2105,133 @@ public class EventEsQueryVisitorTest {
             + "          }\n"
             + "        }\n";
     assertQueryEquals(expectedQuery, query);
+  }
+
+  /**
+   * The DNA assistance doesn't apply to the Humboldt taxonomic scopes, so the queries are the same
+   * with and without the flag.
+   */
+  @Test
+  public void testUseDnaAssistanceDoesNotAffectHumboldtTaxonFields()
+      throws QueryBuildingException, JsonProcessingException {
+    Function<Boolean, Predicate> equals =
+        dna ->
+            new EqualsPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
+                "6",
+                false,
+                CHECKLIST_KEY,
+                dna);
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"event.humboldt\",\n"
+            + "          \"query\": {\n"
+            + "            \"term\": {\n"
+            + "              \"event.humboldt.targetTaxonomicScope.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
+            + "                \"value\": \"6\"\n"
+            + "              }\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(equals.apply(true)));
+    assertEquals(visitor.buildQuery(equals.apply(false)), visitor.buildQuery(equals.apply(true)));
+
+    Function<Boolean, Predicate> isNull =
+        dna ->
+            new IsNullPredicate<>(
+                EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_NAME,
+                CHECKLIST_KEY,
+                dna);
+    assertEquals(visitor.buildQuery(isNull.apply(false)), visitor.buildQuery(isNull.apply(true)));
+
+    Function<Boolean, Predicate> notIn =
+        dna ->
+            new NotPredicate(
+                new InPredicate<>(
+                    EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_USAGE_KEY,
+                    List.of("1", "2"),
+                    false,
+                    CHECKLIST_KEY,
+                    dna));
+    assertEquals(visitor.buildQuery(notIn.apply(false)), visitor.buildQuery(notIn.apply(true)));
+  }
+
+  /** With the flag in both, only the event taxon key is expanded, not the Humboldt one. */
+  @Test
+  public void testUseDnaAssistanceHumboldtAndTaxonKey()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new EqualsPredicate<>(
+                    EventSearchParameter.HUMBOLDT_TARGET_TAXONOMIC_SCOPE_TAXON_KEY,
+                    "6",
+                    false,
+                    CHECKLIST_KEY,
+                    true),
+                new EqualsPredicate<>(
+                    EventSearchParameter.TAXON_KEY, "6", false, CHECKLIST_KEY, true)));
+    assertQueryEquals(
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"bool\": {\n"
+            + "                \"should\": [\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
+            + "                        \"value\": \"6\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  },\n"
+            + "                  {\n"
+            + "                    \"term\": {\n"
+            + "                      \"dnaClassifications.classifications.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
+            + "                        \"value\": \"6\"\n"
+            + "                      }\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                ]\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"nested\": {\n"
+            + "          \"path\": \"event.humboldt\",\n"
+            + "          \"query\": {\n"
+            + "            \"bool\": {\n"
+            + "              \"filter\": [\n"
+            + "                {\n"
+            + "                  \"term\": {\n"
+            + "                    \"event.humboldt.targetTaxonomicScope.7ddf754f-d193-4cc9-b351-99906754a03b.taxonKeys\": {\n"
+            + "                      \"value\": \"6\"\n"
+            + "                    }\n"
+            + "                  }\n"
+            + "                }\n"
+            + "              ]\n"
+            + "            }\n"
+            + "          },\n"
+            + "          \"score_mode\": \"none\"\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}\n",
+        visitor.buildQuery(p));
   }
 }
