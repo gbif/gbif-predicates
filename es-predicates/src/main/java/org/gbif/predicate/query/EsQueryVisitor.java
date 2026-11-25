@@ -304,8 +304,17 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
       }
 
       S key = entry.getKey();
+      // Only one lower bound (gt/gte) and one upper bound (lt/lte) can be merged into a single
+      // range query. Any additional bound on the same key is left out of the merge and visited
+      // as its own range query, so all of them are applied (gbif/occurrence#632).
       Object gte = null, lte = null, gt = null, lt = null;
+      boolean hasLower = false, hasUpper = false;
       for (SimplePredicate<S> bound : bounds) {
+        boolean isLower =
+            bound instanceof GreaterThanPredicate || bound instanceof GreaterThanOrEqualsPredicate;
+        if (isLower ? hasLower : hasUpper) {
+          continue;
+        }
         Object value = parseParamValue(bound.getValue(), key);
         if (bound instanceof GreaterThanPredicate) {
           gt = value;
@@ -315,6 +324,11 @@ public abstract class EsQueryVisitor<S extends SearchParameter> implements Query
           lt = value;
         } else if (bound instanceof LessThanOrEqualsPredicate) {
           lte = value;
+        }
+        if (isLower) {
+          hasLower = true;
+        } else {
+          hasUpper = true;
         }
         handledAsMergedRange.add(bound);
       }

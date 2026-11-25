@@ -2147,6 +2147,93 @@ public class OccurrenceEsQueryVisitorTest {
     assertQueryEquals(expectedQuery, query);
   }
 
+  /**
+   * gbif/occurrence#632: several bounds of the same kind on one field must all be applied instead
+   * of the last one replacing the others.
+   */
+  @Test
+  public void severalRangeBoundsSameFieldTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1518"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1541"),
+                new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1800")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"range\": {\n"
+            + "          \"year\": {\n"
+            + "            \"gte\": \"1518\",\n"
+            + "            \"lt\": \"1541\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lte\": \"1800\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
+  /** gbif/occurrence#632: same as above with the upper bounds inverted. */
+  @Test
+  public void severalRangeBoundsSameFieldInvertedOrderTest()
+      throws QueryBuildingException, JsonProcessingException {
+    Predicate p =
+        new ConjunctionPredicate(
+            List.of(
+                new GreaterThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1518"),
+                new LessThanOrEqualsPredicate<>(OccurrenceSearchParameter.YEAR, "1800"),
+                new LessThanPredicate<>(OccurrenceSearchParameter.YEAR, "1541")));
+    String query = visitor.buildQuery(p);
+    String expectedQuery =
+        "{\n"
+            + "  \"bool\": {\n"
+            + "    \"filter\": [\n"
+            + "      {\n"
+            + "        \"range\": {\n"
+            + "          \"year\": {\n"
+            + "            \"gte\": \"1518\",\n"
+            + "            \"lte\": \"1800\"\n"
+            + "          }\n"
+            + "        }\n"
+            + "      },\n"
+            + "      {\n"
+            + "        \"bool\": {\n"
+            + "          \"filter\": [\n"
+            + "            {\n"
+            + "              \"range\": {\n"
+            + "                \"year\": {\n"
+            + "                  \"lt\": \"1541\"\n"
+            + "                }\n"
+            + "              }\n"
+            + "            }\n"
+            + "          ]\n"
+            + "        }\n"
+            + "      }\n"
+            + "    ]\n"
+            + "  }\n"
+            + "}";
+    assertQueryEquals(expectedQuery, query);
+  }
+
   /** gbif/occurrence#630: an interval on a nested field was dropped, returning an empty query. */
   @Test
   public void nestedFieldRangeIntervalTest()
