@@ -2160,504 +2160,1053 @@
 <span class="source-line-no">2147</span><span id="line-2147">    assertQueryEquals(expectedQuery, query);</span>
 <span class="source-line-no">2148</span><span id="line-2148">  }</span>
 <span class="source-line-no">2149</span><span id="line-2149"></span>
-<span class="source-line-no">2150</span><span id="line-2150">  /** gbif/occurrence#630: an interval on a nested field was dropped, returning an empty query. */</span>
+<span class="source-line-no">2150</span><span id="line-2150">  /** gbif/occurrence#632: one lower and one upper bound are merged into a single range. */</span>
 <span class="source-line-no">2151</span><span id="line-2151">  @Test</span>
-<span class="source-line-no">2152</span><span id="line-2152">  public void nestedFieldRangeIntervalTest()</span>
+<span class="source-line-no">2152</span><span id="line-2152">  public void lowerAndUpperBoundsMergedTest()</span>
 <span class="source-line-no">2153</span><span id="line-2153">      throws QueryBuildingException, JsonProcessingException {</span>
 <span class="source-line-no">2154</span><span id="line-2154">    Predicate p =</span>
 <span class="source-line-no">2155</span><span id="line-2155">        new ConjunctionPredicate(</span>
 <span class="source-line-no">2156</span><span id="line-2156">            List.of(</span>
-<span class="source-line-no">2157</span><span id="line-2157">                new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2158</span><span id="line-2158">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
-<span class="source-line-no">2159</span><span id="line-2159">                new LessThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2160</span><span id="line-2160">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));</span>
-<span class="source-line-no">2161</span><span id="line-2161">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">2162</span><span id="line-2162">    String expectedQuery =</span>
-<span class="source-line-no">2163</span><span id="line-2163">        "{\n"</span>
-<span class="source-line-no">2164</span><span id="line-2164">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2165</span><span id="line-2165">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2166</span><span id="line-2166">            + "      {\n"</span>
-<span class="source-line-no">2167</span><span id="line-2167">            + "        \"nested\": {\n"</span>
-<span class="source-line-no">2168</span><span id="line-2168">            + "          \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2169</span><span id="line-2169">            + "          \"query\": {\n"</span>
-<span class="source-line-no">2170</span><span id="line-2170">            + "            \"bool\": {\n"</span>
-<span class="source-line-no">2171</span><span id="line-2171">            + "              \"filter\": [\n"</span>
-<span class="source-line-no">2172</span><span id="line-2172">            + "                {\n"</span>
-<span class="source-line-no">2173</span><span id="line-2173">            + "                  \"range\": {\n"</span>
-<span class="source-line-no">2174</span><span id="line-2174">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
-<span class="source-line-no">2175</span><span id="line-2175">            + "                      \"gte\": \"1000\",\n"</span>
-<span class="source-line-no">2176</span><span id="line-2176">            + "                      \"lte\": \"2000\"\n"</span>
-<span class="source-line-no">2177</span><span id="line-2177">            + "                    }\n"</span>
-<span class="source-line-no">2178</span><span id="line-2178">            + "                  }\n"</span>
-<span class="source-line-no">2179</span><span id="line-2179">            + "                }\n"</span>
-<span class="source-line-no">2180</span><span id="line-2180">            + "              ]\n"</span>
-<span class="source-line-no">2181</span><span id="line-2181">            + "            }\n"</span>
-<span class="source-line-no">2182</span><span id="line-2182">            + "          },\n"</span>
-<span class="source-line-no">2183</span><span id="line-2183">            + "          \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2184</span><span id="line-2184">            + "        }\n"</span>
-<span class="source-line-no">2185</span><span id="line-2185">            + "      }\n"</span>
-<span class="source-line-no">2186</span><span id="line-2186">            + "    ]\n"</span>
-<span class="source-line-no">2187</span><span id="line-2187">            + "  }\n"</span>
-<span class="source-line-no">2188</span><span id="line-2188">            + "}";</span>
-<span class="source-line-no">2189</span><span id="line-2189">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2190</span><span id="line-2190">  }</span>
-<span class="source-line-no">2191</span><span id="line-2191"></span>
-<span class="source-line-no">2192</span><span id="line-2192">  /** gbif/occurrence#630: same as above with exclusive bounds. */</span>
-<span class="source-line-no">2193</span><span id="line-2193">  @Test</span>
-<span class="source-line-no">2194</span><span id="line-2194">  public void nestedFieldExclusiveRangeIntervalTest()</span>
-<span class="source-line-no">2195</span><span id="line-2195">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2196</span><span id="line-2196">    Predicate p =</span>
-<span class="source-line-no">2197</span><span id="line-2197">        new ConjunctionPredicate(</span>
-<span class="source-line-no">2198</span><span id="line-2198">            List.of(</span>
-<span class="source-line-no">2199</span><span id="line-2199">                new GreaterThanPredicate&lt;&gt;(</span>
-<span class="source-line-no">2200</span><span id="line-2200">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
-<span class="source-line-no">2201</span><span id="line-2201">                new LessThanPredicate&lt;&gt;(</span>
-<span class="source-line-no">2202</span><span id="line-2202">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));</span>
-<span class="source-line-no">2203</span><span id="line-2203">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">2204</span><span id="line-2204">    String expectedQuery =</span>
-<span class="source-line-no">2205</span><span id="line-2205">        "{\n"</span>
-<span class="source-line-no">2206</span><span id="line-2206">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2207</span><span id="line-2207">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2208</span><span id="line-2208">            + "      {\n"</span>
-<span class="source-line-no">2209</span><span id="line-2209">            + "        \"nested\": {\n"</span>
-<span class="source-line-no">2210</span><span id="line-2210">            + "          \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2211</span><span id="line-2211">            + "          \"query\": {\n"</span>
-<span class="source-line-no">2212</span><span id="line-2212">            + "            \"bool\": {\n"</span>
-<span class="source-line-no">2213</span><span id="line-2213">            + "              \"filter\": [\n"</span>
-<span class="source-line-no">2214</span><span id="line-2214">            + "                {\n"</span>
-<span class="source-line-no">2215</span><span id="line-2215">            + "                  \"range\": {\n"</span>
-<span class="source-line-no">2216</span><span id="line-2216">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
-<span class="source-line-no">2217</span><span id="line-2217">            + "                      \"gt\": \"1000\",\n"</span>
-<span class="source-line-no">2218</span><span id="line-2218">            + "                      \"lt\": \"2000\"\n"</span>
-<span class="source-line-no">2219</span><span id="line-2219">            + "                    }\n"</span>
-<span class="source-line-no">2220</span><span id="line-2220">            + "                  }\n"</span>
-<span class="source-line-no">2221</span><span id="line-2221">            + "                }\n"</span>
-<span class="source-line-no">2222</span><span id="line-2222">            + "              ]\n"</span>
-<span class="source-line-no">2223</span><span id="line-2223">            + "            }\n"</span>
-<span class="source-line-no">2224</span><span id="line-2224">            + "          },\n"</span>
-<span class="source-line-no">2225</span><span id="line-2225">            + "          \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2226</span><span id="line-2226">            + "        }\n"</span>
-<span class="source-line-no">2227</span><span id="line-2227">            + "      }\n"</span>
-<span class="source-line-no">2228</span><span id="line-2228">            + "    ]\n"</span>
-<span class="source-line-no">2229</span><span id="line-2229">            + "  }\n"</span>
-<span class="source-line-no">2230</span><span id="line-2230">            + "}";</span>
-<span class="source-line-no">2231</span><span id="line-2231">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2232</span><span id="line-2232">  }</span>
-<span class="source-line-no">2233</span><span id="line-2233"></span>
-<span class="source-line-no">2234</span><span id="line-2234">  /**</span>
-<span class="source-line-no">2235</span><span id="line-2235">   * gbif/occurrence#630: an interval on a nested field must be combined with the other conditions</span>
-<span class="source-line-no">2236</span><span id="line-2236">   * on the same nested path and kept alongside non-nested conditions.</span>
-<span class="source-line-no">2237</span><span id="line-2237">   */</span>
-<span class="source-line-no">2238</span><span id="line-2238">  @Test</span>
-<span class="source-line-no">2239</span><span id="line-2239">  public void nestedFieldRangeIntervalWithOtherConditionsTest()</span>
-<span class="source-line-no">2240</span><span id="line-2240">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2241</span><span id="line-2241">    Predicate p =</span>
-<span class="source-line-no">2242</span><span id="line-2242">        new ConjunctionPredicate(</span>
-<span class="source-line-no">2243</span><span id="line-2243">            List.of(</span>
-<span class="source-line-no">2244</span><span id="line-2244">                new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2245</span><span id="line-2245">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
-<span class="source-line-no">2246</span><span id="line-2246">                new LessThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2247</span><span id="line-2247">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),</span>
-<span class="source-line-no">2248</span><span id="line-2248">                new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2249</span><span id="line-2249">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, "COI", false),</span>
-<span class="source-line-no">2250</span><span id="line-2250">                new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "DK", false)));</span>
-<span class="source-line-no">2251</span><span id="line-2251">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">2252</span><span id="line-2252">    String expectedQuery =</span>
-<span class="source-line-no">2253</span><span id="line-2253">        "{\n"</span>
-<span class="source-line-no">2254</span><span id="line-2254">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2255</span><span id="line-2255">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2256</span><span id="line-2256">            + "      {\n"</span>
-<span class="source-line-no">2257</span><span id="line-2257">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2258</span><span id="line-2258">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2259</span><span id="line-2259">            + "            {\n"</span>
-<span class="source-line-no">2260</span><span id="line-2260">            + "              \"term\": {\n"</span>
-<span class="source-line-no">2261</span><span id="line-2261">            + "                \"country\": {\n"</span>
-<span class="source-line-no">2262</span><span id="line-2262">            + "                  \"value\": \"DK\"\n"</span>
-<span class="source-line-no">2263</span><span id="line-2263">            + "                }\n"</span>
-<span class="source-line-no">2264</span><span id="line-2264">            + "              }\n"</span>
-<span class="source-line-no">2265</span><span id="line-2265">            + "            }\n"</span>
-<span class="source-line-no">2266</span><span id="line-2266">            + "          ]\n"</span>
-<span class="source-line-no">2267</span><span id="line-2267">            + "        }\n"</span>
-<span class="source-line-no">2268</span><span id="line-2268">            + "      },\n"</span>
-<span class="source-line-no">2269</span><span id="line-2269">            + "      {\n"</span>
-<span class="source-line-no">2270</span><span id="line-2270">            + "        \"nested\": {\n"</span>
-<span class="source-line-no">2271</span><span id="line-2271">            + "          \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2272</span><span id="line-2272">            + "          \"query\": {\n"</span>
-<span class="source-line-no">2273</span><span id="line-2273">            + "            \"bool\": {\n"</span>
-<span class="source-line-no">2274</span><span id="line-2274">            + "              \"filter\": [\n"</span>
-<span class="source-line-no">2275</span><span id="line-2275">            + "                {\n"</span>
-<span class="source-line-no">2276</span><span id="line-2276">            + "                  \"range\": {\n"</span>
-<span class="source-line-no">2277</span><span id="line-2277">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
-<span class="source-line-no">2278</span><span id="line-2278">            + "                      \"gte\": \"1000\",\n"</span>
-<span class="source-line-no">2279</span><span id="line-2279">            + "                      \"lte\": \"2000\"\n"</span>
-<span class="source-line-no">2280</span><span id="line-2280">            + "                    }\n"</span>
-<span class="source-line-no">2281</span><span id="line-2281">            + "                  }\n"</span>
-<span class="source-line-no">2282</span><span id="line-2282">            + "                },\n"</span>
-<span class="source-line-no">2283</span><span id="line-2283">            + "                {\n"</span>
-<span class="source-line-no">2284</span><span id="line-2284">            + "                  \"term\": {\n"</span>
-<span class="source-line-no">2285</span><span id="line-2285">            + "                    \"nucleotide_sequence_target_gene.keyword\": {\n"</span>
-<span class="source-line-no">2286</span><span id="line-2286">            + "                      \"value\": \"COI\"\n"</span>
-<span class="source-line-no">2287</span><span id="line-2287">            + "                    }\n"</span>
-<span class="source-line-no">2288</span><span id="line-2288">            + "                  }\n"</span>
-<span class="source-line-no">2289</span><span id="line-2289">            + "                }\n"</span>
-<span class="source-line-no">2290</span><span id="line-2290">            + "              ]\n"</span>
-<span class="source-line-no">2291</span><span id="line-2291">            + "            }\n"</span>
-<span class="source-line-no">2292</span><span id="line-2292">            + "          },\n"</span>
-<span class="source-line-no">2293</span><span id="line-2293">            + "          \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2294</span><span id="line-2294">            + "        }\n"</span>
-<span class="source-line-no">2295</span><span id="line-2295">            + "      }\n"</span>
-<span class="source-line-no">2296</span><span id="line-2296">            + "    ]\n"</span>
-<span class="source-line-no">2297</span><span id="line-2297">            + "  }\n"</span>
-<span class="source-line-no">2298</span><span id="line-2298">            + "}";</span>
-<span class="source-line-no">2299</span><span id="line-2299">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2300</span><span id="line-2300">  }</span>
-<span class="source-line-no">2301</span><span id="line-2301"></span>
-<span class="source-line-no">2302</span><span id="line-2302">  /**</span>
-<span class="source-line-no">2303</span><span id="line-2303">   * gbif/occurrence#630: inside an OR, a conjunction with a nested interval and a flat condition</span>
-<span class="source-line-no">2304</span><span id="line-2304">   * must keep both conditions instead of only the nested range.</span>
-<span class="source-line-no">2305</span><span id="line-2305">   */</span>
-<span class="source-line-no">2306</span><span id="line-2306">  @Test</span>
-<span class="source-line-no">2307</span><span id="line-2307">  public void nestedFieldRangeIntervalWithFlatConditionInDisjunctionTest()</span>
-<span class="source-line-no">2308</span><span id="line-2308">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2309</span><span id="line-2309">    Predicate p =</span>
-<span class="source-line-no">2310</span><span id="line-2310">        new DisjunctionPredicate(</span>
-<span class="source-line-no">2311</span><span id="line-2311">            List.of(</span>
-<span class="source-line-no">2312</span><span id="line-2312">                new ConjunctionPredicate(</span>
-<span class="source-line-no">2313</span><span id="line-2313">                    List.of(</span>
-<span class="source-line-no">2314</span><span id="line-2314">                        new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2315</span><span id="line-2315">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
-<span class="source-line-no">2316</span><span id="line-2316">                        new LessThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2317</span><span id="line-2317">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),</span>
-<span class="source-line-no">2318</span><span id="line-2318">                        new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "DK", false))),</span>
-<span class="source-line-no">2319</span><span id="line-2319">                new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "ES", false)));</span>
-<span class="source-line-no">2320</span><span id="line-2320">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">2321</span><span id="line-2321">    String expectedQuery =</span>
-<span class="source-line-no">2322</span><span id="line-2322">        "{\n"</span>
-<span class="source-line-no">2323</span><span id="line-2323">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2324</span><span id="line-2324">            + "    \"should\": [\n"</span>
-<span class="source-line-no">2325</span><span id="line-2325">            + "      {\n"</span>
-<span class="source-line-no">2326</span><span id="line-2326">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2327</span><span id="line-2327">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2328</span><span id="line-2328">            + "            {\n"</span>
-<span class="source-line-no">2329</span><span id="line-2329">            + "              \"bool\": {\n"</span>
-<span class="source-line-no">2330</span><span id="line-2330">            + "                \"filter\": [\n"</span>
-<span class="source-line-no">2331</span><span id="line-2331">            + "                  {\n"</span>
-<span class="source-line-no">2332</span><span id="line-2332">            + "                    \"term\": {\n"</span>
-<span class="source-line-no">2333</span><span id="line-2333">            + "                      \"country\": {\n"</span>
-<span class="source-line-no">2334</span><span id="line-2334">            + "                        \"value\": \"DK\"\n"</span>
-<span class="source-line-no">2335</span><span id="line-2335">            + "                      }\n"</span>
-<span class="source-line-no">2336</span><span id="line-2336">            + "                    }\n"</span>
-<span class="source-line-no">2337</span><span id="line-2337">            + "                  }\n"</span>
-<span class="source-line-no">2338</span><span id="line-2338">            + "                ]\n"</span>
-<span class="source-line-no">2339</span><span id="line-2339">            + "              }\n"</span>
-<span class="source-line-no">2340</span><span id="line-2340">            + "            },\n"</span>
-<span class="source-line-no">2341</span><span id="line-2341">            + "            {\n"</span>
-<span class="source-line-no">2342</span><span id="line-2342">            + "              \"nested\": {\n"</span>
-<span class="source-line-no">2343</span><span id="line-2343">            + "                \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2344</span><span id="line-2344">            + "                \"query\": {\n"</span>
-<span class="source-line-no">2345</span><span id="line-2345">            + "                  \"bool\": {\n"</span>
-<span class="source-line-no">2346</span><span id="line-2346">            + "                    \"filter\": [\n"</span>
-<span class="source-line-no">2347</span><span id="line-2347">            + "                      {\n"</span>
-<span class="source-line-no">2348</span><span id="line-2348">            + "                        \"range\": {\n"</span>
-<span class="source-line-no">2349</span><span id="line-2349">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
-<span class="source-line-no">2350</span><span id="line-2350">            + "                            \"gte\": \"1000\",\n"</span>
-<span class="source-line-no">2351</span><span id="line-2351">            + "                            \"lte\": \"2000\"\n"</span>
-<span class="source-line-no">2352</span><span id="line-2352">            + "                          }\n"</span>
-<span class="source-line-no">2353</span><span id="line-2353">            + "                        }\n"</span>
-<span class="source-line-no">2354</span><span id="line-2354">            + "                      }\n"</span>
-<span class="source-line-no">2355</span><span id="line-2355">            + "                    ]\n"</span>
-<span class="source-line-no">2356</span><span id="line-2356">            + "                  }\n"</span>
-<span class="source-line-no">2357</span><span id="line-2357">            + "                },\n"</span>
-<span class="source-line-no">2358</span><span id="line-2358">            + "                \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2359</span><span id="line-2359">            + "              }\n"</span>
-<span class="source-line-no">2360</span><span id="line-2360">            + "            }\n"</span>
-<span class="source-line-no">2361</span><span id="line-2361">            + "          ]\n"</span>
-<span class="source-line-no">2362</span><span id="line-2362">            + "        }\n"</span>
-<span class="source-line-no">2363</span><span id="line-2363">            + "      },\n"</span>
-<span class="source-line-no">2364</span><span id="line-2364">            + "      {\n"</span>
-<span class="source-line-no">2365</span><span id="line-2365">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2366</span><span id="line-2366">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2367</span><span id="line-2367">            + "            {\n"</span>
-<span class="source-line-no">2368</span><span id="line-2368">            + "              \"term\": {\n"</span>
-<span class="source-line-no">2369</span><span id="line-2369">            + "                \"country\": {\n"</span>
-<span class="source-line-no">2370</span><span id="line-2370">            + "                  \"value\": \"ES\"\n"</span>
-<span class="source-line-no">2371</span><span id="line-2371">            + "                }\n"</span>
-<span class="source-line-no">2372</span><span id="line-2372">            + "              }\n"</span>
-<span class="source-line-no">2373</span><span id="line-2373">            + "            }\n"</span>
-<span class="source-line-no">2374</span><span id="line-2374">            + "          ]\n"</span>
-<span class="source-line-no">2375</span><span id="line-2375">            + "        }\n"</span>
-<span class="source-line-no">2376</span><span id="line-2376">            + "      }\n"</span>
-<span class="source-line-no">2377</span><span id="line-2377">            + "    ]\n"</span>
-<span class="source-line-no">2378</span><span id="line-2378">            + "  }\n"</span>
-<span class="source-line-no">2379</span><span id="line-2379">            + "}";</span>
-<span class="source-line-no">2380</span><span id="line-2380">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2381</span><span id="line-2381">  }</span>
-<span class="source-line-no">2382</span><span id="line-2382"></span>
-<span class="source-line-no">2383</span><span id="line-2383">  /**</span>
-<span class="source-line-no">2384</span><span id="line-2384">   * gbif/occurrence#630: negating a nested interval must exclude the range instead of an empty</span>
-<span class="source-line-no">2385</span><span id="line-2385">   * query, which excluded every record.</span>
-<span class="source-line-no">2386</span><span id="line-2386">   */</span>
-<span class="source-line-no">2387</span><span id="line-2387">  @Test</span>
-<span class="source-line-no">2388</span><span id="line-2388">  public void nestedFieldRangeIntervalInNotPredicateTest()</span>
-<span class="source-line-no">2389</span><span id="line-2389">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2390</span><span id="line-2390">    Predicate p =</span>
-<span class="source-line-no">2391</span><span id="line-2391">        new NotPredicate(</span>
-<span class="source-line-no">2392</span><span id="line-2392">            new ConjunctionPredicate(</span>
-<span class="source-line-no">2393</span><span id="line-2393">                List.of(</span>
-<span class="source-line-no">2394</span><span id="line-2394">                    new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2395</span><span id="line-2395">                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
-<span class="source-line-no">2396</span><span id="line-2396">                    new LessThanOrEqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">2397</span><span id="line-2397">                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"))));</span>
-<span class="source-line-no">2398</span><span id="line-2398">    String query = visitor.buildQuery(p);</span>
-<span class="source-line-no">2399</span><span id="line-2399">    String expectedQuery =</span>
-<span class="source-line-no">2400</span><span id="line-2400">        "{\n"</span>
-<span class="source-line-no">2401</span><span id="line-2401">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2402</span><span id="line-2402">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2403</span><span id="line-2403">            + "      {\n"</span>
-<span class="source-line-no">2404</span><span id="line-2404">            + "        \"nested\": {\n"</span>
-<span class="source-line-no">2405</span><span id="line-2405">            + "          \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2406</span><span id="line-2406">            + "          \"query\": {\n"</span>
-<span class="source-line-no">2407</span><span id="line-2407">            + "            \"exists\": {\n"</span>
-<span class="source-line-no">2408</span><span id="line-2408">            + "              \"field\": \"nucleotideSequence.sequenceLength\"\n"</span>
-<span class="source-line-no">2409</span><span id="line-2409">            + "            }\n"</span>
-<span class="source-line-no">2410</span><span id="line-2410">            + "          },\n"</span>
-<span class="source-line-no">2411</span><span id="line-2411">            + "          \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2412</span><span id="line-2412">            + "        }\n"</span>
-<span class="source-line-no">2413</span><span id="line-2413">            + "      }\n"</span>
-<span class="source-line-no">2414</span><span id="line-2414">            + "    ],\n"</span>
-<span class="source-line-no">2415</span><span id="line-2415">            + "    \"must_not\": [\n"</span>
-<span class="source-line-no">2416</span><span id="line-2416">            + "      {\n"</span>
-<span class="source-line-no">2417</span><span id="line-2417">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2418</span><span id="line-2418">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2419</span><span id="line-2419">            + "            {\n"</span>
-<span class="source-line-no">2420</span><span id="line-2420">            + "              \"nested\": {\n"</span>
-<span class="source-line-no">2421</span><span id="line-2421">            + "                \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2422</span><span id="line-2422">            + "                \"query\": {\n"</span>
-<span class="source-line-no">2423</span><span id="line-2423">            + "                  \"bool\": {\n"</span>
-<span class="source-line-no">2424</span><span id="line-2424">            + "                    \"filter\": [\n"</span>
-<span class="source-line-no">2425</span><span id="line-2425">            + "                      {\n"</span>
-<span class="source-line-no">2426</span><span id="line-2426">            + "                        \"range\": {\n"</span>
-<span class="source-line-no">2427</span><span id="line-2427">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
-<span class="source-line-no">2428</span><span id="line-2428">            + "                            \"gte\": \"1000\",\n"</span>
+<span class="source-line-no">2157</span><span id="line-2157">                new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1518"),</span>
+<span class="source-line-no">2158</span><span id="line-2158">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1541")));</span>
+<span class="source-line-no">2159</span><span id="line-2159">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2160</span><span id="line-2160">    String expectedQuery =</span>
+<span class="source-line-no">2161</span><span id="line-2161">        "{\n"</span>
+<span class="source-line-no">2162</span><span id="line-2162">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2163</span><span id="line-2163">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2164</span><span id="line-2164">            + "      {\n"</span>
+<span class="source-line-no">2165</span><span id="line-2165">            + "        \"range\": {\n"</span>
+<span class="source-line-no">2166</span><span id="line-2166">            + "          \"year\": {\n"</span>
+<span class="source-line-no">2167</span><span id="line-2167">            + "            \"gte\": \"1518\",\n"</span>
+<span class="source-line-no">2168</span><span id="line-2168">            + "            \"lt\": \"1541\"\n"</span>
+<span class="source-line-no">2169</span><span id="line-2169">            + "          }\n"</span>
+<span class="source-line-no">2170</span><span id="line-2170">            + "        }\n"</span>
+<span class="source-line-no">2171</span><span id="line-2171">            + "      }\n"</span>
+<span class="source-line-no">2172</span><span id="line-2172">            + "    ]\n"</span>
+<span class="source-line-no">2173</span><span id="line-2173">            + "  }\n"</span>
+<span class="source-line-no">2174</span><span id="line-2174">            + "}";</span>
+<span class="source-line-no">2175</span><span id="line-2175">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2176</span><span id="line-2176">  }</span>
+<span class="source-line-no">2177</span><span id="line-2177"></span>
+<span class="source-line-no">2178</span><span id="line-2178">  /**</span>
+<span class="source-line-no">2179</span><span id="line-2179">   * gbif/occurrence#632: several bounds of the same kind on one field must all be applied instead</span>
+<span class="source-line-no">2180</span><span id="line-2180">   * of the last one replacing the others.</span>
+<span class="source-line-no">2181</span><span id="line-2181">   */</span>
+<span class="source-line-no">2182</span><span id="line-2182">  @Test</span>
+<span class="source-line-no">2183</span><span id="line-2183">  public void severalRangeBoundsSameFieldTest()</span>
+<span class="source-line-no">2184</span><span id="line-2184">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2185</span><span id="line-2185">    Predicate p =</span>
+<span class="source-line-no">2186</span><span id="line-2186">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2187</span><span id="line-2187">            List.of(</span>
+<span class="source-line-no">2188</span><span id="line-2188">                new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1518"),</span>
+<span class="source-line-no">2189</span><span id="line-2189">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1541"),</span>
+<span class="source-line-no">2190</span><span id="line-2190">                new LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1800")));</span>
+<span class="source-line-no">2191</span><span id="line-2191">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2192</span><span id="line-2192">    String expectedQuery =</span>
+<span class="source-line-no">2193</span><span id="line-2193">        "{\n"</span>
+<span class="source-line-no">2194</span><span id="line-2194">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2195</span><span id="line-2195">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2196</span><span id="line-2196">            + "      {\n"</span>
+<span class="source-line-no">2197</span><span id="line-2197">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2198</span><span id="line-2198">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2199</span><span id="line-2199">            + "            {\n"</span>
+<span class="source-line-no">2200</span><span id="line-2200">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2201</span><span id="line-2201">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2202</span><span id="line-2202">            + "                  \"gte\": \"1518\"\n"</span>
+<span class="source-line-no">2203</span><span id="line-2203">            + "                }\n"</span>
+<span class="source-line-no">2204</span><span id="line-2204">            + "              }\n"</span>
+<span class="source-line-no">2205</span><span id="line-2205">            + "            },\n"</span>
+<span class="source-line-no">2206</span><span id="line-2206">            + "            {\n"</span>
+<span class="source-line-no">2207</span><span id="line-2207">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2208</span><span id="line-2208">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2209</span><span id="line-2209">            + "                  \"lt\": \"1541\"\n"</span>
+<span class="source-line-no">2210</span><span id="line-2210">            + "                }\n"</span>
+<span class="source-line-no">2211</span><span id="line-2211">            + "              }\n"</span>
+<span class="source-line-no">2212</span><span id="line-2212">            + "            },\n"</span>
+<span class="source-line-no">2213</span><span id="line-2213">            + "            {\n"</span>
+<span class="source-line-no">2214</span><span id="line-2214">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2215</span><span id="line-2215">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2216</span><span id="line-2216">            + "                  \"lte\": \"1800\"\n"</span>
+<span class="source-line-no">2217</span><span id="line-2217">            + "                }\n"</span>
+<span class="source-line-no">2218</span><span id="line-2218">            + "              }\n"</span>
+<span class="source-line-no">2219</span><span id="line-2219">            + "            }\n"</span>
+<span class="source-line-no">2220</span><span id="line-2220">            + "          ]\n"</span>
+<span class="source-line-no">2221</span><span id="line-2221">            + "        }\n"</span>
+<span class="source-line-no">2222</span><span id="line-2222">            + "      }\n"</span>
+<span class="source-line-no">2223</span><span id="line-2223">            + "    ]\n"</span>
+<span class="source-line-no">2224</span><span id="line-2224">            + "  }\n"</span>
+<span class="source-line-no">2225</span><span id="line-2225">            + "}";</span>
+<span class="source-line-no">2226</span><span id="line-2226">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2227</span><span id="line-2227">  }</span>
+<span class="source-line-no">2228</span><span id="line-2228"></span>
+<span class="source-line-no">2229</span><span id="line-2229">  /** gbif/occurrence#632: same as above with the upper bounds inverted. */</span>
+<span class="source-line-no">2230</span><span id="line-2230">  @Test</span>
+<span class="source-line-no">2231</span><span id="line-2231">  public void severalRangeBoundsSameFieldInvertedOrderTest()</span>
+<span class="source-line-no">2232</span><span id="line-2232">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2233</span><span id="line-2233">    Predicate p =</span>
+<span class="source-line-no">2234</span><span id="line-2234">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2235</span><span id="line-2235">            List.of(</span>
+<span class="source-line-no">2236</span><span id="line-2236">                new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1518"),</span>
+<span class="source-line-no">2237</span><span id="line-2237">                new LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1800"),</span>
+<span class="source-line-no">2238</span><span id="line-2238">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1541")));</span>
+<span class="source-line-no">2239</span><span id="line-2239">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2240</span><span id="line-2240">    String expectedQuery =</span>
+<span class="source-line-no">2241</span><span id="line-2241">        "{\n"</span>
+<span class="source-line-no">2242</span><span id="line-2242">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2243</span><span id="line-2243">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2244</span><span id="line-2244">            + "      {\n"</span>
+<span class="source-line-no">2245</span><span id="line-2245">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2246</span><span id="line-2246">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2247</span><span id="line-2247">            + "            {\n"</span>
+<span class="source-line-no">2248</span><span id="line-2248">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2249</span><span id="line-2249">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2250</span><span id="line-2250">            + "                  \"gte\": \"1518\"\n"</span>
+<span class="source-line-no">2251</span><span id="line-2251">            + "                }\n"</span>
+<span class="source-line-no">2252</span><span id="line-2252">            + "              }\n"</span>
+<span class="source-line-no">2253</span><span id="line-2253">            + "            },\n"</span>
+<span class="source-line-no">2254</span><span id="line-2254">            + "            {\n"</span>
+<span class="source-line-no">2255</span><span id="line-2255">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2256</span><span id="line-2256">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2257</span><span id="line-2257">            + "                  \"lte\": \"1800\"\n"</span>
+<span class="source-line-no">2258</span><span id="line-2258">            + "                }\n"</span>
+<span class="source-line-no">2259</span><span id="line-2259">            + "              }\n"</span>
+<span class="source-line-no">2260</span><span id="line-2260">            + "            },\n"</span>
+<span class="source-line-no">2261</span><span id="line-2261">            + "            {\n"</span>
+<span class="source-line-no">2262</span><span id="line-2262">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2263</span><span id="line-2263">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2264</span><span id="line-2264">            + "                  \"lt\": \"1541\"\n"</span>
+<span class="source-line-no">2265</span><span id="line-2265">            + "                }\n"</span>
+<span class="source-line-no">2266</span><span id="line-2266">            + "              }\n"</span>
+<span class="source-line-no">2267</span><span id="line-2267">            + "            }\n"</span>
+<span class="source-line-no">2268</span><span id="line-2268">            + "          ]\n"</span>
+<span class="source-line-no">2269</span><span id="line-2269">            + "        }\n"</span>
+<span class="source-line-no">2270</span><span id="line-2270">            + "      }\n"</span>
+<span class="source-line-no">2271</span><span id="line-2271">            + "    ]\n"</span>
+<span class="source-line-no">2272</span><span id="line-2272">            + "  }\n"</span>
+<span class="source-line-no">2273</span><span id="line-2273">            + "}";</span>
+<span class="source-line-no">2274</span><span id="line-2274">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2275</span><span id="line-2275">  }</span>
+<span class="source-line-no">2276</span><span id="line-2276"></span>
+<span class="source-line-no">2277</span><span id="line-2277">  /** gbif/occurrence#632: several lower bounds on the same field must all be applied. */</span>
+<span class="source-line-no">2278</span><span id="line-2278">  @Test</span>
+<span class="source-line-no">2279</span><span id="line-2279">  public void severalLowerRangeBoundsSameFieldTest()</span>
+<span class="source-line-no">2280</span><span id="line-2280">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2281</span><span id="line-2281">    Predicate p =</span>
+<span class="source-line-no">2282</span><span id="line-2282">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2283</span><span id="line-2283">            List.of(</span>
+<span class="source-line-no">2284</span><span id="line-2284">                new GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1600"),</span>
+<span class="source-line-no">2285</span><span id="line-2285">                new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1518"),</span>
+<span class="source-line-no">2286</span><span id="line-2286">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1800")));</span>
+<span class="source-line-no">2287</span><span id="line-2287">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2288</span><span id="line-2288">    assertQueryEquals(</span>
+<span class="source-line-no">2289</span><span id="line-2289">        "{\n"</span>
+<span class="source-line-no">2290</span><span id="line-2290">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2291</span><span id="line-2291">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2292</span><span id="line-2292">            + "      {\n"</span>
+<span class="source-line-no">2293</span><span id="line-2293">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2294</span><span id="line-2294">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2295</span><span id="line-2295">            + "            {\n"</span>
+<span class="source-line-no">2296</span><span id="line-2296">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2297</span><span id="line-2297">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2298</span><span id="line-2298">            + "                  \"gt\": \"1600\"\n"</span>
+<span class="source-line-no">2299</span><span id="line-2299">            + "                }\n"</span>
+<span class="source-line-no">2300</span><span id="line-2300">            + "              }\n"</span>
+<span class="source-line-no">2301</span><span id="line-2301">            + "            },\n"</span>
+<span class="source-line-no">2302</span><span id="line-2302">            + "            {\n"</span>
+<span class="source-line-no">2303</span><span id="line-2303">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2304</span><span id="line-2304">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2305</span><span id="line-2305">            + "                  \"gte\": \"1518\"\n"</span>
+<span class="source-line-no">2306</span><span id="line-2306">            + "                }\n"</span>
+<span class="source-line-no">2307</span><span id="line-2307">            + "              }\n"</span>
+<span class="source-line-no">2308</span><span id="line-2308">            + "            },\n"</span>
+<span class="source-line-no">2309</span><span id="line-2309">            + "            {\n"</span>
+<span class="source-line-no">2310</span><span id="line-2310">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2311</span><span id="line-2311">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2312</span><span id="line-2312">            + "                  \"lt\": \"1800\"\n"</span>
+<span class="source-line-no">2313</span><span id="line-2313">            + "                }\n"</span>
+<span class="source-line-no">2314</span><span id="line-2314">            + "              }\n"</span>
+<span class="source-line-no">2315</span><span id="line-2315">            + "            }\n"</span>
+<span class="source-line-no">2316</span><span id="line-2316">            + "          ]\n"</span>
+<span class="source-line-no">2317</span><span id="line-2317">            + "        }\n"</span>
+<span class="source-line-no">2318</span><span id="line-2318">            + "      }\n"</span>
+<span class="source-line-no">2319</span><span id="line-2319">            + "    ]\n"</span>
+<span class="source-line-no">2320</span><span id="line-2320">            + "  }\n"</span>
+<span class="source-line-no">2321</span><span id="line-2321">            + "}",</span>
+<span class="source-line-no">2322</span><span id="line-2322">        query);</span>
+<span class="source-line-no">2323</span><span id="line-2323">  }</span>
+<span class="source-line-no">2324</span><span id="line-2324"></span>
+<span class="source-line-no">2325</span><span id="line-2325">  /**</span>
+<span class="source-line-no">2326</span><span id="line-2326">   * gbif/occurrence#632: with more than one lower or upper bound, each bound is its own range and</span>
+<span class="source-line-no">2327</span><span id="line-2327">   * all of them are applied together in a single bool filter.</span>
+<span class="source-line-no">2328</span><span id="line-2328">   */</span>
+<span class="source-line-no">2329</span><span id="line-2329">  @Test</span>
+<span class="source-line-no">2330</span><span id="line-2330">  public void manyRangeBoundsSameFieldTest()</span>
+<span class="source-line-no">2331</span><span id="line-2331">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2332</span><span id="line-2332">    Predicate p =</span>
+<span class="source-line-no">2333</span><span id="line-2333">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2334</span><span id="line-2334">            List.of(</span>
+<span class="source-line-no">2335</span><span id="line-2335">                new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1500"),</span>
+<span class="source-line-no">2336</span><span id="line-2336">                new GreaterThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1510"),</span>
+<span class="source-line-no">2337</span><span id="line-2337">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1600"),</span>
+<span class="source-line-no">2338</span><span id="line-2338">                new LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1700"),</span>
+<span class="source-line-no">2339</span><span id="line-2339">                new LessThanPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "1550")));</span>
+<span class="source-line-no">2340</span><span id="line-2340">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2341</span><span id="line-2341">    String expectedQuery =</span>
+<span class="source-line-no">2342</span><span id="line-2342">        "{\n"</span>
+<span class="source-line-no">2343</span><span id="line-2343">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2344</span><span id="line-2344">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2345</span><span id="line-2345">            + "      {\n"</span>
+<span class="source-line-no">2346</span><span id="line-2346">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2347</span><span id="line-2347">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2348</span><span id="line-2348">            + "            {\n"</span>
+<span class="source-line-no">2349</span><span id="line-2349">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2350</span><span id="line-2350">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2351</span><span id="line-2351">            + "                  \"gte\": \"1500\"\n"</span>
+<span class="source-line-no">2352</span><span id="line-2352">            + "                }\n"</span>
+<span class="source-line-no">2353</span><span id="line-2353">            + "              }\n"</span>
+<span class="source-line-no">2354</span><span id="line-2354">            + "            },\n"</span>
+<span class="source-line-no">2355</span><span id="line-2355">            + "            {\n"</span>
+<span class="source-line-no">2356</span><span id="line-2356">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2357</span><span id="line-2357">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2358</span><span id="line-2358">            + "                  \"gt\": \"1510\"\n"</span>
+<span class="source-line-no">2359</span><span id="line-2359">            + "                }\n"</span>
+<span class="source-line-no">2360</span><span id="line-2360">            + "              }\n"</span>
+<span class="source-line-no">2361</span><span id="line-2361">            + "            },\n"</span>
+<span class="source-line-no">2362</span><span id="line-2362">            + "            {\n"</span>
+<span class="source-line-no">2363</span><span id="line-2363">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2364</span><span id="line-2364">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2365</span><span id="line-2365">            + "                  \"lt\": \"1600\"\n"</span>
+<span class="source-line-no">2366</span><span id="line-2366">            + "                }\n"</span>
+<span class="source-line-no">2367</span><span id="line-2367">            + "              }\n"</span>
+<span class="source-line-no">2368</span><span id="line-2368">            + "            },\n"</span>
+<span class="source-line-no">2369</span><span id="line-2369">            + "            {\n"</span>
+<span class="source-line-no">2370</span><span id="line-2370">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2371</span><span id="line-2371">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2372</span><span id="line-2372">            + "                  \"lte\": \"1700\"\n"</span>
+<span class="source-line-no">2373</span><span id="line-2373">            + "                }\n"</span>
+<span class="source-line-no">2374</span><span id="line-2374">            + "              }\n"</span>
+<span class="source-line-no">2375</span><span id="line-2375">            + "            },\n"</span>
+<span class="source-line-no">2376</span><span id="line-2376">            + "            {\n"</span>
+<span class="source-line-no">2377</span><span id="line-2377">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2378</span><span id="line-2378">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2379</span><span id="line-2379">            + "                  \"lt\": \"1550\"\n"</span>
+<span class="source-line-no">2380</span><span id="line-2380">            + "                }\n"</span>
+<span class="source-line-no">2381</span><span id="line-2381">            + "              }\n"</span>
+<span class="source-line-no">2382</span><span id="line-2382">            + "            }\n"</span>
+<span class="source-line-no">2383</span><span id="line-2383">            + "          ]\n"</span>
+<span class="source-line-no">2384</span><span id="line-2384">            + "        }\n"</span>
+<span class="source-line-no">2385</span><span id="line-2385">            + "      }\n"</span>
+<span class="source-line-no">2386</span><span id="line-2386">            + "    ]\n"</span>
+<span class="source-line-no">2387</span><span id="line-2387">            + "  }\n"</span>
+<span class="source-line-no">2388</span><span id="line-2388">            + "}";</span>
+<span class="source-line-no">2389</span><span id="line-2389">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2390</span><span id="line-2390">  }</span>
+<span class="source-line-no">2391</span><span id="line-2391"></span>
+<span class="source-line-no">2392</span><span id="line-2392">  /** gbif/occurrence#632: extra bounds on a nested field stay in the same nested query. */</span>
+<span class="source-line-no">2393</span><span id="line-2393">  @Test</span>
+<span class="source-line-no">2394</span><span id="line-2394">  public void severalRangeBoundsNestedFieldTest()</span>
+<span class="source-line-no">2395</span><span id="line-2395">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2396</span><span id="line-2396">    Predicate p =</span>
+<span class="source-line-no">2397</span><span id="line-2397">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2398</span><span id="line-2398">            List.of(</span>
+<span class="source-line-no">2399</span><span id="line-2399">                new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2400</span><span id="line-2400">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2401</span><span id="line-2401">                new LessThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2402</span><span id="line-2402">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),</span>
+<span class="source-line-no">2403</span><span id="line-2403">                new LessThanPredicate&lt;&gt;(</span>
+<span class="source-line-no">2404</span><span id="line-2404">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1500")));</span>
+<span class="source-line-no">2405</span><span id="line-2405">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2406</span><span id="line-2406">    assertQueryEquals(</span>
+<span class="source-line-no">2407</span><span id="line-2407">        "{\n"</span>
+<span class="source-line-no">2408</span><span id="line-2408">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2409</span><span id="line-2409">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2410</span><span id="line-2410">            + "      {\n"</span>
+<span class="source-line-no">2411</span><span id="line-2411">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2412</span><span id="line-2412">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2413</span><span id="line-2413">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2414</span><span id="line-2414">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2415</span><span id="line-2415">            + "              \"filter\": [\n"</span>
+<span class="source-line-no">2416</span><span id="line-2416">            + "                {\n"</span>
+<span class="source-line-no">2417</span><span id="line-2417">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2418</span><span id="line-2418">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2419</span><span id="line-2419">            + "                      {\n"</span>
+<span class="source-line-no">2420</span><span id="line-2420">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2421</span><span id="line-2421">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2422</span><span id="line-2422">            + "                            \"gte\": \"1000\"\n"</span>
+<span class="source-line-no">2423</span><span id="line-2423">            + "                          }\n"</span>
+<span class="source-line-no">2424</span><span id="line-2424">            + "                        }\n"</span>
+<span class="source-line-no">2425</span><span id="line-2425">            + "                      },\n"</span>
+<span class="source-line-no">2426</span><span id="line-2426">            + "                      {\n"</span>
+<span class="source-line-no">2427</span><span id="line-2427">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2428</span><span id="line-2428">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
 <span class="source-line-no">2429</span><span id="line-2429">            + "                            \"lte\": \"2000\"\n"</span>
 <span class="source-line-no">2430</span><span id="line-2430">            + "                          }\n"</span>
 <span class="source-line-no">2431</span><span id="line-2431">            + "                        }\n"</span>
-<span class="source-line-no">2432</span><span id="line-2432">            + "                      }\n"</span>
-<span class="source-line-no">2433</span><span id="line-2433">            + "                    ]\n"</span>
-<span class="source-line-no">2434</span><span id="line-2434">            + "                  }\n"</span>
-<span class="source-line-no">2435</span><span id="line-2435">            + "                },\n"</span>
-<span class="source-line-no">2436</span><span id="line-2436">            + "                \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2437</span><span id="line-2437">            + "              }\n"</span>
-<span class="source-line-no">2438</span><span id="line-2438">            + "            }\n"</span>
-<span class="source-line-no">2439</span><span id="line-2439">            + "          ]\n"</span>
-<span class="source-line-no">2440</span><span id="line-2440">            + "        }\n"</span>
-<span class="source-line-no">2441</span><span id="line-2441">            + "      }\n"</span>
-<span class="source-line-no">2442</span><span id="line-2442">            + "    ]\n"</span>
-<span class="source-line-no">2443</span><span id="line-2443">            + "  }\n"</span>
-<span class="source-line-no">2444</span><span id="line-2444">            + "}";</span>
-<span class="source-line-no">2445</span><span id="line-2445">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2446</span><span id="line-2446">  }</span>
-<span class="source-line-no">2447</span><span id="line-2447"></span>
-<span class="source-line-no">2448</span><span id="line-2448">  @Test</span>
-<span class="source-line-no">2449</span><span id="line-2449">  public void conjunctionWithNotPredicateTest()</span>
-<span class="source-line-no">2450</span><span id="line-2450">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2451</span><span id="line-2451">    Predicate predicate =</span>
-<span class="source-line-no">2452</span><span id="line-2452">        new ConjunctionPredicate(</span>
-<span class="source-line-no">2453</span><span id="line-2453">            Arrays.asList(</span>
-<span class="source-line-no">2454</span><span id="line-2454">                new InPredicate(</span>
-<span class="source-line-no">2455</span><span id="line-2455">                    OccurrenceSearchParameter.DATASET_KEY,</span>
-<span class="source-line-no">2456</span><span id="line-2456">                    Arrays.asList(</span>
-<span class="source-line-no">2457</span><span id="line-2457">                        "b364710b-3f07-4876-a554-1943b702363f",</span>
-<span class="source-line-no">2458</span><span id="line-2458">                        "6595e04b-13d2-4eac-933f-73786627b5a2"),</span>
-<span class="source-line-no">2459</span><span id="line-2459">                    false),</span>
-<span class="source-line-no">2460</span><span id="line-2460">                new NotPredicate(</span>
-<span class="source-line-no">2461</span><span id="line-2461">                    new ConjunctionPredicate(</span>
-<span class="source-line-no">2462</span><span id="line-2462">                        Arrays.asList(</span>
-<span class="source-line-no">2463</span><span id="line-2463">                            new InPredicate(</span>
-<span class="source-line-no">2464</span><span id="line-2464">                                OccurrenceSearchParameter.INSTITUTION_KEY,</span>
-<span class="source-line-no">2465</span><span id="line-2465">                                List.of("75f50140-830d-4630-a290-3d6e951a7c29"),</span>
-<span class="source-line-no">2466</span><span id="line-2466">                                false),</span>
-<span class="source-line-no">2467</span><span id="line-2467">                            new InPredicate(</span>
-<span class="source-line-no">2468</span><span id="line-2468">                                OccurrenceSearchParameter.COLLECTION_KEY,</span>
-<span class="source-line-no">2469</span><span id="line-2469">                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),</span>
-<span class="source-line-no">2470</span><span id="line-2470">                                false))))));</span>
-<span class="source-line-no">2471</span><span id="line-2471">    String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">2472</span><span id="line-2472">    String expectedQuery =</span>
-<span class="source-line-no">2473</span><span id="line-2473">        "{\n"</span>
-<span class="source-line-no">2474</span><span id="line-2474">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2475</span><span id="line-2475">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2476</span><span id="line-2476">            + "      {\n"</span>
-<span class="source-line-no">2477</span><span id="line-2477">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2478</span><span id="line-2478">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2479</span><span id="line-2479">            + "            {\n"</span>
-<span class="source-line-no">2480</span><span id="line-2480">            + "              \"terms\": {\n"</span>
-<span class="source-line-no">2481</span><span id="line-2481">            + "                \"dataset_key\": [\n"</span>
-<span class="source-line-no">2482</span><span id="line-2482">            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"</span>
-<span class="source-line-no">2483</span><span id="line-2483">            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"</span>
-<span class="source-line-no">2484</span><span id="line-2484">            + "                ]\n"</span>
-<span class="source-line-no">2485</span><span id="line-2485">            + "              }\n"</span>
-<span class="source-line-no">2486</span><span id="line-2486">            + "            }\n"</span>
-<span class="source-line-no">2487</span><span id="line-2487">            + "          ]\n"</span>
-<span class="source-line-no">2488</span><span id="line-2488">            + "        }\n"</span>
-<span class="source-line-no">2489</span><span id="line-2489">            + "      },\n"</span>
-<span class="source-line-no">2490</span><span id="line-2490">            + "      {\n"</span>
-<span class="source-line-no">2491</span><span id="line-2491">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2492</span><span id="line-2492">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2493</span><span id="line-2493">            + "            {\n"</span>
-<span class="source-line-no">2494</span><span id="line-2494">            + "              \"exists\": {\n"</span>
-<span class="source-line-no">2495</span><span id="line-2495">            + "                \"field\": \"institution_key\"\n"</span>
-<span class="source-line-no">2496</span><span id="line-2496">            + "              }\n"</span>
-<span class="source-line-no">2497</span><span id="line-2497">            + "            },\n"</span>
-<span class="source-line-no">2498</span><span id="line-2498">            + "            {\n"</span>
-<span class="source-line-no">2499</span><span id="line-2499">            + "              \"exists\": {\n"</span>
-<span class="source-line-no">2500</span><span id="line-2500">            + "                \"field\": \"collection_key\"\n"</span>
-<span class="source-line-no">2501</span><span id="line-2501">            + "              }\n"</span>
-<span class="source-line-no">2502</span><span id="line-2502">            + "            }\n"</span>
-<span class="source-line-no">2503</span><span id="line-2503">            + "          ],\n"</span>
-<span class="source-line-no">2504</span><span id="line-2504">            + "          \"must_not\": [\n"</span>
-<span class="source-line-no">2505</span><span id="line-2505">            + "            {\n"</span>
-<span class="source-line-no">2506</span><span id="line-2506">            + "              \"bool\": {\n"</span>
-<span class="source-line-no">2507</span><span id="line-2507">            + "                \"filter\": [\n"</span>
-<span class="source-line-no">2508</span><span id="line-2508">            + "                  {\n"</span>
-<span class="source-line-no">2509</span><span id="line-2509">            + "                    \"bool\": {\n"</span>
-<span class="source-line-no">2510</span><span id="line-2510">            + "                      \"filter\": [\n"</span>
-<span class="source-line-no">2511</span><span id="line-2511">            + "                        {\n"</span>
-<span class="source-line-no">2512</span><span id="line-2512">            + "                          \"terms\": {\n"</span>
-<span class="source-line-no">2513</span><span id="line-2513">            + "                            \"institution_key\": [\"75f50140-830d-4630-a290-3d6e951a7c29\"]\n"</span>
-<span class="source-line-no">2514</span><span id="line-2514">            + "                          }\n"</span>
-<span class="source-line-no">2515</span><span id="line-2515">            + "                        }\n"</span>
-<span class="source-line-no">2516</span><span id="line-2516">            + "                      ]\n"</span>
-<span class="source-line-no">2517</span><span id="line-2517">            + "                    }\n"</span>
-<span class="source-line-no">2518</span><span id="line-2518">            + "                  },\n"</span>
-<span class="source-line-no">2519</span><span id="line-2519">            + "                  {\n"</span>
-<span class="source-line-no">2520</span><span id="line-2520">            + "                    \"bool\": {\n"</span>
-<span class="source-line-no">2521</span><span id="line-2521">            + "                      \"filter\": [\n"</span>
-<span class="source-line-no">2522</span><span id="line-2522">            + "                        {\n"</span>
-<span class="source-line-no">2523</span><span id="line-2523">            + "                          \"terms\": {\n"</span>
-<span class="source-line-no">2524</span><span id="line-2524">            + "                            \"collection_key\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"</span>
-<span class="source-line-no">2525</span><span id="line-2525">            + "                          }\n"</span>
-<span class="source-line-no">2526</span><span id="line-2526">            + "                        }\n"</span>
-<span class="source-line-no">2527</span><span id="line-2527">            + "                      ]\n"</span>
-<span class="source-line-no">2528</span><span id="line-2528">            + "                    }\n"</span>
-<span class="source-line-no">2529</span><span id="line-2529">            + "                  }\n"</span>
-<span class="source-line-no">2530</span><span id="line-2530">            + "                ]\n"</span>
-<span class="source-line-no">2531</span><span id="line-2531">            + "              }\n"</span>
-<span class="source-line-no">2532</span><span id="line-2532">            + "            }\n"</span>
-<span class="source-line-no">2533</span><span id="line-2533">            + "          ]\n"</span>
-<span class="source-line-no">2534</span><span id="line-2534">            + "        }\n"</span>
-<span class="source-line-no">2535</span><span id="line-2535">            + "      }\n"</span>
-<span class="source-line-no">2536</span><span id="line-2536">            + "    ]\n"</span>
-<span class="source-line-no">2537</span><span id="line-2537">            + "  }\n"</span>
-<span class="source-line-no">2538</span><span id="line-2538">            + "}";</span>
-<span class="source-line-no">2539</span><span id="line-2539">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2540</span><span id="line-2540">  }</span>
-<span class="source-line-no">2541</span><span id="line-2541"></span>
-<span class="source-line-no">2542</span><span id="line-2542">  @Test</span>
-<span class="source-line-no">2543</span><span id="line-2543">  public void conjunctionWithNotPredicateAndNestedFieldTest()</span>
-<span class="source-line-no">2544</span><span id="line-2544">      throws QueryBuildingException, JsonProcessingException {</span>
-<span class="source-line-no">2545</span><span id="line-2545">    Predicate predicate =</span>
-<span class="source-line-no">2546</span><span id="line-2546">        new ConjunctionPredicate(</span>
-<span class="source-line-no">2547</span><span id="line-2547">            Arrays.asList(</span>
-<span class="source-line-no">2548</span><span id="line-2548">                new InPredicate(</span>
-<span class="source-line-no">2549</span><span id="line-2549">                    OccurrenceSearchParameter.DATASET_KEY,</span>
-<span class="source-line-no">2550</span><span id="line-2550">                    Arrays.asList(</span>
-<span class="source-line-no">2551</span><span id="line-2551">                        "b364710b-3f07-4876-a554-1943b702363f",</span>
-<span class="source-line-no">2552</span><span id="line-2552">                        "6595e04b-13d2-4eac-933f-73786627b5a2"),</span>
-<span class="source-line-no">2553</span><span id="line-2553">                    false),</span>
-<span class="source-line-no">2554</span><span id="line-2554">                new NotPredicate(</span>
-<span class="source-line-no">2555</span><span id="line-2555">                    new ConjunctionPredicate(</span>
-<span class="source-line-no">2556</span><span id="line-2556">                        Arrays.asList(</span>
-<span class="source-line-no">2557</span><span id="line-2557">                            new InPredicate(</span>
-<span class="source-line-no">2558</span><span id="line-2558">                                OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,</span>
-<span class="source-line-no">2559</span><span id="line-2559">                                List.of("7"),</span>
-<span class="source-line-no">2560</span><span id="line-2560">                                false),</span>
-<span class="source-line-no">2561</span><span id="line-2561">                            new InPredicate(</span>
-<span class="source-line-no">2562</span><span id="line-2562">                                OccurrenceSearchParameter.COLLECTION_KEY,</span>
-<span class="source-line-no">2563</span><span id="line-2563">                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),</span>
-<span class="source-line-no">2564</span><span id="line-2564">                                false))))));</span>
-<span class="source-line-no">2565</span><span id="line-2565">    String query = visitor.buildQuery(predicate);</span>
-<span class="source-line-no">2566</span><span id="line-2566">    String expectedQuery =</span>
-<span class="source-line-no">2567</span><span id="line-2567">        "{\n"</span>
-<span class="source-line-no">2568</span><span id="line-2568">            + "  \"bool\": {\n"</span>
-<span class="source-line-no">2569</span><span id="line-2569">            + "    \"filter\": [\n"</span>
-<span class="source-line-no">2570</span><span id="line-2570">            + "      {\n"</span>
-<span class="source-line-no">2571</span><span id="line-2571">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2572</span><span id="line-2572">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2573</span><span id="line-2573">            + "            {\n"</span>
-<span class="source-line-no">2574</span><span id="line-2574">            + "              \"terms\": {\n"</span>
-<span class="source-line-no">2575</span><span id="line-2575">            + "                \"dataset_key\": [\n"</span>
-<span class="source-line-no">2576</span><span id="line-2576">            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"</span>
-<span class="source-line-no">2577</span><span id="line-2577">            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"</span>
-<span class="source-line-no">2578</span><span id="line-2578">            + "                ]\n"</span>
-<span class="source-line-no">2579</span><span id="line-2579">            + "              }\n"</span>
-<span class="source-line-no">2580</span><span id="line-2580">            + "            }\n"</span>
-<span class="source-line-no">2581</span><span id="line-2581">            + "          ]\n"</span>
-<span class="source-line-no">2582</span><span id="line-2582">            + "        }\n"</span>
-<span class="source-line-no">2583</span><span id="line-2583">            + "      },\n"</span>
-<span class="source-line-no">2584</span><span id="line-2584">            + "      {\n"</span>
-<span class="source-line-no">2585</span><span id="line-2585">            + "        \"bool\": {\n"</span>
-<span class="source-line-no">2586</span><span id="line-2586">            + "          \"filter\": [\n"</span>
-<span class="source-line-no">2587</span><span id="line-2587">            + "            {\n"</span>
-<span class="source-line-no">2588</span><span id="line-2588">            + "              \"nested\": {\n"</span>
-<span class="source-line-no">2589</span><span id="line-2589">            + "                \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2590</span><span id="line-2590">            + "                \"query\": {\n"</span>
-<span class="source-line-no">2591</span><span id="line-2591">            + "                  \"exists\": {\n"</span>
-<span class="source-line-no">2592</span><span id="line-2592">            + "                    \"field\": \"nucleotideSequence.sequenceLength\"\n"</span>
-<span class="source-line-no">2593</span><span id="line-2593">            + "                  }\n"</span>
-<span class="source-line-no">2594</span><span id="line-2594">            + "                },\n"</span>
-<span class="source-line-no">2595</span><span id="line-2595">            + "                \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2596</span><span id="line-2596">            + "              }\n"</span>
-<span class="source-line-no">2597</span><span id="line-2597">            + "            },\n"</span>
-<span class="source-line-no">2598</span><span id="line-2598">            + "            {\n"</span>
-<span class="source-line-no">2599</span><span id="line-2599">            + "              \"exists\": {\n"</span>
-<span class="source-line-no">2600</span><span id="line-2600">            + "                \"field\": \"collection_key\"\n"</span>
-<span class="source-line-no">2601</span><span id="line-2601">            + "              }\n"</span>
-<span class="source-line-no">2602</span><span id="line-2602">            + "            }\n"</span>
-<span class="source-line-no">2603</span><span id="line-2603">            + "          ],\n"</span>
-<span class="source-line-no">2604</span><span id="line-2604">            + "          \"must_not\": [\n"</span>
-<span class="source-line-no">2605</span><span id="line-2605">            + "            {\n"</span>
-<span class="source-line-no">2606</span><span id="line-2606">            + "              \"bool\": {\n"</span>
-<span class="source-line-no">2607</span><span id="line-2607">            + "                \"filter\": [\n"</span>
-<span class="source-line-no">2608</span><span id="line-2608">            + "                  {\n"</span>
-<span class="source-line-no">2609</span><span id="line-2609">            + "                    \"bool\": {\n"</span>
-<span class="source-line-no">2610</span><span id="line-2610">            + "                      \"filter\": [\n"</span>
-<span class="source-line-no">2611</span><span id="line-2611">            + "                        {\n"</span>
-<span class="source-line-no">2612</span><span id="line-2612">            + "                          \"terms\": {\n"</span>
-<span class="source-line-no">2613</span><span id="line-2613">            + "                            \"collection_key\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"</span>
-<span class="source-line-no">2614</span><span id="line-2614">            + "                          }\n"</span>
-<span class="source-line-no">2615</span><span id="line-2615">            + "                        }\n"</span>
-<span class="source-line-no">2616</span><span id="line-2616">            + "                      ]\n"</span>
-<span class="source-line-no">2617</span><span id="line-2617">            + "                    }\n"</span>
-<span class="source-line-no">2618</span><span id="line-2618">            + "                  },\n"</span>
-<span class="source-line-no">2619</span><span id="line-2619">            + "                  {\n"</span>
-<span class="source-line-no">2620</span><span id="line-2620">            + "                    \"nested\": {\n"</span>
-<span class="source-line-no">2621</span><span id="line-2621">            + "                      \"path\": \"nucleotideSequence\",\n"</span>
-<span class="source-line-no">2622</span><span id="line-2622">            + "                      \"query\": {\n"</span>
-<span class="source-line-no">2623</span><span id="line-2623">            + "                        \"bool\": {\n"</span>
-<span class="source-line-no">2624</span><span id="line-2624">            + "                          \"filter\": [\n"</span>
-<span class="source-line-no">2625</span><span id="line-2625">            + "                            {\n"</span>
-<span class="source-line-no">2626</span><span id="line-2626">            + "                              \"terms\": {\n"</span>
-<span class="source-line-no">2627</span><span id="line-2627">            + "                                \"nucleotideSequence.sequenceLength\": [\"7\"]\n"</span>
-<span class="source-line-no">2628</span><span id="line-2628">            + "                              }\n"</span>
-<span class="source-line-no">2629</span><span id="line-2629">            + "                            }\n"</span>
-<span class="source-line-no">2630</span><span id="line-2630">            + "                          ]\n"</span>
-<span class="source-line-no">2631</span><span id="line-2631">            + "                        }\n"</span>
-<span class="source-line-no">2632</span><span id="line-2632">            + "                      },\n"</span>
-<span class="source-line-no">2633</span><span id="line-2633">            + "                      \"score_mode\": \"none\"\n"</span>
-<span class="source-line-no">2634</span><span id="line-2634">            + "                    }\n"</span>
-<span class="source-line-no">2635</span><span id="line-2635">            + "                  }\n"</span>
-<span class="source-line-no">2636</span><span id="line-2636">            + "                ]\n"</span>
-<span class="source-line-no">2637</span><span id="line-2637">            + "              }\n"</span>
-<span class="source-line-no">2638</span><span id="line-2638">            + "            }\n"</span>
-<span class="source-line-no">2639</span><span id="line-2639">            + "          ]\n"</span>
-<span class="source-line-no">2640</span><span id="line-2640">            + "        }\n"</span>
-<span class="source-line-no">2641</span><span id="line-2641">            + "      }\n"</span>
-<span class="source-line-no">2642</span><span id="line-2642">            + "    ]\n"</span>
-<span class="source-line-no">2643</span><span id="line-2643">            + "  }\n"</span>
-<span class="source-line-no">2644</span><span id="line-2644">            + "}";</span>
-<span class="source-line-no">2645</span><span id="line-2645">    assertQueryEquals(expectedQuery, query);</span>
-<span class="source-line-no">2646</span><span id="line-2646">  }</span>
-<span class="source-line-no">2647</span><span id="line-2647">}</span>
+<span class="source-line-no">2432</span><span id="line-2432">            + "                      },\n"</span>
+<span class="source-line-no">2433</span><span id="line-2433">            + "                      {\n"</span>
+<span class="source-line-no">2434</span><span id="line-2434">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2435</span><span id="line-2435">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2436</span><span id="line-2436">            + "                            \"lt\": \"1500\"\n"</span>
+<span class="source-line-no">2437</span><span id="line-2437">            + "                          }\n"</span>
+<span class="source-line-no">2438</span><span id="line-2438">            + "                        }\n"</span>
+<span class="source-line-no">2439</span><span id="line-2439">            + "                      }\n"</span>
+<span class="source-line-no">2440</span><span id="line-2440">            + "                    ]\n"</span>
+<span class="source-line-no">2441</span><span id="line-2441">            + "                  }\n"</span>
+<span class="source-line-no">2442</span><span id="line-2442">            + "                }\n"</span>
+<span class="source-line-no">2443</span><span id="line-2443">            + "              ]\n"</span>
+<span class="source-line-no">2444</span><span id="line-2444">            + "            }\n"</span>
+<span class="source-line-no">2445</span><span id="line-2445">            + "          },\n"</span>
+<span class="source-line-no">2446</span><span id="line-2446">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2447</span><span id="line-2447">            + "        }\n"</span>
+<span class="source-line-no">2448</span><span id="line-2448">            + "      }\n"</span>
+<span class="source-line-no">2449</span><span id="line-2449">            + "    ]\n"</span>
+<span class="source-line-no">2450</span><span id="line-2450">            + "  }\n"</span>
+<span class="source-line-no">2451</span><span id="line-2451">            + "}",</span>
+<span class="source-line-no">2452</span><span id="line-2452">        query);</span>
+<span class="source-line-no">2453</span><span id="line-2453">  }</span>
+<span class="source-line-no">2454</span><span id="line-2454"></span>
+<span class="source-line-no">2455</span><span id="line-2455">  /**</span>
+<span class="source-line-no">2456</span><span id="line-2456">   * gbif/occurrence#632: inside an OR, all the bounds of a nested field in an AND must stay</span>
+<span class="source-line-no">2457</span><span id="line-2457">   * together instead of being ORed with the other branches.</span>
+<span class="source-line-no">2458</span><span id="line-2458">   */</span>
+<span class="source-line-no">2459</span><span id="line-2459">  @Test</span>
+<span class="source-line-no">2460</span><span id="line-2460">  public void severalRangeBoundsNestedFieldInDisjunctionTest()</span>
+<span class="source-line-no">2461</span><span id="line-2461">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2462</span><span id="line-2462">    OccurrenceSearchParameter key = OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;</span>
+<span class="source-line-no">2463</span><span id="line-2463">    Predicate p =</span>
+<span class="source-line-no">2464</span><span id="line-2464">        new DisjunctionPredicate(</span>
+<span class="source-line-no">2465</span><span id="line-2465">            List.of(</span>
+<span class="source-line-no">2466</span><span id="line-2466">                new ConjunctionPredicate(</span>
+<span class="source-line-no">2467</span><span id="line-2467">                    List.of(</span>
+<span class="source-line-no">2468</span><span id="line-2468">                        new GreaterThanOrEqualsPredicate&lt;&gt;(key, "10"),</span>
+<span class="source-line-no">2469</span><span id="line-2469">                        new LessThanOrEqualsPredicate&lt;&gt;(key, "20"),</span>
+<span class="source-line-no">2470</span><span id="line-2470">                        new LessThanPredicate&lt;&gt;(key, "15"))),</span>
+<span class="source-line-no">2471</span><span id="line-2471">                new ConjunctionPredicate(</span>
+<span class="source-line-no">2472</span><span id="line-2472">                    List.of(</span>
+<span class="source-line-no">2473</span><span id="line-2473">                        new GreaterThanOrEqualsPredicate&lt;&gt;(key, "30"),</span>
+<span class="source-line-no">2474</span><span id="line-2474">                        new LessThanOrEqualsPredicate&lt;&gt;(key, "40")))));</span>
+<span class="source-line-no">2475</span><span id="line-2475">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2476</span><span id="line-2476">    String expectedQuery =</span>
+<span class="source-line-no">2477</span><span id="line-2477">        "{\n"</span>
+<span class="source-line-no">2478</span><span id="line-2478">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2479</span><span id="line-2479">            + "    \"should\": [\n"</span>
+<span class="source-line-no">2480</span><span id="line-2480">            + "      {\n"</span>
+<span class="source-line-no">2481</span><span id="line-2481">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2482</span><span id="line-2482">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2483</span><span id="line-2483">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2484</span><span id="line-2484">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2485</span><span id="line-2485">            + "              \"should\": [\n"</span>
+<span class="source-line-no">2486</span><span id="line-2486">            + "                {\n"</span>
+<span class="source-line-no">2487</span><span id="line-2487">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2488</span><span id="line-2488">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2489</span><span id="line-2489">            + "                      {\n"</span>
+<span class="source-line-no">2490</span><span id="line-2490">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2491</span><span id="line-2491">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2492</span><span id="line-2492">            + "                            \"gte\": \"10\"\n"</span>
+<span class="source-line-no">2493</span><span id="line-2493">            + "                          }\n"</span>
+<span class="source-line-no">2494</span><span id="line-2494">            + "                        }\n"</span>
+<span class="source-line-no">2495</span><span id="line-2495">            + "                      },\n"</span>
+<span class="source-line-no">2496</span><span id="line-2496">            + "                      {\n"</span>
+<span class="source-line-no">2497</span><span id="line-2497">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2498</span><span id="line-2498">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2499</span><span id="line-2499">            + "                            \"lte\": \"20\"\n"</span>
+<span class="source-line-no">2500</span><span id="line-2500">            + "                          }\n"</span>
+<span class="source-line-no">2501</span><span id="line-2501">            + "                        }\n"</span>
+<span class="source-line-no">2502</span><span id="line-2502">            + "                      },\n"</span>
+<span class="source-line-no">2503</span><span id="line-2503">            + "                      {\n"</span>
+<span class="source-line-no">2504</span><span id="line-2504">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2505</span><span id="line-2505">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2506</span><span id="line-2506">            + "                            \"lt\": \"15\"\n"</span>
+<span class="source-line-no">2507</span><span id="line-2507">            + "                          }\n"</span>
+<span class="source-line-no">2508</span><span id="line-2508">            + "                        }\n"</span>
+<span class="source-line-no">2509</span><span id="line-2509">            + "                      }\n"</span>
+<span class="source-line-no">2510</span><span id="line-2510">            + "                    ]\n"</span>
+<span class="source-line-no">2511</span><span id="line-2511">            + "                  }\n"</span>
+<span class="source-line-no">2512</span><span id="line-2512">            + "                },\n"</span>
+<span class="source-line-no">2513</span><span id="line-2513">            + "                {\n"</span>
+<span class="source-line-no">2514</span><span id="line-2514">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2515</span><span id="line-2515">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2516</span><span id="line-2516">            + "                      \"gte\": \"30\",\n"</span>
+<span class="source-line-no">2517</span><span id="line-2517">            + "                      \"lte\": \"40\"\n"</span>
+<span class="source-line-no">2518</span><span id="line-2518">            + "                    }\n"</span>
+<span class="source-line-no">2519</span><span id="line-2519">            + "                  }\n"</span>
+<span class="source-line-no">2520</span><span id="line-2520">            + "                }\n"</span>
+<span class="source-line-no">2521</span><span id="line-2521">            + "              ]\n"</span>
+<span class="source-line-no">2522</span><span id="line-2522">            + "            }\n"</span>
+<span class="source-line-no">2523</span><span id="line-2523">            + "          },\n"</span>
+<span class="source-line-no">2524</span><span id="line-2524">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2525</span><span id="line-2525">            + "        }\n"</span>
+<span class="source-line-no">2526</span><span id="line-2526">            + "      }\n"</span>
+<span class="source-line-no">2527</span><span id="line-2527">            + "    ]\n"</span>
+<span class="source-line-no">2528</span><span id="line-2528">            + "  }\n"</span>
+<span class="source-line-no">2529</span><span id="line-2529">            + "}";</span>
+<span class="source-line-no">2530</span><span id="line-2530">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2531</span><span id="line-2531">  }</span>
+<span class="source-line-no">2532</span><span id="line-2532"></span>
+<span class="source-line-no">2533</span><span id="line-2533">  /**</span>
+<span class="source-line-no">2534</span><span id="line-2534">   * Inside an OR, an AND mixing flat and nested conditions keeps the nested ones in a single nested</span>
+<span class="source-line-no">2535</span><span id="line-2535">   * query, ANDed with the flat ones.</span>
+<span class="source-line-no">2536</span><span id="line-2536">   */</span>
+<span class="source-line-no">2537</span><span id="line-2537">  @Test</span>
+<span class="source-line-no">2538</span><span id="line-2538">  public void nestedAndFlatConditionsInConjunctionInsideDisjunctionTest()</span>
+<span class="source-line-no">2539</span><span id="line-2539">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2540</span><span id="line-2540">    OccurrenceSearchParameter length =</span>
+<span class="source-line-no">2541</span><span id="line-2541">        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;</span>
+<span class="source-line-no">2542</span><span id="line-2542">    Predicate p =</span>
+<span class="source-line-no">2543</span><span id="line-2543">        new DisjunctionPredicate(</span>
+<span class="source-line-no">2544</span><span id="line-2544">            List.of(</span>
+<span class="source-line-no">2545</span><span id="line-2545">                new ConjunctionPredicate(</span>
+<span class="source-line-no">2546</span><span id="line-2546">                    List.of(</span>
+<span class="source-line-no">2547</span><span id="line-2547">                        new GreaterThanOrEqualsPredicate&lt;&gt;(length, "600"),</span>
+<span class="source-line-no">2548</span><span id="line-2548">                        new LessThanOrEqualsPredicate&lt;&gt;(length, "700"),</span>
+<span class="source-line-no">2549</span><span id="line-2549">                        new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2550</span><span id="line-2550">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE,</span>
+<span class="source-line-no">2551</span><span id="line-2551">                            "COI",</span>
+<span class="source-line-no">2552</span><span id="line-2552">                            false),</span>
+<span class="source-line-no">2553</span><span id="line-2553">                        new GreaterThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "2000"),</span>
+<span class="source-line-no">2554</span><span id="line-2554">                        new LessThanOrEqualsPredicate&lt;&gt;(OccurrenceSearchParameter.YEAR, "2010"))),</span>
+<span class="source-line-no">2555</span><span id="line-2555">                new GreaterThanOrEqualsPredicate&lt;&gt;(length, "2000")));</span>
+<span class="source-line-no">2556</span><span id="line-2556">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2557</span><span id="line-2557">    String expectedQuery =</span>
+<span class="source-line-no">2558</span><span id="line-2558">        "{\n"</span>
+<span class="source-line-no">2559</span><span id="line-2559">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2560</span><span id="line-2560">            + "    \"should\": [\n"</span>
+<span class="source-line-no">2561</span><span id="line-2561">            + "      {\n"</span>
+<span class="source-line-no">2562</span><span id="line-2562">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2563</span><span id="line-2563">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2564</span><span id="line-2564">            + "            {\n"</span>
+<span class="source-line-no">2565</span><span id="line-2565">            + "              \"range\": {\n"</span>
+<span class="source-line-no">2566</span><span id="line-2566">            + "                \"year\": {\n"</span>
+<span class="source-line-no">2567</span><span id="line-2567">            + "                  \"gte\": \"2000\",\n"</span>
+<span class="source-line-no">2568</span><span id="line-2568">            + "                  \"lte\": \"2010\"\n"</span>
+<span class="source-line-no">2569</span><span id="line-2569">            + "                }\n"</span>
+<span class="source-line-no">2570</span><span id="line-2570">            + "              }\n"</span>
+<span class="source-line-no">2571</span><span id="line-2571">            + "            },\n"</span>
+<span class="source-line-no">2572</span><span id="line-2572">            + "            {\n"</span>
+<span class="source-line-no">2573</span><span id="line-2573">            + "              \"nested\": {\n"</span>
+<span class="source-line-no">2574</span><span id="line-2574">            + "                \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2575</span><span id="line-2575">            + "                \"query\": {\n"</span>
+<span class="source-line-no">2576</span><span id="line-2576">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2577</span><span id="line-2577">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2578</span><span id="line-2578">            + "                      {\n"</span>
+<span class="source-line-no">2579</span><span id="line-2579">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2580</span><span id="line-2580">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2581</span><span id="line-2581">            + "                            \"gte\": \"600\",\n"</span>
+<span class="source-line-no">2582</span><span id="line-2582">            + "                            \"lte\": \"700\"\n"</span>
+<span class="source-line-no">2583</span><span id="line-2583">            + "                          }\n"</span>
+<span class="source-line-no">2584</span><span id="line-2584">            + "                        }\n"</span>
+<span class="source-line-no">2585</span><span id="line-2585">            + "                      },\n"</span>
+<span class="source-line-no">2586</span><span id="line-2586">            + "                      {\n"</span>
+<span class="source-line-no">2587</span><span id="line-2587">            + "                        \"term\": {\n"</span>
+<span class="source-line-no">2588</span><span id="line-2588">            + "                          \"nucleotide_sequence_target_gene.keyword\": {\n"</span>
+<span class="source-line-no">2589</span><span id="line-2589">            + "                            \"value\": \"COI\"\n"</span>
+<span class="source-line-no">2590</span><span id="line-2590">            + "                          }\n"</span>
+<span class="source-line-no">2591</span><span id="line-2591">            + "                        }\n"</span>
+<span class="source-line-no">2592</span><span id="line-2592">            + "                      }\n"</span>
+<span class="source-line-no">2593</span><span id="line-2593">            + "                    ]\n"</span>
+<span class="source-line-no">2594</span><span id="line-2594">            + "                  }\n"</span>
+<span class="source-line-no">2595</span><span id="line-2595">            + "                },\n"</span>
+<span class="source-line-no">2596</span><span id="line-2596">            + "                \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2597</span><span id="line-2597">            + "              }\n"</span>
+<span class="source-line-no">2598</span><span id="line-2598">            + "            }\n"</span>
+<span class="source-line-no">2599</span><span id="line-2599">            + "          ]\n"</span>
+<span class="source-line-no">2600</span><span id="line-2600">            + "        }\n"</span>
+<span class="source-line-no">2601</span><span id="line-2601">            + "      },\n"</span>
+<span class="source-line-no">2602</span><span id="line-2602">            + "      {\n"</span>
+<span class="source-line-no">2603</span><span id="line-2603">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2604</span><span id="line-2604">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2605</span><span id="line-2605">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2606</span><span id="line-2606">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2607</span><span id="line-2607">            + "              \"should\": [\n"</span>
+<span class="source-line-no">2608</span><span id="line-2608">            + "                {\n"</span>
+<span class="source-line-no">2609</span><span id="line-2609">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2610</span><span id="line-2610">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2611</span><span id="line-2611">            + "                      \"gte\": \"2000\"\n"</span>
+<span class="source-line-no">2612</span><span id="line-2612">            + "                    }\n"</span>
+<span class="source-line-no">2613</span><span id="line-2613">            + "                  }\n"</span>
+<span class="source-line-no">2614</span><span id="line-2614">            + "                }\n"</span>
+<span class="source-line-no">2615</span><span id="line-2615">            + "              ]\n"</span>
+<span class="source-line-no">2616</span><span id="line-2616">            + "            }\n"</span>
+<span class="source-line-no">2617</span><span id="line-2617">            + "          },\n"</span>
+<span class="source-line-no">2618</span><span id="line-2618">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2619</span><span id="line-2619">            + "        }\n"</span>
+<span class="source-line-no">2620</span><span id="line-2620">            + "      }\n"</span>
+<span class="source-line-no">2621</span><span id="line-2621">            + "    ]\n"</span>
+<span class="source-line-no">2622</span><span id="line-2622">            + "  }\n"</span>
+<span class="source-line-no">2623</span><span id="line-2623">            + "}";</span>
+<span class="source-line-no">2624</span><span id="line-2624">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2625</span><span id="line-2625">  }</span>
+<span class="source-line-no">2626</span><span id="line-2626"></span>
+<span class="source-line-no">2627</span><span id="line-2627">  /**</span>
+<span class="source-line-no">2628</span><span id="line-2628">   * Inside an OR, the conditions of an AND on the same nested path must all match together instead</span>
+<span class="source-line-no">2629</span><span id="line-2629">   * of being ORed with the other branches.</span>
+<span class="source-line-no">2630</span><span id="line-2630">   */</span>
+<span class="source-line-no">2631</span><span id="line-2631">  @Test</span>
+<span class="source-line-no">2632</span><span id="line-2632">  public void nestedConditionsInConjunctionInsideDisjunctionTest()</span>
+<span class="source-line-no">2633</span><span id="line-2633">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2634</span><span id="line-2634">    OccurrenceSearchParameter length =</span>
+<span class="source-line-no">2635</span><span id="line-2635">        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH;</span>
+<span class="source-line-no">2636</span><span id="line-2636">    Predicate p =</span>
+<span class="source-line-no">2637</span><span id="line-2637">        new DisjunctionPredicate(</span>
+<span class="source-line-no">2638</span><span id="line-2638">            List.of(</span>
+<span class="source-line-no">2639</span><span id="line-2639">                new ConjunctionPredicate(</span>
+<span class="source-line-no">2640</span><span id="line-2640">                    List.of(</span>
+<span class="source-line-no">2641</span><span id="line-2641">                        new GreaterThanOrEqualsPredicate&lt;&gt;(length, "600"),</span>
+<span class="source-line-no">2642</span><span id="line-2642">                        new LessThanOrEqualsPredicate&lt;&gt;(length, "700"),</span>
+<span class="source-line-no">2643</span><span id="line-2643">                        new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2644</span><span id="line-2644">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE,</span>
+<span class="source-line-no">2645</span><span id="line-2645">                            "COI",</span>
+<span class="source-line-no">2646</span><span id="line-2646">                            false))),</span>
+<span class="source-line-no">2647</span><span id="line-2647">                new GreaterThanOrEqualsPredicate&lt;&gt;(length, "2000")));</span>
+<span class="source-line-no">2648</span><span id="line-2648">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2649</span><span id="line-2649">    String expectedQuery =</span>
+<span class="source-line-no">2650</span><span id="line-2650">        "{\n"</span>
+<span class="source-line-no">2651</span><span id="line-2651">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2652</span><span id="line-2652">            + "    \"should\": [\n"</span>
+<span class="source-line-no">2653</span><span id="line-2653">            + "      {\n"</span>
+<span class="source-line-no">2654</span><span id="line-2654">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2655</span><span id="line-2655">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2656</span><span id="line-2656">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2657</span><span id="line-2657">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2658</span><span id="line-2658">            + "              \"should\": [\n"</span>
+<span class="source-line-no">2659</span><span id="line-2659">            + "                {\n"</span>
+<span class="source-line-no">2660</span><span id="line-2660">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2661</span><span id="line-2661">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2662</span><span id="line-2662">            + "                      {\n"</span>
+<span class="source-line-no">2663</span><span id="line-2663">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2664</span><span id="line-2664">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2665</span><span id="line-2665">            + "                            \"gte\": \"600\",\n"</span>
+<span class="source-line-no">2666</span><span id="line-2666">            + "                            \"lte\": \"700\"\n"</span>
+<span class="source-line-no">2667</span><span id="line-2667">            + "                          }\n"</span>
+<span class="source-line-no">2668</span><span id="line-2668">            + "                        }\n"</span>
+<span class="source-line-no">2669</span><span id="line-2669">            + "                      },\n"</span>
+<span class="source-line-no">2670</span><span id="line-2670">            + "                      {\n"</span>
+<span class="source-line-no">2671</span><span id="line-2671">            + "                        \"term\": {\n"</span>
+<span class="source-line-no">2672</span><span id="line-2672">            + "                          \"nucleotide_sequence_target_gene.keyword\": {\n"</span>
+<span class="source-line-no">2673</span><span id="line-2673">            + "                            \"value\": \"COI\"\n"</span>
+<span class="source-line-no">2674</span><span id="line-2674">            + "                          }\n"</span>
+<span class="source-line-no">2675</span><span id="line-2675">            + "                        }\n"</span>
+<span class="source-line-no">2676</span><span id="line-2676">            + "                      }\n"</span>
+<span class="source-line-no">2677</span><span id="line-2677">            + "                    ]\n"</span>
+<span class="source-line-no">2678</span><span id="line-2678">            + "                  }\n"</span>
+<span class="source-line-no">2679</span><span id="line-2679">            + "                },\n"</span>
+<span class="source-line-no">2680</span><span id="line-2680">            + "                {\n"</span>
+<span class="source-line-no">2681</span><span id="line-2681">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2682</span><span id="line-2682">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2683</span><span id="line-2683">            + "                      \"gte\": \"2000\"\n"</span>
+<span class="source-line-no">2684</span><span id="line-2684">            + "                    }\n"</span>
+<span class="source-line-no">2685</span><span id="line-2685">            + "                  }\n"</span>
+<span class="source-line-no">2686</span><span id="line-2686">            + "                }\n"</span>
+<span class="source-line-no">2687</span><span id="line-2687">            + "              ]\n"</span>
+<span class="source-line-no">2688</span><span id="line-2688">            + "            }\n"</span>
+<span class="source-line-no">2689</span><span id="line-2689">            + "          },\n"</span>
+<span class="source-line-no">2690</span><span id="line-2690">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2691</span><span id="line-2691">            + "        }\n"</span>
+<span class="source-line-no">2692</span><span id="line-2692">            + "      }\n"</span>
+<span class="source-line-no">2693</span><span id="line-2693">            + "    ]\n"</span>
+<span class="source-line-no">2694</span><span id="line-2694">            + "  }\n"</span>
+<span class="source-line-no">2695</span><span id="line-2695">            + "}";</span>
+<span class="source-line-no">2696</span><span id="line-2696">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2697</span><span id="line-2697">  }</span>
+<span class="source-line-no">2698</span><span id="line-2698"></span>
+<span class="source-line-no">2699</span><span id="line-2699">  /** gbif/occurrence#630: an interval on a nested field was dropped, returning an empty query. */</span>
+<span class="source-line-no">2700</span><span id="line-2700">  @Test</span>
+<span class="source-line-no">2701</span><span id="line-2701">  public void nestedFieldRangeIntervalTest()</span>
+<span class="source-line-no">2702</span><span id="line-2702">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2703</span><span id="line-2703">    Predicate p =</span>
+<span class="source-line-no">2704</span><span id="line-2704">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2705</span><span id="line-2705">            List.of(</span>
+<span class="source-line-no">2706</span><span id="line-2706">                new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2707</span><span id="line-2707">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2708</span><span id="line-2708">                new LessThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2709</span><span id="line-2709">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));</span>
+<span class="source-line-no">2710</span><span id="line-2710">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2711</span><span id="line-2711">    String expectedQuery =</span>
+<span class="source-line-no">2712</span><span id="line-2712">        "{\n"</span>
+<span class="source-line-no">2713</span><span id="line-2713">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2714</span><span id="line-2714">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2715</span><span id="line-2715">            + "      {\n"</span>
+<span class="source-line-no">2716</span><span id="line-2716">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2717</span><span id="line-2717">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2718</span><span id="line-2718">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2719</span><span id="line-2719">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2720</span><span id="line-2720">            + "              \"filter\": [\n"</span>
+<span class="source-line-no">2721</span><span id="line-2721">            + "                {\n"</span>
+<span class="source-line-no">2722</span><span id="line-2722">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2723</span><span id="line-2723">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2724</span><span id="line-2724">            + "                      \"gte\": \"1000\",\n"</span>
+<span class="source-line-no">2725</span><span id="line-2725">            + "                      \"lte\": \"2000\"\n"</span>
+<span class="source-line-no">2726</span><span id="line-2726">            + "                    }\n"</span>
+<span class="source-line-no">2727</span><span id="line-2727">            + "                  }\n"</span>
+<span class="source-line-no">2728</span><span id="line-2728">            + "                }\n"</span>
+<span class="source-line-no">2729</span><span id="line-2729">            + "              ]\n"</span>
+<span class="source-line-no">2730</span><span id="line-2730">            + "            }\n"</span>
+<span class="source-line-no">2731</span><span id="line-2731">            + "          },\n"</span>
+<span class="source-line-no">2732</span><span id="line-2732">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2733</span><span id="line-2733">            + "        }\n"</span>
+<span class="source-line-no">2734</span><span id="line-2734">            + "      }\n"</span>
+<span class="source-line-no">2735</span><span id="line-2735">            + "    ]\n"</span>
+<span class="source-line-no">2736</span><span id="line-2736">            + "  }\n"</span>
+<span class="source-line-no">2737</span><span id="line-2737">            + "}";</span>
+<span class="source-line-no">2738</span><span id="line-2738">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2739</span><span id="line-2739">  }</span>
+<span class="source-line-no">2740</span><span id="line-2740"></span>
+<span class="source-line-no">2741</span><span id="line-2741">  /** gbif/occurrence#630: same as above with exclusive bounds. */</span>
+<span class="source-line-no">2742</span><span id="line-2742">  @Test</span>
+<span class="source-line-no">2743</span><span id="line-2743">  public void nestedFieldExclusiveRangeIntervalTest()</span>
+<span class="source-line-no">2744</span><span id="line-2744">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2745</span><span id="line-2745">    Predicate p =</span>
+<span class="source-line-no">2746</span><span id="line-2746">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2747</span><span id="line-2747">            List.of(</span>
+<span class="source-line-no">2748</span><span id="line-2748">                new GreaterThanPredicate&lt;&gt;(</span>
+<span class="source-line-no">2749</span><span id="line-2749">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2750</span><span id="line-2750">                new LessThanPredicate&lt;&gt;(</span>
+<span class="source-line-no">2751</span><span id="line-2751">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000")));</span>
+<span class="source-line-no">2752</span><span id="line-2752">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2753</span><span id="line-2753">    String expectedQuery =</span>
+<span class="source-line-no">2754</span><span id="line-2754">        "{\n"</span>
+<span class="source-line-no">2755</span><span id="line-2755">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2756</span><span id="line-2756">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2757</span><span id="line-2757">            + "      {\n"</span>
+<span class="source-line-no">2758</span><span id="line-2758">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2759</span><span id="line-2759">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2760</span><span id="line-2760">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2761</span><span id="line-2761">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2762</span><span id="line-2762">            + "              \"filter\": [\n"</span>
+<span class="source-line-no">2763</span><span id="line-2763">            + "                {\n"</span>
+<span class="source-line-no">2764</span><span id="line-2764">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2765</span><span id="line-2765">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2766</span><span id="line-2766">            + "                      \"gt\": \"1000\",\n"</span>
+<span class="source-line-no">2767</span><span id="line-2767">            + "                      \"lt\": \"2000\"\n"</span>
+<span class="source-line-no">2768</span><span id="line-2768">            + "                    }\n"</span>
+<span class="source-line-no">2769</span><span id="line-2769">            + "                  }\n"</span>
+<span class="source-line-no">2770</span><span id="line-2770">            + "                }\n"</span>
+<span class="source-line-no">2771</span><span id="line-2771">            + "              ]\n"</span>
+<span class="source-line-no">2772</span><span id="line-2772">            + "            }\n"</span>
+<span class="source-line-no">2773</span><span id="line-2773">            + "          },\n"</span>
+<span class="source-line-no">2774</span><span id="line-2774">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2775</span><span id="line-2775">            + "        }\n"</span>
+<span class="source-line-no">2776</span><span id="line-2776">            + "      }\n"</span>
+<span class="source-line-no">2777</span><span id="line-2777">            + "    ]\n"</span>
+<span class="source-line-no">2778</span><span id="line-2778">            + "  }\n"</span>
+<span class="source-line-no">2779</span><span id="line-2779">            + "}";</span>
+<span class="source-line-no">2780</span><span id="line-2780">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2781</span><span id="line-2781">  }</span>
+<span class="source-line-no">2782</span><span id="line-2782"></span>
+<span class="source-line-no">2783</span><span id="line-2783">  /**</span>
+<span class="source-line-no">2784</span><span id="line-2784">   * gbif/occurrence#630: an interval on a nested field must be combined with the other conditions</span>
+<span class="source-line-no">2785</span><span id="line-2785">   * on the same nested path and kept alongside non-nested conditions.</span>
+<span class="source-line-no">2786</span><span id="line-2786">   */</span>
+<span class="source-line-no">2787</span><span id="line-2787">  @Test</span>
+<span class="source-line-no">2788</span><span id="line-2788">  public void nestedFieldRangeIntervalWithOtherConditionsTest()</span>
+<span class="source-line-no">2789</span><span id="line-2789">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2790</span><span id="line-2790">    Predicate p =</span>
+<span class="source-line-no">2791</span><span id="line-2791">        new ConjunctionPredicate(</span>
+<span class="source-line-no">2792</span><span id="line-2792">            List.of(</span>
+<span class="source-line-no">2793</span><span id="line-2793">                new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2794</span><span id="line-2794">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2795</span><span id="line-2795">                new LessThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2796</span><span id="line-2796">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),</span>
+<span class="source-line-no">2797</span><span id="line-2797">                new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2798</span><span id="line-2798">                    OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_TARGET_GENE, "COI", false),</span>
+<span class="source-line-no">2799</span><span id="line-2799">                new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "DK", false)));</span>
+<span class="source-line-no">2800</span><span id="line-2800">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2801</span><span id="line-2801">    String expectedQuery =</span>
+<span class="source-line-no">2802</span><span id="line-2802">        "{\n"</span>
+<span class="source-line-no">2803</span><span id="line-2803">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2804</span><span id="line-2804">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2805</span><span id="line-2805">            + "      {\n"</span>
+<span class="source-line-no">2806</span><span id="line-2806">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2807</span><span id="line-2807">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2808</span><span id="line-2808">            + "            {\n"</span>
+<span class="source-line-no">2809</span><span id="line-2809">            + "              \"term\": {\n"</span>
+<span class="source-line-no">2810</span><span id="line-2810">            + "                \"country\": {\n"</span>
+<span class="source-line-no">2811</span><span id="line-2811">            + "                  \"value\": \"DK\"\n"</span>
+<span class="source-line-no">2812</span><span id="line-2812">            + "                }\n"</span>
+<span class="source-line-no">2813</span><span id="line-2813">            + "              }\n"</span>
+<span class="source-line-no">2814</span><span id="line-2814">            + "            }\n"</span>
+<span class="source-line-no">2815</span><span id="line-2815">            + "          ]\n"</span>
+<span class="source-line-no">2816</span><span id="line-2816">            + "        }\n"</span>
+<span class="source-line-no">2817</span><span id="line-2817">            + "      },\n"</span>
+<span class="source-line-no">2818</span><span id="line-2818">            + "      {\n"</span>
+<span class="source-line-no">2819</span><span id="line-2819">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2820</span><span id="line-2820">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2821</span><span id="line-2821">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2822</span><span id="line-2822">            + "            \"bool\": {\n"</span>
+<span class="source-line-no">2823</span><span id="line-2823">            + "              \"filter\": [\n"</span>
+<span class="source-line-no">2824</span><span id="line-2824">            + "                {\n"</span>
+<span class="source-line-no">2825</span><span id="line-2825">            + "                  \"range\": {\n"</span>
+<span class="source-line-no">2826</span><span id="line-2826">            + "                    \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2827</span><span id="line-2827">            + "                      \"gte\": \"1000\",\n"</span>
+<span class="source-line-no">2828</span><span id="line-2828">            + "                      \"lte\": \"2000\"\n"</span>
+<span class="source-line-no">2829</span><span id="line-2829">            + "                    }\n"</span>
+<span class="source-line-no">2830</span><span id="line-2830">            + "                  }\n"</span>
+<span class="source-line-no">2831</span><span id="line-2831">            + "                },\n"</span>
+<span class="source-line-no">2832</span><span id="line-2832">            + "                {\n"</span>
+<span class="source-line-no">2833</span><span id="line-2833">            + "                  \"term\": {\n"</span>
+<span class="source-line-no">2834</span><span id="line-2834">            + "                    \"nucleotide_sequence_target_gene.keyword\": {\n"</span>
+<span class="source-line-no">2835</span><span id="line-2835">            + "                      \"value\": \"COI\"\n"</span>
+<span class="source-line-no">2836</span><span id="line-2836">            + "                    }\n"</span>
+<span class="source-line-no">2837</span><span id="line-2837">            + "                  }\n"</span>
+<span class="source-line-no">2838</span><span id="line-2838">            + "                }\n"</span>
+<span class="source-line-no">2839</span><span id="line-2839">            + "              ]\n"</span>
+<span class="source-line-no">2840</span><span id="line-2840">            + "            }\n"</span>
+<span class="source-line-no">2841</span><span id="line-2841">            + "          },\n"</span>
+<span class="source-line-no">2842</span><span id="line-2842">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2843</span><span id="line-2843">            + "        }\n"</span>
+<span class="source-line-no">2844</span><span id="line-2844">            + "      }\n"</span>
+<span class="source-line-no">2845</span><span id="line-2845">            + "    ]\n"</span>
+<span class="source-line-no">2846</span><span id="line-2846">            + "  }\n"</span>
+<span class="source-line-no">2847</span><span id="line-2847">            + "}";</span>
+<span class="source-line-no">2848</span><span id="line-2848">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2849</span><span id="line-2849">  }</span>
+<span class="source-line-no">2850</span><span id="line-2850"></span>
+<span class="source-line-no">2851</span><span id="line-2851">  /**</span>
+<span class="source-line-no">2852</span><span id="line-2852">   * gbif/occurrence#630: inside an OR, a conjunction with a nested interval and a flat condition</span>
+<span class="source-line-no">2853</span><span id="line-2853">   * must keep both conditions instead of only the nested range.</span>
+<span class="source-line-no">2854</span><span id="line-2854">   */</span>
+<span class="source-line-no">2855</span><span id="line-2855">  @Test</span>
+<span class="source-line-no">2856</span><span id="line-2856">  public void nestedFieldRangeIntervalWithFlatConditionInDisjunctionTest()</span>
+<span class="source-line-no">2857</span><span id="line-2857">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2858</span><span id="line-2858">    Predicate p =</span>
+<span class="source-line-no">2859</span><span id="line-2859">        new DisjunctionPredicate(</span>
+<span class="source-line-no">2860</span><span id="line-2860">            List.of(</span>
+<span class="source-line-no">2861</span><span id="line-2861">                new ConjunctionPredicate(</span>
+<span class="source-line-no">2862</span><span id="line-2862">                    List.of(</span>
+<span class="source-line-no">2863</span><span id="line-2863">                        new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2864</span><span id="line-2864">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2865</span><span id="line-2865">                        new LessThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2866</span><span id="line-2866">                            OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"),</span>
+<span class="source-line-no">2867</span><span id="line-2867">                        new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "DK", false))),</span>
+<span class="source-line-no">2868</span><span id="line-2868">                new EqualsPredicate&lt;&gt;(OccurrenceSearchParameter.COUNTRY, "ES", false)));</span>
+<span class="source-line-no">2869</span><span id="line-2869">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2870</span><span id="line-2870">    String expectedQuery =</span>
+<span class="source-line-no">2871</span><span id="line-2871">        "{\n"</span>
+<span class="source-line-no">2872</span><span id="line-2872">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2873</span><span id="line-2873">            + "    \"should\": [\n"</span>
+<span class="source-line-no">2874</span><span id="line-2874">            + "      {\n"</span>
+<span class="source-line-no">2875</span><span id="line-2875">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2876</span><span id="line-2876">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2877</span><span id="line-2877">            + "            {\n"</span>
+<span class="source-line-no">2878</span><span id="line-2878">            + "              \"bool\": {\n"</span>
+<span class="source-line-no">2879</span><span id="line-2879">            + "                \"filter\": [\n"</span>
+<span class="source-line-no">2880</span><span id="line-2880">            + "                  {\n"</span>
+<span class="source-line-no">2881</span><span id="line-2881">            + "                    \"term\": {\n"</span>
+<span class="source-line-no">2882</span><span id="line-2882">            + "                      \"country\": {\n"</span>
+<span class="source-line-no">2883</span><span id="line-2883">            + "                        \"value\": \"DK\"\n"</span>
+<span class="source-line-no">2884</span><span id="line-2884">            + "                      }\n"</span>
+<span class="source-line-no">2885</span><span id="line-2885">            + "                    }\n"</span>
+<span class="source-line-no">2886</span><span id="line-2886">            + "                  }\n"</span>
+<span class="source-line-no">2887</span><span id="line-2887">            + "                ]\n"</span>
+<span class="source-line-no">2888</span><span id="line-2888">            + "              }\n"</span>
+<span class="source-line-no">2889</span><span id="line-2889">            + "            },\n"</span>
+<span class="source-line-no">2890</span><span id="line-2890">            + "            {\n"</span>
+<span class="source-line-no">2891</span><span id="line-2891">            + "              \"nested\": {\n"</span>
+<span class="source-line-no">2892</span><span id="line-2892">            + "                \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2893</span><span id="line-2893">            + "                \"query\": {\n"</span>
+<span class="source-line-no">2894</span><span id="line-2894">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2895</span><span id="line-2895">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2896</span><span id="line-2896">            + "                      {\n"</span>
+<span class="source-line-no">2897</span><span id="line-2897">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2898</span><span id="line-2898">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2899</span><span id="line-2899">            + "                            \"gte\": \"1000\",\n"</span>
+<span class="source-line-no">2900</span><span id="line-2900">            + "                            \"lte\": \"2000\"\n"</span>
+<span class="source-line-no">2901</span><span id="line-2901">            + "                          }\n"</span>
+<span class="source-line-no">2902</span><span id="line-2902">            + "                        }\n"</span>
+<span class="source-line-no">2903</span><span id="line-2903">            + "                      }\n"</span>
+<span class="source-line-no">2904</span><span id="line-2904">            + "                    ]\n"</span>
+<span class="source-line-no">2905</span><span id="line-2905">            + "                  }\n"</span>
+<span class="source-line-no">2906</span><span id="line-2906">            + "                },\n"</span>
+<span class="source-line-no">2907</span><span id="line-2907">            + "                \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2908</span><span id="line-2908">            + "              }\n"</span>
+<span class="source-line-no">2909</span><span id="line-2909">            + "            }\n"</span>
+<span class="source-line-no">2910</span><span id="line-2910">            + "          ]\n"</span>
+<span class="source-line-no">2911</span><span id="line-2911">            + "        }\n"</span>
+<span class="source-line-no">2912</span><span id="line-2912">            + "      },\n"</span>
+<span class="source-line-no">2913</span><span id="line-2913">            + "      {\n"</span>
+<span class="source-line-no">2914</span><span id="line-2914">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2915</span><span id="line-2915">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2916</span><span id="line-2916">            + "            {\n"</span>
+<span class="source-line-no">2917</span><span id="line-2917">            + "              \"term\": {\n"</span>
+<span class="source-line-no">2918</span><span id="line-2918">            + "                \"country\": {\n"</span>
+<span class="source-line-no">2919</span><span id="line-2919">            + "                  \"value\": \"ES\"\n"</span>
+<span class="source-line-no">2920</span><span id="line-2920">            + "                }\n"</span>
+<span class="source-line-no">2921</span><span id="line-2921">            + "              }\n"</span>
+<span class="source-line-no">2922</span><span id="line-2922">            + "            }\n"</span>
+<span class="source-line-no">2923</span><span id="line-2923">            + "          ]\n"</span>
+<span class="source-line-no">2924</span><span id="line-2924">            + "        }\n"</span>
+<span class="source-line-no">2925</span><span id="line-2925">            + "      }\n"</span>
+<span class="source-line-no">2926</span><span id="line-2926">            + "    ]\n"</span>
+<span class="source-line-no">2927</span><span id="line-2927">            + "  }\n"</span>
+<span class="source-line-no">2928</span><span id="line-2928">            + "}";</span>
+<span class="source-line-no">2929</span><span id="line-2929">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2930</span><span id="line-2930">  }</span>
+<span class="source-line-no">2931</span><span id="line-2931"></span>
+<span class="source-line-no">2932</span><span id="line-2932">  /**</span>
+<span class="source-line-no">2933</span><span id="line-2933">   * gbif/occurrence#630: negating a nested interval must exclude the range instead of an empty</span>
+<span class="source-line-no">2934</span><span id="line-2934">   * query, which excluded every record.</span>
+<span class="source-line-no">2935</span><span id="line-2935">   */</span>
+<span class="source-line-no">2936</span><span id="line-2936">  @Test</span>
+<span class="source-line-no">2937</span><span id="line-2937">  public void nestedFieldRangeIntervalInNotPredicateTest()</span>
+<span class="source-line-no">2938</span><span id="line-2938">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">2939</span><span id="line-2939">    Predicate p =</span>
+<span class="source-line-no">2940</span><span id="line-2940">        new NotPredicate(</span>
+<span class="source-line-no">2941</span><span id="line-2941">            new ConjunctionPredicate(</span>
+<span class="source-line-no">2942</span><span id="line-2942">                List.of(</span>
+<span class="source-line-no">2943</span><span id="line-2943">                    new GreaterThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2944</span><span id="line-2944">                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "1000"),</span>
+<span class="source-line-no">2945</span><span id="line-2945">                    new LessThanOrEqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">2946</span><span id="line-2946">                        OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH, "2000"))));</span>
+<span class="source-line-no">2947</span><span id="line-2947">    String query = visitor.buildQuery(p);</span>
+<span class="source-line-no">2948</span><span id="line-2948">    String expectedQuery =</span>
+<span class="source-line-no">2949</span><span id="line-2949">        "{\n"</span>
+<span class="source-line-no">2950</span><span id="line-2950">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">2951</span><span id="line-2951">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">2952</span><span id="line-2952">            + "      {\n"</span>
+<span class="source-line-no">2953</span><span id="line-2953">            + "        \"nested\": {\n"</span>
+<span class="source-line-no">2954</span><span id="line-2954">            + "          \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2955</span><span id="line-2955">            + "          \"query\": {\n"</span>
+<span class="source-line-no">2956</span><span id="line-2956">            + "            \"exists\": {\n"</span>
+<span class="source-line-no">2957</span><span id="line-2957">            + "              \"field\": \"nucleotideSequence.sequenceLength\"\n"</span>
+<span class="source-line-no">2958</span><span id="line-2958">            + "            }\n"</span>
+<span class="source-line-no">2959</span><span id="line-2959">            + "          },\n"</span>
+<span class="source-line-no">2960</span><span id="line-2960">            + "          \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2961</span><span id="line-2961">            + "        }\n"</span>
+<span class="source-line-no">2962</span><span id="line-2962">            + "      }\n"</span>
+<span class="source-line-no">2963</span><span id="line-2963">            + "    ],\n"</span>
+<span class="source-line-no">2964</span><span id="line-2964">            + "    \"must_not\": [\n"</span>
+<span class="source-line-no">2965</span><span id="line-2965">            + "      {\n"</span>
+<span class="source-line-no">2966</span><span id="line-2966">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">2967</span><span id="line-2967">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">2968</span><span id="line-2968">            + "            {\n"</span>
+<span class="source-line-no">2969</span><span id="line-2969">            + "              \"nested\": {\n"</span>
+<span class="source-line-no">2970</span><span id="line-2970">            + "                \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">2971</span><span id="line-2971">            + "                \"query\": {\n"</span>
+<span class="source-line-no">2972</span><span id="line-2972">            + "                  \"bool\": {\n"</span>
+<span class="source-line-no">2973</span><span id="line-2973">            + "                    \"filter\": [\n"</span>
+<span class="source-line-no">2974</span><span id="line-2974">            + "                      {\n"</span>
+<span class="source-line-no">2975</span><span id="line-2975">            + "                        \"range\": {\n"</span>
+<span class="source-line-no">2976</span><span id="line-2976">            + "                          \"nucleotideSequence.sequenceLength\": {\n"</span>
+<span class="source-line-no">2977</span><span id="line-2977">            + "                            \"gte\": \"1000\",\n"</span>
+<span class="source-line-no">2978</span><span id="line-2978">            + "                            \"lte\": \"2000\"\n"</span>
+<span class="source-line-no">2979</span><span id="line-2979">            + "                          }\n"</span>
+<span class="source-line-no">2980</span><span id="line-2980">            + "                        }\n"</span>
+<span class="source-line-no">2981</span><span id="line-2981">            + "                      }\n"</span>
+<span class="source-line-no">2982</span><span id="line-2982">            + "                    ]\n"</span>
+<span class="source-line-no">2983</span><span id="line-2983">            + "                  }\n"</span>
+<span class="source-line-no">2984</span><span id="line-2984">            + "                },\n"</span>
+<span class="source-line-no">2985</span><span id="line-2985">            + "                \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">2986</span><span id="line-2986">            + "              }\n"</span>
+<span class="source-line-no">2987</span><span id="line-2987">            + "            }\n"</span>
+<span class="source-line-no">2988</span><span id="line-2988">            + "          ]\n"</span>
+<span class="source-line-no">2989</span><span id="line-2989">            + "        }\n"</span>
+<span class="source-line-no">2990</span><span id="line-2990">            + "      }\n"</span>
+<span class="source-line-no">2991</span><span id="line-2991">            + "    ]\n"</span>
+<span class="source-line-no">2992</span><span id="line-2992">            + "  }\n"</span>
+<span class="source-line-no">2993</span><span id="line-2993">            + "}";</span>
+<span class="source-line-no">2994</span><span id="line-2994">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">2995</span><span id="line-2995">  }</span>
+<span class="source-line-no">2996</span><span id="line-2996"></span>
+<span class="source-line-no">2997</span><span id="line-2997">  @Test</span>
+<span class="source-line-no">2998</span><span id="line-2998">  public void conjunctionWithNotPredicateTest()</span>
+<span class="source-line-no">2999</span><span id="line-2999">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">3000</span><span id="line-3000">    Predicate predicate =</span>
+<span class="source-line-no">3001</span><span id="line-3001">        new ConjunctionPredicate(</span>
+<span class="source-line-no">3002</span><span id="line-3002">            Arrays.asList(</span>
+<span class="source-line-no">3003</span><span id="line-3003">                new InPredicate(</span>
+<span class="source-line-no">3004</span><span id="line-3004">                    OccurrenceSearchParameter.DATASET_KEY,</span>
+<span class="source-line-no">3005</span><span id="line-3005">                    Arrays.asList(</span>
+<span class="source-line-no">3006</span><span id="line-3006">                        "b364710b-3f07-4876-a554-1943b702363f",</span>
+<span class="source-line-no">3007</span><span id="line-3007">                        "6595e04b-13d2-4eac-933f-73786627b5a2"),</span>
+<span class="source-line-no">3008</span><span id="line-3008">                    false),</span>
+<span class="source-line-no">3009</span><span id="line-3009">                new NotPredicate(</span>
+<span class="source-line-no">3010</span><span id="line-3010">                    new ConjunctionPredicate(</span>
+<span class="source-line-no">3011</span><span id="line-3011">                        Arrays.asList(</span>
+<span class="source-line-no">3012</span><span id="line-3012">                            new InPredicate(</span>
+<span class="source-line-no">3013</span><span id="line-3013">                                OccurrenceSearchParameter.INSTITUTION_KEY,</span>
+<span class="source-line-no">3014</span><span id="line-3014">                                List.of("75f50140-830d-4630-a290-3d6e951a7c29"),</span>
+<span class="source-line-no">3015</span><span id="line-3015">                                false),</span>
+<span class="source-line-no">3016</span><span id="line-3016">                            new InPredicate(</span>
+<span class="source-line-no">3017</span><span id="line-3017">                                OccurrenceSearchParameter.COLLECTION_KEY,</span>
+<span class="source-line-no">3018</span><span id="line-3018">                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),</span>
+<span class="source-line-no">3019</span><span id="line-3019">                                false))))));</span>
+<span class="source-line-no">3020</span><span id="line-3020">    String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">3021</span><span id="line-3021">    String expectedQuery =</span>
+<span class="source-line-no">3022</span><span id="line-3022">        "{\n"</span>
+<span class="source-line-no">3023</span><span id="line-3023">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">3024</span><span id="line-3024">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">3025</span><span id="line-3025">            + "      {\n"</span>
+<span class="source-line-no">3026</span><span id="line-3026">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">3027</span><span id="line-3027">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">3028</span><span id="line-3028">            + "            {\n"</span>
+<span class="source-line-no">3029</span><span id="line-3029">            + "              \"terms\": {\n"</span>
+<span class="source-line-no">3030</span><span id="line-3030">            + "                \"dataset_key\": [\n"</span>
+<span class="source-line-no">3031</span><span id="line-3031">            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"</span>
+<span class="source-line-no">3032</span><span id="line-3032">            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"</span>
+<span class="source-line-no">3033</span><span id="line-3033">            + "                ]\n"</span>
+<span class="source-line-no">3034</span><span id="line-3034">            + "              }\n"</span>
+<span class="source-line-no">3035</span><span id="line-3035">            + "            }\n"</span>
+<span class="source-line-no">3036</span><span id="line-3036">            + "          ]\n"</span>
+<span class="source-line-no">3037</span><span id="line-3037">            + "        }\n"</span>
+<span class="source-line-no">3038</span><span id="line-3038">            + "      },\n"</span>
+<span class="source-line-no">3039</span><span id="line-3039">            + "      {\n"</span>
+<span class="source-line-no">3040</span><span id="line-3040">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">3041</span><span id="line-3041">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">3042</span><span id="line-3042">            + "            {\n"</span>
+<span class="source-line-no">3043</span><span id="line-3043">            + "              \"exists\": {\n"</span>
+<span class="source-line-no">3044</span><span id="line-3044">            + "                \"field\": \"institution_key\"\n"</span>
+<span class="source-line-no">3045</span><span id="line-3045">            + "              }\n"</span>
+<span class="source-line-no">3046</span><span id="line-3046">            + "            },\n"</span>
+<span class="source-line-no">3047</span><span id="line-3047">            + "            {\n"</span>
+<span class="source-line-no">3048</span><span id="line-3048">            + "              \"exists\": {\n"</span>
+<span class="source-line-no">3049</span><span id="line-3049">            + "                \"field\": \"collection_key\"\n"</span>
+<span class="source-line-no">3050</span><span id="line-3050">            + "              }\n"</span>
+<span class="source-line-no">3051</span><span id="line-3051">            + "            }\n"</span>
+<span class="source-line-no">3052</span><span id="line-3052">            + "          ],\n"</span>
+<span class="source-line-no">3053</span><span id="line-3053">            + "          \"must_not\": [\n"</span>
+<span class="source-line-no">3054</span><span id="line-3054">            + "            {\n"</span>
+<span class="source-line-no">3055</span><span id="line-3055">            + "              \"bool\": {\n"</span>
+<span class="source-line-no">3056</span><span id="line-3056">            + "                \"filter\": [\n"</span>
+<span class="source-line-no">3057</span><span id="line-3057">            + "                  {\n"</span>
+<span class="source-line-no">3058</span><span id="line-3058">            + "                    \"bool\": {\n"</span>
+<span class="source-line-no">3059</span><span id="line-3059">            + "                      \"filter\": [\n"</span>
+<span class="source-line-no">3060</span><span id="line-3060">            + "                        {\n"</span>
+<span class="source-line-no">3061</span><span id="line-3061">            + "                          \"terms\": {\n"</span>
+<span class="source-line-no">3062</span><span id="line-3062">            + "                            \"institution_key\": [\"75f50140-830d-4630-a290-3d6e951a7c29\"]\n"</span>
+<span class="source-line-no">3063</span><span id="line-3063">            + "                          }\n"</span>
+<span class="source-line-no">3064</span><span id="line-3064">            + "                        }\n"</span>
+<span class="source-line-no">3065</span><span id="line-3065">            + "                      ]\n"</span>
+<span class="source-line-no">3066</span><span id="line-3066">            + "                    }\n"</span>
+<span class="source-line-no">3067</span><span id="line-3067">            + "                  },\n"</span>
+<span class="source-line-no">3068</span><span id="line-3068">            + "                  {\n"</span>
+<span class="source-line-no">3069</span><span id="line-3069">            + "                    \"bool\": {\n"</span>
+<span class="source-line-no">3070</span><span id="line-3070">            + "                      \"filter\": [\n"</span>
+<span class="source-line-no">3071</span><span id="line-3071">            + "                        {\n"</span>
+<span class="source-line-no">3072</span><span id="line-3072">            + "                          \"terms\": {\n"</span>
+<span class="source-line-no">3073</span><span id="line-3073">            + "                            \"collection_key\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"</span>
+<span class="source-line-no">3074</span><span id="line-3074">            + "                          }\n"</span>
+<span class="source-line-no">3075</span><span id="line-3075">            + "                        }\n"</span>
+<span class="source-line-no">3076</span><span id="line-3076">            + "                      ]\n"</span>
+<span class="source-line-no">3077</span><span id="line-3077">            + "                    }\n"</span>
+<span class="source-line-no">3078</span><span id="line-3078">            + "                  }\n"</span>
+<span class="source-line-no">3079</span><span id="line-3079">            + "                ]\n"</span>
+<span class="source-line-no">3080</span><span id="line-3080">            + "              }\n"</span>
+<span class="source-line-no">3081</span><span id="line-3081">            + "            }\n"</span>
+<span class="source-line-no">3082</span><span id="line-3082">            + "          ]\n"</span>
+<span class="source-line-no">3083</span><span id="line-3083">            + "        }\n"</span>
+<span class="source-line-no">3084</span><span id="line-3084">            + "      }\n"</span>
+<span class="source-line-no">3085</span><span id="line-3085">            + "    ]\n"</span>
+<span class="source-line-no">3086</span><span id="line-3086">            + "  }\n"</span>
+<span class="source-line-no">3087</span><span id="line-3087">            + "}";</span>
+<span class="source-line-no">3088</span><span id="line-3088">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">3089</span><span id="line-3089">  }</span>
+<span class="source-line-no">3090</span><span id="line-3090"></span>
+<span class="source-line-no">3091</span><span id="line-3091">  @Test</span>
+<span class="source-line-no">3092</span><span id="line-3092">  public void conjunctionWithNotPredicateAndNestedFieldTest()</span>
+<span class="source-line-no">3093</span><span id="line-3093">      throws QueryBuildingException, JsonProcessingException {</span>
+<span class="source-line-no">3094</span><span id="line-3094">    Predicate predicate =</span>
+<span class="source-line-no">3095</span><span id="line-3095">        new ConjunctionPredicate(</span>
+<span class="source-line-no">3096</span><span id="line-3096">            Arrays.asList(</span>
+<span class="source-line-no">3097</span><span id="line-3097">                new InPredicate(</span>
+<span class="source-line-no">3098</span><span id="line-3098">                    OccurrenceSearchParameter.DATASET_KEY,</span>
+<span class="source-line-no">3099</span><span id="line-3099">                    Arrays.asList(</span>
+<span class="source-line-no">3100</span><span id="line-3100">                        "b364710b-3f07-4876-a554-1943b702363f",</span>
+<span class="source-line-no">3101</span><span id="line-3101">                        "6595e04b-13d2-4eac-933f-73786627b5a2"),</span>
+<span class="source-line-no">3102</span><span id="line-3102">                    false),</span>
+<span class="source-line-no">3103</span><span id="line-3103">                new NotPredicate(</span>
+<span class="source-line-no">3104</span><span id="line-3104">                    new ConjunctionPredicate(</span>
+<span class="source-line-no">3105</span><span id="line-3105">                        Arrays.asList(</span>
+<span class="source-line-no">3106</span><span id="line-3106">                            new InPredicate(</span>
+<span class="source-line-no">3107</span><span id="line-3107">                                OccurrenceSearchParameter.NUCLEOTIDE_SEQUENCE_SEQUENCE_LENGTH,</span>
+<span class="source-line-no">3108</span><span id="line-3108">                                List.of("7"),</span>
+<span class="source-line-no">3109</span><span id="line-3109">                                false),</span>
+<span class="source-line-no">3110</span><span id="line-3110">                            new InPredicate(</span>
+<span class="source-line-no">3111</span><span id="line-3111">                                OccurrenceSearchParameter.COLLECTION_KEY,</span>
+<span class="source-line-no">3112</span><span id="line-3112">                                List.of("2294871f-f0f7-44b2-b707-e9511ff5a878"),</span>
+<span class="source-line-no">3113</span><span id="line-3113">                                false))))));</span>
+<span class="source-line-no">3114</span><span id="line-3114">    String query = visitor.buildQuery(predicate);</span>
+<span class="source-line-no">3115</span><span id="line-3115">    String expectedQuery =</span>
+<span class="source-line-no">3116</span><span id="line-3116">        "{\n"</span>
+<span class="source-line-no">3117</span><span id="line-3117">            + "  \"bool\": {\n"</span>
+<span class="source-line-no">3118</span><span id="line-3118">            + "    \"filter\": [\n"</span>
+<span class="source-line-no">3119</span><span id="line-3119">            + "      {\n"</span>
+<span class="source-line-no">3120</span><span id="line-3120">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">3121</span><span id="line-3121">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">3122</span><span id="line-3122">            + "            {\n"</span>
+<span class="source-line-no">3123</span><span id="line-3123">            + "              \"terms\": {\n"</span>
+<span class="source-line-no">3124</span><span id="line-3124">            + "                \"dataset_key\": [\n"</span>
+<span class="source-line-no">3125</span><span id="line-3125">            + "                  \"b364710b-3f07-4876-a554-1943b702363f\",\n"</span>
+<span class="source-line-no">3126</span><span id="line-3126">            + "                  \"6595e04b-13d2-4eac-933f-73786627b5a2\"\n"</span>
+<span class="source-line-no">3127</span><span id="line-3127">            + "                ]\n"</span>
+<span class="source-line-no">3128</span><span id="line-3128">            + "              }\n"</span>
+<span class="source-line-no">3129</span><span id="line-3129">            + "            }\n"</span>
+<span class="source-line-no">3130</span><span id="line-3130">            + "          ]\n"</span>
+<span class="source-line-no">3131</span><span id="line-3131">            + "        }\n"</span>
+<span class="source-line-no">3132</span><span id="line-3132">            + "      },\n"</span>
+<span class="source-line-no">3133</span><span id="line-3133">            + "      {\n"</span>
+<span class="source-line-no">3134</span><span id="line-3134">            + "        \"bool\": {\n"</span>
+<span class="source-line-no">3135</span><span id="line-3135">            + "          \"filter\": [\n"</span>
+<span class="source-line-no">3136</span><span id="line-3136">            + "            {\n"</span>
+<span class="source-line-no">3137</span><span id="line-3137">            + "              \"nested\": {\n"</span>
+<span class="source-line-no">3138</span><span id="line-3138">            + "                \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">3139</span><span id="line-3139">            + "                \"query\": {\n"</span>
+<span class="source-line-no">3140</span><span id="line-3140">            + "                  \"exists\": {\n"</span>
+<span class="source-line-no">3141</span><span id="line-3141">            + "                    \"field\": \"nucleotideSequence.sequenceLength\"\n"</span>
+<span class="source-line-no">3142</span><span id="line-3142">            + "                  }\n"</span>
+<span class="source-line-no">3143</span><span id="line-3143">            + "                },\n"</span>
+<span class="source-line-no">3144</span><span id="line-3144">            + "                \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">3145</span><span id="line-3145">            + "              }\n"</span>
+<span class="source-line-no">3146</span><span id="line-3146">            + "            },\n"</span>
+<span class="source-line-no">3147</span><span id="line-3147">            + "            {\n"</span>
+<span class="source-line-no">3148</span><span id="line-3148">            + "              \"exists\": {\n"</span>
+<span class="source-line-no">3149</span><span id="line-3149">            + "                \"field\": \"collection_key\"\n"</span>
+<span class="source-line-no">3150</span><span id="line-3150">            + "              }\n"</span>
+<span class="source-line-no">3151</span><span id="line-3151">            + "            }\n"</span>
+<span class="source-line-no">3152</span><span id="line-3152">            + "          ],\n"</span>
+<span class="source-line-no">3153</span><span id="line-3153">            + "          \"must_not\": [\n"</span>
+<span class="source-line-no">3154</span><span id="line-3154">            + "            {\n"</span>
+<span class="source-line-no">3155</span><span id="line-3155">            + "              \"bool\": {\n"</span>
+<span class="source-line-no">3156</span><span id="line-3156">            + "                \"filter\": [\n"</span>
+<span class="source-line-no">3157</span><span id="line-3157">            + "                  {\n"</span>
+<span class="source-line-no">3158</span><span id="line-3158">            + "                    \"bool\": {\n"</span>
+<span class="source-line-no">3159</span><span id="line-3159">            + "                      \"filter\": [\n"</span>
+<span class="source-line-no">3160</span><span id="line-3160">            + "                        {\n"</span>
+<span class="source-line-no">3161</span><span id="line-3161">            + "                          \"terms\": {\n"</span>
+<span class="source-line-no">3162</span><span id="line-3162">            + "                            \"collection_key\": [\"2294871f-f0f7-44b2-b707-e9511ff5a878\"]\n"</span>
+<span class="source-line-no">3163</span><span id="line-3163">            + "                          }\n"</span>
+<span class="source-line-no">3164</span><span id="line-3164">            + "                        }\n"</span>
+<span class="source-line-no">3165</span><span id="line-3165">            + "                      ]\n"</span>
+<span class="source-line-no">3166</span><span id="line-3166">            + "                    }\n"</span>
+<span class="source-line-no">3167</span><span id="line-3167">            + "                  },\n"</span>
+<span class="source-line-no">3168</span><span id="line-3168">            + "                  {\n"</span>
+<span class="source-line-no">3169</span><span id="line-3169">            + "                    \"nested\": {\n"</span>
+<span class="source-line-no">3170</span><span id="line-3170">            + "                      \"path\": \"nucleotideSequence\",\n"</span>
+<span class="source-line-no">3171</span><span id="line-3171">            + "                      \"query\": {\n"</span>
+<span class="source-line-no">3172</span><span id="line-3172">            + "                        \"bool\": {\n"</span>
+<span class="source-line-no">3173</span><span id="line-3173">            + "                          \"filter\": [\n"</span>
+<span class="source-line-no">3174</span><span id="line-3174">            + "                            {\n"</span>
+<span class="source-line-no">3175</span><span id="line-3175">            + "                              \"terms\": {\n"</span>
+<span class="source-line-no">3176</span><span id="line-3176">            + "                                \"nucleotideSequence.sequenceLength\": [\"7\"]\n"</span>
+<span class="source-line-no">3177</span><span id="line-3177">            + "                              }\n"</span>
+<span class="source-line-no">3178</span><span id="line-3178">            + "                            }\n"</span>
+<span class="source-line-no">3179</span><span id="line-3179">            + "                          ]\n"</span>
+<span class="source-line-no">3180</span><span id="line-3180">            + "                        }\n"</span>
+<span class="source-line-no">3181</span><span id="line-3181">            + "                      },\n"</span>
+<span class="source-line-no">3182</span><span id="line-3182">            + "                      \"score_mode\": \"none\"\n"</span>
+<span class="source-line-no">3183</span><span id="line-3183">            + "                    }\n"</span>
+<span class="source-line-no">3184</span><span id="line-3184">            + "                  }\n"</span>
+<span class="source-line-no">3185</span><span id="line-3185">            + "                ]\n"</span>
+<span class="source-line-no">3186</span><span id="line-3186">            + "              }\n"</span>
+<span class="source-line-no">3187</span><span id="line-3187">            + "            }\n"</span>
+<span class="source-line-no">3188</span><span id="line-3188">            + "          ]\n"</span>
+<span class="source-line-no">3189</span><span id="line-3189">            + "        }\n"</span>
+<span class="source-line-no">3190</span><span id="line-3190">            + "      }\n"</span>
+<span class="source-line-no">3191</span><span id="line-3191">            + "    ]\n"</span>
+<span class="source-line-no">3192</span><span id="line-3192">            + "  }\n"</span>
+<span class="source-line-no">3193</span><span id="line-3193">            + "}";</span>
+<span class="source-line-no">3194</span><span id="line-3194">    assertQueryEquals(expectedQuery, query);</span>
+<span class="source-line-no">3195</span><span id="line-3195">  }</span>
+<span class="source-line-no">3196</span><span id="line-3196">}</span>
 
 
 

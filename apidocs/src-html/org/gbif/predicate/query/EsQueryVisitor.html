@@ -283,740 +283,783 @@
 <span class="source-line-no">270</span><span id="line-270">                        })));</span>
 <span class="source-line-no">271</span><span id="line-271">  }</span>
 <span class="source-line-no">272</span><span id="line-272"></span>
-<span class="source-line-no">273</span><span id="line-273">  /**</span>
-<span class="source-line-no">274</span><span id="line-274">   * handle conjunction predicate</span>
-<span class="source-line-no">275</span><span id="line-275">   *</span>
-<span class="source-line-no">276</span><span id="line-276">   * @param predicate conjunction predicate</span>
-<span class="source-line-no">277</span><span id="line-277">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">278</span><span id="line-278">   */</span>
-<span class="source-line-no">279</span><span id="line-279">  public void visit(ConjunctionPredicate predicate, QueryData queryData) {</span>
-<span class="source-line-no">280</span><span id="line-280">    Map&lt;String, List&lt;Query&gt;&gt; queriesByNestedPath = new HashMap&lt;&gt;();</span>
-<span class="source-line-no">281</span><span id="line-281">    boolean nonNestedQueriesFound = false;</span>
-<span class="source-line-no">282</span><span id="line-282"></span>
-<span class="source-line-no">283</span><span id="line-283">    // Flatten nested ConjunctionPredicates so that nested-field conditions from inner ANDs</span>
-<span class="source-line-no">284</span><span id="line-284">    // are merged with outer-level nested-field conditions (fixes issue #585).</span>
-<span class="source-line-no">285</span><span id="line-285">    List&lt;Predicate&gt; flatPredicates = flattenConjunction(predicate.getPredicates());</span>
-<span class="source-line-no">286</span><span id="line-286"></span>
-<span class="source-line-no">287</span><span id="line-287">    Map&lt;S, List&lt;SimplePredicate&lt;S&gt;&gt;&gt; rangeBoundsByKey =</span>
-<span class="source-line-no">288</span><span id="line-288">        flatPredicates.stream()</span>
-<span class="source-line-no">289</span><span id="line-289">            .filter(</span>
-<span class="source-line-no">290</span><span id="line-290">                p -&gt;</span>
-<span class="source-line-no">291</span><span id="line-291">                    p instanceof GreaterThanPredicate</span>
-<span class="source-line-no">292</span><span id="line-292">                        || p instanceof GreaterThanOrEqualsPredicate</span>
-<span class="source-line-no">293</span><span id="line-293">                        || p instanceof LessThanPredicate</span>
-<span class="source-line-no">294</span><span id="line-294">                        || p instanceof LessThanOrEqualsPredicate)</span>
-<span class="source-line-no">295</span><span id="line-295">            .map(p -&gt; (SimplePredicate&lt;S&gt;) p)</span>
-<span class="source-line-no">296</span><span id="line-296">            .collect(Collectors.groupingBy(SimplePredicate::getKey));</span>
+<span class="source-line-no">273</span><span id="line-273">  /** Range query for a single gt/gte/lt/lte predicate. */</span>
+<span class="source-line-no">274</span><span id="line-274">  private Query boundRangeQuery(String field, SimplePredicate&lt;S&gt; bound) {</span>
+<span class="source-line-no">275</span><span id="line-275">    Object value = parseParamValue(bound.getValue(), bound.getKey());</span>
+<span class="source-line-no">276</span><span id="line-276">    if (bound instanceof GreaterThanPredicate) {</span>
+<span class="source-line-no">277</span><span id="line-277">      return rangeQuery(field, null, null, value, null, null);</span>
+<span class="source-line-no">278</span><span id="line-278">    } else if (bound instanceof GreaterThanOrEqualsPredicate) {</span>
+<span class="source-line-no">279</span><span id="line-279">      return rangeQuery(field, value, null, null, null, null);</span>
+<span class="source-line-no">280</span><span id="line-280">    } else if (bound instanceof LessThanPredicate) {</span>
+<span class="source-line-no">281</span><span id="line-281">      return rangeQuery(field, null, null, null, value, null);</span>
+<span class="source-line-no">282</span><span id="line-282">    } else if (bound instanceof LessThanOrEqualsPredicate) {</span>
+<span class="source-line-no">283</span><span id="line-283">      return rangeQuery(field, null, value, null, null, null);</span>
+<span class="source-line-no">284</span><span id="line-284">    }</span>
+<span class="source-line-no">285</span><span id="line-285">    throw new IllegalArgumentException("Not a range bound predicate: " + bound);</span>
+<span class="source-line-no">286</span><span id="line-286">  }</span>
+<span class="source-line-no">287</span><span id="line-287"></span>
+<span class="source-line-no">288</span><span id="line-288">  /**</span>
+<span class="source-line-no">289</span><span id="line-289">   * handle conjunction predicate</span>
+<span class="source-line-no">290</span><span id="line-290">   *</span>
+<span class="source-line-no">291</span><span id="line-291">   * @param predicate conjunction predicate</span>
+<span class="source-line-no">292</span><span id="line-292">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">293</span><span id="line-293">   */</span>
+<span class="source-line-no">294</span><span id="line-294">  public void visit(ConjunctionPredicate predicate, QueryData queryData) {</span>
+<span class="source-line-no">295</span><span id="line-295">    Map&lt;String, List&lt;Query&gt;&gt; queriesByNestedPath = new HashMap&lt;&gt;();</span>
+<span class="source-line-no">296</span><span id="line-296">    boolean nonNestedQueriesFound = false;</span>
 <span class="source-line-no">297</span><span id="line-297"></span>
-<span class="source-line-no">298</span><span id="line-298">    Set&lt;Predicate&gt; handledAsMergedRange = new HashSet&lt;&gt;();</span>
-<span class="source-line-no">299</span><span id="line-299"></span>
-<span class="source-line-no">300</span><span id="line-300">    for (Map.Entry&lt;S, List&lt;SimplePredicate&lt;S&gt;&gt;&gt; entry : rangeBoundsByKey.entrySet()) {</span>
-<span class="source-line-no">301</span><span id="line-301">      List&lt;SimplePredicate&lt;S&gt;&gt; bounds = entry.getValue();</span>
-<span class="source-line-no">302</span><span id="line-302">      if (bounds.size() &lt; 2) {</span>
-<span class="source-line-no">303</span><span id="line-303">        continue;</span>
-<span class="source-line-no">304</span><span id="line-304">      }</span>
-<span class="source-line-no">305</span><span id="line-305"></span>
-<span class="source-line-no">306</span><span id="line-306">      S key = entry.getKey();</span>
-<span class="source-line-no">307</span><span id="line-307">      Object gte = null, lte = null, gt = null, lt = null;</span>
-<span class="source-line-no">308</span><span id="line-308">      for (SimplePredicate&lt;S&gt; bound : bounds) {</span>
-<span class="source-line-no">309</span><span id="line-309">        Object value = parseParamValue(bound.getValue(), key);</span>
-<span class="source-line-no">310</span><span id="line-310">        if (bound instanceof GreaterThanPredicate) {</span>
-<span class="source-line-no">311</span><span id="line-311">          gt = value;</span>
-<span class="source-line-no">312</span><span id="line-312">        } else if (bound instanceof GreaterThanOrEqualsPredicate) {</span>
-<span class="source-line-no">313</span><span id="line-313">          gte = value;</span>
-<span class="source-line-no">314</span><span id="line-314">        } else if (bound instanceof LessThanPredicate) {</span>
-<span class="source-line-no">315</span><span id="line-315">          lt = value;</span>
-<span class="source-line-no">316</span><span id="line-316">        } else if (bound instanceof LessThanOrEqualsPredicate) {</span>
-<span class="source-line-no">317</span><span id="line-317">          lte = value;</span>
-<span class="source-line-no">318</span><span id="line-318">        }</span>
-<span class="source-line-no">319</span><span id="line-319">        handledAsMergedRange.add(bound);</span>
-<span class="source-line-no">320</span><span id="line-320">      }</span>
-<span class="source-line-no">321</span><span id="line-321"></span>
-<span class="source-line-no">322</span><span id="line-322">      Query q =</span>
-<span class="source-line-no">323</span><span id="line-323">          addNullableFieldPredicate(</span>
-<span class="source-line-no">324</span><span id="line-324">              bounds.get(0),</span>
-<span class="source-line-no">325</span><span id="line-325">              rangeQuery(esFieldMapper.getExactMatchFieldName(key), gte, lte, gt, lt, null));</span>
-<span class="source-line-no">326</span><span id="line-326">      if (esFieldMapper.isNestedField(key)) {</span>
-<span class="source-line-no">327</span><span id="line-327">        // grouped with the other conditions on the same nested path so it's wrapped in a single</span>
-<span class="source-line-no">328</span><span id="line-328">        // nested query below (gbif/occurrence#630)</span>
-<span class="source-line-no">329</span><span id="line-329">        queriesByNestedPath</span>
-<span class="source-line-no">330</span><span id="line-330">            .computeIfAbsent(esFieldMapper.getNestedPath(key), k -&gt; new ArrayList&lt;&gt;())</span>
-<span class="source-line-no">331</span><span id="line-331">            .add(q);</span>
-<span class="source-line-no">332</span><span id="line-332">      } else {</span>
-<span class="source-line-no">333</span><span id="line-333">        queryData.filterQueries.add(q);</span>
-<span class="source-line-no">334</span><span id="line-334">        nonNestedQueriesFound = true;</span>
-<span class="source-line-no">335</span><span id="line-335">      }</span>
-<span class="source-line-no">336</span><span id="line-336">    }</span>
-<span class="source-line-no">337</span><span id="line-337"></span>
-<span class="source-line-no">338</span><span id="line-338">    for (Predicate subPredicate : flatPredicates) {</span>
-<span class="source-line-no">339</span><span id="line-339">      if (handledAsMergedRange.contains(subPredicate)) {</span>
-<span class="source-line-no">340</span><span id="line-340">        continue;</span>
-<span class="source-line-no">341</span><span id="line-341">      }</span>
-<span class="source-line-no">342</span><span id="line-342">      try {</span>
-<span class="source-line-no">343</span><span id="line-343">        QueryData mustQueryData = new QueryData();</span>
-<span class="source-line-no">344</span><span id="line-344">        visit(subPredicate, mustQueryData);</span>
-<span class="source-line-no">345</span><span id="line-345"></span>
-<span class="source-line-no">346</span><span id="line-346">        if (mustQueryData.isNested()) {</span>
-<span class="source-line-no">347</span><span id="line-347">          List&lt;Query&gt; queriesToAdd;</span>
-<span class="source-line-no">348</span><span id="line-348"></span>
-<span class="source-line-no">349</span><span id="line-349">          if (subPredicate instanceof DisjunctionPredicate &amp;&amp; mustQueryData.rawQueries.size() &gt; 1) {</span>
-<span class="source-line-no">350</span><span id="line-350">            Query shouldWrapper =</span>
-<span class="source-line-no">351</span><span id="line-351">                buildBoolQuery(</span>
-<span class="source-line-no">352</span><span id="line-352">                    Collections.emptyList(), mustQueryData.rawQueries, Collections.emptyList());</span>
-<span class="source-line-no">353</span><span id="line-353">            queriesToAdd = List.of(addNullableFieldPredicate(subPredicate, shouldWrapper));</span>
-<span class="source-line-no">354</span><span id="line-354">          } else {</span>
-<span class="source-line-no">355</span><span id="line-355">            queriesToAdd =</span>
-<span class="source-line-no">356</span><span id="line-356">                mustQueryData.rawQueries.stream()</span>
-<span class="source-line-no">357</span><span id="line-357">                    .map(rq -&gt; addNullableFieldPredicate(subPredicate, rq))</span>
-<span class="source-line-no">358</span><span id="line-358">                    .collect(Collectors.toList());</span>
-<span class="source-line-no">359</span><span id="line-359">          }</span>
-<span class="source-line-no">360</span><span id="line-360">          queriesByNestedPath</span>
-<span class="source-line-no">361</span><span id="line-361">              .computeIfAbsent(mustQueryData.nestedPath, k -&gt; new ArrayList&lt;&gt;())</span>
-<span class="source-line-no">362</span><span id="line-362">              .addAll(queriesToAdd);</span>
-<span class="source-line-no">363</span><span id="line-363">        } else {</span>
-<span class="source-line-no">364</span><span id="line-364">          Query combined = buildBoolFromQueryData(mustQueryData);</span>
-<span class="source-line-no">365</span><span id="line-365">          queryData.filterQueries.add(addNullableFieldPredicate(subPredicate, combined));</span>
-<span class="source-line-no">366</span><span id="line-366">          nonNestedQueriesFound = true;</span>
-<span class="source-line-no">367</span><span id="line-367">        }</span>
-<span class="source-line-no">368</span><span id="line-368">      } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">369</span><span id="line-369">        throw new RuntimeException(ex);</span>
-<span class="source-line-no">370</span><span id="line-370">      }</span>
-<span class="source-line-no">371</span><span id="line-371">    }</span>
-<span class="source-line-no">372</span><span id="line-372"></span>
-<span class="source-line-no">373</span><span id="line-373">    for (Map.Entry&lt;String, List&lt;Query&gt;&gt; entry : queriesByNestedPath.entrySet()) {</span>
-<span class="source-line-no">374</span><span id="line-374">      String key = entry.getKey();</span>
-<span class="source-line-no">375</span><span id="line-375">      List&lt;Query&gt; value = entry.getValue();</span>
-<span class="source-line-no">376</span><span id="line-376">      Query nestedBool = buildBoolQuery(value, Collections.emptyList(), Collections.emptyList());</span>
-<span class="source-line-no">377</span><span id="line-377">      queryData.filterQueries.add(nestedQuery(key, nestedBool));</span>
-<span class="source-line-no">378</span><span id="line-378">      queryData.nestedPath = !nonNestedQueriesFound ? key : null;</span>
-<span class="source-line-no">379</span><span id="line-379">      queryData.rawQueries = value;</span>
-<span class="source-line-no">380</span><span id="line-380">    }</span>
-<span class="source-line-no">381</span><span id="line-381">  }</span>
+<span class="source-line-no">298</span><span id="line-298">    // Flatten nested ConjunctionPredicates so that nested-field conditions from inner ANDs</span>
+<span class="source-line-no">299</span><span id="line-299">    // are merged with outer-level nested-field conditions (fixes issue #585).</span>
+<span class="source-line-no">300</span><span id="line-300">    List&lt;Predicate&gt; flatPredicates = flattenConjunction(predicate.getPredicates());</span>
+<span class="source-line-no">301</span><span id="line-301"></span>
+<span class="source-line-no">302</span><span id="line-302">    Map&lt;S, List&lt;SimplePredicate&lt;S&gt;&gt;&gt; rangeBoundsByKey =</span>
+<span class="source-line-no">303</span><span id="line-303">        flatPredicates.stream()</span>
+<span class="source-line-no">304</span><span id="line-304">            .filter(</span>
+<span class="source-line-no">305</span><span id="line-305">                p -&gt;</span>
+<span class="source-line-no">306</span><span id="line-306">                    p instanceof GreaterThanPredicate</span>
+<span class="source-line-no">307</span><span id="line-307">                        || p instanceof GreaterThanOrEqualsPredicate</span>
+<span class="source-line-no">308</span><span id="line-308">                        || p instanceof LessThanPredicate</span>
+<span class="source-line-no">309</span><span id="line-309">                        || p instanceof LessThanOrEqualsPredicate)</span>
+<span class="source-line-no">310</span><span id="line-310">            .map(p -&gt; (SimplePredicate&lt;S&gt;) p)</span>
+<span class="source-line-no">311</span><span id="line-311">            .collect(Collectors.groupingBy(SimplePredicate::getKey));</span>
+<span class="source-line-no">312</span><span id="line-312"></span>
+<span class="source-line-no">313</span><span id="line-313">    Set&lt;Predicate&gt; handledAsMergedRange = new HashSet&lt;&gt;();</span>
+<span class="source-line-no">314</span><span id="line-314"></span>
+<span class="source-line-no">315</span><span id="line-315">    for (Map.Entry&lt;S, List&lt;SimplePredicate&lt;S&gt;&gt;&gt; entry : rangeBoundsByKey.entrySet()) {</span>
+<span class="source-line-no">316</span><span id="line-316">      List&lt;SimplePredicate&lt;S&gt;&gt; bounds = entry.getValue();</span>
+<span class="source-line-no">317</span><span id="line-317">      if (bounds.size() &lt; 2) {</span>
+<span class="source-line-no">318</span><span id="line-318">        continue;</span>
+<span class="source-line-no">319</span><span id="line-319">      }</span>
+<span class="source-line-no">320</span><span id="line-320"></span>
+<span class="source-line-no">321</span><span id="line-321">      S key = entry.getKey();</span>
+<span class="source-line-no">322</span><span id="line-322">      String field = esFieldMapper.getExactMatchFieldName(key);</span>
+<span class="source-line-no">323</span><span id="line-323">      // All the bounds of a key go into a single query, so they stay together when this AND is</span>
+<span class="source-line-no">324</span><span id="line-324">      // inside an OR. With at most one lower (gt/gte) and one upper (lt/lte) bound they're merged</span>
+<span class="source-line-no">325</span><span id="line-325">      // into one range; otherwise each bound is its own range in a bool filter, so all of them are</span>
+<span class="source-line-no">326</span><span id="line-326">      // applied (gbif/occurrence#632).</span>
+<span class="source-line-no">327</span><span id="line-327">      long lowerBounds =</span>
+<span class="source-line-no">328</span><span id="line-328">          bounds.stream()</span>
+<span class="source-line-no">329</span><span id="line-329">              .filter(</span>
+<span class="source-line-no">330</span><span id="line-330">                  b -&gt;</span>
+<span class="source-line-no">331</span><span id="line-331">                      b instanceof GreaterThanPredicate</span>
+<span class="source-line-no">332</span><span id="line-332">                          || b instanceof GreaterThanOrEqualsPredicate)</span>
+<span class="source-line-no">333</span><span id="line-333">              .count();</span>
+<span class="source-line-no">334</span><span id="line-334">      Query rangeQ;</span>
+<span class="source-line-no">335</span><span id="line-335">      if (lowerBounds &lt;= 1 &amp;&amp; bounds.size() - lowerBounds &lt;= 1) {</span>
+<span class="source-line-no">336</span><span id="line-336">        Object gte = null, lte = null, gt = null, lt = null;</span>
+<span class="source-line-no">337</span><span id="line-337">        for (SimplePredicate&lt;S&gt; bound : bounds) {</span>
+<span class="source-line-no">338</span><span id="line-338">          Object value = parseParamValue(bound.getValue(), key);</span>
+<span class="source-line-no">339</span><span id="line-339">          if (bound instanceof GreaterThanPredicate) {</span>
+<span class="source-line-no">340</span><span id="line-340">            gt = value;</span>
+<span class="source-line-no">341</span><span id="line-341">          } else if (bound instanceof GreaterThanOrEqualsPredicate) {</span>
+<span class="source-line-no">342</span><span id="line-342">            gte = value;</span>
+<span class="source-line-no">343</span><span id="line-343">          } else if (bound instanceof LessThanPredicate) {</span>
+<span class="source-line-no">344</span><span id="line-344">            lt = value;</span>
+<span class="source-line-no">345</span><span id="line-345">          } else if (bound instanceof LessThanOrEqualsPredicate) {</span>
+<span class="source-line-no">346</span><span id="line-346">            lte = value;</span>
+<span class="source-line-no">347</span><span id="line-347">          }</span>
+<span class="source-line-no">348</span><span id="line-348">        }</span>
+<span class="source-line-no">349</span><span id="line-349">        rangeQ = rangeQuery(field, gte, lte, gt, lt, null);</span>
+<span class="source-line-no">350</span><span id="line-350">      } else {</span>
+<span class="source-line-no">351</span><span id="line-351">        rangeQ =</span>
+<span class="source-line-no">352</span><span id="line-352">            buildBoolQuery(</span>
+<span class="source-line-no">353</span><span id="line-353">                bounds.stream().map(b -&gt; boundRangeQuery(field, b)).collect(Collectors.toList()),</span>
+<span class="source-line-no">354</span><span id="line-354">                Collections.emptyList(),</span>
+<span class="source-line-no">355</span><span id="line-355">                Collections.emptyList());</span>
+<span class="source-line-no">356</span><span id="line-356">      }</span>
+<span class="source-line-no">357</span><span id="line-357">      handledAsMergedRange.addAll(bounds);</span>
+<span class="source-line-no">358</span><span id="line-358"></span>
+<span class="source-line-no">359</span><span id="line-359">      Query q = addNullableFieldPredicate(bounds.get(0), rangeQ);</span>
+<span class="source-line-no">360</span><span id="line-360">      if (esFieldMapper.isNestedField(key)) {</span>
+<span class="source-line-no">361</span><span id="line-361">        // grouped with the other conditions on the same nested path so it's wrapped in a single</span>
+<span class="source-line-no">362</span><span id="line-362">        // nested query below (gbif/occurrence#630)</span>
+<span class="source-line-no">363</span><span id="line-363">        queriesByNestedPath</span>
+<span class="source-line-no">364</span><span id="line-364">            .computeIfAbsent(esFieldMapper.getNestedPath(key), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="source-line-no">365</span><span id="line-365">            .add(q);</span>
+<span class="source-line-no">366</span><span id="line-366">      } else {</span>
+<span class="source-line-no">367</span><span id="line-367">        queryData.filterQueries.add(q);</span>
+<span class="source-line-no">368</span><span id="line-368">        nonNestedQueriesFound = true;</span>
+<span class="source-line-no">369</span><span id="line-369">      }</span>
+<span class="source-line-no">370</span><span id="line-370">    }</span>
+<span class="source-line-no">371</span><span id="line-371"></span>
+<span class="source-line-no">372</span><span id="line-372">    for (Predicate subPredicate : flatPredicates) {</span>
+<span class="source-line-no">373</span><span id="line-373">      if (handledAsMergedRange.contains(subPredicate)) {</span>
+<span class="source-line-no">374</span><span id="line-374">        continue;</span>
+<span class="source-line-no">375</span><span id="line-375">      }</span>
+<span class="source-line-no">376</span><span id="line-376">      try {</span>
+<span class="source-line-no">377</span><span id="line-377">        QueryData mustQueryData = new QueryData();</span>
+<span class="source-line-no">378</span><span id="line-378">        visit(subPredicate, mustQueryData);</span>
+<span class="source-line-no">379</span><span id="line-379"></span>
+<span class="source-line-no">380</span><span id="line-380">        if (mustQueryData.isNested()) {</span>
+<span class="source-line-no">381</span><span id="line-381">          List&lt;Query&gt; queriesToAdd;</span>
 <span class="source-line-no">382</span><span id="line-382"></span>
-<span class="source-line-no">383</span><span id="line-383">  private static Query buildBoolFromQueryData(QueryData d) {</span>
-<span class="source-line-no">384</span><span id="line-384">    return buildBoolQuery(d.filterQueries, d.shouldQueries, d.mustNotQueries);</span>
-<span class="source-line-no">385</span><span id="line-385">  }</span>
-<span class="source-line-no">386</span><span id="line-386"></span>
-<span class="source-line-no">387</span><span id="line-387">  /**</span>
-<span class="source-line-no">388</span><span id="line-388">   * Recursively flattens nested ConjunctionPredicates into a single list, so that nested-field</span>
-<span class="source-line-no">389</span><span id="line-389">   * conditions from inner ANDs are merged with outer-level conditions during query building.</span>
-<span class="source-line-no">390</span><span id="line-390">   */</span>
-<span class="source-line-no">391</span><span id="line-391">  private static List&lt;Predicate&gt; flattenConjunction(Collection&lt;Predicate&gt; predicates) {</span>
-<span class="source-line-no">392</span><span id="line-392">    List&lt;Predicate&gt; result = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">393</span><span id="line-393">    for (Predicate p : predicates) {</span>
-<span class="source-line-no">394</span><span id="line-394">      if (p instanceof ConjunctionPredicate) {</span>
-<span class="source-line-no">395</span><span id="line-395">        result.addAll(flattenConjunction(((ConjunctionPredicate) p).getPredicates()));</span>
-<span class="source-line-no">396</span><span id="line-396">      } else {</span>
-<span class="source-line-no">397</span><span id="line-397">        result.add(p);</span>
-<span class="source-line-no">398</span><span id="line-398">      }</span>
-<span class="source-line-no">399</span><span id="line-399">    }</span>
-<span class="source-line-no">400</span><span id="line-400">    return result;</span>
-<span class="source-line-no">401</span><span id="line-401">  }</span>
-<span class="source-line-no">402</span><span id="line-402"></span>
-<span class="source-line-no">403</span><span id="line-403">  /**</span>
-<span class="source-line-no">404</span><span id="line-404">   * handle disjunction predicate</span>
-<span class="source-line-no">405</span><span id="line-405">   *</span>
-<span class="source-line-no">406</span><span id="line-406">   * @param predicate disjunction predicate</span>
-<span class="source-line-no">407</span><span id="line-407">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">408</span><span id="line-408">   */</span>
-<span class="source-line-no">409</span><span id="line-409">  public void visit(DisjunctionPredicate predicate, QueryData queryData) {</span>
-<span class="source-line-no">410</span><span id="line-410">    Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalsPredicatesReplaceableByIn = groupEquals(predicate);</span>
-<span class="source-line-no">411</span><span id="line-411"></span>
-<span class="source-line-no">412</span><span id="line-412">    Map&lt;String, List&lt;Query&gt;&gt; queriesByNestedPath = new HashMap&lt;&gt;();</span>
-<span class="source-line-no">413</span><span id="line-413">    boolean nonNestedQueriesFound = false;</span>
-<span class="source-line-no">414</span><span id="line-414"></span>
-<span class="source-line-no">415</span><span id="line-415">    for (Predicate subPredicate : predicate.getPredicates()) {</span>
-<span class="source-line-no">416</span><span id="line-416">      try {</span>
-<span class="source-line-no">417</span><span id="line-417">        if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {</span>
-<span class="source-line-no">418</span><span id="line-418">          QueryData shouldQueryData = new QueryData();</span>
-<span class="source-line-no">419</span><span id="line-419">          visit(subPredicate, shouldQueryData);</span>
-<span class="source-line-no">420</span><span id="line-420">          Query q =</span>
-<span class="source-line-no">421</span><span id="line-421">              addNullableFieldPredicate(subPredicate, buildBoolFromQueryData(shouldQueryData));</span>
-<span class="source-line-no">422</span><span id="line-422"></span>
-<span class="source-line-no">423</span><span id="line-423">          if (shouldQueryData.isNested()) {</span>
-<span class="source-line-no">424</span><span id="line-424">            queriesByNestedPath</span>
-<span class="source-line-no">425</span><span id="line-425">                .computeIfAbsent(shouldQueryData.nestedPath, k -&gt; new ArrayList&lt;&gt;())</span>
-<span class="source-line-no">426</span><span id="line-426">                .addAll(shouldQueryData.rawQueries);</span>
-<span class="source-line-no">427</span><span id="line-427">          } else {</span>
-<span class="source-line-no">428</span><span id="line-428">            nonNestedQueriesFound = true;</span>
-<span class="source-line-no">429</span><span id="line-429">            queryData.shouldQueries.add(q);</span>
-<span class="source-line-no">430</span><span id="line-430">          }</span>
-<span class="source-line-no">431</span><span id="line-431"></span>
-<span class="source-line-no">432</span><span id="line-432">          if (subPredicate instanceof SimplePredicate) {</span>
-<span class="source-line-no">433</span><span id="line-433">            equalsPredicatesReplaceableByIn.remove(((SimplePredicate) subPredicate).getKey());</span>
-<span class="source-line-no">434</span><span id="line-434">          }</span>
-<span class="source-line-no">435</span><span id="line-435">        }</span>
-<span class="source-line-no">436</span><span id="line-436">      } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">437</span><span id="line-437">        throw new RuntimeException(ex);</span>
-<span class="source-line-no">438</span><span id="line-438">      }</span>
-<span class="source-line-no">439</span><span id="line-439">    }</span>
-<span class="source-line-no">440</span><span id="line-440"></span>
-<span class="source-line-no">441</span><span id="line-441">    for (Map.Entry&lt;String, List&lt;Query&gt;&gt; e : queriesByNestedPath.entrySet()) {</span>
-<span class="source-line-no">442</span><span id="line-442">      String s = e.getKey();</span>
-<span class="source-line-no">443</span><span id="line-443">      List&lt;Query&gt; builders = e.getValue();</span>
-<span class="source-line-no">444</span><span id="line-444">      Query nestedBool = buildBoolQuery(Collections.emptyList(), builders, Collections.emptyList());</span>
-<span class="source-line-no">445</span><span id="line-445">      queryData.shouldQueries.add(nestedQuery(s, nestedBool));</span>
-<span class="source-line-no">446</span><span id="line-446">      queryData.nestedPath = !nonNestedQueriesFound ? s : null;</span>
-<span class="source-line-no">447</span><span id="line-447">      queryData.rawQueries = builders;</span>
-<span class="source-line-no">448</span><span id="line-448">    }</span>
-<span class="source-line-no">449</span><span id="line-449"></span>
-<span class="source-line-no">450</span><span id="line-450">    if (!equalsPredicatesReplaceableByIn.isEmpty()) {</span>
-<span class="source-line-no">451</span><span id="line-451">      Optional&lt;S&gt; geoTimeParam = getParam(OccurrenceSearchParameter.GEOLOGICAL_TIME.name());</span>
-<span class="source-line-no">452</span><span id="line-452">      if (geoTimeParam.isPresent()</span>
-<span class="source-line-no">453</span><span id="line-453">          &amp;&amp; equalsPredicatesReplaceableByIn.containsKey(geoTimeParam.get())) {</span>
-<span class="source-line-no">454</span><span id="line-454">        List&lt;Query&gt; queryBuilders = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">455</span><span id="line-455">        equalsPredicatesReplaceableByIn</span>
-<span class="source-line-no">456</span><span id="line-456">            .get(geoTimeParam.get())</span>
-<span class="source-line-no">457</span><span id="line-457">            .forEach(</span>
-<span class="source-line-no">458</span><span id="line-458">                ep -&gt;</span>
-<span class="source-line-no">459</span><span id="line-459">                    queryBuilders.add(</span>
-<span class="source-line-no">460</span><span id="line-460">                        termQuery(</span>
-<span class="source-line-no">461</span><span id="line-461">                            getExactMatchOrVerbatimField(ep),</span>
-<span class="source-line-no">462</span><span id="line-462">                            parseParamValue(ep.getValue(), ep.getKey()))));</span>
-<span class="source-line-no">463</span><span id="line-463"></span>
-<span class="source-line-no">464</span><span id="line-464">        if (!queryBuilders.isEmpty()) {</span>
-<span class="source-line-no">465</span><span id="line-465">          nonNestedQueriesFound = true;</span>
-<span class="source-line-no">466</span><span id="line-466">          queryData.shouldQueries.addAll(queryBuilders);</span>
-<span class="source-line-no">467</span><span id="line-467">        }</span>
-<span class="source-line-no">468</span><span id="line-468">        equalsPredicatesReplaceableByIn.remove(geoTimeParam.get());</span>
-<span class="source-line-no">469</span><span id="line-469">      }</span>
-<span class="source-line-no">470</span><span id="line-470"></span>
-<span class="source-line-no">471</span><span id="line-471">      if (!equalsPredicatesReplaceableByIn.isEmpty()) {</span>
-<span class="source-line-no">472</span><span id="line-472">        Map&lt;String, List&lt;Query&gt;&gt; replaceableQueriesByNestedPath = new HashMap&lt;&gt;();</span>
-<span class="source-line-no">473</span><span id="line-473">        for (InPredicate&lt;S&gt; ep : toInPredicates(equalsPredicatesReplaceableByIn)) {</span>
-<span class="source-line-no">474</span><span id="line-474">          Query termsQ =</span>
-<span class="source-line-no">475</span><span id="line-475">              termsQuery(</span>
-<span class="source-line-no">476</span><span id="line-476">                  getExactMatchOrVerbatimField(ep),</span>
-<span class="source-line-no">477</span><span id="line-477">                  ep.getValues().stream()</span>
-<span class="source-line-no">478</span><span id="line-478">                      .map(v -&gt; parseParamValue(v, ep.getKey()))</span>
-<span class="source-line-no">479</span><span id="line-479">                      .collect(Collectors.toList()));</span>
-<span class="source-line-no">480</span><span id="line-480"></span>
-<span class="source-line-no">481</span><span id="line-481">          if (esFieldMapper.isNestedField(ep.getKey())) {</span>
-<span class="source-line-no">482</span><span id="line-482">            replaceableQueriesByNestedPath</span>
-<span class="source-line-no">483</span><span id="line-483">                .computeIfAbsent(esFieldMapper.getNestedPath(ep.getKey()), k -&gt; new ArrayList&lt;&gt;())</span>
-<span class="source-line-no">484</span><span id="line-484">                .add(termsQ);</span>
-<span class="source-line-no">485</span><span id="line-485">          } else {</span>
-<span class="source-line-no">486</span><span id="line-486">            queryData.shouldQueries.add(termsQ);</span>
-<span class="source-line-no">487</span><span id="line-487">            nonNestedQueriesFound = true;</span>
-<span class="source-line-no">488</span><span id="line-488">          }</span>
-<span class="source-line-no">489</span><span id="line-489">        }</span>
-<span class="source-line-no">490</span><span id="line-490"></span>
-<span class="source-line-no">491</span><span id="line-491">        for (Map.Entry&lt;String, List&lt;Query&gt;&gt; entry : replaceableQueriesByNestedPath.entrySet()) {</span>
-<span class="source-line-no">492</span><span id="line-492">          String key = entry.getKey();</span>
-<span class="source-line-no">493</span><span id="line-493">          List&lt;Query&gt; value = entry.getValue();</span>
-<span class="source-line-no">494</span><span id="line-494">          Query nestedBool =</span>
-<span class="source-line-no">495</span><span id="line-495">              buildBoolQuery(Collections.emptyList(), value, Collections.emptyList());</span>
-<span class="source-line-no">496</span><span id="line-496">          queryData.shouldQueries.add(nestedQuery(key, nestedBool));</span>
-<span class="source-line-no">497</span><span id="line-497">          queryData.nestedPath = !nonNestedQueriesFound ? key : null;</span>
-<span class="source-line-no">498</span><span id="line-498">          queryData.rawQueries = value;</span>
-<span class="source-line-no">499</span><span id="line-499">        }</span>
-<span class="source-line-no">500</span><span id="line-500">      }</span>
-<span class="source-line-no">501</span><span id="line-501">    }</span>
-<span class="source-line-no">502</span><span id="line-502">  }</span>
-<span class="source-line-no">503</span><span id="line-503"></span>
-<span class="source-line-no">504</span><span id="line-504">  /** Checks if a predicate has in grouped and can be replaced later by a InPredicate. */</span>
-<span class="source-line-no">505</span><span id="line-505">  private boolean isReplaceableByInPredicate(</span>
-<span class="source-line-no">506</span><span id="line-506">      Predicate predicate, Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalsPredicatesReplaceableByIn) {</span>
-<span class="source-line-no">507</span><span id="line-507">    if (!equalsPredicatesReplaceableByIn.isEmpty() &amp;&amp; predicate instanceof EqualsPredicate) {</span>
-<span class="source-line-no">508</span><span id="line-508">      EqualsPredicate&lt;S&gt; equalsPredicate = (EqualsPredicate&lt;S&gt;) predicate;</span>
-<span class="source-line-no">509</span><span id="line-509"></span>
-<span class="source-line-no">510</span><span id="line-510">      // check it is not a range predicate e.g. YEAR 2000,*</span>
-<span class="source-line-no">511</span><span id="line-511">      if (SearchTypeValidator.isNumericRange(equalsPredicate.getValue())</span>
-<span class="source-line-no">512</span><span id="line-512">          || SearchTypeValidator.isDateRange(equalsPredicate.getValue())) {</span>
-<span class="source-line-no">513</span><span id="line-513">        return false;</span>
-<span class="source-line-no">514</span><span id="line-514">      }</span>
-<span class="source-line-no">515</span><span id="line-515"></span>
-<span class="source-line-no">516</span><span id="line-516">      return equalsPredicatesReplaceableByIn.containsKey(equalsPredicate.getKey())</span>
-<span class="source-line-no">517</span><span id="line-517">          &amp;&amp; equalsPredicatesReplaceableByIn</span>
-<span class="source-line-no">518</span><span id="line-518">              .get(equalsPredicate.getKey())</span>
-<span class="source-line-no">519</span><span id="line-519">              .contains(equalsPredicate);</span>
-<span class="source-line-no">520</span><span id="line-520">    }</span>
-<span class="source-line-no">521</span><span id="line-521">    return false;</span>
-<span class="source-line-no">522</span><span id="line-522">  }</span>
+<span class="source-line-no">383</span><span id="line-383">          if (subPredicate instanceof DisjunctionPredicate &amp;&amp; mustQueryData.rawQueries.size() &gt; 1) {</span>
+<span class="source-line-no">384</span><span id="line-384">            Query shouldWrapper =</span>
+<span class="source-line-no">385</span><span id="line-385">                buildBoolQuery(</span>
+<span class="source-line-no">386</span><span id="line-386">                    Collections.emptyList(), mustQueryData.rawQueries, Collections.emptyList());</span>
+<span class="source-line-no">387</span><span id="line-387">            queriesToAdd = List.of(addNullableFieldPredicate(subPredicate, shouldWrapper));</span>
+<span class="source-line-no">388</span><span id="line-388">          } else {</span>
+<span class="source-line-no">389</span><span id="line-389">            queriesToAdd =</span>
+<span class="source-line-no">390</span><span id="line-390">                mustQueryData.rawQueries.stream()</span>
+<span class="source-line-no">391</span><span id="line-391">                    .map(rq -&gt; addNullableFieldPredicate(subPredicate, rq))</span>
+<span class="source-line-no">392</span><span id="line-392">                    .collect(Collectors.toList());</span>
+<span class="source-line-no">393</span><span id="line-393">          }</span>
+<span class="source-line-no">394</span><span id="line-394">          queriesByNestedPath</span>
+<span class="source-line-no">395</span><span id="line-395">              .computeIfAbsent(mustQueryData.nestedPath, k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="source-line-no">396</span><span id="line-396">              .addAll(queriesToAdd);</span>
+<span class="source-line-no">397</span><span id="line-397">        } else {</span>
+<span class="source-line-no">398</span><span id="line-398">          Query combined = buildBoolFromQueryData(mustQueryData);</span>
+<span class="source-line-no">399</span><span id="line-399">          queryData.filterQueries.add(addNullableFieldPredicate(subPredicate, combined));</span>
+<span class="source-line-no">400</span><span id="line-400">          nonNestedQueriesFound = true;</span>
+<span class="source-line-no">401</span><span id="line-401">        }</span>
+<span class="source-line-no">402</span><span id="line-402">      } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">403</span><span id="line-403">        throw new RuntimeException(ex);</span>
+<span class="source-line-no">404</span><span id="line-404">      }</span>
+<span class="source-line-no">405</span><span id="line-405">    }</span>
+<span class="source-line-no">406</span><span id="line-406"></span>
+<span class="source-line-no">407</span><span id="line-407">    for (Map.Entry&lt;String, List&lt;Query&gt;&gt; entry : queriesByNestedPath.entrySet()) {</span>
+<span class="source-line-no">408</span><span id="line-408">      String key = entry.getKey();</span>
+<span class="source-line-no">409</span><span id="line-409">      List&lt;Query&gt; value = entry.getValue();</span>
+<span class="source-line-no">410</span><span id="line-410">      Query nestedBool = buildBoolQuery(value, Collections.emptyList(), Collections.emptyList());</span>
+<span class="source-line-no">411</span><span id="line-411">      queryData.filterQueries.add(nestedQuery(key, nestedBool));</span>
+<span class="source-line-no">412</span><span id="line-412">      queryData.nestedPath = !nonNestedQueriesFound ? key : null;</span>
+<span class="source-line-no">413</span><span id="line-413">      queryData.rawQueries = value;</span>
+<span class="source-line-no">414</span><span id="line-414">    }</span>
+<span class="source-line-no">415</span><span id="line-415">  }</span>
+<span class="source-line-no">416</span><span id="line-416"></span>
+<span class="source-line-no">417</span><span id="line-417">  private static Query buildBoolFromQueryData(QueryData d) {</span>
+<span class="source-line-no">418</span><span id="line-418">    return buildBoolQuery(d.filterQueries, d.shouldQueries, d.mustNotQueries);</span>
+<span class="source-line-no">419</span><span id="line-419">  }</span>
+<span class="source-line-no">420</span><span id="line-420"></span>
+<span class="source-line-no">421</span><span id="line-421">  /**</span>
+<span class="source-line-no">422</span><span id="line-422">   * Recursively flattens nested ConjunctionPredicates into a single list, so that nested-field</span>
+<span class="source-line-no">423</span><span id="line-423">   * conditions from inner ANDs are merged with outer-level conditions during query building.</span>
+<span class="source-line-no">424</span><span id="line-424">   */</span>
+<span class="source-line-no">425</span><span id="line-425">  private static List&lt;Predicate&gt; flattenConjunction(Collection&lt;Predicate&gt; predicates) {</span>
+<span class="source-line-no">426</span><span id="line-426">    List&lt;Predicate&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">427</span><span id="line-427">    for (Predicate p : predicates) {</span>
+<span class="source-line-no">428</span><span id="line-428">      if (p instanceof ConjunctionPredicate) {</span>
+<span class="source-line-no">429</span><span id="line-429">        result.addAll(flattenConjunction(((ConjunctionPredicate) p).getPredicates()));</span>
+<span class="source-line-no">430</span><span id="line-430">      } else {</span>
+<span class="source-line-no">431</span><span id="line-431">        result.add(p);</span>
+<span class="source-line-no">432</span><span id="line-432">      }</span>
+<span class="source-line-no">433</span><span id="line-433">    }</span>
+<span class="source-line-no">434</span><span id="line-434">    return result;</span>
+<span class="source-line-no">435</span><span id="line-435">  }</span>
+<span class="source-line-no">436</span><span id="line-436"></span>
+<span class="source-line-no">437</span><span id="line-437">  /**</span>
+<span class="source-line-no">438</span><span id="line-438">   * handle disjunction predicate</span>
+<span class="source-line-no">439</span><span id="line-439">   *</span>
+<span class="source-line-no">440</span><span id="line-440">   * @param predicate disjunction predicate</span>
+<span class="source-line-no">441</span><span id="line-441">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">442</span><span id="line-442">   */</span>
+<span class="source-line-no">443</span><span id="line-443">  public void visit(DisjunctionPredicate predicate, QueryData queryData) {</span>
+<span class="source-line-no">444</span><span id="line-444">    Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalsPredicatesReplaceableByIn = groupEquals(predicate);</span>
+<span class="source-line-no">445</span><span id="line-445"></span>
+<span class="source-line-no">446</span><span id="line-446">    Map&lt;String, List&lt;Query&gt;&gt; queriesByNestedPath = new HashMap&lt;&gt;();</span>
+<span class="source-line-no">447</span><span id="line-447">    boolean nonNestedQueriesFound = false;</span>
+<span class="source-line-no">448</span><span id="line-448"></span>
+<span class="source-line-no">449</span><span id="line-449">    for (Predicate subPredicate : predicate.getPredicates()) {</span>
+<span class="source-line-no">450</span><span id="line-450">      try {</span>
+<span class="source-line-no">451</span><span id="line-451">        if (!isReplaceableByInPredicate(subPredicate, equalsPredicatesReplaceableByIn)) {</span>
+<span class="source-line-no">452</span><span id="line-452">          QueryData shouldQueryData = new QueryData();</span>
+<span class="source-line-no">453</span><span id="line-453">          visit(subPredicate, shouldQueryData);</span>
+<span class="source-line-no">454</span><span id="line-454">          Query q =</span>
+<span class="source-line-no">455</span><span id="line-455">              addNullableFieldPredicate(subPredicate, buildBoolFromQueryData(shouldQueryData));</span>
+<span class="source-line-no">456</span><span id="line-456"></span>
+<span class="source-line-no">457</span><span id="line-457">          if (shouldQueryData.isNested()) {</span>
+<span class="source-line-no">458</span><span id="line-458">            List&lt;Query&gt; nestedQueries = shouldQueryData.rawQueries;</span>
+<span class="source-line-no">459</span><span id="line-459">            if (subPredicate instanceof ConjunctionPredicate &amp;&amp; nestedQueries.size() &gt; 1) {</span>
+<span class="source-line-no">460</span><span id="line-460">              // the conditions of an AND must all match, so they're kept together in a single</span>
+<span class="source-line-no">461</span><span id="line-461">              // query instead of being ORed with the other branches</span>
+<span class="source-line-no">462</span><span id="line-462">              nestedQueries =</span>
+<span class="source-line-no">463</span><span id="line-463">                  List.of(</span>
+<span class="source-line-no">464</span><span id="line-464">                      buildBoolQuery(</span>
+<span class="source-line-no">465</span><span id="line-465">                          nestedQueries, Collections.emptyList(), Collections.emptyList()));</span>
+<span class="source-line-no">466</span><span id="line-466">            }</span>
+<span class="source-line-no">467</span><span id="line-467">            queriesByNestedPath</span>
+<span class="source-line-no">468</span><span id="line-468">                .computeIfAbsent(shouldQueryData.nestedPath, k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="source-line-no">469</span><span id="line-469">                .addAll(nestedQueries);</span>
+<span class="source-line-no">470</span><span id="line-470">          } else {</span>
+<span class="source-line-no">471</span><span id="line-471">            nonNestedQueriesFound = true;</span>
+<span class="source-line-no">472</span><span id="line-472">            queryData.shouldQueries.add(q);</span>
+<span class="source-line-no">473</span><span id="line-473">          }</span>
+<span class="source-line-no">474</span><span id="line-474"></span>
+<span class="source-line-no">475</span><span id="line-475">          if (subPredicate instanceof SimplePredicate) {</span>
+<span class="source-line-no">476</span><span id="line-476">            equalsPredicatesReplaceableByIn.remove(((SimplePredicate) subPredicate).getKey());</span>
+<span class="source-line-no">477</span><span id="line-477">          }</span>
+<span class="source-line-no">478</span><span id="line-478">        }</span>
+<span class="source-line-no">479</span><span id="line-479">      } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">480</span><span id="line-480">        throw new RuntimeException(ex);</span>
+<span class="source-line-no">481</span><span id="line-481">      }</span>
+<span class="source-line-no">482</span><span id="line-482">    }</span>
+<span class="source-line-no">483</span><span id="line-483"></span>
+<span class="source-line-no">484</span><span id="line-484">    for (Map.Entry&lt;String, List&lt;Query&gt;&gt; e : queriesByNestedPath.entrySet()) {</span>
+<span class="source-line-no">485</span><span id="line-485">      String s = e.getKey();</span>
+<span class="source-line-no">486</span><span id="line-486">      List&lt;Query&gt; builders = e.getValue();</span>
+<span class="source-line-no">487</span><span id="line-487">      Query nestedBool = buildBoolQuery(Collections.emptyList(), builders, Collections.emptyList());</span>
+<span class="source-line-no">488</span><span id="line-488">      queryData.shouldQueries.add(nestedQuery(s, nestedBool));</span>
+<span class="source-line-no">489</span><span id="line-489">      queryData.nestedPath = !nonNestedQueriesFound ? s : null;</span>
+<span class="source-line-no">490</span><span id="line-490">      queryData.rawQueries = builders;</span>
+<span class="source-line-no">491</span><span id="line-491">    }</span>
+<span class="source-line-no">492</span><span id="line-492"></span>
+<span class="source-line-no">493</span><span id="line-493">    if (!equalsPredicatesReplaceableByIn.isEmpty()) {</span>
+<span class="source-line-no">494</span><span id="line-494">      Optional&lt;S&gt; geoTimeParam = getParam(OccurrenceSearchParameter.GEOLOGICAL_TIME.name());</span>
+<span class="source-line-no">495</span><span id="line-495">      if (geoTimeParam.isPresent()</span>
+<span class="source-line-no">496</span><span id="line-496">          &amp;&amp; equalsPredicatesReplaceableByIn.containsKey(geoTimeParam.get())) {</span>
+<span class="source-line-no">497</span><span id="line-497">        List&lt;Query&gt; queryBuilders = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">498</span><span id="line-498">        equalsPredicatesReplaceableByIn</span>
+<span class="source-line-no">499</span><span id="line-499">            .get(geoTimeParam.get())</span>
+<span class="source-line-no">500</span><span id="line-500">            .forEach(</span>
+<span class="source-line-no">501</span><span id="line-501">                ep -&gt;</span>
+<span class="source-line-no">502</span><span id="line-502">                    queryBuilders.add(</span>
+<span class="source-line-no">503</span><span id="line-503">                        termQuery(</span>
+<span class="source-line-no">504</span><span id="line-504">                            getExactMatchOrVerbatimField(ep),</span>
+<span class="source-line-no">505</span><span id="line-505">                            parseParamValue(ep.getValue(), ep.getKey()))));</span>
+<span class="source-line-no">506</span><span id="line-506"></span>
+<span class="source-line-no">507</span><span id="line-507">        if (!queryBuilders.isEmpty()) {</span>
+<span class="source-line-no">508</span><span id="line-508">          nonNestedQueriesFound = true;</span>
+<span class="source-line-no">509</span><span id="line-509">          queryData.shouldQueries.addAll(queryBuilders);</span>
+<span class="source-line-no">510</span><span id="line-510">        }</span>
+<span class="source-line-no">511</span><span id="line-511">        equalsPredicatesReplaceableByIn.remove(geoTimeParam.get());</span>
+<span class="source-line-no">512</span><span id="line-512">      }</span>
+<span class="source-line-no">513</span><span id="line-513"></span>
+<span class="source-line-no">514</span><span id="line-514">      if (!equalsPredicatesReplaceableByIn.isEmpty()) {</span>
+<span class="source-line-no">515</span><span id="line-515">        Map&lt;String, List&lt;Query&gt;&gt; replaceableQueriesByNestedPath = new HashMap&lt;&gt;();</span>
+<span class="source-line-no">516</span><span id="line-516">        for (InPredicate&lt;S&gt; ep : toInPredicates(equalsPredicatesReplaceableByIn)) {</span>
+<span class="source-line-no">517</span><span id="line-517">          Query termsQ =</span>
+<span class="source-line-no">518</span><span id="line-518">              termsQuery(</span>
+<span class="source-line-no">519</span><span id="line-519">                  getExactMatchOrVerbatimField(ep),</span>
+<span class="source-line-no">520</span><span id="line-520">                  ep.getValues().stream()</span>
+<span class="source-line-no">521</span><span id="line-521">                      .map(v -&gt; parseParamValue(v, ep.getKey()))</span>
+<span class="source-line-no">522</span><span id="line-522">                      .collect(Collectors.toList()));</span>
 <span class="source-line-no">523</span><span id="line-523"></span>
-<span class="source-line-no">524</span><span id="line-524">  /** Groups all equals predicates by search parameter. */</span>
-<span class="source-line-no">525</span><span id="line-525">  private Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; groupEquals(DisjunctionPredicate predicate) {</span>
-<span class="source-line-no">526</span><span id="line-526">    return predicate.getPredicates().stream()</span>
-<span class="source-line-no">527</span><span id="line-527">        .filter(p -&gt; p instanceof EqualsPredicate)</span>
-<span class="source-line-no">528</span><span id="line-528">        .filter(p -&gt; ((EqualsPredicate&lt;?&gt;) p).getChecklistKey() == null)</span>
-<span class="source-line-no">529</span><span id="line-529">        .map(p -&gt; (EqualsPredicate&lt;S&gt;) p)</span>
-<span class="source-line-no">530</span><span id="line-530">        .collect(Collectors.groupingBy(EqualsPredicate::getKey))</span>
-<span class="source-line-no">531</span><span id="line-531">        .entrySet()</span>
-<span class="source-line-no">532</span><span id="line-532">        .stream()</span>
-<span class="source-line-no">533</span><span id="line-533">        .filter(e -&gt; e.getValue().size() &gt; 1)</span>
-<span class="source-line-no">534</span><span id="line-534">        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));</span>
-<span class="source-line-no">535</span><span id="line-535">  }</span>
-<span class="source-line-no">536</span><span id="line-536"></span>
-<span class="source-line-no">537</span><span id="line-537">  /** Transforms the grouped EqualsPredicates into InPredicates. */</span>
-<span class="source-line-no">538</span><span id="line-538">  private List&lt;InPredicate&lt;S&gt;&gt; toInPredicates(Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalPredicates) {</span>
-<span class="source-line-no">539</span><span id="line-539">    return equalPredicates.entrySet().stream()</span>
-<span class="source-line-no">540</span><span id="line-540">        .map(</span>
-<span class="source-line-no">541</span><span id="line-541">            e -&gt;</span>
-<span class="source-line-no">542</span><span id="line-542">                e.getValue().stream()</span>
-<span class="source-line-no">543</span><span id="line-543">                    .collect(Collectors.groupingBy(EqualsPredicate::isMatchCase))</span>
-<span class="source-line-no">544</span><span id="line-544">                    .entrySet()</span>
-<span class="source-line-no">545</span><span id="line-545">                    .stream()</span>
-<span class="source-line-no">546</span><span id="line-546">                    .map(</span>
-<span class="source-line-no">547</span><span id="line-547">                        group -&gt;</span>
-<span class="source-line-no">548</span><span id="line-548">                            new InPredicate&lt;S&gt;(</span>
-<span class="source-line-no">549</span><span id="line-549">                                e.getKey(),</span>
-<span class="source-line-no">550</span><span id="line-550">                                group.getValue().stream()</span>
-<span class="source-line-no">551</span><span id="line-551">                                    .map(EqualsPredicate::getValue)</span>
-<span class="source-line-no">552</span><span id="line-552">                                    .collect(Collectors.toSet()),</span>
-<span class="source-line-no">553</span><span id="line-553">                                group.getKey()))</span>
-<span class="source-line-no">554</span><span id="line-554">                    .collect(Collectors.toList()))</span>
-<span class="source-line-no">555</span><span id="line-555">        .flatMap(List::stream)</span>
-<span class="source-line-no">556</span><span id="line-556">        .collect(Collectors.toList());</span>
-<span class="source-line-no">557</span><span id="line-557">  }</span>
+<span class="source-line-no">524</span><span id="line-524">          if (esFieldMapper.isNestedField(ep.getKey())) {</span>
+<span class="source-line-no">525</span><span id="line-525">            replaceableQueriesByNestedPath</span>
+<span class="source-line-no">526</span><span id="line-526">                .computeIfAbsent(esFieldMapper.getNestedPath(ep.getKey()), k -&gt; new ArrayList&lt;&gt;())</span>
+<span class="source-line-no">527</span><span id="line-527">                .add(termsQ);</span>
+<span class="source-line-no">528</span><span id="line-528">          } else {</span>
+<span class="source-line-no">529</span><span id="line-529">            queryData.shouldQueries.add(termsQ);</span>
+<span class="source-line-no">530</span><span id="line-530">            nonNestedQueriesFound = true;</span>
+<span class="source-line-no">531</span><span id="line-531">          }</span>
+<span class="source-line-no">532</span><span id="line-532">        }</span>
+<span class="source-line-no">533</span><span id="line-533"></span>
+<span class="source-line-no">534</span><span id="line-534">        for (Map.Entry&lt;String, List&lt;Query&gt;&gt; entry : replaceableQueriesByNestedPath.entrySet()) {</span>
+<span class="source-line-no">535</span><span id="line-535">          String key = entry.getKey();</span>
+<span class="source-line-no">536</span><span id="line-536">          List&lt;Query&gt; value = entry.getValue();</span>
+<span class="source-line-no">537</span><span id="line-537">          Query nestedBool =</span>
+<span class="source-line-no">538</span><span id="line-538">              buildBoolQuery(Collections.emptyList(), value, Collections.emptyList());</span>
+<span class="source-line-no">539</span><span id="line-539">          queryData.shouldQueries.add(nestedQuery(key, nestedBool));</span>
+<span class="source-line-no">540</span><span id="line-540">          queryData.nestedPath = !nonNestedQueriesFound ? key : null;</span>
+<span class="source-line-no">541</span><span id="line-541">          queryData.rawQueries = value;</span>
+<span class="source-line-no">542</span><span id="line-542">        }</span>
+<span class="source-line-no">543</span><span id="line-543">      }</span>
+<span class="source-line-no">544</span><span id="line-544">    }</span>
+<span class="source-line-no">545</span><span id="line-545">  }</span>
+<span class="source-line-no">546</span><span id="line-546"></span>
+<span class="source-line-no">547</span><span id="line-547">  /** Checks if a predicate has in grouped and can be replaced later by a InPredicate. */</span>
+<span class="source-line-no">548</span><span id="line-548">  private boolean isReplaceableByInPredicate(</span>
+<span class="source-line-no">549</span><span id="line-549">      Predicate predicate, Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalsPredicatesReplaceableByIn) {</span>
+<span class="source-line-no">550</span><span id="line-550">    if (!equalsPredicatesReplaceableByIn.isEmpty() &amp;&amp; predicate instanceof EqualsPredicate) {</span>
+<span class="source-line-no">551</span><span id="line-551">      EqualsPredicate&lt;S&gt; equalsPredicate = (EqualsPredicate&lt;S&gt;) predicate;</span>
+<span class="source-line-no">552</span><span id="line-552"></span>
+<span class="source-line-no">553</span><span id="line-553">      // check it is not a range predicate e.g. YEAR 2000,*</span>
+<span class="source-line-no">554</span><span id="line-554">      if (SearchTypeValidator.isNumericRange(equalsPredicate.getValue())</span>
+<span class="source-line-no">555</span><span id="line-555">          || SearchTypeValidator.isDateRange(equalsPredicate.getValue())) {</span>
+<span class="source-line-no">556</span><span id="line-556">        return false;</span>
+<span class="source-line-no">557</span><span id="line-557">      }</span>
 <span class="source-line-no">558</span><span id="line-558"></span>
-<span class="source-line-no">559</span><span id="line-559">  /**</span>
-<span class="source-line-no">560</span><span id="line-560">   * handles EqualPredicate</span>
-<span class="source-line-no">561</span><span id="line-561">   *</span>
-<span class="source-line-no">562</span><span id="line-562">   * @param predicate equalPredicate</span>
-<span class="source-line-no">563</span><span id="line-563">   */</span>
-<span class="source-line-no">564</span><span id="line-564">  public void visit(EqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">565</span><span id="line-565">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">566</span><span id="line-566">    String field = esFieldMapper.getExactMatchFieldName(parameter);</span>
-<span class="source-line-no">567</span><span id="line-567">    Query q;</span>
-<span class="source-line-no">568</span><span id="line-568"></span>
-<span class="source-line-no">569</span><span id="line-569">    if ((Number.class.isAssignableFrom(predicate.getKey().type())</span>
-<span class="source-line-no">570</span><span id="line-570">            || paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name()))</span>
-<span class="source-line-no">571</span><span id="line-571">        &amp;&amp; SearchTypeValidator.isNumericRange(predicate.getValue())) {</span>
-<span class="source-line-no">572</span><span id="line-572">      Range&lt;Double&gt; decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());</span>
-<span class="source-line-no">573</span><span id="line-573">      Double gte = decimalRange.hasLowerBound() ? decimalRange.lowerEndpoint() : null;</span>
-<span class="source-line-no">574</span><span id="line-574">      Double lte = decimalRange.hasUpperBound() ? decimalRange.upperEndpoint() : null;</span>
-<span class="source-line-no">575</span><span id="line-575">      String rel =</span>
-<span class="source-line-no">576</span><span id="line-576">          paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name())</span>
-<span class="source-line-no">577</span><span id="line-577">              ? "within"</span>
-<span class="source-line-no">578</span><span id="line-578">              : null;</span>
-<span class="source-line-no">579</span><span id="line-579">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, lte, null, null, rel));</span>
-<span class="source-line-no">580</span><span id="line-580">    } else if (Date.class.isAssignableFrom(predicate.getKey().type())</span>
-<span class="source-line-no">581</span><span id="line-581">        &amp;&amp; SearchTypeValidator.isDateRange(predicate.getValue())) {</span>
-<span class="source-line-no">582</span><span id="line-582">      Range&lt;LocalDate&gt; dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());</span>
-<span class="source-line-no">583</span><span id="line-583">      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;</span>
-<span class="source-line-no">584</span><span id="line-584">      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;</span>
-<span class="source-line-no">585</span><span id="line-585">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));</span>
-<span class="source-line-no">586</span><span id="line-586">    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {</span>
-<span class="source-line-no">587</span><span id="line-587">      Range&lt;LocalDate&gt; dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());</span>
-<span class="source-line-no">588</span><span id="line-588">      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;</span>
-<span class="source-line-no">589</span><span id="line-589">      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;</span>
-<span class="source-line-no">590</span><span id="line-590">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));</span>
-<span class="source-line-no">591</span><span id="line-591">    } else {</span>
-<span class="source-line-no">592</span><span id="line-592">      q =</span>
-<span class="source-line-no">593</span><span id="line-593">          addNullableFieldPredicate(</span>
-<span class="source-line-no">594</span><span id="line-594">              predicate,</span>
-<span class="source-line-no">595</span><span id="line-595">              termQuery(</span>
-<span class="source-line-no">596</span><span id="line-596">                  getExactMatchOrVerbatimField(predicate),</span>
-<span class="source-line-no">597</span><span id="line-597">                  parseParamValue(predicate.getValue(), parameter)));</span>
-<span class="source-line-no">598</span><span id="line-598">    }</span>
-<span class="source-line-no">599</span><span id="line-599"></span>
-<span class="source-line-no">600</span><span id="line-600">    addFilterQuery(q, queryData, parameter);</span>
-<span class="source-line-no">601</span><span id="line-601">  }</span>
-<span class="source-line-no">602</span><span id="line-602"></span>
-<span class="source-line-no">603</span><span id="line-603">  private final Function&lt;String, Object&gt; parseDate =</span>
-<span class="source-line-no">604</span><span id="line-604">      d -&gt; "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);</span>
-<span class="source-line-no">605</span><span id="line-605"></span>
-<span class="source-line-no">606</span><span id="line-606">  private final Function&lt;String, Object&gt; parseInteger =</span>
-<span class="source-line-no">607</span><span id="line-607">      d -&gt; "*".equals(d) ? null : Integer.parseInt(d);</span>
-<span class="source-line-no">608</span><span id="line-608"></span>
-<span class="source-line-no">609</span><span id="line-609">  private final Function&lt;String, Object&gt; parseDouble =</span>
-<span class="source-line-no">610</span><span id="line-610">      d -&gt; "*".equals(d) ? null : Double.parseDouble(d);</span>
+<span class="source-line-no">559</span><span id="line-559">      return equalsPredicatesReplaceableByIn.containsKey(equalsPredicate.getKey())</span>
+<span class="source-line-no">560</span><span id="line-560">          &amp;&amp; equalsPredicatesReplaceableByIn</span>
+<span class="source-line-no">561</span><span id="line-561">              .get(equalsPredicate.getKey())</span>
+<span class="source-line-no">562</span><span id="line-562">              .contains(equalsPredicate);</span>
+<span class="source-line-no">563</span><span id="line-563">    }</span>
+<span class="source-line-no">564</span><span id="line-564">    return false;</span>
+<span class="source-line-no">565</span><span id="line-565">  }</span>
+<span class="source-line-no">566</span><span id="line-566"></span>
+<span class="source-line-no">567</span><span id="line-567">  /** Groups all equals predicates by search parameter. */</span>
+<span class="source-line-no">568</span><span id="line-568">  private Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; groupEquals(DisjunctionPredicate predicate) {</span>
+<span class="source-line-no">569</span><span id="line-569">    return predicate.getPredicates().stream()</span>
+<span class="source-line-no">570</span><span id="line-570">        .filter(p -&gt; p instanceof EqualsPredicate)</span>
+<span class="source-line-no">571</span><span id="line-571">        .filter(p -&gt; ((EqualsPredicate&lt;?&gt;) p).getChecklistKey() == null)</span>
+<span class="source-line-no">572</span><span id="line-572">        .map(p -&gt; (EqualsPredicate&lt;S&gt;) p)</span>
+<span class="source-line-no">573</span><span id="line-573">        .collect(Collectors.groupingBy(EqualsPredicate::getKey))</span>
+<span class="source-line-no">574</span><span id="line-574">        .entrySet()</span>
+<span class="source-line-no">575</span><span id="line-575">        .stream()</span>
+<span class="source-line-no">576</span><span id="line-576">        .filter(e -&gt; e.getValue().size() &gt; 1)</span>
+<span class="source-line-no">577</span><span id="line-577">        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));</span>
+<span class="source-line-no">578</span><span id="line-578">  }</span>
+<span class="source-line-no">579</span><span id="line-579"></span>
+<span class="source-line-no">580</span><span id="line-580">  /** Transforms the grouped EqualsPredicates into InPredicates. */</span>
+<span class="source-line-no">581</span><span id="line-581">  private List&lt;InPredicate&lt;S&gt;&gt; toInPredicates(Map&lt;S, List&lt;EqualsPredicate&lt;S&gt;&gt;&gt; equalPredicates) {</span>
+<span class="source-line-no">582</span><span id="line-582">    return equalPredicates.entrySet().stream()</span>
+<span class="source-line-no">583</span><span id="line-583">        .map(</span>
+<span class="source-line-no">584</span><span id="line-584">            e -&gt;</span>
+<span class="source-line-no">585</span><span id="line-585">                e.getValue().stream()</span>
+<span class="source-line-no">586</span><span id="line-586">                    .collect(Collectors.groupingBy(EqualsPredicate::isMatchCase))</span>
+<span class="source-line-no">587</span><span id="line-587">                    .entrySet()</span>
+<span class="source-line-no">588</span><span id="line-588">                    .stream()</span>
+<span class="source-line-no">589</span><span id="line-589">                    .map(</span>
+<span class="source-line-no">590</span><span id="line-590">                        group -&gt;</span>
+<span class="source-line-no">591</span><span id="line-591">                            new InPredicate&lt;S&gt;(</span>
+<span class="source-line-no">592</span><span id="line-592">                                e.getKey(),</span>
+<span class="source-line-no">593</span><span id="line-593">                                group.getValue().stream()</span>
+<span class="source-line-no">594</span><span id="line-594">                                    .map(EqualsPredicate::getValue)</span>
+<span class="source-line-no">595</span><span id="line-595">                                    .collect(Collectors.toSet()),</span>
+<span class="source-line-no">596</span><span id="line-596">                                group.getKey()))</span>
+<span class="source-line-no">597</span><span id="line-597">                    .collect(Collectors.toList()))</span>
+<span class="source-line-no">598</span><span id="line-598">        .flatMap(List::stream)</span>
+<span class="source-line-no">599</span><span id="line-599">        .collect(Collectors.toList());</span>
+<span class="source-line-no">600</span><span id="line-600">  }</span>
+<span class="source-line-no">601</span><span id="line-601"></span>
+<span class="source-line-no">602</span><span id="line-602">  /**</span>
+<span class="source-line-no">603</span><span id="line-603">   * handles EqualPredicate</span>
+<span class="source-line-no">604</span><span id="line-604">   *</span>
+<span class="source-line-no">605</span><span id="line-605">   * @param predicate equalPredicate</span>
+<span class="source-line-no">606</span><span id="line-606">   */</span>
+<span class="source-line-no">607</span><span id="line-607">  public void visit(EqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">608</span><span id="line-608">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">609</span><span id="line-609">    String field = esFieldMapper.getExactMatchFieldName(parameter);</span>
+<span class="source-line-no">610</span><span id="line-610">    Query q;</span>
 <span class="source-line-no">611</span><span id="line-611"></span>
-<span class="source-line-no">612</span><span id="line-612">  public void visit(RangePredicate&lt;S&gt; predicate, QueryData queryData)</span>
-<span class="source-line-no">613</span><span id="line-613">      throws QueryBuildingException {</span>
-<span class="source-line-no">614</span><span id="line-614">    String field = esFieldMapper.getExactMatchFieldName(predicate.getKey());</span>
-<span class="source-line-no">615</span><span id="line-615">    Object gte = null, lte = null, gt = null, lt = null;</span>
-<span class="source-line-no">616</span><span id="line-616">    Function&lt;String, Object&gt; initialiser;</span>
-<span class="source-line-no">617</span><span id="line-617">    if (Integer.class.isAssignableFrom(predicate.getKey().type())) {</span>
-<span class="source-line-no">618</span><span id="line-618">      initialiser = parseInteger;</span>
-<span class="source-line-no">619</span><span id="line-619">    } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {</span>
-<span class="source-line-no">620</span><span id="line-620">      initialiser = parseDouble;</span>
-<span class="source-line-no">621</span><span id="line-621">    } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {</span>
-<span class="source-line-no">622</span><span id="line-622">      initialiser = parseDate;</span>
-<span class="source-line-no">623</span><span id="line-623">    } else {</span>
-<span class="source-line-no">624</span><span id="line-624">      addFilterQuery(Query.of(q -&gt; q.matchAll(m -&gt; m)), queryData, predicate.getKey());</span>
-<span class="source-line-no">625</span><span id="line-625">      return;</span>
-<span class="source-line-no">626</span><span id="line-626">    }</span>
-<span class="source-line-no">627</span><span id="line-627">    if (predicate.getValue().getGte() != null)</span>
-<span class="source-line-no">628</span><span id="line-628">      gte = initialiser.apply(predicate.getValue().getGte());</span>
-<span class="source-line-no">629</span><span id="line-629">    if (predicate.getValue().getLte() != null)</span>
-<span class="source-line-no">630</span><span id="line-630">      lte = initialiser.apply(predicate.getValue().getLte());</span>
-<span class="source-line-no">631</span><span id="line-631">    if (predicate.getValue().getGt() != null) gt = initialiser.apply(predicate.getValue().getGt());</span>
-<span class="source-line-no">632</span><span id="line-632">    if (predicate.getValue().getLt() != null) lt = initialiser.apply(predicate.getValue().getLt());</span>
-<span class="source-line-no">633</span><span id="line-633">    Query rqb = rangeQuery(field, gte, lte, gt, lt, null);</span>
-<span class="source-line-no">634</span><span id="line-634">    addFilterQuery(rqb, queryData, predicate.getKey());</span>
-<span class="source-line-no">635</span><span id="line-635">  }</span>
-<span class="source-line-no">636</span><span id="line-636"></span>
-<span class="source-line-no">637</span><span id="line-637">  private static LocalDate parseDate(String d) {</span>
-<span class="source-line-no">638</span><span id="line-638">    return "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);</span>
-<span class="source-line-no">639</span><span id="line-639">  }</span>
-<span class="source-line-no">640</span><span id="line-640"></span>
-<span class="source-line-no">641</span><span id="line-641">  /**</span>
-<span class="source-line-no">642</span><span id="line-642">   * handle greater than equals predicate</span>
-<span class="source-line-no">643</span><span id="line-643">   *</span>
-<span class="source-line-no">644</span><span id="line-644">   * @param predicate gte predicate</span>
-<span class="source-line-no">645</span><span id="line-645">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">646</span><span id="line-646">   */</span>
-<span class="source-line-no">647</span><span id="line-647">  public void visit(GreaterThanOrEqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">648</span><span id="line-648">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">649</span><span id="line-649">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
-<span class="source-line-no">650</span><span id="line-650">    Query q =</span>
-<span class="source-line-no">651</span><span id="line-651">        addNullableFieldPredicate(</span>
-<span class="source-line-no">652</span><span id="line-652">            predicate,</span>
-<span class="source-line-no">653</span><span id="line-653">            rangeQuery(</span>
-<span class="source-line-no">654</span><span id="line-654">                esFieldMapper.getExactMatchFieldName(parameter), val, null, null, null, null));</span>
-<span class="source-line-no">655</span><span id="line-655">    addFilterQuery(q, queryData, predicate.getKey());</span>
-<span class="source-line-no">656</span><span id="line-656">  }</span>
-<span class="source-line-no">657</span><span id="line-657"></span>
-<span class="source-line-no">658</span><span id="line-658">  /**</span>
-<span class="source-line-no">659</span><span id="line-659">   * Adds an "is null" filter if the mapper instructs to. Used mostly in range queries to give</span>
-<span class="source-line-no">660</span><span id="line-660">   * specific semantics to null values.</span>
-<span class="source-line-no">661</span><span id="line-661">   */</span>
-<span class="source-line-no">662</span><span id="line-662">  private Query addNullableFieldPredicate(Predicate predicate, Query filter) {</span>
-<span class="source-line-no">663</span><span id="line-663">    if (predicate instanceof SimplePredicate</span>
-<span class="source-line-no">664</span><span id="line-664">        &amp;&amp; esFieldMapper.includeNullInPredicate((SimplePredicate&lt;S&gt;) predicate)) {</span>
-<span class="source-line-no">665</span><span id="line-665">      String field =</span>
-<span class="source-line-no">666</span><span id="line-666">          esFieldMapper.getExactMatchFieldName(((SimplePredicate&lt;S&gt;) predicate).getKey());</span>
-<span class="source-line-no">667</span><span id="line-667">      Query missing = Query.of(q -&gt; q.bool(b -&gt; b.mustNot(existsQuery(field))));</span>
-<span class="source-line-no">668</span><span id="line-668">      return buildBoolQuery(</span>
-<span class="source-line-no">669</span><span id="line-669">          Collections.emptyList(), List.of(filter, missing), Collections.emptyList());</span>
-<span class="source-line-no">670</span><span id="line-670">    }</span>
-<span class="source-line-no">671</span><span id="line-671">    return filter;</span>
-<span class="source-line-no">672</span><span id="line-672">  }</span>
-<span class="source-line-no">673</span><span id="line-673"></span>
-<span class="source-line-no">674</span><span id="line-674">  /**</span>
-<span class="source-line-no">675</span><span id="line-675">   * handles greater than predicate</span>
-<span class="source-line-no">676</span><span id="line-676">   *</span>
-<span class="source-line-no">677</span><span id="line-677">   * @param predicate greater than predicate</span>
-<span class="source-line-no">678</span><span id="line-678">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">679</span><span id="line-679">   */</span>
-<span class="source-line-no">680</span><span id="line-680">  public void visit(GreaterThanPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">681</span><span id="line-681">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">682</span><span id="line-682">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
-<span class="source-line-no">683</span><span id="line-683">    Query q =</span>
-<span class="source-line-no">684</span><span id="line-684">        addNullableFieldPredicate(</span>
-<span class="source-line-no">685</span><span id="line-685">            predicate,</span>
-<span class="source-line-no">686</span><span id="line-686">            rangeQuery(</span>
-<span class="source-line-no">687</span><span id="line-687">                esFieldMapper.getExactMatchFieldName(parameter), null, null, val, null, null));</span>
-<span class="source-line-no">688</span><span id="line-688">    addFilterQuery(q, queryData, parameter);</span>
-<span class="source-line-no">689</span><span id="line-689">  }</span>
-<span class="source-line-no">690</span><span id="line-690"></span>
-<span class="source-line-no">691</span><span id="line-691">  /**</span>
-<span class="source-line-no">692</span><span id="line-692">   * handle IN Predicate</span>
-<span class="source-line-no">693</span><span id="line-693">   *</span>
-<span class="source-line-no">694</span><span id="line-694">   * @param predicate InPredicate</span>
-<span class="source-line-no">695</span><span id="line-695">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">696</span><span id="line-696">   */</span>
-<span class="source-line-no">697</span><span id="line-697">  public void visit(InPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">698</span><span id="line-698">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">699</span><span id="line-699"></span>
-<span class="source-line-no">700</span><span id="line-700">    if (paramEquals(parameter, OccurrenceSearchParameter.EVENT_DATE.name())) {</span>
-<span class="source-line-no">701</span><span id="line-701">      predicate</span>
-<span class="source-line-no">702</span><span id="line-702">          .getValues()</span>
-<span class="source-line-no">703</span><span id="line-703">          .forEach(</span>
-<span class="source-line-no">704</span><span id="line-704">              value -&gt; {</span>
-<span class="source-line-no">705</span><span id="line-705">                try {</span>
-<span class="source-line-no">706</span><span id="line-706">                  QueryData shouldQueryData = new QueryData();</span>
-<span class="source-line-no">707</span><span id="line-707">                  Predicate subPredicate =</span>
-<span class="source-line-no">708</span><span id="line-708">                      new EqualsPredicate&lt;&gt;(</span>
-<span class="source-line-no">709</span><span id="line-709">                          getParam(OccurrenceSearchParameter.EVENT_DATE.name()).get(),</span>
-<span class="source-line-no">710</span><span id="line-710">                          value,</span>
-<span class="source-line-no">711</span><span id="line-711">                          predicate.isMatchCase(),</span>
-<span class="source-line-no">712</span><span id="line-712">                          predicate.getChecklistKey());</span>
-<span class="source-line-no">713</span><span id="line-713">                  visit(subPredicate, shouldQueryData);</span>
-<span class="source-line-no">714</span><span id="line-714">                  queryData.shouldQueries.add(</span>
-<span class="source-line-no">715</span><span id="line-715">                      addNullableFieldPredicate(</span>
-<span class="source-line-no">716</span><span id="line-716">                          subPredicate, buildBoolFromQueryData(shouldQueryData)));</span>
-<span class="source-line-no">717</span><span id="line-717">                } catch (QueryBuildingException ex) {</span>
-<span class="source-line-no">718</span><span id="line-718">                  throw new RuntimeException(ex);</span>
-<span class="source-line-no">719</span><span id="line-719">                }</span>
-<span class="source-line-no">720</span><span id="line-720">              });</span>
-<span class="source-line-no">721</span><span id="line-721">    } else if (paramEquals(parameter, OccurrenceSearchParameter.GEOLOGICAL_TIME.name())) {</span>
-<span class="source-line-no">722</span><span id="line-722">      List&lt;Predicate&gt; allPredicates =</span>
-<span class="source-line-no">723</span><span id="line-723">          predicate.getValues().stream()</span>
-<span class="source-line-no">724</span><span id="line-724">              .map(v -&gt; new EqualsPredicate&lt;&gt;(predicate.getKey(), v, false))</span>
-<span class="source-line-no">725</span><span id="line-725">              .collect(Collectors.toList());</span>
-<span class="source-line-no">726</span><span id="line-726">      visit(new DisjunctionPredicate(allPredicates), queryData);</span>
-<span class="source-line-no">727</span><span id="line-727">    } else {</span>
-<span class="source-line-no">728</span><span id="line-728">      Query termsQ =</span>
-<span class="source-line-no">729</span><span id="line-729">          termsQuery(</span>
-<span class="source-line-no">730</span><span id="line-730">              getExactMatchOrVerbatimField(predicate),</span>
-<span class="source-line-no">731</span><span id="line-731">              predicate.getValues().stream()</span>
-<span class="source-line-no">732</span><span id="line-732">                  .map(v -&gt; parseParamValue(v, parameter))</span>
-<span class="source-line-no">733</span><span id="line-733">                  .collect(Collectors.toList()));</span>
-<span class="source-line-no">734</span><span id="line-734">      addFilterQuery(termsQ, queryData, predicate.getKey());</span>
-<span class="source-line-no">735</span><span id="line-735">    }</span>
-<span class="source-line-no">736</span><span id="line-736">  }</span>
-<span class="source-line-no">737</span><span id="line-737"></span>
-<span class="source-line-no">738</span><span id="line-738">  /** handles less than or equals predicate */</span>
-<span class="source-line-no">739</span><span id="line-739">  public void visit(LessThanOrEqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">740</span><span id="line-740">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">741</span><span id="line-741">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
-<span class="source-line-no">742</span><span id="line-742">    Query q =</span>
-<span class="source-line-no">743</span><span id="line-743">        addNullableFieldPredicate(</span>
-<span class="source-line-no">744</span><span id="line-744">            predicate,</span>
-<span class="source-line-no">745</span><span id="line-745">            rangeQuery(</span>
-<span class="source-line-no">746</span><span id="line-746">                esFieldMapper.getExactMatchFieldName(parameter), null, val, null, null, null));</span>
-<span class="source-line-no">747</span><span id="line-747">    addFilterQuery(q, queryData, parameter);</span>
-<span class="source-line-no">748</span><span id="line-748">  }</span>
-<span class="source-line-no">749</span><span id="line-749"></span>
-<span class="source-line-no">750</span><span id="line-750">  /** handles less than predicate */</span>
-<span class="source-line-no">751</span><span id="line-751">  public void visit(LessThanPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">752</span><span id="line-752">    S parameter = predicate.getKey();</span>
-<span class="source-line-no">753</span><span id="line-753">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
-<span class="source-line-no">754</span><span id="line-754">    Query q =</span>
-<span class="source-line-no">755</span><span id="line-755">        addNullableFieldPredicate(</span>
-<span class="source-line-no">756</span><span id="line-756">            predicate,</span>
-<span class="source-line-no">757</span><span id="line-757">            rangeQuery(</span>
-<span class="source-line-no">758</span><span id="line-758">                esFieldMapper.getExactMatchFieldName(parameter), null, null, null, val, null));</span>
-<span class="source-line-no">759</span><span id="line-759">    addFilterQuery(q, queryData, parameter);</span>
-<span class="source-line-no">760</span><span id="line-760">  }</span>
-<span class="source-line-no">761</span><span id="line-761"></span>
-<span class="source-line-no">762</span><span id="line-762">  /** handles like predicate */</span>
-<span class="source-line-no">763</span><span id="line-763">  public void visit(LikePredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">764</span><span id="line-764">    addFilterQuery(</span>
-<span class="source-line-no">765</span><span id="line-765">        wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),</span>
-<span class="source-line-no">766</span><span id="line-766">        queryData,</span>
-<span class="source-line-no">767</span><span id="line-767">        predicate.getKey());</span>
-<span class="source-line-no">768</span><span id="line-768">  }</span>
-<span class="source-line-no">769</span><span id="line-769"></span>
-<span class="source-line-no">770</span><span id="line-770">  /** handles not predicate */</span>
-<span class="source-line-no">771</span><span id="line-771">  public void visit(NotPredicate predicate, QueryData queryData) throws QueryBuildingException {</span>
-<span class="source-line-no">772</span><span id="line-772">    QueryData mustNotQueryData = new QueryData();</span>
-<span class="source-line-no">773</span><span id="line-773">    visit(predicate.getPredicate(), mustNotQueryData);</span>
-<span class="source-line-no">774</span><span id="line-774"></span>
-<span class="source-line-no">775</span><span id="line-775">    QueryData existsQueryData = new QueryData();</span>
-<span class="source-line-no">776</span><span id="line-776">    addNotPredicateNonNullFilters(predicate.getPredicate(), existsQueryData);</span>
-<span class="source-line-no">777</span><span id="line-777">    queryData.filterQueries.addAll(existsQueryData.filterQueries);</span>
-<span class="source-line-no">778</span><span id="line-778"></span>
-<span class="source-line-no">779</span><span id="line-779">    queryData.mustNotQueries.add(buildBoolFromQueryData(mustNotQueryData));</span>
-<span class="source-line-no">780</span><span id="line-780">  }</span>
-<span class="source-line-no">781</span><span id="line-781"></span>
-<span class="source-line-no">782</span><span id="line-782">  private void addNotPredicateNonNullFilters(Predicate predicate, QueryData queryData) {</span>
-<span class="source-line-no">783</span><span id="line-783">    Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter = new LinkedHashMap&lt;&gt;();</span>
-<span class="source-line-no">784</span><span id="line-784">    collectNotPredicateFields(predicate, fieldsByParameter);</span>
-<span class="source-line-no">785</span><span id="line-785"></span>
-<span class="source-line-no">786</span><span id="line-786">    fieldsByParameter.forEach(</span>
-<span class="source-line-no">787</span><span id="line-787">        (parameter, fields) -&gt;</span>
-<span class="source-line-no">788</span><span id="line-788">            fields.forEach(field -&gt; addFilterQuery(existsQuery(field), queryData, parameter)));</span>
-<span class="source-line-no">789</span><span id="line-789">  }</span>
-<span class="source-line-no">790</span><span id="line-790"></span>
-<span class="source-line-no">791</span><span id="line-791">  @SuppressWarnings("unchecked")</span>
-<span class="source-line-no">792</span><span id="line-792">  private void collectNotPredicateFields(</span>
-<span class="source-line-no">793</span><span id="line-793">      Predicate predicate, Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter) {</span>
-<span class="source-line-no">794</span><span id="line-794">    if (predicate instanceof ConjunctionPredicate) {</span>
-<span class="source-line-no">795</span><span id="line-795">      ((ConjunctionPredicate) predicate)</span>
-<span class="source-line-no">796</span><span id="line-796">          .getPredicates()</span>
-<span class="source-line-no">797</span><span id="line-797">          .forEach(p -&gt; collectNotPredicateFields(p, fieldsByParameter));</span>
-<span class="source-line-no">798</span><span id="line-798">    } else if (predicate instanceof DisjunctionPredicate) {</span>
-<span class="source-line-no">799</span><span id="line-799">      ((DisjunctionPredicate) predicate)</span>
-<span class="source-line-no">800</span><span id="line-800">          .getPredicates()</span>
-<span class="source-line-no">801</span><span id="line-801">          .forEach(p -&gt; collectNotPredicateFields(p, fieldsByParameter));</span>
-<span class="source-line-no">802</span><span id="line-802">    } else if (predicate instanceof InPredicate) {</span>
-<span class="source-line-no">803</span><span id="line-803">      InPredicate&lt;S&gt; p = (InPredicate&lt;S&gt;) predicate;</span>
-<span class="source-line-no">804</span><span id="line-804">      addNotPredicateFieldToNonNullChecks(</span>
-<span class="source-line-no">805</span><span id="line-805">          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));</span>
-<span class="source-line-no">806</span><span id="line-806">    } else if (predicate instanceof SimplePredicate) {</span>
-<span class="source-line-no">807</span><span id="line-807">      SimplePredicate&lt;S&gt; p = (SimplePredicate&lt;S&gt;) predicate;</span>
-<span class="source-line-no">808</span><span id="line-808">      addNotPredicateFieldToNonNullChecks(</span>
-<span class="source-line-no">809</span><span id="line-809">          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));</span>
-<span class="source-line-no">810</span><span id="line-810">    }</span>
+<span class="source-line-no">612</span><span id="line-612">    if ((Number.class.isAssignableFrom(predicate.getKey().type())</span>
+<span class="source-line-no">613</span><span id="line-613">            || paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name()))</span>
+<span class="source-line-no">614</span><span id="line-614">        &amp;&amp; SearchTypeValidator.isNumericRange(predicate.getValue())) {</span>
+<span class="source-line-no">615</span><span id="line-615">      Range&lt;Double&gt; decimalRange = SearchTypeValidator.parseDecimalRange(predicate.getValue());</span>
+<span class="source-line-no">616</span><span id="line-616">      Double gte = decimalRange.hasLowerBound() ? decimalRange.lowerEndpoint() : null;</span>
+<span class="source-line-no">617</span><span id="line-617">      Double lte = decimalRange.hasUpperBound() ? decimalRange.upperEndpoint() : null;</span>
+<span class="source-line-no">618</span><span id="line-618">      String rel =</span>
+<span class="source-line-no">619</span><span id="line-619">          paramEquals(predicate.getKey(), OccurrenceSearchParameter.GEOLOGICAL_TIME.name())</span>
+<span class="source-line-no">620</span><span id="line-620">              ? "within"</span>
+<span class="source-line-no">621</span><span id="line-621">              : null;</span>
+<span class="source-line-no">622</span><span id="line-622">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, lte, null, null, rel));</span>
+<span class="source-line-no">623</span><span id="line-623">    } else if (Date.class.isAssignableFrom(predicate.getKey().type())</span>
+<span class="source-line-no">624</span><span id="line-624">        &amp;&amp; SearchTypeValidator.isDateRange(predicate.getValue())) {</span>
+<span class="source-line-no">625</span><span id="line-625">      Range&lt;LocalDate&gt; dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());</span>
+<span class="source-line-no">626</span><span id="line-626">      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;</span>
+<span class="source-line-no">627</span><span id="line-627">      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;</span>
+<span class="source-line-no">628</span><span id="line-628">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));</span>
+<span class="source-line-no">629</span><span id="line-629">    } else if (IsoDateInterval.class.isAssignableFrom(predicate.getKey().type())) {</span>
+<span class="source-line-no">630</span><span id="line-630">      Range&lt;LocalDate&gt; dateRange = IsoDateParsingUtils.parseDateRange(predicate.getValue());</span>
+<span class="source-line-no">631</span><span id="line-631">      Object gte = dateRange.hasLowerBound() ? dateRange.lowerEndpoint().toString() : null;</span>
+<span class="source-line-no">632</span><span id="line-632">      Object lt = dateRange.hasUpperBound() ? dateRange.upperEndpoint().toString() : null;</span>
+<span class="source-line-no">633</span><span id="line-633">      q = addNullableFieldPredicate(predicate, rangeQuery(field, gte, null, null, lt, "within"));</span>
+<span class="source-line-no">634</span><span id="line-634">    } else {</span>
+<span class="source-line-no">635</span><span id="line-635">      q =</span>
+<span class="source-line-no">636</span><span id="line-636">          addNullableFieldPredicate(</span>
+<span class="source-line-no">637</span><span id="line-637">              predicate,</span>
+<span class="source-line-no">638</span><span id="line-638">              termQuery(</span>
+<span class="source-line-no">639</span><span id="line-639">                  getExactMatchOrVerbatimField(predicate),</span>
+<span class="source-line-no">640</span><span id="line-640">                  parseParamValue(predicate.getValue(), parameter)));</span>
+<span class="source-line-no">641</span><span id="line-641">    }</span>
+<span class="source-line-no">642</span><span id="line-642"></span>
+<span class="source-line-no">643</span><span id="line-643">    addFilterQuery(q, queryData, parameter);</span>
+<span class="source-line-no">644</span><span id="line-644">  }</span>
+<span class="source-line-no">645</span><span id="line-645"></span>
+<span class="source-line-no">646</span><span id="line-646">  private final Function&lt;String, Object&gt; parseDate =</span>
+<span class="source-line-no">647</span><span id="line-647">      d -&gt; "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);</span>
+<span class="source-line-no">648</span><span id="line-648"></span>
+<span class="source-line-no">649</span><span id="line-649">  private final Function&lt;String, Object&gt; parseInteger =</span>
+<span class="source-line-no">650</span><span id="line-650">      d -&gt; "*".equals(d) ? null : Integer.parseInt(d);</span>
+<span class="source-line-no">651</span><span id="line-651"></span>
+<span class="source-line-no">652</span><span id="line-652">  private final Function&lt;String, Object&gt; parseDouble =</span>
+<span class="source-line-no">653</span><span id="line-653">      d -&gt; "*".equals(d) ? null : Double.parseDouble(d);</span>
+<span class="source-line-no">654</span><span id="line-654"></span>
+<span class="source-line-no">655</span><span id="line-655">  public void visit(RangePredicate&lt;S&gt; predicate, QueryData queryData)</span>
+<span class="source-line-no">656</span><span id="line-656">      throws QueryBuildingException {</span>
+<span class="source-line-no">657</span><span id="line-657">    String field = esFieldMapper.getExactMatchFieldName(predicate.getKey());</span>
+<span class="source-line-no">658</span><span id="line-658">    Object gte = null, lte = null, gt = null, lt = null;</span>
+<span class="source-line-no">659</span><span id="line-659">    Function&lt;String, Object&gt; initialiser;</span>
+<span class="source-line-no">660</span><span id="line-660">    if (Integer.class.isAssignableFrom(predicate.getKey().type())) {</span>
+<span class="source-line-no">661</span><span id="line-661">      initialiser = parseInteger;</span>
+<span class="source-line-no">662</span><span id="line-662">    } else if (Double.class.isAssignableFrom(predicate.getKey().type())) {</span>
+<span class="source-line-no">663</span><span id="line-663">      initialiser = parseDouble;</span>
+<span class="source-line-no">664</span><span id="line-664">    } else if (Date.class.isAssignableFrom(predicate.getKey().type())) {</span>
+<span class="source-line-no">665</span><span id="line-665">      initialiser = parseDate;</span>
+<span class="source-line-no">666</span><span id="line-666">    } else {</span>
+<span class="source-line-no">667</span><span id="line-667">      addFilterQuery(Query.of(q -&gt; q.matchAll(m -&gt; m)), queryData, predicate.getKey());</span>
+<span class="source-line-no">668</span><span id="line-668">      return;</span>
+<span class="source-line-no">669</span><span id="line-669">    }</span>
+<span class="source-line-no">670</span><span id="line-670">    if (predicate.getValue().getGte() != null)</span>
+<span class="source-line-no">671</span><span id="line-671">      gte = initialiser.apply(predicate.getValue().getGte());</span>
+<span class="source-line-no">672</span><span id="line-672">    if (predicate.getValue().getLte() != null)</span>
+<span class="source-line-no">673</span><span id="line-673">      lte = initialiser.apply(predicate.getValue().getLte());</span>
+<span class="source-line-no">674</span><span id="line-674">    if (predicate.getValue().getGt() != null) gt = initialiser.apply(predicate.getValue().getGt());</span>
+<span class="source-line-no">675</span><span id="line-675">    if (predicate.getValue().getLt() != null) lt = initialiser.apply(predicate.getValue().getLt());</span>
+<span class="source-line-no">676</span><span id="line-676">    Query rqb = rangeQuery(field, gte, lte, gt, lt, null);</span>
+<span class="source-line-no">677</span><span id="line-677">    addFilterQuery(rqb, queryData, predicate.getKey());</span>
+<span class="source-line-no">678</span><span id="line-678">  }</span>
+<span class="source-line-no">679</span><span id="line-679"></span>
+<span class="source-line-no">680</span><span id="line-680">  private static LocalDate parseDate(String d) {</span>
+<span class="source-line-no">681</span><span id="line-681">    return "*".equals(d) ? null : IsoDateParsingUtils.parseDate(d);</span>
+<span class="source-line-no">682</span><span id="line-682">  }</span>
+<span class="source-line-no">683</span><span id="line-683"></span>
+<span class="source-line-no">684</span><span id="line-684">  /**</span>
+<span class="source-line-no">685</span><span id="line-685">   * handle greater than equals predicate</span>
+<span class="source-line-no">686</span><span id="line-686">   *</span>
+<span class="source-line-no">687</span><span id="line-687">   * @param predicate gte predicate</span>
+<span class="source-line-no">688</span><span id="line-688">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">689</span><span id="line-689">   */</span>
+<span class="source-line-no">690</span><span id="line-690">  public void visit(GreaterThanOrEqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">691</span><span id="line-691">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">692</span><span id="line-692">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
+<span class="source-line-no">693</span><span id="line-693">    Query q =</span>
+<span class="source-line-no">694</span><span id="line-694">        addNullableFieldPredicate(</span>
+<span class="source-line-no">695</span><span id="line-695">            predicate,</span>
+<span class="source-line-no">696</span><span id="line-696">            rangeQuery(</span>
+<span class="source-line-no">697</span><span id="line-697">                esFieldMapper.getExactMatchFieldName(parameter), val, null, null, null, null));</span>
+<span class="source-line-no">698</span><span id="line-698">    addFilterQuery(q, queryData, predicate.getKey());</span>
+<span class="source-line-no">699</span><span id="line-699">  }</span>
+<span class="source-line-no">700</span><span id="line-700"></span>
+<span class="source-line-no">701</span><span id="line-701">  /**</span>
+<span class="source-line-no">702</span><span id="line-702">   * Adds an "is null" filter if the mapper instructs to. Used mostly in range queries to give</span>
+<span class="source-line-no">703</span><span id="line-703">   * specific semantics to null values.</span>
+<span class="source-line-no">704</span><span id="line-704">   */</span>
+<span class="source-line-no">705</span><span id="line-705">  private Query addNullableFieldPredicate(Predicate predicate, Query filter) {</span>
+<span class="source-line-no">706</span><span id="line-706">    if (predicate instanceof SimplePredicate</span>
+<span class="source-line-no">707</span><span id="line-707">        &amp;&amp; esFieldMapper.includeNullInPredicate((SimplePredicate&lt;S&gt;) predicate)) {</span>
+<span class="source-line-no">708</span><span id="line-708">      String field =</span>
+<span class="source-line-no">709</span><span id="line-709">          esFieldMapper.getExactMatchFieldName(((SimplePredicate&lt;S&gt;) predicate).getKey());</span>
+<span class="source-line-no">710</span><span id="line-710">      Query missing = Query.of(q -&gt; q.bool(b -&gt; b.mustNot(existsQuery(field))));</span>
+<span class="source-line-no">711</span><span id="line-711">      return buildBoolQuery(</span>
+<span class="source-line-no">712</span><span id="line-712">          Collections.emptyList(), List.of(filter, missing), Collections.emptyList());</span>
+<span class="source-line-no">713</span><span id="line-713">    }</span>
+<span class="source-line-no">714</span><span id="line-714">    return filter;</span>
+<span class="source-line-no">715</span><span id="line-715">  }</span>
+<span class="source-line-no">716</span><span id="line-716"></span>
+<span class="source-line-no">717</span><span id="line-717">  /**</span>
+<span class="source-line-no">718</span><span id="line-718">   * handles greater than predicate</span>
+<span class="source-line-no">719</span><span id="line-719">   *</span>
+<span class="source-line-no">720</span><span id="line-720">   * @param predicate greater than predicate</span>
+<span class="source-line-no">721</span><span id="line-721">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">722</span><span id="line-722">   */</span>
+<span class="source-line-no">723</span><span id="line-723">  public void visit(GreaterThanPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">724</span><span id="line-724">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">725</span><span id="line-725">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
+<span class="source-line-no">726</span><span id="line-726">    Query q =</span>
+<span class="source-line-no">727</span><span id="line-727">        addNullableFieldPredicate(</span>
+<span class="source-line-no">728</span><span id="line-728">            predicate,</span>
+<span class="source-line-no">729</span><span id="line-729">            rangeQuery(</span>
+<span class="source-line-no">730</span><span id="line-730">                esFieldMapper.getExactMatchFieldName(parameter), null, null, val, null, null));</span>
+<span class="source-line-no">731</span><span id="line-731">    addFilterQuery(q, queryData, parameter);</span>
+<span class="source-line-no">732</span><span id="line-732">  }</span>
+<span class="source-line-no">733</span><span id="line-733"></span>
+<span class="source-line-no">734</span><span id="line-734">  /**</span>
+<span class="source-line-no">735</span><span id="line-735">   * handle IN Predicate</span>
+<span class="source-line-no">736</span><span id="line-736">   *</span>
+<span class="source-line-no">737</span><span id="line-737">   * @param predicate InPredicate</span>
+<span class="source-line-no">738</span><span id="line-738">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">739</span><span id="line-739">   */</span>
+<span class="source-line-no">740</span><span id="line-740">  public void visit(InPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">741</span><span id="line-741">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">742</span><span id="line-742"></span>
+<span class="source-line-no">743</span><span id="line-743">    if (paramEquals(parameter, OccurrenceSearchParameter.EVENT_DATE.name())) {</span>
+<span class="source-line-no">744</span><span id="line-744">      predicate</span>
+<span class="source-line-no">745</span><span id="line-745">          .getValues()</span>
+<span class="source-line-no">746</span><span id="line-746">          .forEach(</span>
+<span class="source-line-no">747</span><span id="line-747">              value -&gt; {</span>
+<span class="source-line-no">748</span><span id="line-748">                try {</span>
+<span class="source-line-no">749</span><span id="line-749">                  QueryData shouldQueryData = new QueryData();</span>
+<span class="source-line-no">750</span><span id="line-750">                  Predicate subPredicate =</span>
+<span class="source-line-no">751</span><span id="line-751">                      new EqualsPredicate&lt;&gt;(</span>
+<span class="source-line-no">752</span><span id="line-752">                          getParam(OccurrenceSearchParameter.EVENT_DATE.name()).get(),</span>
+<span class="source-line-no">753</span><span id="line-753">                          value,</span>
+<span class="source-line-no">754</span><span id="line-754">                          predicate.isMatchCase(),</span>
+<span class="source-line-no">755</span><span id="line-755">                          predicate.getChecklistKey());</span>
+<span class="source-line-no">756</span><span id="line-756">                  visit(subPredicate, shouldQueryData);</span>
+<span class="source-line-no">757</span><span id="line-757">                  queryData.shouldQueries.add(</span>
+<span class="source-line-no">758</span><span id="line-758">                      addNullableFieldPredicate(</span>
+<span class="source-line-no">759</span><span id="line-759">                          subPredicate, buildBoolFromQueryData(shouldQueryData)));</span>
+<span class="source-line-no">760</span><span id="line-760">                } catch (QueryBuildingException ex) {</span>
+<span class="source-line-no">761</span><span id="line-761">                  throw new RuntimeException(ex);</span>
+<span class="source-line-no">762</span><span id="line-762">                }</span>
+<span class="source-line-no">763</span><span id="line-763">              });</span>
+<span class="source-line-no">764</span><span id="line-764">    } else if (paramEquals(parameter, OccurrenceSearchParameter.GEOLOGICAL_TIME.name())) {</span>
+<span class="source-line-no">765</span><span id="line-765">      List&lt;Predicate&gt; allPredicates =</span>
+<span class="source-line-no">766</span><span id="line-766">          predicate.getValues().stream()</span>
+<span class="source-line-no">767</span><span id="line-767">              .map(v -&gt; new EqualsPredicate&lt;&gt;(predicate.getKey(), v, false))</span>
+<span class="source-line-no">768</span><span id="line-768">              .collect(Collectors.toList());</span>
+<span class="source-line-no">769</span><span id="line-769">      visit(new DisjunctionPredicate(allPredicates), queryData);</span>
+<span class="source-line-no">770</span><span id="line-770">    } else {</span>
+<span class="source-line-no">771</span><span id="line-771">      Query termsQ =</span>
+<span class="source-line-no">772</span><span id="line-772">          termsQuery(</span>
+<span class="source-line-no">773</span><span id="line-773">              getExactMatchOrVerbatimField(predicate),</span>
+<span class="source-line-no">774</span><span id="line-774">              predicate.getValues().stream()</span>
+<span class="source-line-no">775</span><span id="line-775">                  .map(v -&gt; parseParamValue(v, parameter))</span>
+<span class="source-line-no">776</span><span id="line-776">                  .collect(Collectors.toList()));</span>
+<span class="source-line-no">777</span><span id="line-777">      addFilterQuery(termsQ, queryData, predicate.getKey());</span>
+<span class="source-line-no">778</span><span id="line-778">    }</span>
+<span class="source-line-no">779</span><span id="line-779">  }</span>
+<span class="source-line-no">780</span><span id="line-780"></span>
+<span class="source-line-no">781</span><span id="line-781">  /** handles less than or equals predicate */</span>
+<span class="source-line-no">782</span><span id="line-782">  public void visit(LessThanOrEqualsPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">783</span><span id="line-783">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">784</span><span id="line-784">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
+<span class="source-line-no">785</span><span id="line-785">    Query q =</span>
+<span class="source-line-no">786</span><span id="line-786">        addNullableFieldPredicate(</span>
+<span class="source-line-no">787</span><span id="line-787">            predicate,</span>
+<span class="source-line-no">788</span><span id="line-788">            rangeQuery(</span>
+<span class="source-line-no">789</span><span id="line-789">                esFieldMapper.getExactMatchFieldName(parameter), null, val, null, null, null));</span>
+<span class="source-line-no">790</span><span id="line-790">    addFilterQuery(q, queryData, parameter);</span>
+<span class="source-line-no">791</span><span id="line-791">  }</span>
+<span class="source-line-no">792</span><span id="line-792"></span>
+<span class="source-line-no">793</span><span id="line-793">  /** handles less than predicate */</span>
+<span class="source-line-no">794</span><span id="line-794">  public void visit(LessThanPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">795</span><span id="line-795">    S parameter = predicate.getKey();</span>
+<span class="source-line-no">796</span><span id="line-796">    Object val = parseParamValue(predicate.getValue(), parameter);</span>
+<span class="source-line-no">797</span><span id="line-797">    Query q =</span>
+<span class="source-line-no">798</span><span id="line-798">        addNullableFieldPredicate(</span>
+<span class="source-line-no">799</span><span id="line-799">            predicate,</span>
+<span class="source-line-no">800</span><span id="line-800">            rangeQuery(</span>
+<span class="source-line-no">801</span><span id="line-801">                esFieldMapper.getExactMatchFieldName(parameter), null, null, null, val, null));</span>
+<span class="source-line-no">802</span><span id="line-802">    addFilterQuery(q, queryData, parameter);</span>
+<span class="source-line-no">803</span><span id="line-803">  }</span>
+<span class="source-line-no">804</span><span id="line-804"></span>
+<span class="source-line-no">805</span><span id="line-805">  /** handles like predicate */</span>
+<span class="source-line-no">806</span><span id="line-806">  public void visit(LikePredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">807</span><span id="line-807">    addFilterQuery(</span>
+<span class="source-line-no">808</span><span id="line-808">        wildcardQuery(getExactMatchOrVerbatimField(predicate), predicate.getValue()),</span>
+<span class="source-line-no">809</span><span id="line-809">        queryData,</span>
+<span class="source-line-no">810</span><span id="line-810">        predicate.getKey());</span>
 <span class="source-line-no">811</span><span id="line-811">  }</span>
 <span class="source-line-no">812</span><span id="line-812"></span>
-<span class="source-line-no">813</span><span id="line-813">  private void addNotPredicateFieldToNonNullChecks(</span>
-<span class="source-line-no">814</span><span id="line-814">      Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter, S parameter, String fieldName) {</span>
-<span class="source-line-no">815</span><span id="line-815">    fieldsByParameter.computeIfAbsent(parameter, ignored -&gt; new LinkedHashSet&lt;&gt;()).add(fieldName);</span>
-<span class="source-line-no">816</span><span id="line-816">  }</span>
+<span class="source-line-no">813</span><span id="line-813">  /** handles not predicate */</span>
+<span class="source-line-no">814</span><span id="line-814">  public void visit(NotPredicate predicate, QueryData queryData) throws QueryBuildingException {</span>
+<span class="source-line-no">815</span><span id="line-815">    QueryData mustNotQueryData = new QueryData();</span>
+<span class="source-line-no">816</span><span id="line-816">    visit(predicate.getPredicate(), mustNotQueryData);</span>
 <span class="source-line-no">817</span><span id="line-817"></span>
-<span class="source-line-no">818</span><span id="line-818">  /**</span>
-<span class="source-line-no">819</span><span id="line-819">   * handles within predicate</span>
-<span class="source-line-no">820</span><span id="line-820">   *</span>
-<span class="source-line-no">821</span><span id="line-821">   * @param within Within predicate</span>
-<span class="source-line-no">822</span><span id="line-822">   * @param queryData data with the root query builder and the nested path</span>
-<span class="source-line-no">823</span><span id="line-823">   */</span>
-<span class="source-line-no">824</span><span id="line-824">  public void visit(WithinPredicate within, QueryData queryData) {</span>
-<span class="source-line-no">825</span><span id="line-825">    Query q = buildGeoShapeQuery(within.getGeometry());</span>
-<span class="source-line-no">826</span><span id="line-826">    queryData.filterQueries.add(q);</span>
-<span class="source-line-no">827</span><span id="line-827">  }</span>
+<span class="source-line-no">818</span><span id="line-818">    QueryData existsQueryData = new QueryData();</span>
+<span class="source-line-no">819</span><span id="line-819">    addNotPredicateNonNullFilters(predicate.getPredicate(), existsQueryData);</span>
+<span class="source-line-no">820</span><span id="line-820">    queryData.filterQueries.addAll(existsQueryData.filterQueries);</span>
+<span class="source-line-no">821</span><span id="line-821"></span>
+<span class="source-line-no">822</span><span id="line-822">    queryData.mustNotQueries.add(buildBoolFromQueryData(mustNotQueryData));</span>
+<span class="source-line-no">823</span><span id="line-823">  }</span>
+<span class="source-line-no">824</span><span id="line-824"></span>
+<span class="source-line-no">825</span><span id="line-825">  private void addNotPredicateNonNullFilters(Predicate predicate, QueryData queryData) {</span>
+<span class="source-line-no">826</span><span id="line-826">    Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter = new LinkedHashMap&lt;&gt;();</span>
+<span class="source-line-no">827</span><span id="line-827">    collectNotPredicateFields(predicate, fieldsByParameter);</span>
 <span class="source-line-no">828</span><span id="line-828"></span>
-<span class="source-line-no">829</span><span id="line-829">  /** Builds a geo_shape query (WITHIN relation) from WKT geometry. */</span>
-<span class="source-line-no">830</span><span id="line-830">  public Query buildGeoShapeQuery(String wkt) {</span>
-<span class="source-line-no">831</span><span id="line-831">    Geometry geometry;</span>
-<span class="source-line-no">832</span><span id="line-832">    try {</span>
-<span class="source-line-no">833</span><span id="line-833">      geometry = new WKTReader().read(wkt);</span>
-<span class="source-line-no">834</span><span id="line-834">    } catch (ParseException e) {</span>
-<span class="source-line-no">835</span><span id="line-835">      throw new IllegalArgumentException(e.getMessage(), e);</span>
-<span class="source-line-no">836</span><span id="line-836">    }</span>
-<span class="source-line-no">837</span><span id="line-837"></span>
-<span class="source-line-no">838</span><span id="line-838">    String type =</span>
-<span class="source-line-no">839</span><span id="line-839">        "LinearRing".equals(geometry.getGeometryType())</span>
-<span class="source-line-no">840</span><span id="line-840">            ? "LINESTRING"</span>
-<span class="source-line-no">841</span><span id="line-841">            : geometry.getGeometryType().toUpperCase();</span>
-<span class="source-line-no">842</span><span id="line-842"></span>
-<span class="source-line-no">843</span><span id="line-843">    Object geoJson;</span>
-<span class="source-line-no">844</span><span id="line-844">    if (("POINT").equals(type)) {</span>
-<span class="source-line-no">845</span><span id="line-845">      Coordinate c = geometry.getCoordinate();</span>
-<span class="source-line-no">846</span><span id="line-846">      geoJson = Map.of("type", "Point", "coordinates", List.of(c.x, c.y));</span>
-<span class="source-line-no">847</span><span id="line-847">    } else if ("LINESTRING".equals(type)) {</span>
-<span class="source-line-no">848</span><span id="line-848">      geoJson =</span>
-<span class="source-line-no">849</span><span id="line-849">          Map.of(</span>
-<span class="source-line-no">850</span><span id="line-850">              "type",</span>
-<span class="source-line-no">851</span><span id="line-851">              "LineString",</span>
-<span class="source-line-no">852</span><span id="line-852">              "coordinates",</span>
-<span class="source-line-no">853</span><span id="line-853">              Arrays.stream(geometry.getCoordinates())</span>
-<span class="source-line-no">854</span><span id="line-854">                  .map(c -&gt; List.of(c.x, c.y))</span>
-<span class="source-line-no">855</span><span id="line-855">                  .collect(Collectors.toList()));</span>
-<span class="source-line-no">856</span><span id="line-856">    } else if ("POLYGON".equals(type)) {</span>
-<span class="source-line-no">857</span><span id="line-857">      Polygon poly = (Polygon) geometry;</span>
-<span class="source-line-no">858</span><span id="line-858">      List&lt;List&lt;List&lt;Double&gt;&gt;&gt; rings = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">859</span><span id="line-859">      rings.add(</span>
-<span class="source-line-no">860</span><span id="line-860">          Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))</span>
-<span class="source-line-no">861</span><span id="line-861">              .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
-<span class="source-line-no">862</span><span id="line-862">              .collect(Collectors.toList()));</span>
-<span class="source-line-no">863</span><span id="line-863">      for (int i = 0; i &lt; poly.getNumInteriorRing(); i++) {</span>
-<span class="source-line-no">864</span><span id="line-864">        rings.add(</span>
-<span class="source-line-no">865</span><span id="line-865">            Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(i).getCoordinates()))</span>
-<span class="source-line-no">866</span><span id="line-866">                .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
-<span class="source-line-no">867</span><span id="line-867">                .collect(Collectors.toList()));</span>
-<span class="source-line-no">868</span><span id="line-868">      }</span>
-<span class="source-line-no">869</span><span id="line-869">      geoJson = Map.of("type", "Polygon", "coordinates", rings);</span>
-<span class="source-line-no">870</span><span id="line-870">    } else if ("MULTIPOLYGON".equals(type)) {</span>
-<span class="source-line-no">871</span><span id="line-871">      List&lt;List&lt;List&lt;List&lt;Double&gt;&gt;&gt;&gt; polygons = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">872</span><span id="line-872">      for (int i = 0; i &lt; geometry.getNumGeometries(); i++) {</span>
-<span class="source-line-no">873</span><span id="line-873">        Polygon poly = (Polygon) geometry.getGeometryN(i);</span>
-<span class="source-line-no">874</span><span id="line-874">        List&lt;List&lt;List&lt;Double&gt;&gt;&gt; rings = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">875</span><span id="line-875">        rings.add(</span>
-<span class="source-line-no">876</span><span id="line-876">            Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))</span>
-<span class="source-line-no">877</span><span id="line-877">                .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
-<span class="source-line-no">878</span><span id="line-878">                .collect(Collectors.toList()));</span>
-<span class="source-line-no">879</span><span id="line-879">        for (int h = 0; h &lt; poly.getNumInteriorRing(); h++) {</span>
-<span class="source-line-no">880</span><span id="line-880">          rings.add(</span>
-<span class="source-line-no">881</span><span id="line-881">              Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(h).getCoordinates()))</span>
-<span class="source-line-no">882</span><span id="line-882">                  .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
-<span class="source-line-no">883</span><span id="line-883">                  .collect(Collectors.toList()));</span>
-<span class="source-line-no">884</span><span id="line-884">        }</span>
-<span class="source-line-no">885</span><span id="line-885">        polygons.add(rings);</span>
-<span class="source-line-no">886</span><span id="line-886">      }</span>
-<span class="source-line-no">887</span><span id="line-887">      geoJson = Map.of("type", "MultiPolygon", "coordinates", polygons);</span>
-<span class="source-line-no">888</span><span id="line-888">    } else {</span>
-<span class="source-line-no">889</span><span id="line-889">      throw new IllegalArgumentException(type + " shape is not supported");</span>
-<span class="source-line-no">890</span><span id="line-890">    }</span>
-<span class="source-line-no">891</span><span id="line-891"></span>
-<span class="source-line-no">892</span><span id="line-892">    GeoShapeFieldQuery shapeQuery =</span>
-<span class="source-line-no">893</span><span id="line-893">        GeoShapeFieldQuery.of(s -&gt; s.shape(JsonData.of(geoJson)).relation(GeoShapeRelation.Within));</span>
-<span class="source-line-no">894</span><span id="line-894">    return Query.of(</span>
-<span class="source-line-no">895</span><span id="line-895">        q -&gt; q.geoShape(g -&gt; g.field(esFieldMapper.getGeoShapeField()).shape(shapeQuery)));</span>
-<span class="source-line-no">896</span><span id="line-896">  }</span>
-<span class="source-line-no">897</span><span id="line-897"></span>
-<span class="source-line-no">898</span><span id="line-898">  /** Eliminates consecutive duplicates. The order is preserved. */</span>
-<span class="source-line-no">899</span><span id="line-899">  static Coordinate[] normalizePolygonCoordinates(Coordinate[] coordinates) {</span>
-<span class="source-line-no">900</span><span id="line-900">    List&lt;Coordinate&gt; normalizedCoordinates = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">901</span><span id="line-901"></span>
-<span class="source-line-no">902</span><span id="line-902">    // we always have to keep the fist and last coordinates</span>
-<span class="source-line-no">903</span><span id="line-903">    int i = 0;</span>
-<span class="source-line-no">904</span><span id="line-904">    normalizedCoordinates.add(i++, coordinates[0]);</span>
-<span class="source-line-no">905</span><span id="line-905"></span>
-<span class="source-line-no">906</span><span id="line-906">    for (int j = 1; j &lt; coordinates.length; j++) {</span>
-<span class="source-line-no">907</span><span id="line-907">      if (!coordinates[j - 1].equals(coordinates[j])) {</span>
-<span class="source-line-no">908</span><span id="line-908">        normalizedCoordinates.add(i++, coordinates[j]);</span>
-<span class="source-line-no">909</span><span id="line-909">      }</span>
-<span class="source-line-no">910</span><span id="line-910">    }</span>
-<span class="source-line-no">911</span><span id="line-911"></span>
-<span class="source-line-no">912</span><span id="line-912">    return normalizedCoordinates.toArray(new Coordinate[0]);</span>
-<span class="source-line-no">913</span><span id="line-913">  }</span>
-<span class="source-line-no">914</span><span id="line-914"></span>
-<span class="source-line-no">915</span><span id="line-915">  /** handles geoDistance predicate */</span>
-<span class="source-line-no">916</span><span id="line-916">  public void visit(GeoDistancePredicate geoDistance, QueryData queryData) {</span>
-<span class="source-line-no">917</span><span id="line-917">    Query q = buildGeoDistanceQuery(geoDistance.getGeoDistance());</span>
-<span class="source-line-no">918</span><span id="line-918">    queryData.filterQueries.add(q);</span>
-<span class="source-line-no">919</span><span id="line-919">  }</span>
-<span class="source-line-no">920</span><span id="line-920"></span>
-<span class="source-line-no">921</span><span id="line-921">  private Query buildGeoDistanceQuery(DistanceUnit.GeoDistance geoDistance) {</span>
-<span class="source-line-no">922</span><span id="line-922">    return Query.of(</span>
-<span class="source-line-no">923</span><span id="line-923">        q -&gt;</span>
-<span class="source-line-no">924</span><span id="line-924">            q.geoDistance(</span>
-<span class="source-line-no">925</span><span id="line-925">                g -&gt;</span>
-<span class="source-line-no">926</span><span id="line-926">                    g.field(esFieldMapper.getGeoDistanceField())</span>
-<span class="source-line-no">927</span><span id="line-927">                        .distance(geoDistance.getDistance().toString())</span>
-<span class="source-line-no">928</span><span id="line-928">                        .location(</span>
-<span class="source-line-no">929</span><span id="line-929">                            loc -&gt;</span>
-<span class="source-line-no">930</span><span id="line-930">                                loc.latlon(</span>
-<span class="source-line-no">931</span><span id="line-931">                                    ll -&gt;</span>
-<span class="source-line-no">932</span><span id="line-932">                                        ll.lat(geoDistance.getLatitude())</span>
-<span class="source-line-no">933</span><span id="line-933">                                            .lon(geoDistance.getLongitude())))));</span>
-<span class="source-line-no">934</span><span id="line-934">  }</span>
-<span class="source-line-no">935</span><span id="line-935"></span>
-<span class="source-line-no">936</span><span id="line-936">  /** handles ISNOTNULL Predicate */</span>
-<span class="source-line-no">937</span><span id="line-937">  public void visit(IsNotNullPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">938</span><span id="line-938">    addFilterQuery(</span>
-<span class="source-line-no">939</span><span id="line-939">        existsQuery(getExactMatchFieldName(predicate)), queryData, predicate.getParameter());</span>
-<span class="source-line-no">940</span><span id="line-940">  }</span>
-<span class="source-line-no">941</span><span id="line-941"></span>
-<span class="source-line-no">942</span><span id="line-942">  /** handles ISNULL Predicate */</span>
-<span class="source-line-no">943</span><span id="line-943">  public void visit(IsNullPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
-<span class="source-line-no">944</span><span id="line-944">    addFilterQuery(</span>
-<span class="source-line-no">945</span><span id="line-945">        Query.of(q -&gt; q.bool(b -&gt; b.mustNot(existsQuery(getExactMatchFieldName(predicate))))),</span>
-<span class="source-line-no">946</span><span id="line-946">        queryData,</span>
-<span class="source-line-no">947</span><span id="line-947">        predicate.getParameter());</span>
-<span class="source-line-no">948</span><span id="line-948">  }</span>
-<span class="source-line-no">949</span><span id="line-949"></span>
-<span class="source-line-no">950</span><span id="line-950">  private void visit(Object object, QueryData queryData) throws QueryBuildingException {</span>
-<span class="source-line-no">951</span><span id="line-951">    Method method;</span>
-<span class="source-line-no">952</span><span id="line-952">    try {</span>
-<span class="source-line-no">953</span><span id="line-953">      method = getClass().getMethod("visit", object.getClass(), QueryData.class);</span>
-<span class="source-line-no">954</span><span id="line-954">    } catch (NoSuchMethodException e) {</span>
-<span class="source-line-no">955</span><span id="line-955">      log.warn(</span>
-<span class="source-line-no">956</span><span id="line-956">          "Visit method could not be found. That means a unknown Predicate has been passed", e);</span>
-<span class="source-line-no">957</span><span id="line-957">      throw new IllegalArgumentException("Unknown Predicate", e);</span>
-<span class="source-line-no">958</span><span id="line-958">    }</span>
-<span class="source-line-no">959</span><span id="line-959">    try {</span>
-<span class="source-line-no">960</span><span id="line-960">      method.invoke(this, object, queryData);</span>
-<span class="source-line-no">961</span><span id="line-961">    } catch (IllegalAccessException e) {</span>
-<span class="source-line-no">962</span><span id="line-962">      log.error(</span>
-<span class="source-line-no">963</span><span id="line-963">          "This error shouldn't occur if all visit methods are public. Probably a programming error",</span>
-<span class="source-line-no">964</span><span id="line-964">          e);</span>
-<span class="source-line-no">965</span><span id="line-965">      throw new RuntimeException(e);</span>
-<span class="source-line-no">966</span><span id="line-966">    } catch (InvocationTargetException e) {</span>
-<span class="source-line-no">967</span><span id="line-967">      log.info("Exception thrown while building the query", e);</span>
-<span class="source-line-no">968</span><span id="line-968">      throw new QueryBuildingException(e);</span>
-<span class="source-line-no">969</span><span id="line-969">    }</span>
-<span class="source-line-no">970</span><span id="line-970">  }</span>
-<span class="source-line-no">971</span><span id="line-971"></span>
-<span class="source-line-no">972</span><span id="line-972">  private void addFilterQuery(Query q, QueryData queryData, S searchParameter) {</span>
-<span class="source-line-no">973</span><span id="line-973">    if (esFieldMapper.isNestedField(searchParameter)) {</span>
-<span class="source-line-no">974</span><span id="line-974">      queryData.filterQueries.add(nestedQuery(esFieldMapper.getNestedPath(searchParameter), q));</span>
-<span class="source-line-no">975</span><span id="line-975">      queryData.rawQueries = List.of(q);</span>
-<span class="source-line-no">976</span><span id="line-976">      queryData.nestedPath = esFieldMapper.getNestedPath(searchParameter);</span>
-<span class="source-line-no">977</span><span id="line-977">    } else {</span>
-<span class="source-line-no">978</span><span id="line-978">      queryData.filterQueries.add(q);</span>
-<span class="source-line-no">979</span><span id="line-979">    }</span>
-<span class="source-line-no">980</span><span id="line-980">  }</span>
-<span class="source-line-no">981</span><span id="line-981"></span>
-<span class="source-line-no">982</span><span id="line-982">  @Data</span>
-<span class="source-line-no">983</span><span id="line-983">  public static class QueryData {</span>
-<span class="source-line-no">984</span><span id="line-984">    List&lt;Query&gt; filterQueries = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">985</span><span id="line-985">    List&lt;Query&gt; shouldQueries = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">986</span><span id="line-986">    List&lt;Query&gt; mustNotQueries = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">987</span><span id="line-987"></span>
-<span class="source-line-no">988</span><span id="line-988">    /** Raw queries that go inside a nested query. */</span>
-<span class="source-line-no">989</span><span id="line-989">    List&lt;Query&gt; rawQueries = new ArrayList&lt;&gt;();</span>
-<span class="source-line-no">990</span><span id="line-990"></span>
-<span class="source-line-no">991</span><span id="line-991">    String nestedPath;</span>
+<span class="source-line-no">829</span><span id="line-829">    fieldsByParameter.forEach(</span>
+<span class="source-line-no">830</span><span id="line-830">        (parameter, fields) -&gt;</span>
+<span class="source-line-no">831</span><span id="line-831">            fields.forEach(field -&gt; addFilterQuery(existsQuery(field), queryData, parameter)));</span>
+<span class="source-line-no">832</span><span id="line-832">  }</span>
+<span class="source-line-no">833</span><span id="line-833"></span>
+<span class="source-line-no">834</span><span id="line-834">  @SuppressWarnings("unchecked")</span>
+<span class="source-line-no">835</span><span id="line-835">  private void collectNotPredicateFields(</span>
+<span class="source-line-no">836</span><span id="line-836">      Predicate predicate, Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter) {</span>
+<span class="source-line-no">837</span><span id="line-837">    if (predicate instanceof ConjunctionPredicate) {</span>
+<span class="source-line-no">838</span><span id="line-838">      ((ConjunctionPredicate) predicate)</span>
+<span class="source-line-no">839</span><span id="line-839">          .getPredicates()</span>
+<span class="source-line-no">840</span><span id="line-840">          .forEach(p -&gt; collectNotPredicateFields(p, fieldsByParameter));</span>
+<span class="source-line-no">841</span><span id="line-841">    } else if (predicate instanceof DisjunctionPredicate) {</span>
+<span class="source-line-no">842</span><span id="line-842">      ((DisjunctionPredicate) predicate)</span>
+<span class="source-line-no">843</span><span id="line-843">          .getPredicates()</span>
+<span class="source-line-no">844</span><span id="line-844">          .forEach(p -&gt; collectNotPredicateFields(p, fieldsByParameter));</span>
+<span class="source-line-no">845</span><span id="line-845">    } else if (predicate instanceof InPredicate) {</span>
+<span class="source-line-no">846</span><span id="line-846">      InPredicate&lt;S&gt; p = (InPredicate&lt;S&gt;) predicate;</span>
+<span class="source-line-no">847</span><span id="line-847">      addNotPredicateFieldToNonNullChecks(</span>
+<span class="source-line-no">848</span><span id="line-848">          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));</span>
+<span class="source-line-no">849</span><span id="line-849">    } else if (predicate instanceof SimplePredicate) {</span>
+<span class="source-line-no">850</span><span id="line-850">      SimplePredicate&lt;S&gt; p = (SimplePredicate&lt;S&gt;) predicate;</span>
+<span class="source-line-no">851</span><span id="line-851">      addNotPredicateFieldToNonNullChecks(</span>
+<span class="source-line-no">852</span><span id="line-852">          fieldsByParameter, p.getKey(), getExactMatchOrVerbatimField(p));</span>
+<span class="source-line-no">853</span><span id="line-853">    }</span>
+<span class="source-line-no">854</span><span id="line-854">  }</span>
+<span class="source-line-no">855</span><span id="line-855"></span>
+<span class="source-line-no">856</span><span id="line-856">  private void addNotPredicateFieldToNonNullChecks(</span>
+<span class="source-line-no">857</span><span id="line-857">      Map&lt;S, Set&lt;String&gt;&gt; fieldsByParameter, S parameter, String fieldName) {</span>
+<span class="source-line-no">858</span><span id="line-858">    fieldsByParameter.computeIfAbsent(parameter, ignored -&gt; new LinkedHashSet&lt;&gt;()).add(fieldName);</span>
+<span class="source-line-no">859</span><span id="line-859">  }</span>
+<span class="source-line-no">860</span><span id="line-860"></span>
+<span class="source-line-no">861</span><span id="line-861">  /**</span>
+<span class="source-line-no">862</span><span id="line-862">   * handles within predicate</span>
+<span class="source-line-no">863</span><span id="line-863">   *</span>
+<span class="source-line-no">864</span><span id="line-864">   * @param within Within predicate</span>
+<span class="source-line-no">865</span><span id="line-865">   * @param queryData data with the root query builder and the nested path</span>
+<span class="source-line-no">866</span><span id="line-866">   */</span>
+<span class="source-line-no">867</span><span id="line-867">  public void visit(WithinPredicate within, QueryData queryData) {</span>
+<span class="source-line-no">868</span><span id="line-868">    Query q = buildGeoShapeQuery(within.getGeometry());</span>
+<span class="source-line-no">869</span><span id="line-869">    queryData.filterQueries.add(q);</span>
+<span class="source-line-no">870</span><span id="line-870">  }</span>
+<span class="source-line-no">871</span><span id="line-871"></span>
+<span class="source-line-no">872</span><span id="line-872">  /** Builds a geo_shape query (WITHIN relation) from WKT geometry. */</span>
+<span class="source-line-no">873</span><span id="line-873">  public Query buildGeoShapeQuery(String wkt) {</span>
+<span class="source-line-no">874</span><span id="line-874">    Geometry geometry;</span>
+<span class="source-line-no">875</span><span id="line-875">    try {</span>
+<span class="source-line-no">876</span><span id="line-876">      geometry = new WKTReader().read(wkt);</span>
+<span class="source-line-no">877</span><span id="line-877">    } catch (ParseException e) {</span>
+<span class="source-line-no">878</span><span id="line-878">      throw new IllegalArgumentException(e.getMessage(), e);</span>
+<span class="source-line-no">879</span><span id="line-879">    }</span>
+<span class="source-line-no">880</span><span id="line-880"></span>
+<span class="source-line-no">881</span><span id="line-881">    String type =</span>
+<span class="source-line-no">882</span><span id="line-882">        "LinearRing".equals(geometry.getGeometryType())</span>
+<span class="source-line-no">883</span><span id="line-883">            ? "LINESTRING"</span>
+<span class="source-line-no">884</span><span id="line-884">            : geometry.getGeometryType().toUpperCase();</span>
+<span class="source-line-no">885</span><span id="line-885"></span>
+<span class="source-line-no">886</span><span id="line-886">    Object geoJson;</span>
+<span class="source-line-no">887</span><span id="line-887">    if (("POINT").equals(type)) {</span>
+<span class="source-line-no">888</span><span id="line-888">      Coordinate c = geometry.getCoordinate();</span>
+<span class="source-line-no">889</span><span id="line-889">      geoJson = Map.of("type", "Point", "coordinates", List.of(c.x, c.y));</span>
+<span class="source-line-no">890</span><span id="line-890">    } else if ("LINESTRING".equals(type)) {</span>
+<span class="source-line-no">891</span><span id="line-891">      geoJson =</span>
+<span class="source-line-no">892</span><span id="line-892">          Map.of(</span>
+<span class="source-line-no">893</span><span id="line-893">              "type",</span>
+<span class="source-line-no">894</span><span id="line-894">              "LineString",</span>
+<span class="source-line-no">895</span><span id="line-895">              "coordinates",</span>
+<span class="source-line-no">896</span><span id="line-896">              Arrays.stream(geometry.getCoordinates())</span>
+<span class="source-line-no">897</span><span id="line-897">                  .map(c -&gt; List.of(c.x, c.y))</span>
+<span class="source-line-no">898</span><span id="line-898">                  .collect(Collectors.toList()));</span>
+<span class="source-line-no">899</span><span id="line-899">    } else if ("POLYGON".equals(type)) {</span>
+<span class="source-line-no">900</span><span id="line-900">      Polygon poly = (Polygon) geometry;</span>
+<span class="source-line-no">901</span><span id="line-901">      List&lt;List&lt;List&lt;Double&gt;&gt;&gt; rings = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">902</span><span id="line-902">      rings.add(</span>
+<span class="source-line-no">903</span><span id="line-903">          Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))</span>
+<span class="source-line-no">904</span><span id="line-904">              .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
+<span class="source-line-no">905</span><span id="line-905">              .collect(Collectors.toList()));</span>
+<span class="source-line-no">906</span><span id="line-906">      for (int i = 0; i &lt; poly.getNumInteriorRing(); i++) {</span>
+<span class="source-line-no">907</span><span id="line-907">        rings.add(</span>
+<span class="source-line-no">908</span><span id="line-908">            Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(i).getCoordinates()))</span>
+<span class="source-line-no">909</span><span id="line-909">                .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
+<span class="source-line-no">910</span><span id="line-910">                .collect(Collectors.toList()));</span>
+<span class="source-line-no">911</span><span id="line-911">      }</span>
+<span class="source-line-no">912</span><span id="line-912">      geoJson = Map.of("type", "Polygon", "coordinates", rings);</span>
+<span class="source-line-no">913</span><span id="line-913">    } else if ("MULTIPOLYGON".equals(type)) {</span>
+<span class="source-line-no">914</span><span id="line-914">      List&lt;List&lt;List&lt;List&lt;Double&gt;&gt;&gt;&gt; polygons = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">915</span><span id="line-915">      for (int i = 0; i &lt; geometry.getNumGeometries(); i++) {</span>
+<span class="source-line-no">916</span><span id="line-916">        Polygon poly = (Polygon) geometry.getGeometryN(i);</span>
+<span class="source-line-no">917</span><span id="line-917">        List&lt;List&lt;List&lt;Double&gt;&gt;&gt; rings = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">918</span><span id="line-918">        rings.add(</span>
+<span class="source-line-no">919</span><span id="line-919">            Arrays.stream(normalizePolygonCoordinates(poly.getExteriorRing().getCoordinates()))</span>
+<span class="source-line-no">920</span><span id="line-920">                .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
+<span class="source-line-no">921</span><span id="line-921">                .collect(Collectors.toList()));</span>
+<span class="source-line-no">922</span><span id="line-922">        for (int h = 0; h &lt; poly.getNumInteriorRing(); h++) {</span>
+<span class="source-line-no">923</span><span id="line-923">          rings.add(</span>
+<span class="source-line-no">924</span><span id="line-924">              Arrays.stream(normalizePolygonCoordinates(poly.getInteriorRingN(h).getCoordinates()))</span>
+<span class="source-line-no">925</span><span id="line-925">                  .map(c -&gt; List.&lt;Double&gt;of(c.x, c.y))</span>
+<span class="source-line-no">926</span><span id="line-926">                  .collect(Collectors.toList()));</span>
+<span class="source-line-no">927</span><span id="line-927">        }</span>
+<span class="source-line-no">928</span><span id="line-928">        polygons.add(rings);</span>
+<span class="source-line-no">929</span><span id="line-929">      }</span>
+<span class="source-line-no">930</span><span id="line-930">      geoJson = Map.of("type", "MultiPolygon", "coordinates", polygons);</span>
+<span class="source-line-no">931</span><span id="line-931">    } else {</span>
+<span class="source-line-no">932</span><span id="line-932">      throw new IllegalArgumentException(type + " shape is not supported");</span>
+<span class="source-line-no">933</span><span id="line-933">    }</span>
+<span class="source-line-no">934</span><span id="line-934"></span>
+<span class="source-line-no">935</span><span id="line-935">    GeoShapeFieldQuery shapeQuery =</span>
+<span class="source-line-no">936</span><span id="line-936">        GeoShapeFieldQuery.of(s -&gt; s.shape(JsonData.of(geoJson)).relation(GeoShapeRelation.Within));</span>
+<span class="source-line-no">937</span><span id="line-937">    return Query.of(</span>
+<span class="source-line-no">938</span><span id="line-938">        q -&gt; q.geoShape(g -&gt; g.field(esFieldMapper.getGeoShapeField()).shape(shapeQuery)));</span>
+<span class="source-line-no">939</span><span id="line-939">  }</span>
+<span class="source-line-no">940</span><span id="line-940"></span>
+<span class="source-line-no">941</span><span id="line-941">  /** Eliminates consecutive duplicates. The order is preserved. */</span>
+<span class="source-line-no">942</span><span id="line-942">  static Coordinate[] normalizePolygonCoordinates(Coordinate[] coordinates) {</span>
+<span class="source-line-no">943</span><span id="line-943">    List&lt;Coordinate&gt; normalizedCoordinates = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">944</span><span id="line-944"></span>
+<span class="source-line-no">945</span><span id="line-945">    // we always have to keep the fist and last coordinates</span>
+<span class="source-line-no">946</span><span id="line-946">    int i = 0;</span>
+<span class="source-line-no">947</span><span id="line-947">    normalizedCoordinates.add(i++, coordinates[0]);</span>
+<span class="source-line-no">948</span><span id="line-948"></span>
+<span class="source-line-no">949</span><span id="line-949">    for (int j = 1; j &lt; coordinates.length; j++) {</span>
+<span class="source-line-no">950</span><span id="line-950">      if (!coordinates[j - 1].equals(coordinates[j])) {</span>
+<span class="source-line-no">951</span><span id="line-951">        normalizedCoordinates.add(i++, coordinates[j]);</span>
+<span class="source-line-no">952</span><span id="line-952">      }</span>
+<span class="source-line-no">953</span><span id="line-953">    }</span>
+<span class="source-line-no">954</span><span id="line-954"></span>
+<span class="source-line-no">955</span><span id="line-955">    return normalizedCoordinates.toArray(new Coordinate[0]);</span>
+<span class="source-line-no">956</span><span id="line-956">  }</span>
+<span class="source-line-no">957</span><span id="line-957"></span>
+<span class="source-line-no">958</span><span id="line-958">  /** handles geoDistance predicate */</span>
+<span class="source-line-no">959</span><span id="line-959">  public void visit(GeoDistancePredicate geoDistance, QueryData queryData) {</span>
+<span class="source-line-no">960</span><span id="line-960">    Query q = buildGeoDistanceQuery(geoDistance.getGeoDistance());</span>
+<span class="source-line-no">961</span><span id="line-961">    queryData.filterQueries.add(q);</span>
+<span class="source-line-no">962</span><span id="line-962">  }</span>
+<span class="source-line-no">963</span><span id="line-963"></span>
+<span class="source-line-no">964</span><span id="line-964">  private Query buildGeoDistanceQuery(DistanceUnit.GeoDistance geoDistance) {</span>
+<span class="source-line-no">965</span><span id="line-965">    return Query.of(</span>
+<span class="source-line-no">966</span><span id="line-966">        q -&gt;</span>
+<span class="source-line-no">967</span><span id="line-967">            q.geoDistance(</span>
+<span class="source-line-no">968</span><span id="line-968">                g -&gt;</span>
+<span class="source-line-no">969</span><span id="line-969">                    g.field(esFieldMapper.getGeoDistanceField())</span>
+<span class="source-line-no">970</span><span id="line-970">                        .distance(geoDistance.getDistance().toString())</span>
+<span class="source-line-no">971</span><span id="line-971">                        .location(</span>
+<span class="source-line-no">972</span><span id="line-972">                            loc -&gt;</span>
+<span class="source-line-no">973</span><span id="line-973">                                loc.latlon(</span>
+<span class="source-line-no">974</span><span id="line-974">                                    ll -&gt;</span>
+<span class="source-line-no">975</span><span id="line-975">                                        ll.lat(geoDistance.getLatitude())</span>
+<span class="source-line-no">976</span><span id="line-976">                                            .lon(geoDistance.getLongitude())))));</span>
+<span class="source-line-no">977</span><span id="line-977">  }</span>
+<span class="source-line-no">978</span><span id="line-978"></span>
+<span class="source-line-no">979</span><span id="line-979">  /** handles ISNOTNULL Predicate */</span>
+<span class="source-line-no">980</span><span id="line-980">  public void visit(IsNotNullPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">981</span><span id="line-981">    addFilterQuery(</span>
+<span class="source-line-no">982</span><span id="line-982">        existsQuery(getExactMatchFieldName(predicate)), queryData, predicate.getParameter());</span>
+<span class="source-line-no">983</span><span id="line-983">  }</span>
+<span class="source-line-no">984</span><span id="line-984"></span>
+<span class="source-line-no">985</span><span id="line-985">  /** handles ISNULL Predicate */</span>
+<span class="source-line-no">986</span><span id="line-986">  public void visit(IsNullPredicate&lt;S&gt; predicate, QueryData queryData) {</span>
+<span class="source-line-no">987</span><span id="line-987">    addFilterQuery(</span>
+<span class="source-line-no">988</span><span id="line-988">        Query.of(q -&gt; q.bool(b -&gt; b.mustNot(existsQuery(getExactMatchFieldName(predicate))))),</span>
+<span class="source-line-no">989</span><span id="line-989">        queryData,</span>
+<span class="source-line-no">990</span><span id="line-990">        predicate.getParameter());</span>
+<span class="source-line-no">991</span><span id="line-991">  }</span>
 <span class="source-line-no">992</span><span id="line-992"></span>
-<span class="source-line-no">993</span><span id="line-993">    QueryData() {}</span>
-<span class="source-line-no">994</span><span id="line-994"></span>
-<span class="source-line-no">995</span><span id="line-995">    boolean isNested() {</span>
-<span class="source-line-no">996</span><span id="line-996">      return nestedPath != null;</span>
-<span class="source-line-no">997</span><span id="line-997">    }</span>
-<span class="source-line-no">998</span><span id="line-998">  }</span>
-<span class="source-line-no">999</span><span id="line-999"></span>
-<span class="source-line-no">1000</span><span id="line-1000">  private boolean paramEquals(S param1, String param2) {</span>
-<span class="source-line-no">1001</span><span id="line-1001">    Optional&lt;S&gt; param2Opt = getParam(param2);</span>
-<span class="source-line-no">1002</span><span id="line-1002">    return param2Opt.isPresent() &amp;&amp; param1 == param2Opt.get();</span>
-<span class="source-line-no">1003</span><span id="line-1003">  }</span>
-<span class="source-line-no">1004</span><span id="line-1004"></span>
-<span class="source-line-no">1005</span><span id="line-1005">  protected abstract Optional&lt;S&gt; getParam(String name);</span>
-<span class="source-line-no">1006</span><span id="line-1006">}</span>
+<span class="source-line-no">993</span><span id="line-993">  private void visit(Object object, QueryData queryData) throws QueryBuildingException {</span>
+<span class="source-line-no">994</span><span id="line-994">    Method method;</span>
+<span class="source-line-no">995</span><span id="line-995">    try {</span>
+<span class="source-line-no">996</span><span id="line-996">      method = getClass().getMethod("visit", object.getClass(), QueryData.class);</span>
+<span class="source-line-no">997</span><span id="line-997">    } catch (NoSuchMethodException e) {</span>
+<span class="source-line-no">998</span><span id="line-998">      log.warn(</span>
+<span class="source-line-no">999</span><span id="line-999">          "Visit method could not be found. That means a unknown Predicate has been passed", e);</span>
+<span class="source-line-no">1000</span><span id="line-1000">      throw new IllegalArgumentException("Unknown Predicate", e);</span>
+<span class="source-line-no">1001</span><span id="line-1001">    }</span>
+<span class="source-line-no">1002</span><span id="line-1002">    try {</span>
+<span class="source-line-no">1003</span><span id="line-1003">      method.invoke(this, object, queryData);</span>
+<span class="source-line-no">1004</span><span id="line-1004">    } catch (IllegalAccessException e) {</span>
+<span class="source-line-no">1005</span><span id="line-1005">      log.error(</span>
+<span class="source-line-no">1006</span><span id="line-1006">          "This error shouldn't occur if all visit methods are public. Probably a programming error",</span>
+<span class="source-line-no">1007</span><span id="line-1007">          e);</span>
+<span class="source-line-no">1008</span><span id="line-1008">      throw new RuntimeException(e);</span>
+<span class="source-line-no">1009</span><span id="line-1009">    } catch (InvocationTargetException e) {</span>
+<span class="source-line-no">1010</span><span id="line-1010">      log.info("Exception thrown while building the query", e);</span>
+<span class="source-line-no">1011</span><span id="line-1011">      throw new QueryBuildingException(e);</span>
+<span class="source-line-no">1012</span><span id="line-1012">    }</span>
+<span class="source-line-no">1013</span><span id="line-1013">  }</span>
+<span class="source-line-no">1014</span><span id="line-1014"></span>
+<span class="source-line-no">1015</span><span id="line-1015">  private void addFilterQuery(Query q, QueryData queryData, S searchParameter) {</span>
+<span class="source-line-no">1016</span><span id="line-1016">    if (esFieldMapper.isNestedField(searchParameter)) {</span>
+<span class="source-line-no">1017</span><span id="line-1017">      queryData.filterQueries.add(nestedQuery(esFieldMapper.getNestedPath(searchParameter), q));</span>
+<span class="source-line-no">1018</span><span id="line-1018">      queryData.rawQueries = List.of(q);</span>
+<span class="source-line-no">1019</span><span id="line-1019">      queryData.nestedPath = esFieldMapper.getNestedPath(searchParameter);</span>
+<span class="source-line-no">1020</span><span id="line-1020">    } else {</span>
+<span class="source-line-no">1021</span><span id="line-1021">      queryData.filterQueries.add(q);</span>
+<span class="source-line-no">1022</span><span id="line-1022">    }</span>
+<span class="source-line-no">1023</span><span id="line-1023">  }</span>
+<span class="source-line-no">1024</span><span id="line-1024"></span>
+<span class="source-line-no">1025</span><span id="line-1025">  @Data</span>
+<span class="source-line-no">1026</span><span id="line-1026">  public static class QueryData {</span>
+<span class="source-line-no">1027</span><span id="line-1027">    List&lt;Query&gt; filterQueries = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">1028</span><span id="line-1028">    List&lt;Query&gt; shouldQueries = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">1029</span><span id="line-1029">    List&lt;Query&gt; mustNotQueries = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">1030</span><span id="line-1030"></span>
+<span class="source-line-no">1031</span><span id="line-1031">    /** Raw queries that go inside a nested query. */</span>
+<span class="source-line-no">1032</span><span id="line-1032">    List&lt;Query&gt; rawQueries = new ArrayList&lt;&gt;();</span>
+<span class="source-line-no">1033</span><span id="line-1033"></span>
+<span class="source-line-no">1034</span><span id="line-1034">    String nestedPath;</span>
+<span class="source-line-no">1035</span><span id="line-1035"></span>
+<span class="source-line-no">1036</span><span id="line-1036">    QueryData() {}</span>
+<span class="source-line-no">1037</span><span id="line-1037"></span>
+<span class="source-line-no">1038</span><span id="line-1038">    boolean isNested() {</span>
+<span class="source-line-no">1039</span><span id="line-1039">      return nestedPath != null;</span>
+<span class="source-line-no">1040</span><span id="line-1040">    }</span>
+<span class="source-line-no">1041</span><span id="line-1041">  }</span>
+<span class="source-line-no">1042</span><span id="line-1042"></span>
+<span class="source-line-no">1043</span><span id="line-1043">  private boolean paramEquals(S param1, String param2) {</span>
+<span class="source-line-no">1044</span><span id="line-1044">    Optional&lt;S&gt; param2Opt = getParam(param2);</span>
+<span class="source-line-no">1045</span><span id="line-1045">    return param2Opt.isPresent() &amp;&amp; param1 == param2Opt.get();</span>
+<span class="source-line-no">1046</span><span id="line-1046">  }</span>
+<span class="source-line-no">1047</span><span id="line-1047"></span>
+<span class="source-line-no">1048</span><span id="line-1048">  protected abstract Optional&lt;S&gt; getParam(String name);</span>
+<span class="source-line-no">1049</span><span id="line-1049">}</span>
 
 
 
